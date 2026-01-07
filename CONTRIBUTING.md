@@ -18,7 +18,7 @@ playwright install
 
 ## Run (dev)
 ```powershell
-py F:\Python\FlowerTrack\flowertracker.py
+py .\flowertracker.py
 ```
 
 ## Tests

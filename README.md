@@ -17,7 +17,7 @@ FlowerTrack is a Windows desktop app for tracking medical cannabis usage and sto
 
 ## Run (development)
 ```powershell
-py F:\Python\FlowerTrack\flowertracker.py
+py .\flowertracker.py
 ```
 
 ## Build (single exe)
@@ -29,7 +29,7 @@ pyinstaller --noconfirm --clean --onefile --windowed --icon assets/icon.ico --ad
 ## Configuration and data
 All user data and configs are stored under:
 ```
-C:\Users\<you>\AppData\Roaming\FlowerTrack
+%APPDATA%\FlowerTrack
 ```
 Key files:
 - `flowertrack_config.json` (unified tracker + scraper settings)
