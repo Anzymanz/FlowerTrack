@@ -31,8 +31,10 @@ class NotificationService:
         txt = "; ".join(parts)
         return txt if len(txt) <= max_len else (txt[: max_len - 3] + "...")
 
-    def format_windows_body(self, payload: dict, summary: str) -> str:
+    def format_windows_body(self, payload: dict, summary: str, detail: str = "full") -> str:
         body_parts: list[str] = []
+        if detail.lower() == "summary":
+            return summary
         new_items = payload.get("new_item_summaries") or []
         removed_items = payload.get("removed_item_summaries") or []
         price_changes = payload.get("price_change_summaries") or []

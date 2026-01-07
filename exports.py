@@ -357,23 +357,6 @@ def export_html_auto(
             pass
     return path
 
-def export_json_auto(data, exports_dir: Optional[Path] = None, open_file: bool = False):
-
-    d = Path(exports_dir or _EXPORTS_DIR or ".")
-    d.mkdir(parents=True, exist_ok=True)
-    ts = datetime.now().astimezone().strftime('%Y-%m-%d_%H-%M-%S%z')
-    fname = f"export-{ts}.json"
-    path = d / fname
-    Path(path).write_text(json.dumps(data, indent=2), encoding="utf-8")
-    if open_file:
-        try:
-            if os.name == 'nt':
-                os.startfile(path)
-            else:
-                webbrowser.open(path.as_uri())
-        except Exception:
-            pass
-    return path
 
 def cleanup_html_exports(exports_dir: Optional[Path] = None, max_files: int = 20) -> None:
     """Keep only the newest `max_files` HTML exports."""

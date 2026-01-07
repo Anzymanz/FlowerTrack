@@ -49,6 +49,30 @@ CBD: 1 %
         item_b = dict(base, price=9.0)
         self.assertEqual(make_identity_key(item_a), make_identity_key(item_b))
 
+    def test_parse_price_variants(self):
+        text = """
+IN STOCK
+Producer Co CANNABIS FLOWER (ABC123)
+Example Strain | Hybrid
+10 g
+PRICE: 7.25
+"""
+        items = parse_clinic_text(text)
+        self.assertEqual(len(items), 1)
+        self.assertAlmostEqual(items[0].get("price") or 0, 7.25)
+
+        text2 = """
+IN STOCK
+Producer Co CANNABIS FLOWER (ABC123)
+Example Strain | Hybrid
+10 g
+GBP 8.50
+"""
+        items2 = parse_clinic_text(text2)
+        self.assertEqual(len(items2), 1)
+        self.assertAlmostEqual(items2[0].get("price") or 0, 8.50)
+
+
 
 if __name__ == "__main__":
     unittest.main()

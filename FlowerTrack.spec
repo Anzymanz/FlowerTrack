@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['flowertracker.pyw'],
+    ['flowertracker.py'],
     pathex=[],
     binaries=[],
     datas=[('assets', 'assets'), ('flowerlibrary.py', '.'), ('mixcalc.py', '.')],

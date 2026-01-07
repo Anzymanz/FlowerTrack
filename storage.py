@@ -50,3 +50,23 @@ def save_last_change(path: Path, summary: str) -> None:
         path.write_text(summary, encoding="utf-8")
     except Exception:
         pass
+
+def load_last_scrape(path: Path) -> str | None:
+    """Load the last successful scrape timestamp."""
+    try:
+        if path.exists():
+            text = path.read_text(encoding="utf-8").strip()
+            return text or None
+    except Exception:
+        pass
+    return None
+
+
+def save_last_scrape(path: Path, summary: str) -> None:
+    """Persist the last successful scrape timestamp."""
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(summary, encoding="utf-8")
+    except Exception:
+        pass
+

@@ -4,6 +4,7 @@ import os
 import sys
 import threading
 import time
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Dict, Literal, Optional, TypedDict
@@ -38,6 +39,35 @@ class CaptureStateMachine:
         return True
 
 
+@dataclass(frozen=True)
+class RetryPolicy:
+    retry_attempts: int
+    retry_wait_seconds: float
+    backoff_max: float
+
+    @classmethod
+    def from_config(cls, cfg: dict) -> "RetryPolicy":
+        attempts = max(0, int(cfg.get("retry_attempts", 0)))
+        wait = float(cfg.get("retry_wait_seconds", 0) or 0)
+        if wait <= 0:
+            wait = float(cfg.get("post_nav_wait_seconds", 0) or 0)
+        backoff = float(cfg.get("retry_backoff_max", 4) or 4)
+        if backoff < 1:
+            backoff = 1.0
+        return cls(attempts, max(0.0, wait), backoff)
+
+    def attempt_wait(self, attempt: int) -> float:
+        if self.retry_wait_seconds <= 0:
+            return 0.0
+        factor = min(max(1, attempt), self.backoff_max)
+        return self.retry_wait_seconds * factor
+
+    def interval_with_backoff(self, base_interval: float, failures: int) -> float:
+        if failures <= 0:
+            return base_interval
+        factor = min(1 + failures, self.backoff_max)
+        return base_interval * factor
+
 
 class CaptureCallbacks(TypedDict, total=False):
     capture_log: Callable[[str], None]
@@ -69,7 +99,8 @@ class CaptureWorker:
         self.state = CaptureStateMachine()
         self.status: Status = self.state.status
         self.empty_failures: int = 0
-        self.retry_attempts = max(0, int(cfg.get("retry_attempts", 0)))
+        self.retry_policy = RetryPolicy.from_config(cfg)
+        self.retry_attempts = self.retry_policy.retry_attempts
         self.scheduler = IntervalScheduler(self.callbacks["stop_event"], self.callbacks["responsive_wait"])
 
     def _set_status(self, status: Status, msg: Optional[str] = None):
@@ -137,7 +168,7 @@ class CaptureWorker:
                 while not self.callbacks["stop_event"].is_set():
                     self._set_status("running", f"Navigating to {self.cfg['url']}")
                     try:
-                        retries_left = self.retry_attempts
+                        retries_left = self.retry_policy.retry_attempts
                         wait_post = max(self.cfg.get("post_nav_wait_seconds", 0), 0)
                         if first_cycle:
                             if not safe_goto(self.cfg["url"], "First visit"):
@@ -242,13 +273,13 @@ class CaptureWorker:
 
                         # First attempt: no refresh, assume page loaded during waits.
                         success = collect_once(refresh=False)
-                        attempt_wait = wait_post
+                        attempt_wait = self.retry_policy.retry_wait_seconds
                         attempt = 0
                         while not success and retries_left > 0 and not self.callbacks["stop_event"].is_set():
                             retries_left -= 1
                             attempt += 1
                             self.callbacks["capture_log"](
-                                f"No content; retrying after {attempt_wait}s (attempt {attempt}/{self.retry_attempts})."
+                                f"No content; retrying after {attempt_wait}s (attempt {attempt}/{self.retry_policy.retry_attempts})."
                             )
                             if self.callbacks["responsive_wait"](attempt_wait, label="Retrying capture"):
                                 break
@@ -266,7 +297,7 @@ class CaptureWorker:
                     # Overnight slow-down
                     interval = self.scheduler.next_interval(self.cfg["interval_seconds"])
                     if self.empty_failures:
-                        interval *= min(1 + self.empty_failures, 4)
+                        interval = self.retry_policy.interval_with_backoff(interval, self.empty_failures)
                     if self.scheduler.wait(interval, label="Waiting for next capture"):
                         break
                 browser.close()

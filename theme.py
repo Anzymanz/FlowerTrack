@@ -29,6 +29,8 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
     style.theme_use("clam")
     style.configure("TFrame", background=bg)
     style.configure("TLabel", background=bg, foreground=fg)
+    hint_fg = "#c77" if bg == "#111" else "#a33"
+    style.configure("Hint.TLabel", background=bg, foreground=hint_fg)
     style.configure("TLabelframe", background=bg, foreground=fg, bordercolor=ctrl_bg)
     style.configure("TLabelframe.Label", background=bg, foreground=fg)
     style.configure(

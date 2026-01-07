@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 # Default schema for capture config (centralized)
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 DEFAULT_CAPTURE_CONFIG = {
     "version": SCHEMA_VERSION,
     "url": "",
@@ -24,6 +24,8 @@ DEFAULT_CAPTURE_CONFIG = {
     "login_wait_seconds": 3.0,
     "post_nav_wait_seconds": 30.0,
     "retry_attempts": 3,
+    "retry_wait_seconds": 30.0,
+    "retry_backoff_max": 4.0,
     "timeout_ms": 45000,
     "headless": True,
     "auto_notify_ha": False,
@@ -32,6 +34,10 @@ DEFAULT_CAPTURE_CONFIG = {
     "notify_price_changes": True,
     "notify_stock_changes": True,
     "notify_windows": True,
+    "quiet_hours_enabled": False,
+    "quiet_hours_start": "22:00",
+    "quiet_hours_end": "07:00",
+    "notification_detail": "full",
     "minimize_to_tray": False,
     "close_to_tray": False,
 }
@@ -205,6 +211,8 @@ def _validate_capture_config(raw: dict) -> dict:
         5.0,
     )
     cfg["retry_attempts"] = int(_coerce_float(raw.get("retry_attempts"), DEFAULT_CAPTURE_CONFIG["retry_attempts"], 0))
+    cfg["retry_wait_seconds"] = _coerce_float(raw.get("retry_wait_seconds"), DEFAULT_CAPTURE_CONFIG["retry_wait_seconds"], 0.0)
+    cfg["retry_backoff_max"] = _coerce_float(raw.get("retry_backoff_max"), DEFAULT_CAPTURE_CONFIG["retry_backoff_max"], 1.0)
     cfg["timeout_ms"] = int(_coerce_float(raw.get("timeout_ms"), DEFAULT_CAPTURE_CONFIG["timeout_ms"], 0))
     cfg["headless"] = _coerce_bool(raw.get("headless"), DEFAULT_CAPTURE_CONFIG["headless"])
     cfg["auto_notify_ha"] = _coerce_bool(raw.get("auto_notify_ha"), DEFAULT_CAPTURE_CONFIG["auto_notify_ha"])
@@ -213,6 +221,10 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["notify_price_changes"] = _coerce_bool(raw.get("notify_price_changes"), DEFAULT_CAPTURE_CONFIG["notify_price_changes"])
     cfg["notify_stock_changes"] = _coerce_bool(raw.get("notify_stock_changes"), DEFAULT_CAPTURE_CONFIG["notify_stock_changes"])
     cfg["notify_windows"] = _coerce_bool(raw.get("notify_windows"), DEFAULT_CAPTURE_CONFIG["notify_windows"])
+    cfg["quiet_hours_enabled"] = _coerce_bool(raw.get("quiet_hours_enabled"), DEFAULT_CAPTURE_CONFIG["quiet_hours_enabled"])
+    cfg["quiet_hours_start"] = str(raw.get("quiet_hours_start") or DEFAULT_CAPTURE_CONFIG["quiet_hours_start"]).strip()
+    cfg["quiet_hours_end"] = str(raw.get("quiet_hours_end") or DEFAULT_CAPTURE_CONFIG["quiet_hours_end"]).strip()
+    cfg["notification_detail"] = str(raw.get("notification_detail") or DEFAULT_CAPTURE_CONFIG["notification_detail"]).strip() or "full"
     cfg["minimize_to_tray"] = _coerce_bool(raw.get("minimize_to_tray"), DEFAULT_CAPTURE_CONFIG["minimize_to_tray"])
     cfg["close_to_tray"] = _coerce_bool(raw.get("close_to_tray"), DEFAULT_CAPTURE_CONFIG["close_to_tray"])
     return cfg
@@ -275,10 +287,14 @@ def load_unified_config(
             if key in unified_raw["scraper"]:
                 unified_raw["scraper"][key] = decrypt_secret(unified_raw["scraper"].get(key, ""))
 
+    prev_version = raw.get("version") if is_unified else None
     unified = _normalize_unified_config(unified_raw)
-    if write_back and (not path.exists() or not is_unified):
+    needs_migration = (not is_unified) or (prev_version != SCHEMA_VERSION)
+    if write_back and (not path.exists() or needs_migration):
         try:
             save_unified_config(path, unified, encrypt_scraper_keys=decrypt_scraper_keys)
+            if needs_migration:
+                _log_migration(f"Config migrated (source={'legacy' if not is_unified else 'unified'}) v{prev_version or 'none'} -> v{SCHEMA_VERSION}", logger=logger)
         except Exception as exc:
             if logger:
                 try:
@@ -415,13 +431,37 @@ def decrypt_secret(value: str) -> str:
     return value
 
 
+
+
+def _migration_log_path() -> Path:
+    appdata = Path(os.getenv("APPDATA", os.path.expanduser("~")))
+    return appdata / "FlowerTrack" / "data" / "config_migrations.log"
+
+
+def _log_migration(message: str, logger=None) -> None:
+    stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    line = f"[{stamp}] {message}"
+    if logger:
+        try:
+            logger(line)
+        except Exception:
+            pass
+    try:
+        path = _migration_log_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as fh:
+            fh.write(line + "\n")
+    except Exception:
+        pass
+
 def _migrate_capture_config(raw: dict) -> dict:
     """
     Apply schema migrations. Currently bumps missing version to current schema.
     """
     if not isinstance(raw, dict):
         return {}
-    if "version" not in raw:
+    ver = int(raw.get("version") or 0)
+    if ver < SCHEMA_VERSION:
         raw["version"] = SCHEMA_VERSION
     return raw
 

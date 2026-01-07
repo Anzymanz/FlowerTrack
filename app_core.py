@@ -36,7 +36,7 @@ from config import (
     save_capture_config,
     save_unified_config,
 )
-from exports import cleanup_html_exports, export_html, export_html_auto, export_json_auto, init_exports, set_exports_dir
+from exports import cleanup_html_exports, export_html, export_html_auto, init_exports, set_exports_dir
 from notifications import _maybe_send_windows_notification
 from parser import (
     format_brand,
@@ -50,7 +50,7 @@ from parser import (
     _load_brand_hints,
     _save_brand_hints,
 )
-from storage import append_change_log, load_last_change, load_last_parse, save_last_change, save_last_parse
+from storage import append_change_log, load_last_change, load_last_parse, save_last_change, save_last_parse, load_last_scrape, save_last_scrape
 from tray import create_tray_icon, make_tray_image, stop_tray_icon, tray_supported
 from ui_settings import open_settings_window
 from export_server import start_export_server as srv_start_export_server, stop_export_server as srv_stop_export_server
@@ -90,6 +90,7 @@ LAST_PARSE_FILE = DATA_DIR / "last_parse.json"
 SERVER_LOG = DATA_DIR / "parser_server.log"
 CHANGES_LOG_FILE = DATA_DIR / "changes.ndjson"
 LAST_CHANGE_FILE = DATA_DIR / "last_change.txt"
+LAST_SCRAPE_FILE = DATA_DIR / "last_scrape.txt"
 SCRAPER_STATE_FILE = Path(APP_DIR) / "scraper_state.json"
 
 def _log_debug(msg: str) -> None:

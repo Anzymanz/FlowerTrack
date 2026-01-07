@@ -40,12 +40,15 @@ from app_core import (  # shared globals/imports
     LAST_PARSE_FILE,
     CHANGES_LOG_FILE,
     LAST_CHANGE_FILE,
+    LAST_SCRAPE_FILE,
     DEFAULT_CAPTURE_CONFIG,
     load_last_parse,
     save_last_parse,
     append_change_log,
     load_last_change,
     save_last_change,
+    load_last_scrape,
+    save_last_scrape,
     APP_DIR,
     DATA_DIR,
     _port_ready,
@@ -70,6 +73,30 @@ from tray import create_tray_icon, stop_tray_icon, tray_supported, update_tray_i
 from logger import UILogger
 from notification_service import NotificationService
 from ui_theme import apply_style_theme, set_titlebar_dark, compute_colors
+
+
+
+def _should_stop_on_empty(error_count: int, error_threshold: int) -> bool:
+    return error_count >= error_threshold
+
+
+
+
+def _identity_key_cached(item: dict, cache: dict) -> str:
+    key = id(item)
+    cached = cache.get(key)
+    if cached is None:
+        cached = make_identity_key(item)
+        cache[key] = cached
+    return cached
+
+
+def _build_identity_cache(items: list[dict]) -> dict:
+    cache = {}
+    for it in items:
+        cache[id(it)] = make_identity_key(it)
+    return cache
+
 
 class App(tk.Tk):
     _instance = None
@@ -170,6 +197,14 @@ class App(tk.Tk):
         self.console_scroll.pack(side="right", fill="y")
         self.last_change_label = ttk.Label(self, text="Last change detected: none")
         self.last_change_label.pack(pady=(0, 8))
+        self.last_scrape_label = ttk.Label(self, text="Last successful scrape: none")
+        self.last_scrape_label.pack(pady=(0, 8))
+        try:
+            ts = load_last_scrape(LAST_SCRAPE_FILE)
+            if ts:
+                self.last_scrape_label.config(text=f"Last successful scrape: {ts}")
+        except Exception:
+            pass
         self.data = []
         self.price_up_count = 0
         self.price_down_count = 0
@@ -186,6 +221,10 @@ class App(tk.Tk):
         self.cap_auto_notify_ha = tk.BooleanVar(value=False)
         self.cap_ha_webhook = tk.StringVar(value="")
         self.cap_ha_token = tk.StringVar(value="")
+        self.cap_quiet_hours_enabled = tk.BooleanVar(value=False)
+        self.cap_quiet_start = tk.StringVar(value="22:00")
+        self.cap_quiet_end = tk.StringVar(value="07:00")
+        self.cap_notify_detail = tk.StringVar(value="full")
         self.last_change_summary = "none"
         self._build_capture_controls()
         # Tray behavior
@@ -231,12 +270,18 @@ class App(tk.Tk):
         self.notify_price_changes = tk.BooleanVar(value=cfg.get("notify_price_changes", True))
         self.notify_stock_changes = tk.BooleanVar(value=cfg.get("notify_stock_changes", True))
         self.notify_windows = tk.BooleanVar(value=cfg.get("notify_windows", True))
+        self.cap_quiet_hours_enabled.set(bool(cfg.get("quiet_hours_enabled", False)))
+        self.cap_quiet_start.set(cfg.get("quiet_hours_start", "22:00"))
+        self.cap_quiet_end.set(cfg.get("quiet_hours_end", "07:00"))
+        self.cap_notify_detail.set(cfg.get("notification_detail", "full"))
         self.cap_url = tk.StringVar(value=cfg.get("url", ""))
         self.cap_interval = tk.StringVar(value=str(cfg.get("interval_seconds", 60)))
         self.cap_headless = tk.BooleanVar(value=bool(cfg.get("headless", True)))
         self.cap_login_wait = tk.StringVar(value=str(cfg.get("login_wait_seconds", 3)))
         self.cap_post_wait = tk.StringVar(value=str(cfg.get("post_nav_wait_seconds", 30)))
         self.cap_retry_attempts = tk.IntVar(value=int(cfg.get("retry_attempts", 3)))
+        self.cap_retry_wait = tk.StringVar(value=str(cfg.get("retry_wait_seconds", cfg.get("post_nav_wait_seconds", 30))))
+        self.cap_retry_backoff = tk.StringVar(value=str(cfg.get("retry_backoff_max", 4)))
         self.cap_user = tk.StringVar(value=decrypt_secret(cfg.get("username", "")))
         self.cap_pass = tk.StringVar(value=decrypt_secret(cfg.get("password", "")))
         self.cap_user_sel = tk.StringVar(value=cfg.get("username_selector", ""))
@@ -335,12 +380,29 @@ class App(tk.Tk):
         if post_wait < 5:
             post_wait = 5.0
             self.cap_post_wait.set(str(post_wait))
+        try:
+            retry_wait = float(self.cap_retry_wait.get() or 0)
+            if retry_wait < 0:
+                raise ValueError
+        except Exception:
+            self._log_console("Retry wait must be >= 0.")
+            return
+        try:
+            retry_backoff = float(self.cap_retry_backoff.get() or 0)
+            if retry_backoff < 1:
+                retry_backoff = 1.0
+                self.cap_retry_backoff.set(str(retry_backoff))
+        except Exception:
+            self._log_console("Retry backoff max must be >= 1.")
+            return
         cfg = {
             "url": url,
             "interval_seconds": interval,
             "login_wait_seconds": login_wait,
             "post_nav_wait_seconds": post_wait,
             "retry_attempts": int(self.cap_retry_attempts.get() or 0),
+            "retry_wait_seconds": float(self.cap_retry_wait.get() or 0),
+            "retry_backoff_max": float(self.cap_retry_backoff.get() or 0),
             "username": self.cap_user.get(),
             "password": self.cap_pass.get(),
             "username_selector": self.cap_user_sel.get(),
@@ -355,6 +417,10 @@ class App(tk.Tk):
             "notify_price_changes": self.notify_price_changes.get(),
             "notify_stock_changes": self.notify_stock_changes.get(),
             "notify_windows": self.notify_windows.get(),
+            "quiet_hours_enabled": self.cap_quiet_hours_enabled.get(),
+            "quiet_hours_start": self.cap_quiet_start.get(),
+            "quiet_hours_end": self.cap_quiet_end.get(),
+            "notification_detail": self.cap_notify_detail.get(),
         }
         _save_capture_config(cfg)
         self.capture_stop.clear()
@@ -371,13 +437,6 @@ class App(tk.Tk):
         self._log_console("Auto-capture running...")
         try:
             self._write_scraper_state("running")
-        except Exception:
-            pass
-        try:
-            if status in ("running", "retrying", "faulted"):
-                self._write_scraper_state(status)
-            elif status in ("idle", "stopped", "done"):
-                self._write_scraper_state("stopped")
         except Exception:
             pass
         self._update_tray_status()
@@ -544,6 +603,7 @@ class App(tk.Tk):
         except Exception:
             pass
 
+
     def _log_console(self, msg: str):
         # If already timestamped, don't double-stamp.
         if msg.startswith("[") and "]" in msg[:12]:
@@ -568,6 +628,14 @@ class App(tk.Tk):
         save_last_change(LAST_CHANGE_FILE, ts_line)
         try:
             self.last_change_label.config(text=f"Last change detected: {ts_line}")
+        except Exception:
+            pass
+
+    def _update_last_scrape(self):
+        ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        save_last_scrape(LAST_SCRAPE_FILE, ts)
+        try:
+            self.last_scrape_label.config(text=f"Last successful scrape: {ts}")
         except Exception:
             pass
 
@@ -683,6 +751,8 @@ class App(tk.Tk):
         self.cap_login_wait.set(str(cfg.get("login_wait_seconds", 3)))
         self.cap_post_wait.set(str(cfg.get("post_nav_wait_seconds", 30)))
         self.cap_retry_attempts.set(int(cfg.get("retry_attempts", 3)))
+        self.cap_retry_wait.set(str(cfg.get("retry_wait_seconds", cfg.get("post_nav_wait_seconds", 30))))
+        self.cap_retry_backoff.set(str(cfg.get("retry_backoff_max", 4)))
         self.cap_user.set(decrypt_secret(cfg.get("username", "")))
         self.cap_pass.set(decrypt_secret(cfg.get("password", "")))
         self.cap_user_sel.set(cfg.get("username_selector", ""))
@@ -695,6 +765,10 @@ class App(tk.Tk):
         self.notify_price_changes.set(cfg.get("notify_price_changes", True))
         self.notify_stock_changes.set(cfg.get("notify_stock_changes", True))
         self.notify_windows.set(cfg.get("notify_windows", True))
+        self.cap_quiet_hours_enabled.set(bool(cfg.get("quiet_hours_enabled", False)))
+        self.cap_quiet_start.set(cfg.get("quiet_hours_start", "22:00"))
+        self.cap_quiet_end.set(cfg.get("quiet_hours_end", "07:00"))
+        self.cap_notify_detail.set(cfg.get("notification_detail", "full"))
         self.minimize_to_tray.set(cfg.get("minimize_to_tray", False))
         self.close_to_tray.set(cfg.get("close_to_tray", False))
         messagebox.showinfo("Capture Config", f"Loaded capture config from {path}")
@@ -716,6 +790,8 @@ class App(tk.Tk):
             "login_wait_seconds": float(self.cap_login_wait.get() or 0),
             "post_nav_wait_seconds": float(self.cap_post_wait.get() or 0),
             "retry_attempts": int(self.cap_retry_attempts.get() or 0),
+            "retry_wait_seconds": float(self.cap_retry_wait.get() or 0),
+            "retry_backoff_max": float(self.cap_retry_backoff.get() or 0),
             "username": self.cap_user.get(),
             "password": self.cap_pass.get(),
             "username_selector": self.cap_user_sel.get(),
@@ -728,6 +804,10 @@ class App(tk.Tk):
             "notify_price_changes": self.notify_price_changes.get(),
             "notify_stock_changes": self.notify_stock_changes.get(),
             "notify_windows": self.notify_windows.get(),
+            "quiet_hours_enabled": self.cap_quiet_hours_enabled.get(),
+            "quiet_hours_start": self.cap_quiet_start.get(),
+            "quiet_hours_end": self.cap_quiet_end.get(),
+            "notification_detail": self.cap_notify_detail.get(),
             "minimize_to_tray": bool(self.minimize_to_tray.get()),
             "close_to_tray": bool(self.close_to_tray.get()),
         }
@@ -746,6 +826,8 @@ class App(tk.Tk):
             "login_wait_seconds": float(self.cap_login_wait.get() or 0),
             "post_nav_wait_seconds": float(self.cap_post_wait.get() or 0),
             "retry_attempts": int(self.cap_retry_attempts.get() or 0),
+            "retry_wait_seconds": float(self.cap_retry_wait.get() or 0),
+            "retry_backoff_max": float(self.cap_retry_backoff.get() or 0),
             "username": self.cap_user.get(),
             "password": self.cap_pass.get(),
             "username_selector": self.cap_user_sel.get(),
@@ -758,6 +840,10 @@ class App(tk.Tk):
             "notify_price_changes": self.notify_price_changes.get(),
             "notify_stock_changes": self.notify_stock_changes.get(),
             "notify_windows": self.notify_windows.get(),
+            "quiet_hours_enabled": self.cap_quiet_hours_enabled.get(),
+            "quiet_hours_start": self.cap_quiet_start.get(),
+            "quiet_hours_end": self.cap_quiet_end.get(),
+            "notification_detail": self.cap_notify_detail.get(),
             "minimize_to_tray": bool(self.minimize_to_tray.get()),
             "close_to_tray": bool(self.close_to_tray.get()),
         }
@@ -787,6 +873,30 @@ class App(tk.Tk):
             # Still log changes even if HA notifications are disabled
             self.send_home_assistant(log_only=True)
 
+    def _quiet_hours_active(self) -> bool:
+        if not self.cap_quiet_hours_enabled.get():
+            return False
+        def _parse(t):
+            parts = str(t).strip().split(":")
+            if len(parts) < 2:
+                return None
+            try:
+                h = int(parts[0])
+                m = int(parts[1])
+                return h, m
+            except Exception:
+                return None
+        start = _parse(self.cap_quiet_start.get())
+        end = _parse(self.cap_quiet_end.get())
+        if not start or not end:
+            return False
+        now = datetime.now().time()
+        start_t = now.replace(hour=start[0], minute=start[1], second=0, microsecond=0)
+        end_t = now.replace(hour=end[0], minute=end[1], second=0, microsecond=0)
+        if start_t <= end_t:
+            return start_t <= now < end_t
+        return now >= start_t or now < end_t
+
     def send_home_assistant(self, log_only: bool = False):
         url = self.cap_ha_webhook.get().strip()
         if not url and not log_only:
@@ -795,29 +905,30 @@ class App(tk.Tk):
         items = getattr(self, "data", [])
         prev_items = getattr(self, "prev_items", [])
         prev_keys = getattr(self, "prev_keys", set())
+        identity_cache = _build_identity_cache(items + prev_items)
         # Fallback to persisted last parse if in-memory cache is empty
         if (not prev_items or not prev_keys) and LAST_PARSE_FILE.exists():
             try:
                 prev_items = load_last_parse(LAST_PARSE_FILE)
-                prev_keys = {make_identity_key(it) for it in prev_items}
+                prev_keys = { _identity_key_cached(it, identity_cache) for it in prev_items }
             except Exception:
                 pass
-        current_keys = {make_identity_key(it) for it in items}
-        new_items = [it for it in items if make_identity_key(it) not in prev_keys]
+        current_keys = { _identity_key_cached(it, identity_cache) for it in items }
+        new_items = [it for it in items if _identity_key_cached(it, identity_cache) not in prev_keys]
         removed_keys = prev_keys - current_keys
-        removed_items = [it for it in prev_items if make_identity_key(it) in removed_keys]
+        removed_items = [it for it in prev_items if _identity_key_cached(it, identity_cache) in removed_keys]
         price_changes = []
         stock_changes = []
         prev_price_map = {}
         prev_stock_map = {}
         for pit in prev_items:
             try:
-                prev_price_map[make_identity_key(pit)] = float(pit.get("price")) if pit.get("price") is not None else None
+                prev_price_map[_identity_key_cached(pit, identity_cache)] = float(pit.get("price")) if pit.get("price") is not None else None
             except Exception:
-                prev_price_map[make_identity_key(pit)] = None
-            prev_stock_map[make_identity_key(pit)] = pit.get("stock")
+                prev_price_map[_identity_key_cached(pit, identity_cache)] = None
+            prev_stock_map[_identity_key_cached(pit, identity_cache)] = pit.get("stock")
         for it in items:
-            ident = make_identity_key(it)
+            ident = _identity_key_cached(it, identity_cache)
             try:
                 cur_price = float(it.get("price")) if it.get("price") is not None else None
             except Exception:
@@ -968,24 +1079,27 @@ class App(tk.Tk):
             f"+{len(new_items)} new, -{len(removed_items)} removed, "
             f"{len(price_changes)} price changes, {len(stock_changes)} stock changes"
         )
+        quiet_hours = self._quiet_hours_active()
+        if quiet_hours:
+            self._capture_log("Quiet hours active; skipping notifications.")
+            self._update_last_change(summary)
         # Build detailed desktop notification text and launch target
-        windows_body = self.notify_service.format_windows_body(payload, summary)
+        windows_body = self.notify_service.format_windows_body(payload, summary, detail=self.cap_notify_detail.get())
         launch_url = self.cap_url.get().strip() or self._latest_export_url()
         icon_path = ASSETS_DIR / "icon.ico"
         # Windows toast (always allowed when enabled)
-        if self.notify_windows.get():
+        if (not quiet_hours) and self.notify_windows.get():
             self._capture_log(f"Sending Windows notification: {windows_body}")
             ok_win = self.notify_service.send_windows("Medicann update", windows_body, icon_path, launch_url=launch_url)
             if not ok_win:
                 self._capture_log("Windows notification failed to send.")
-        # If log-only, skip HA network send but still append change log
-        if log_only:
-            return
-        ok, status, body = self.notify_service.send_home_assistant(payload)
-        if ok and status:
-            self._update_last_change(summary)
-        else:
-            self._capture_log(f"HA response status: {status} body: {str(body)[:200] if body else ''}")
+        # If log-only or quiet hours, skip HA network send
+        if not (log_only or quiet_hours):
+            ok, status, body = self.notify_service.send_home_assistant(payload)
+            if ok and status:
+                self._update_last_change(summary)
+            else:
+                self._capture_log(f"HA response status: {status} body: {str(body)[:200] if body else ''}")
         try:
             if items:
                 self._generate_change_export(self._get_export_items())
@@ -1028,7 +1142,7 @@ class App(tk.Tk):
             self._log_console(f"Test notification error: status={status} body={str(body)[:200] if body else ''}")
             messagebox.showerror("Home Assistant", f"Test notification failed:\nstatus={status}\nbody={body}")
         # Also send a Windows test notification if enabled
-        if self.notify_windows.get():
+        if (not quiet_hours) and self.notify_windows.get():
             icon_path = ASSETS_DIR / "icon.ico"
             self._log_console("Sending Windows test notification.")
             test_body = (
@@ -1181,13 +1295,13 @@ class App(tk.Tk):
         raw = self.text.get("1.0", "end")
         items = parse_clinic_text(raw)
         prev_items = load_last_parse(LAST_PARSE_FILE)
-        prev_keys = {make_identity_key(it) for it in prev_items}
+        prev_keys = { _identity_key_cached(it, identity_cache) for it in prev_items }
         prev_price_map = {}
         for pit in prev_items:
             try:
-                prev_price_map[make_identity_key(pit)] = float(pit.get("price")) if pit.get("price") is not None else None
+                prev_price_map[_identity_key_cached(pit, identity_cache)] = float(pit.get("price")) if pit.get("price") is not None else None
             except Exception:
-                prev_price_map[make_identity_key(pit)] = None
+                prev_price_map[_identity_key_cached(pit, identity_cache)] = None
         self.prev_items = prev_items
         self.prev_keys = prev_keys
         self.removed_data = []
@@ -1280,9 +1394,10 @@ class App(tk.Tk):
                     current_keys = {make_item_key(it) for it in self.data}
                     prev_items = getattr(self, "prev_items", [])
                     prev_keys = getattr(self, "prev_keys", set())
-                    new_count = len({make_identity_key(it) for it in self.data} - prev_keys)
-                    removed_keys = prev_keys - {make_identity_key(it) for it in self.data}
-                    removed_items = [dict(it, is_removed=True, is_new=False) for it in prev_items if make_identity_key(it) in removed_keys]
+                    identity_cache = _build_identity_cache(self.data + prev_items)
+                    new_count = len({ _identity_key_cached(it, identity_cache) for it in self.data} - prev_keys)
+                    removed_keys = prev_keys - { _identity_key_cached(it, identity_cache) for it in self.data}
+                    removed_items = [dict(it, is_removed=True, is_new=False) for it in prev_items if _identity_key_cached(it, identity_cache) in removed_keys]
                     removed_count = len(removed_items)
                     self.removed_data = removed_items
                     if not self.data:
@@ -1291,7 +1406,7 @@ class App(tk.Tk):
                         self._update_tray_status()
                         self.status.config(text="No products parsed; retrying shortly.")
                         self._log_console("No products parsed; retrying shortly.")
-                        if self.error_count >= self.error_threshold:
+                        if _should_stop_on_empty(self.error_count, self.error_threshold):
                             msg = "Repeated empty captures; auto-scraper stopped."
                             self._log_console(msg)
                             self.notify_service.send_windows("Medicann error", msg, ASSETS_DIR / "icon.ico")
@@ -1304,6 +1419,7 @@ class App(tk.Tk):
                     self._empty_retry_pending = False
                     self._update_tray_status()
                     save_last_parse(LAST_PARSE_FILE, self.data)
+                    self._update_last_scrape()
                     self.status.config(
                         text=(
                             f"Done | {len(self.data)} items | "
@@ -1316,9 +1432,13 @@ class App(tk.Tk):
                         f"{self.price_up_count} price increases | {self.price_down_count} price decreases"
                     )
                     self._post_process_actions()
+                    try:
+                        self._set_next_capture_timer(float(self.cap_interval.get() or 0))
+                    except Exception:
+                        pass
                     # Update prev cache for next run after notifications are sent
                     self.prev_items = list(self.data)
-                    self.prev_keys = {make_identity_key(it) for it in self.data}
+                    self.prev_keys = { _identity_key_cached(it, identity_cache) for it in self.data}
                     self._polling = False
                     return
         except Empty:
@@ -1330,6 +1450,12 @@ class App(tk.Tk):
             ts = load_last_change(LAST_CHANGE_FILE)
             if ts:
                 self.last_change_label.config(text=f"Last change detected: {ts}")
+        except Exception:
+            pass
+        try:
+            ts = load_last_scrape(LAST_SCRAPE_FILE)
+            if ts:
+                self.last_scrape_label.config(text=f"Last successful scrape: {ts}")
         except Exception:
             pass
 
@@ -1607,6 +1733,12 @@ class App(tk.Tk):
             ts = load_last_change(LAST_CHANGE_FILE)
             if ts:
                 self.last_change_label.config(text=f"Last change detected: {ts}")
+        except Exception:
+            pass
+        try:
+            ts = load_last_scrape(LAST_SCRAPE_FILE)
+            if ts:
+                self.last_scrape_label.config(text=f"Last successful scrape: {ts}")
         except Exception:
             pass
         self.after(50, lambda: set_titlebar_dark(self, dark))
