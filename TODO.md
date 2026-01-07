@@ -1,30 +1,34 @@
-# FlowerTrack todo list (next improvements)
+# FlowerTrack todo list (fresh)
 
-1) [x] Theme centralization
-- Create ui_theme.py with shared palettes, ttk style setup, and titlebar helpers.
-- Replace duplicated theme logic in ui_main.py, ui_tracker.py, flowerlibrary.py.
+1) [x] Packaging & release hygiene
+- Add a short CONTRIBUTING.md (dev setup, tests, build).
+- Add a RELEASE.md with tag workflow + artifact notes.
+- Consider Git LFS for binaries if you want to commit exe artifacts.
 
-2) [x] Capture state machine
-- Introduce explicit state transitions (idle/running/retrying/faulted/stopped) in capture flow.
-- Drive tray/status-dot updates from state transitions only.
+2) Notification UX
+- Add a "quiet hours" option for desktop/HA notifications.
+- Add a summary-only mode vs full detail toggle.
 
-3) [x] Scraper config UI polish
-- Minimize/close to tray settings restored in tracker UI.
-- Hide deprecated tray options in scraper settings (they're now no-ops).
-- Ensure load/save config uses unified flowertrack_config.json consistently.
+3) Scraper resilience
+- Centralize retry/backoff config into a small class and expose in settings.
+- Add explicit "last successful scrape" timestamp to UI.
 
-4) [x] Export server reuse
-- Share a single export server between tracker + scraper (avoid competing ports).
-- Expose last-opened export URL in tracker status area.
+4) Config validation + migration
+- Add explicit schema version bump and a migration log entry in config.
+- Validate selectors and URL formats with inline UI hints.
 
-5) [x] Notifications cleanup
-- Consolidate notification formatting into notification_service (remove duplicates).
-- Add toggle for Windows notifications in tracker context (if desired).
+5) Test coverage
+- Add unit tests for per-gram calculation formatting and price parsing edge cases.
+- Add tests for empty-parse retry behavior and stop conditions.
 
-6) [x] Parser tests
-- Add fixture tests for THC/CBD/price parsing + per-gram calculations.
-- Add regression tests for change detection (new/removed/price/stock).
+6) Performance cleanup
+- Move repeated parser cache lookups to a small cache helper with TTL.
+- Reduce duplicate make_identity_key calls in change detection.
 
-7) [x] Cleanup build artifacts
-- Consider moving build/dist outputs to a /builds folder or gitignored path.
-- Remove stale spec/shortcut files if not needed.
+7) UI polish
+- Add a lightweight status bar for scraper state + next run countdown.
+- Align spacing in settings window grids (consistent padding).
+
+8) Repository hygiene
+- Ensure `build/`, `dist/`, `__pycache__/` stay ignored.
+- Remove legacy files that are no longer referenced.
