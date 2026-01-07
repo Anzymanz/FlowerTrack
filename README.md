@@ -17,13 +17,13 @@ FlowerTrack is a Windows desktop app for tracking medical cannabis usage and sto
 
 ## Run (development)
 ```powershell
-py F:\Python\FlowerTrack\flowertracker.pyw
+py F:\Python\FlowerTrack\flowertracker.py
 ```
 
 ## Build (single exe)
 Use the one-liner in `buildline.txt`, or:
 ```powershell
-pyinstaller --noconfirm --clean --onefile --windowed --icon assets/icon.ico --add-data "assets;assets" --add-data "flowerlibrary.py;." --add-data "mixcalc.py;." --name FlowerTrack flowertracker.pyw
+pyinstaller --noconfirm --clean --onefile --windowed --icon assets/icon.ico --add-data "assets;assets" --add-data "flowerlibrary.py;." --add-data "mixcalc.py;." --name FlowerTrack flowertracker.py
 ```
 
 ## Configuration and data
@@ -42,7 +42,7 @@ Key files:
 - The scraper status icon in the tracker window can be toggled in settings.
 
 ## Repository layout
-- `flowertracker.pyw` entry point
+- `flowertracker.py` entry point
 - `ui_*.py` UI modules
 - `capture.py` scraper worker
 - `parser.py` HTML parser

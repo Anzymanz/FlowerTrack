@@ -5,7 +5,7 @@ Releases are published manually.
 ## Steps
 1) Build the exe locally:
 ```powershell
-pyinstaller --noconfirm --clean --onefile --windowed --icon assets/icon.ico --add-data "assets;assets" --add-data "flowerlibrary.py;." --add-data "mixcalc.py;." --name FlowerTrack flowertracker.pyw
+pyinstaller --noconfirm --clean --onefile --windowed --icon assets/icon.ico --add-data "assets;assets" --add-data "flowerlibrary.py;." --add-data "mixcalc.py;." --name FlowerTrack flowertracker.py
 ```
 
 2) Smoke test `dist/FlowerTrack.exe`.

@@ -172,7 +172,7 @@ class CannabisTracker:
                 proc = subprocess.Popen([sys.executable, "--scraper"])
             else:
                 exe = sys.executable
-                target = Path(__file__).resolve().parent / "flowertracker.pyw"
+                target = Path(__file__).resolve().parent / "flowertracker.py"
                 proc = subprocess.Popen([exe, str(target), "--scraper"])
             try:
                 self.child_procs.append(proc)
@@ -2121,7 +2121,7 @@ class CannabisTracker:
                 args = [sys.executable, "--run-library"]
                 cwd = os.path.dirname(sys.executable) or os.getcwd()
             else:
-                entry = Path(__file__).resolve().parent / "flowertracker.pyw"
+                entry = Path(__file__).resolve().parent / "flowertracker.py"
                 if not entry.exists():
                     entry = Path(__file__).resolve()
                 args = [sys.executable, str(entry), "--run-library"]

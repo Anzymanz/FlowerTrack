@@ -18,7 +18,7 @@ playwright install
 
 ## Run (dev)
 ```powershell
-py F:\Python\FlowerTrack\flowertracker.pyw
+py F:\Python\FlowerTrack\flowertracker.py
 ```
 
 ## Tests
@@ -29,7 +29,7 @@ py -m unittest discover -s tests -p "test_*.py"
 ## Build (manual release)
 Use the one-liner in `buildline.txt`:
 ```powershell
-pyinstaller --noconfirm --clean --onefile --windowed --icon assets/icon.ico --add-data "assets;assets" --add-data "flowerlibrary.py;." --add-data "mixcalc.py;." --name FlowerTrack flowertracker.pyw
+pyinstaller --noconfirm --clean --onefile --windowed --icon assets/icon.ico --add-data "assets;assets" --add-data "flowerlibrary.py;." --add-data "mixcalc.py;." --name FlowerTrack flowertracker.py
 ```
 
 ## Repo hygiene
