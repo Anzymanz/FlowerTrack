@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "url": "https://medicann-patient.scriptassist.co.uk/request-repeat",
+  "username": "enc:AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAACpichEcOnUyuF1nGFry5GAAAAAACAAAAAAAQZgAAAAEAACAAAAD2SF46wRe6LHAH1iO1R8Yw+S1bYPKYNHMjgpXnoCMsfgAAAAAOgAAAAAIAACAAAAD/4wftSVOnCvIyT2mtdO8Oa1fvObwwrkdnKgPu0yT/PSAAAAB7tgZAba9A3S7fUETSy8NkRPdrcxDLBmhSoV8nTU92WEAAAAAnTl/xwCgVOz3YATUuQeFBM5yAnRXpc3+f17XW+R3VGzFswbziH73766IuLkK6ei14U4VunlW9/K+sZLiKkMoj",
+  "password": "enc:AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAACpichEcOnUyuF1nGFry5GAAAAAACAAAAAAAQZgAAAAEAACAAAAA4QkRfJxuxWM7y6lHBQ808nmStRwx0U2k6Cep9PkQ2xwAAAAAOgAAAAAIAACAAAAA/t01rpxeLjBbm//l+poZfFpyNr8D5bTBVyqNVnsUomBAAAABzI3rG72MD+7sQEIaR8b/GQAAAAGq752OQqszQguyuiorCSuorHOJXaZc6E0kmD5V7V3/uNjxsbtqVw0icW8TdMDOoTdgBpTPhH76WgGHlf5v443g=",
+  "username_selector": "input[name=\"email\"]",
+  "password_selector": "input[name=\"password\"]",
+  "login_button_selector": "button[type=\"submit\"]",
+  "interval_seconds": 300.0,
+  "login_wait_seconds": 5.0,
+  "post_nav_wait_seconds": 30.0,
+  "retry_attempts": 3,
+  "timeout_ms": 45000,
+  "headless": true,
+  "auto_notify_ha": true,
+  "ha_webhook_url": "http://192.168.0.100:8123/api/webhook/medicann_parser",
+  "ha_token": "",
+  "notify_price_changes": true,
+  "notify_stock_changes": true,
+  "notify_windows": true,
+  "minimize_to_tray": false,
+  "close_to_tray": false
+}

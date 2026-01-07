@@ -1,0 +1,20 @@
+{
+  "data_path": "C:\\Users\\andre\\AppData\\Roaming\\MedicannScraper\\data\\tracker_data.json",
+  "library_data_path": "C:\\Users\\andre\\AppData\\Roaming\\MedicannScraper\\data\\library_data.json",
+  "minimize_to_tray": true,
+  "close_to_tray": false,
+  "enable_stock_coloring": true,
+  "enable_usage_coloring": true,
+  "track_cbd_usage": true,
+  "cbd_total_green_threshold": 8.0,
+  "cbd_total_red_threshold": 5.0,
+  "cbd_single_green_threshold": 7.0,
+  "cbd_single_red_threshold": 3.5,
+  "target_daily_cbd_grams": 2.5,
+  "dark_mode": true,
+  "roa_options": {
+    "Vaped": 0.6,
+    "Eaten": 0.1,
+    "Smoked": 0.3
+  }
+}

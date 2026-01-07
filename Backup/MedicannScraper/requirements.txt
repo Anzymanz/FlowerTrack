@@ -1,0 +1,8 @@
+playwright
+pystray
+pillow
+win10toast
+
+# optional dev tools
+black
+ruff

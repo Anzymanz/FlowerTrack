@@ -1,0 +1,42 @@
+[tool.black]
+line-length = 120
+target-version = ["py312"]
+skip-string-normalization = true
+include = '\.pyw?$'
+exclude = '''
+/(
+  build
+ |dist
+ |Backup
+ |\.venv
+ |__pycache__
+)
+'''
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-select = [
+  "B",      # bugbear
+  "E", "F", # pycodestyle / pyflakes
+  "I",      # import sorting
+  "W",      # warnings
+]
+ignore = [
+  "B905",   # zip strict
+]
+extend-exclude = [
+  "build",
+  "dist",
+  "Backup",
+  "__pycache__",
+]
+
+[tool.ruff.isort]
+force-single-line = false
+known-first-party = ["app_core", "capture", "config", "exports", "export_server", "logger", "models", "notifications", "notification_service", "parser", "scheduler", "storage", "theme", "tray", "ui_main", "ui_settings"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = true

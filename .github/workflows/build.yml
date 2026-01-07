@@ -1,0 +1,25 @@
+name: Build (tag)
+on:
+  push:
+    tags:
+      - "v*"
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps
+        shell: pwsh
+        run: |
+          if (Test-Path requirements.txt) { pip install -r requirements.txt } else { pip install pyinstaller playwright pillow }
+      - name: Build exe
+        shell: pwsh
+        run: pyinstaller --noconfirm --clean --onefile --windowed --icon assets/icon.ico --add-data "assets;assets" --add-data "flowerlibrary.py;." --add-data "mixcalc.py;." --name FlowerTrack flowertracker.pyw
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FlowerTrack-win64
+          path: dist/FlowerTrack.exe

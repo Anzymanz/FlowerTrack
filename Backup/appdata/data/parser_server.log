@@ -1,0 +1,2380 @@
+[2025-12-25 10:00:30] App init: launching parser UI
+[2025-12-25 10:00:30] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 10:00:30] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 10:00:30] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 10:00:30] [server] ensure_export_server: server available
+[2025-12-25 10:00:30] [server] already running on port 8765
+[2025-12-25 10:00:41] [server] ensure_export_server: already running
+[2025-12-25 10:00:42] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_10-00-41+0000.html
+[2025-12-25 10:00:55] [server] shutdown complete
+[2025-12-25 10:00:59] App init: launching parser UI
+[2025-12-25 10:00:59] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 10:00:59] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 10:00:59] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 10:00:59] [server] ensure_export_server: server available
+[2025-12-25 10:00:59] [server] already running on port 8765
+[2025-12-25 10:01:08] [server] ensure_export_server: already running
+[2025-12-25 10:01:08] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_10-01-08+0000.html
+[2025-12-25 10:01:33] App init: launching parser UI
+[2025-12-25 10:01:33] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 10:01:33] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 10:01:33] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 10:01:33] [server] ensure_export_server: server available
+[2025-12-25 10:01:33] [server] already running on port 8765
+[2025-12-25 10:01:43] [server] ensure_export_server: already running
+[2025-12-25 10:01:44] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_10-01-43+0000.html
+[2025-12-25 10:02:38] [server] shutdown complete
+[2025-12-25 10:03:53] App init: launching parser UI
+[2025-12-25 10:03:53] Init export server state. preferred_port=8765 frozen=True
+[2025-12-25 10:03:53] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 10:03:53] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 10:03:53] [server] ensure_export_server: server available
+[2025-12-25 10:03:53] [server] already running on port 8765
+[2025-12-25 10:03:57] [server] ensure_export_server: already running
+[2025-12-25 10:03:58] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_10-03-57+0000.html
+[2025-12-25 10:04:03] [server] shutdown complete
+[2025-12-25 10:04:17] App init: launching parser UI
+[2025-12-25 10:04:17] Init export server state. preferred_port=8765 frozen=True
+[2025-12-25 10:04:17] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 10:04:17] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 10:04:17] [server] ensure_export_server: server available
+[2025-12-25 10:04:17] [server] already running on port 8765
+[2025-12-25 10:04:20] [server] ensure_export_server: already running
+[2025-12-25 10:04:21] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_10-04-20+0000.html
+[2025-12-25 10:05:36] App init: launching parser UI
+[2025-12-25 10:05:36] Init export server state. preferred_port=8765 frozen=True
+[2025-12-25 10:05:36] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 10:05:36] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 10:05:36] [server] ensure_export_server: server available
+[2025-12-25 10:05:36] [server] already running on port 8765
+[2025-12-25 10:05:39] [server] ensure_export_server: already running
+[2025-12-25 10:05:40] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_10-05-39+0000.html
+[2025-12-25 10:06:15] [server] shutdown complete
+[2025-12-25 10:06:19] [server] shutdown complete
+[2025-12-25 10:07:18] App init: launching parser UI
+[2025-12-25 10:07:18] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 10:07:18] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 10:07:18] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 10:07:18] [server] ensure_export_server: server available
+[2025-12-25 10:07:18] [server] already running on port 8765
+[2025-12-25 10:07:22] [server] ensure_export_server: already running
+[2025-12-25 10:07:22] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_10-07-22+0000.html
+[2025-12-25 10:07:29] [server] shutdown complete
+[2025-12-25 10:07:38] App init: launching parser UI
+[2025-12-25 10:07:38] Init export server state. preferred_port=8765 frozen=True
+[2025-12-25 10:07:38] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 10:07:38] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 10:07:38] [server] ensure_export_server: server available
+[2025-12-25 10:07:38] [server] already running on port 8765
+[2025-12-25 10:07:42] [server] ensure_export_server: already running
+[2025-12-25 10:07:42] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_10-07-42+0000.html
+[2025-12-25 10:11:05] [server] shutdown complete
+[2025-12-25 10:13:06] App init: launching parser UI
+[2025-12-25 10:13:06] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 10:13:06] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 10:13:06] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 10:13:06] [server] ensure_export_server: server available
+[2025-12-25 10:13:06] [server] already running on port 8765
+[2025-12-25 10:13:18] [server] ensure_export_server: already running
+[2025-12-25 10:13:19] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_10-13-18+0000.html
+[2025-12-25 10:13:19] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_10-13-18+0000.html
+[2025-12-25 10:14:23] App init: launching parser UI
+[2025-12-25 10:14:23] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 10:14:23] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 10:14:23] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 10:14:23] [server] ensure_export_server: server available
+[2025-12-25 10:14:23] [server] already running on port 8765
+[2025-12-25 10:14:33] [server] ensure_export_server: already running
+[2025-12-25 10:14:33] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_10-14-33+0000.html
+[2025-12-25 10:14:34] [server] "GET /export-2025-12-25_10-14-33+0000.html HTTP/1.1" 200 -
+[2025-12-25 10:14:34] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_10-14-33+0000.html
+[2025-12-25 10:14:34] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 10:14:34] [server] "GET /export-2025-12-25_10-14-33+0000.html HTTP/1.1" 200 -
+[2025-12-25 10:15:56] App init: launching parser UI
+[2025-12-25 10:15:56] Init export server state. preferred_port=8765 frozen=True
+[2025-12-25 10:15:56] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 10:15:56] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 10:15:56] [server] ensure_export_server: server available
+[2025-12-25 10:15:56] [server] already running on port 8765
+[2025-12-25 10:15:59] [server] ensure_export_server: already running
+[2025-12-25 10:15:59] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_10-15-59+0000.html
+[2025-12-25 10:16:00] [server] "GET /export-2025-12-25_10-15-59+0000.html HTTP/1.1" 200 -
+[2025-12-25 10:16:00] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_10-15-59+0000.html
+[2025-12-25 10:16:00] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 10:16:00] [server] "GET /export-2025-12-25_10-15-59+0000.html HTTP/1.1" 200 -
+[2025-12-25 10:16:29] [server] shutdown complete
+[2025-12-25 10:18:55] App init: launching parser UI
+[2025-12-25 10:18:55] Init export server state. preferred_port=8765 frozen=True
+[2025-12-25 10:18:55] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 10:18:55] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 10:18:55] [server] ensure_export_server: server available
+[2025-12-25 10:18:55] [server] already running on port 8765
+[2025-12-25 10:19:02] [server] ensure_export_server: already running
+[2025-12-25 10:19:02] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_10-19-02+0000.html
+[2025-12-25 10:19:03] [server] "GET /export-2025-12-25_10-19-02+0000.html HTTP/1.1" 200 -
+[2025-12-25 10:19:03] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_10-19-02+0000.html
+[2025-12-25 10:19:03] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 10:19:03] [server] "GET /export-2025-12-25_10-19-02+0000.html HTTP/1.1" 200 -
+[2025-12-25 10:19:18] [export] open_recent_export called for C:\Users\andre\Documents\FlowerTrack\Exports\export-2025-12-25_10-19-02+0000.html
+[2025-12-25 10:19:18] [server] ensure_export_server: already running
+[2025-12-25 10:19:18] [export] opening recent via server: http://127.0.0.1:8765/export-2025-12-25_10-19-02+0000.html
+[2025-12-25 10:19:18] [server] "GET /export-2025-12-25_10-19-02+0000.html HTTP/1.1" 200 -
+[2025-12-25 10:19:18] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_10-19-02+0000.html
+[2025-12-25 10:19:18] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 10:19:20] [server] "GET /export-2025-12-25_10-19-02+0000.html HTTP/1.1" 304 -
+[2025-12-25 10:19:48] [server] shutdown complete
+[2025-12-25 10:22:19] App init: launching parser UI
+[2025-12-25 10:22:19] Init export server state. preferred_port=8765 frozen=True
+[2025-12-25 10:22:19] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 10:22:19] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 10:22:19] [server] ensure_export_server: server available
+[2025-12-25 10:22:19] [server] already running on port 8765
+[2025-12-25 10:22:29] [server] ensure_export_server: already running
+[2025-12-25 10:22:29] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_10-22-29+0000.html
+[2025-12-25 10:22:29] [server] "GET /export-2025-12-25_10-22-29+0000.html HTTP/1.1" 200 -
+[2025-12-25 10:22:29] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_10-22-29+0000.html
+[2025-12-25 10:22:29] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 10:22:30] [server] "GET /export-2025-12-25_10-22-29+0000.html HTTP/1.1" 200 -
+[2025-12-25 10:41:33] [server] shutdown complete
+[2025-12-25 18:26:38] App init: launching parser UI
+[2025-12-25 18:26:38] Init export server state. preferred_port=8765 frozen=True
+[2025-12-25 18:26:38] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 18:26:38] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 18:26:38] [server] ensure_export_server: server available
+[2025-12-25 18:26:38] [server] already running on port 8765
+[2025-12-25 18:27:03] [server] ensure_export_server: already running
+[2025-12-25 18:27:03] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-27-03+0000.html
+[2025-12-25 18:27:04] [server] "GET /export-2025-12-25_18-27-03+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:27:04] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-27-03+0000.html
+[2025-12-25 18:27:04] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:27:04] [server] "GET /export-2025-12-25_18-27-03+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:27:04] [server] code 404, message File not found
+[2025-12-25 18:27:04] [server] "GET /favicon.ico HTTP/1.1" 404 -
+[2025-12-25 18:27:04] [server] client disconnected early: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:39:01] [server] "GET /export-2025-12-25_18-27-03+0000.html HTTP/1.1" 304 -
+[2025-12-25 18:39:01] [server] code 404, message File not found
+[2025-12-25 18:39:01] [server] "GET /favicon.ico HTTP/1.1" 404 -
+[2025-12-25 18:39:01] [server] client disconnected early: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:40:24] [server] shutdown complete
+[2025-12-25 18:40:36] App init: launching parser UI
+[2025-12-25 18:40:36] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 18:40:37] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 18:40:37] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 18:40:37] [server] ensure_export_server: server available
+[2025-12-25 18:40:37] [server] already running on port 8765
+[2025-12-25 18:40:43] [server] ensure_export_server: already running
+[2025-12-25 18:40:43] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-40-43+0000.html
+[2025-12-25 18:40:44] [server] "GET /export-2025-12-25_18-40-43+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:40:44] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-40-43+0000.html
+[2025-12-25 18:40:44] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:40:44] [server] "GET /export-2025-12-25_18-40-43+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:40:57] [server] "GET /export-2025-12-25_18-40-43+0000.html HTTP/1.1" 304 -
+[2025-12-25 18:41:00] [server] ensure_export_server: already running
+[2025-12-25 18:41:00] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-41-00+0000.html
+[2025-12-25 18:41:00] [server] "GET /export-2025-12-25_18-41-00+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:41:00] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-41-00+0000.html
+[2025-12-25 18:41:00] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:41:01] [server] "GET /export-2025-12-25_18-41-00+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:42:12] [server] "GET /export-2025-12-25_18-27-03+0000.html HTTP/1.1" 304 -
+[2025-12-25 18:44:02] [server] shutdown complete
+[2025-12-25 18:44:04] App init: launching parser UI
+[2025-12-25 18:44:04] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 18:44:04] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 18:44:04] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 18:44:04] [server] ensure_export_server: server available
+[2025-12-25 18:44:04] [server] already running on port 8765
+[2025-12-25 18:44:08] [server] ensure_export_server: already running
+[2025-12-25 18:44:08] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-44-08+0000.html
+[2025-12-25 18:44:09] [server] "GET /export-2025-12-25_18-44-08+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:44:09] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-44-08+0000.html
+[2025-12-25 18:44:09] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:44:09] [server] "GET /export-2025-12-25_18-44-08+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:46:02] [server] shutdown complete
+[2025-12-25 18:46:04] App init: launching parser UI
+[2025-12-25 18:46:04] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 18:46:04] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 18:46:04] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 18:46:04] [server] ensure_export_server: server available
+[2025-12-25 18:46:04] [server] already running on port 8765
+[2025-12-25 18:46:08] [server] ensure_export_server: already running
+[2025-12-25 18:46:08] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-46-08+0000.html
+[2025-12-25 18:46:09] [server] "GET /export-2025-12-25_18-46-08+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:46:09] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-46-08+0000.html
+[2025-12-25 18:46:09] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:46:09] [server] "GET /export-2025-12-25_18-46-08+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:46:29] [server] ensure_export_server: already running
+[2025-12-25 18:46:30] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-46-29+0000.html
+[2025-12-25 18:46:30] [server] "GET /export-2025-12-25_18-46-29+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:46:30] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-46-29+0000.html
+[2025-12-25 18:46:30] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:46:30] [server] "GET /export-2025-12-25_18-46-29+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:52:47] [server] shutdown complete
+[2025-12-25 18:52:52] App init: launching parser UI
+[2025-12-25 18:52:52] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 18:52:52] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 18:52:52] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 18:52:52] [server] ensure_export_server: server available
+[2025-12-25 18:52:52] [server] already running on port 8765
+[2025-12-25 18:52:54] App init: launching parser UI
+[2025-12-25 18:52:54] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 18:52:54] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 18:52:54] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 18:52:54] [server] ensure_export_server: server available
+[2025-12-25 18:52:54] [server] already running on port 8765
+[2025-12-25 18:53:04] App init: launching parser UI
+[2025-12-25 18:53:04] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 18:53:04] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 18:53:04] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 18:53:04] [server] ensure_export_server: server available
+[2025-12-25 18:53:04] [server] already running on port 8765
+[2025-12-25 18:53:33] App init: launching parser UI
+[2025-12-25 18:53:33] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 18:53:33] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 18:53:33] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 18:53:33] [server] ensure_export_server: server available
+[2025-12-25 18:53:33] [server] already running on port 8765
+[2025-12-25 18:54:00] App init: launching parser UI
+[2025-12-25 18:54:00] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 18:54:00] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 18:54:00] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 18:54:00] [server] ensure_export_server: server available
+[2025-12-25 18:54:00] [server] already running on port 8765
+[2025-12-25 18:54:10] [server] ensure_export_server: already running
+[2025-12-25 18:54:10] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-54-10+0000.html
+[2025-12-25 18:54:11] [server] "GET /export-2025-12-25_18-54-10+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:54:11] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-54-10+0000.html
+[2025-12-25 18:54:11] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:54:11] [server] "GET /export-2025-12-25_18-54-10+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:55:38] [server] shutdown complete
+[2025-12-25 18:55:48] App init: launching parser UI
+[2025-12-25 18:55:48] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 18:55:48] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 18:55:49] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 18:55:49] [server] ensure_export_server: server available
+[2025-12-25 18:55:49] [server] already running on port 8765
+[2025-12-25 18:55:52] [server] ensure_export_server: already running
+[2025-12-25 18:55:52] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-55-52+0000.html
+[2025-12-25 18:55:52] [server] "GET /export-2025-12-25_18-55-52+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:55:52] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-55-52+0000.html
+[2025-12-25 18:55:52] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:55:53] [server] "GET /export-2025-12-25_18-55-52+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:56:06] [server] ensure_export_server: already running
+[2025-12-25 18:56:06] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-56-06+0000.html
+[2025-12-25 18:56:07] [server] "GET /export-2025-12-25_18-56-06+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:56:07] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-56-06+0000.html
+[2025-12-25 18:56:07] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:56:07] [server] "GET /export-2025-12-25_18-56-06+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:56:17] [server] ensure_export_server: already running
+[2025-12-25 18:56:17] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-56-17+0000.html
+[2025-12-25 18:56:18] [server] "GET /export-2025-12-25_18-56-17+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:56:18] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-56-17+0000.html
+[2025-12-25 18:56:18] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:56:18] [server] "GET /export-2025-12-25_18-56-17+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:57:06] [server] shutdown complete
+[2025-12-25 18:57:07] App init: launching parser UI
+[2025-12-25 18:57:07] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 18:57:07] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 18:57:07] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 18:57:07] [server] ensure_export_server: server available
+[2025-12-25 18:57:07] [server] already running on port 8765
+[2025-12-25 18:57:09] [server] ensure_export_server: already running
+[2025-12-25 18:57:09] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-57-09+0000.html
+[2025-12-25 18:57:09] [server] "GET /export-2025-12-25_18-57-09+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:57:09] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-57-09+0000.html
+[2025-12-25 18:57:09] [server] "GET /export-2025-12-25_18-57-09+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:57:13] [server] ensure_export_server: already running
+[2025-12-25 18:57:13] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-57-13+0000.html
+[2025-12-25 18:57:13] [server] "GET /export-2025-12-25_18-57-13+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:57:13] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-57-13+0000.html
+[2025-12-25 18:57:13] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:57:13] [server] "GET /export-2025-12-25_18-57-13+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:57:26] [server] ensure_export_server: already running
+[2025-12-25 18:57:26] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-57-26+0000.html
+[2025-12-25 18:57:26] [server] "GET /export-2025-12-25_18-57-26+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:57:26] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-57-26+0000.html
+[2025-12-25 18:57:26] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:57:26] [server] "GET /export-2025-12-25_18-57-26+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:57:34] [server] ensure_export_server: already running
+[2025-12-25 18:57:35] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-57-34+0000.html
+[2025-12-25 18:57:35] [server] "GET /export-2025-12-25_18-57-34+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:57:35] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-57-34+0000.html
+[2025-12-25 18:57:35] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:57:35] [server] "GET /export-2025-12-25_18-57-34+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:57:43] [server] ensure_export_server: already running
+[2025-12-25 18:57:43] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-57-43+0000.html
+[2025-12-25 18:57:43] [server] "GET /export-2025-12-25_18-57-43+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:57:43] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-57-43+0000.html
+[2025-12-25 18:57:43] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:57:43] [server] "GET /export-2025-12-25_18-57-43+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:58:08] [server] ensure_export_server: already running
+[2025-12-25 18:58:08] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-58-08+0000.html
+[2025-12-25 18:58:09] [server] "GET /export-2025-12-25_18-58-08+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:58:09] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-58-08+0000.html
+[2025-12-25 18:58:09] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:58:09] [server] "GET /export-2025-12-25_18-58-08+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:59:05] [server] ensure_export_server: already running
+[2025-12-25 18:59:05] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-59-05+0000.html
+[2025-12-25 18:59:05] [server] "GET /export-2025-12-25_18-59-05+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:59:05] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-59-05+0000.html
+[2025-12-25 18:59:05] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:59:06] [server] "GET /export-2025-12-25_18-59-05+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:59:23] [server] shutdown complete
+[2025-12-25 18:59:25] App init: launching parser UI
+[2025-12-25 18:59:25] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 18:59:25] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 18:59:25] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 18:59:25] [server] ensure_export_server: server available
+[2025-12-25 18:59:25] [server] already running on port 8765
+[2025-12-25 18:59:41] [server] ensure_export_server: already running
+[2025-12-25 18:59:41] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-59-41+0000.html
+[2025-12-25 18:59:41] [server] "GET /export-2025-12-25_18-59-41+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:59:41] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-59-41+0000.html
+[2025-12-25 18:59:41] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:59:42] [server] "GET /export-2025-12-25_18-59-41+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:59:58] [server] ensure_export_server: already running
+[2025-12-25 18:59:58] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_18-59-58+0000.html
+[2025-12-25 18:59:58] [server] "GET /export-2025-12-25_18-59-58+0000.html HTTP/1.1" 200 -
+[2025-12-25 18:59:58] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_18-59-58+0000.html
+[2025-12-25 18:59:58] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 18:59:59] [server] "GET /export-2025-12-25_18-59-58+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:01:03] [server] shutdown complete
+[2025-12-25 19:01:05] App init: launching parser UI
+[2025-12-25 19:01:05] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:01:05] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:01:05] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:01:05] [server] ensure_export_server: server available
+[2025-12-25 19:01:05] [server] already running on port 8765
+[2025-12-25 19:01:25] [server] ensure_export_server: already running
+[2025-12-25 19:01:25] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-01-25+0000.html
+[2025-12-25 19:01:26] [server] "GET /export-2025-12-25_19-01-25+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:01:26] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-01-25+0000.html
+[2025-12-25 19:01:26] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:01:26] [server] "GET /export-2025-12-25_19-01-25+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:02:52] [server] shutdown complete
+[2025-12-25 19:02:54] App init: launching parser UI
+[2025-12-25 19:02:54] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:02:54] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:02:54] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:02:54] [server] ensure_export_server: server available
+[2025-12-25 19:02:54] [server] already running on port 8765
+[2025-12-25 19:03:06] [server] ensure_export_server: already running
+[2025-12-25 19:03:06] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-03-06+0000.html
+[2025-12-25 19:03:07] [server] "GET /export-2025-12-25_19-03-06+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:03:07] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-03-06+0000.html
+[2025-12-25 19:03:07] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:03:07] [server] "GET /export-2025-12-25_19-03-06+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:04:27] [server] shutdown complete
+[2025-12-25 19:04:28] App init: launching parser UI
+[2025-12-25 19:04:28] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:04:28] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:04:28] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:04:28] [server] ensure_export_server: server available
+[2025-12-25 19:04:28] [server] already running on port 8765
+[2025-12-25 19:04:34] [server] ensure_export_server: already running
+[2025-12-25 19:04:34] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-04-34+0000.html
+[2025-12-25 19:04:34] [server] "GET /export-2025-12-25_19-04-34+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:04:34] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-04-34+0000.html
+[2025-12-25 19:04:34] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:04:34] [server] "GET /export-2025-12-25_19-04-34+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:05:18] [server] shutdown complete
+[2025-12-25 19:05:20] App init: launching parser UI
+[2025-12-25 19:05:20] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:05:20] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:05:20] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:05:20] [server] ensure_export_server: server available
+[2025-12-25 19:05:20] [server] already running on port 8765
+[2025-12-25 19:05:30] [server] ensure_export_server: already running
+[2025-12-25 19:05:30] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-05-30+0000.html
+[2025-12-25 19:05:31] [server] "GET /export-2025-12-25_19-05-30+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:05:31] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-05-30+0000.html
+[2025-12-25 19:05:31] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:05:31] [server] "GET /export-2025-12-25_19-05-30+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:05:49] [server] shutdown complete
+[2025-12-25 19:05:50] App init: launching parser UI
+[2025-12-25 19:05:50] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:05:50] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:05:50] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:05:50] [server] ensure_export_server: server available
+[2025-12-25 19:05:50] [server] already running on port 8765
+[2025-12-25 19:05:54] [server] ensure_export_server: already running
+[2025-12-25 19:05:54] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-05-54+0000.html
+[2025-12-25 19:05:55] [server] "GET /export-2025-12-25_19-05-54+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:05:55] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-05-54+0000.html
+[2025-12-25 19:05:55] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:05:55] [server] "GET /export-2025-12-25_19-05-54+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:06:55] [server] ensure_export_server: already running
+[2025-12-25 19:06:55] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-06-55+0000.html
+[2025-12-25 19:06:56] [server] "GET /export-2025-12-25_19-06-55+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:06:56] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-06-55+0000.html
+[2025-12-25 19:06:56] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:06:56] [server] "GET /export-2025-12-25_19-06-55+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:07:40] [server] shutdown complete
+[2025-12-25 19:07:44] App init: launching parser UI
+[2025-12-25 19:07:44] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:07:44] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:07:44] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:07:44] [server] ensure_export_server: server available
+[2025-12-25 19:07:44] [server] already running on port 8765
+[2025-12-25 19:07:56] [server] ensure_export_server: already running
+[2025-12-25 19:07:56] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-07-56+0000.html
+[2025-12-25 19:07:56] [server] "GET /export-2025-12-25_19-07-56+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:07:56] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-07-56+0000.html
+[2025-12-25 19:07:56] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:07:57] [server] "GET /export-2025-12-25_19-07-56+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:10:19] [server] shutdown complete
+[2025-12-25 19:10:22] App init: launching parser UI
+[2025-12-25 19:10:22] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:10:22] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:10:22] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:10:22] [server] ensure_export_server: server available
+[2025-12-25 19:10:22] [server] already running on port 8765
+[2025-12-25 19:10:25] [server] ensure_export_server: already running
+[2025-12-25 19:10:26] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-10-25+0000.html
+[2025-12-25 19:10:26] [server] "GET /export-2025-12-25_19-10-25+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:10:26] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-10-25+0000.html
+[2025-12-25 19:10:26] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:10:26] [server] "GET /export-2025-12-25_19-10-25+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:11:06] [server] ensure_export_server: already running
+[2025-12-25 19:11:06] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-11-06+0000.html
+[2025-12-25 19:11:06] [server] "GET /export-2025-12-25_19-11-06+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:11:06] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-11-06+0000.html
+[2025-12-25 19:11:06] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:11:07] [server] "GET /export-2025-12-25_19-11-06+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:11:51] [server] shutdown complete
+[2025-12-25 19:12:03] App init: launching parser UI
+[2025-12-25 19:12:03] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:12:03] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:12:03] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:12:03] [server] ensure_export_server: server available
+[2025-12-25 19:12:03] [server] already running on port 8765
+[2025-12-25 19:12:06] [server] ensure_export_server: already running
+[2025-12-25 19:12:06] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-12-06+0000.html
+[2025-12-25 19:12:07] [server] "GET /export-2025-12-25_19-12-06+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:12:07] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-12-06+0000.html
+[2025-12-25 19:12:07] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:12:07] [server] "GET /export-2025-12-25_19-12-06+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:13:14] App init: launching parser UI
+[2025-12-25 19:13:14] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:13:14] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:13:14] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:13:14] [server] ensure_export_server: server available
+[2025-12-25 19:13:14] [server] already running on port 8765
+[2025-12-25 19:13:26] [server] ensure_export_server: already running
+[2025-12-25 19:13:26] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-13-26+0000.html
+[2025-12-25 19:13:27] [server] "GET /export-2025-12-25_19-13-26+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:13:27] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-13-26+0000.html
+[2025-12-25 19:13:27] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:13:27] [server] "GET /export-2025-12-25_19-13-26+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:15:16] [server] shutdown complete
+[2025-12-25 19:15:19] App init: launching parser UI
+[2025-12-25 19:15:19] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:15:19] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:15:19] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:15:19] [server] ensure_export_server: server available
+[2025-12-25 19:15:19] [server] already running on port 8765
+[2025-12-25 19:15:26] [server] ensure_export_server: already running
+[2025-12-25 19:15:26] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-15-26+0000.html
+[2025-12-25 19:15:26] [server] "GET /export-2025-12-25_19-15-26+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:15:26] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-15-26+0000.html
+[2025-12-25 19:15:26] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:15:27] [server] "GET /export-2025-12-25_19-15-26+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:16:55] [server] shutdown complete
+[2025-12-25 19:16:56] App init: launching parser UI
+[2025-12-25 19:16:56] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:16:56] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:16:56] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:16:56] [server] ensure_export_server: server available
+[2025-12-25 19:16:56] [server] already running on port 8765
+[2025-12-25 19:16:57] [server] ensure_export_server: already running
+[2025-12-25 19:16:57] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-16-57+0000.html
+[2025-12-25 19:16:58] [server] "GET /export-2025-12-25_19-16-57+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:16:58] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-16-57+0000.html
+[2025-12-25 19:16:58] [server] "GET /export-2025-12-25_19-16-57+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:17:03] [server] ensure_export_server: already running
+[2025-12-25 19:17:03] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-17-03+0000.html
+[2025-12-25 19:17:03] [server] "GET /export-2025-12-25_19-17-03+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:17:03] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-17-03+0000.html
+[2025-12-25 19:17:03] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:17:04] [server] "GET /export-2025-12-25_19-17-03+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:18:08] [server] ensure_export_server: already running
+[2025-12-25 19:18:08] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-18-08+0000.html
+[2025-12-25 19:18:08] [server] "GET /export-2025-12-25_19-18-08+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:18:08] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-18-08+0000.html
+[2025-12-25 19:18:08] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:18:09] [server] "GET /export-2025-12-25_19-18-08+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:19:05] App init: launching parser UI
+[2025-12-25 19:19:05] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:19:05] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:19:05] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:19:05] [server] ensure_export_server: server available
+[2025-12-25 19:19:05] [server] already running on port 8765
+[2025-12-25 19:19:09] [server] ensure_export_server: already running
+[2025-12-25 19:19:09] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-19-09+0000.html
+[2025-12-25 19:19:10] [server] "GET /export-2025-12-25_19-19-09+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:19:10] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-19-09+0000.html
+[2025-12-25 19:19:10] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:19:10] [server] "GET /export-2025-12-25_19-19-09+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:19:52] App init: launching parser UI
+[2025-12-25 19:19:52] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:19:52] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:19:52] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:19:52] [server] ensure_export_server: server available
+[2025-12-25 19:19:52] [server] already running on port 8765
+[2025-12-25 19:19:54] [server] ensure_export_server: already running
+[2025-12-25 19:19:54] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-19-54+0000.html
+[2025-12-25 19:19:55] [server] "GET /export-2025-12-25_19-19-54+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:19:55] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-19-54+0000.html
+[2025-12-25 19:19:55] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:19:55] [server] "GET /export-2025-12-25_19-19-54+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:20:18] App init: launching parser UI
+[2025-12-25 19:20:18] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:20:18] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:20:18] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:20:18] [server] ensure_export_server: server available
+[2025-12-25 19:20:18] [server] already running on port 8765
+[2025-12-25 19:20:20] [server] ensure_export_server: already running
+[2025-12-25 19:20:21] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-20-20+0000.html
+[2025-12-25 19:20:21] [server] "GET /export-2025-12-25_19-20-20+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:20:21] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-20-20+0000.html
+[2025-12-25 19:20:21] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:20:21] [server] "GET /export-2025-12-25_19-20-20+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:22:20] App init: launching parser UI
+[2025-12-25 19:22:20] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:22:20] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:22:20] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:22:20] [server] ensure_export_server: server available
+[2025-12-25 19:22:20] [server] already running on port 8765
+[2025-12-25 19:22:23] [server] ensure_export_server: already running
+[2025-12-25 19:22:23] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-22-23+0000.html
+[2025-12-25 19:22:23] [server] "GET /export-2025-12-25_19-22-23+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:22:23] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-22-23+0000.html
+[2025-12-25 19:22:23] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:22:24] [server] "GET /export-2025-12-25_19-22-23+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:23:36] [server] shutdown complete
+[2025-12-25 19:23:37] App init: launching parser UI
+[2025-12-25 19:23:37] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:23:37] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:23:37] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:23:37] [server] ensure_export_server: server available
+[2025-12-25 19:23:37] [server] already running on port 8765
+[2025-12-25 19:23:46] [server] ensure_export_server: already running
+[2025-12-25 19:23:46] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-23-46+0000.html
+[2025-12-25 19:23:46] [server] "GET /export-2025-12-25_19-23-46+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:23:46] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-23-46+0000.html
+[2025-12-25 19:23:46] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:23:47] [server] "GET /export-2025-12-25_19-23-46+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:25:06] App init: launching parser UI
+[2025-12-25 19:25:06] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:25:07] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:25:07] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:25:07] [server] ensure_export_server: server available
+[2025-12-25 19:25:07] [server] already running on port 8765
+[2025-12-25 19:25:12] [server] ensure_export_server: already running
+[2025-12-25 19:25:13] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-25-12+0000.html
+[2025-12-25 19:25:13] [server] "GET /export-2025-12-25_19-25-12+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:25:13] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-25-12+0000.html
+[2025-12-25 19:25:13] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:25:13] [server] "GET /export-2025-12-25_19-25-12+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:26:48] App init: launching parser UI
+[2025-12-25 19:26:48] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:26:48] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:26:48] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:26:48] [server] ensure_export_server: server available
+[2025-12-25 19:26:48] [server] already running on port 8765
+[2025-12-25 19:26:52] [server] ensure_export_server: already running
+[2025-12-25 19:26:52] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_19-26-52+0000.html
+[2025-12-25 19:26:53] [server] "GET /export-2025-12-25_19-26-52+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:26:53] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-26-52+0000.html
+[2025-12-25 19:26:53] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:26:53] [server] "GET /export-2025-12-25_19-26-52+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:27:26] App init: launching parser UI
+[2025-12-25 19:27:26] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:27:26] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:27:26] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:27:26] [server] ensure_export_server: server available
+[2025-12-25 19:27:26] [server] already running on port 8765
+[2025-12-25 19:27:28] [server] shutdown complete
+[2025-12-25 19:27:32] App init: launching parser UI
+[2025-12-25 19:27:32] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 19:27:32] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:27:32] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:27:32] [server] ensure_export_server: server available
+[2025-12-25 19:27:32] [server] already running on port 8765
+[2025-12-25 19:27:33] [export] open_recent_export called for C:\Users\andre\Documents\FlowerTrack\Exports\export-2025-12-25_19-26-52+0000.html
+[2025-12-25 19:27:33] [server] ensure_export_server: already running
+[2025-12-25 19:27:33] [export] opening recent via server: http://127.0.0.1:8765/export-2025-12-25_19-26-52+0000.html
+[2025-12-25 19:27:33] [server] "GET /export-2025-12-25_19-26-52+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:27:33] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-26-52+0000.html
+[2025-12-25 19:27:33] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:27:33] [server] "GET /export-2025-12-25_19-26-52+0000.html HTTP/1.1" 304 -
+[2025-12-25 19:27:37] [server] shutdown complete
+[2025-12-25 19:28:52] App init: launching parser UI
+[2025-12-25 19:28:52] Init export server state. preferred_port=8765 frozen=True
+[2025-12-25 19:28:52] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 19:28:52] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 19:28:52] [server] ensure_export_server: server available
+[2025-12-25 19:28:52] [server] already running on port 8765
+[2025-12-25 19:28:53] [export] open_recent_export called for C:\Users\andre\Documents\FlowerTrack\Exports\export-2025-12-25_19-26-52+0000.html
+[2025-12-25 19:28:53] [server] ensure_export_server: already running
+[2025-12-25 19:28:53] [export] opening recent via server: http://127.0.0.1:8765/export-2025-12-25_19-26-52+0000.html
+[2025-12-25 19:28:53] [server] "GET /export-2025-12-25_19-26-52+0000.html HTTP/1.1" 200 -
+[2025-12-25 19:28:53] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_19-26-52+0000.html
+[2025-12-25 19:28:53] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 19:28:53] [server] "GET /export-2025-12-25_19-26-52+0000.html HTTP/1.1" 304 -
+[2025-12-25 19:29:50] [server] shutdown complete
+[2025-12-25 21:00:43] App init: launching parser UI
+[2025-12-25 21:00:43] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 21:00:43] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 21:00:43] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 21:00:43] [server] ensure_export_server: server available
+[2025-12-25 21:00:43] [server] already running on port 8765
+[2025-12-25 21:02:07] [server] shutdown complete
+[2025-12-25 21:02:10] App init: launching parser UI
+[2025-12-25 21:02:10] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 21:02:10] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 21:02:10] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 21:02:10] [server] ensure_export_server: server available
+[2025-12-25 21:02:10] [server] already running on port 8765
+[2025-12-25 21:02:16] [server] ensure_export_server: already running
+[2025-12-25 21:02:16] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_21-02-16+0000.html
+[2025-12-25 21:02:16] [server] "GET /export-2025-12-25_21-02-16+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:02:16] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_21-02-16+0000.html
+[2025-12-25 21:02:16] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 21:02:17] [server] "GET /export-2025-12-25_21-02-16+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:05:24] [server] shutdown complete
+[2025-12-25 21:05:25] App init: launching parser UI
+[2025-12-25 21:05:25] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 21:05:25] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 21:05:25] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 21:05:25] [server] ensure_export_server: server available
+[2025-12-25 21:05:25] [server] already running on port 8765
+[2025-12-25 21:05:28] [server] ensure_export_server: already running
+[2025-12-25 21:05:28] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_21-05-28+0000.html
+[2025-12-25 21:05:29] [server] "GET /export-2025-12-25_21-05-28+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:05:29] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_21-05-28+0000.html
+[2025-12-25 21:05:29] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 21:05:29] [server] "GET /export-2025-12-25_21-05-28+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:08:59] App init: launching parser UI
+[2025-12-25 21:08:59] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 21:08:59] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 21:08:59] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 21:08:59] [server] ensure_export_server: server available
+[2025-12-25 21:08:59] [server] already running on port 8765
+[2025-12-25 21:09:02] [server] ensure_export_server: already running
+[2025-12-25 21:09:02] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_21-09-02+0000.html
+[2025-12-25 21:09:02] [server] "GET /export-2025-12-25_21-09-02+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:09:02] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_21-09-02+0000.html
+[2025-12-25 21:09:02] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 21:09:02] [server] "GET /export-2025-12-25_21-09-02+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:14:08] App init: launching parser UI
+[2025-12-25 21:14:08] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 21:14:08] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 21:14:08] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 21:14:08] [server] ensure_export_server: server available
+[2025-12-25 21:14:08] [server] already running on port 8765
+[2025-12-25 21:14:12] [server] ensure_export_server: already running
+[2025-12-25 21:14:12] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_21-14-12+0000.html
+[2025-12-25 21:14:13] [server] "GET /export-2025-12-25_21-14-12+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:14:13] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_21-14-12+0000.html
+[2025-12-25 21:14:13] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 21:14:13] [server] "GET /export-2025-12-25_21-14-12+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:15:53] App init: launching parser UI
+[2025-12-25 21:15:53] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 21:15:53] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 21:15:53] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 21:15:53] [server] ensure_export_server: server available
+[2025-12-25 21:15:53] [server] already running on port 8765
+[2025-12-25 21:15:58] [server] ensure_export_server: already running
+[2025-12-25 21:15:58] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_21-15-58+0000.html
+[2025-12-25 21:15:59] [server] "GET /export-2025-12-25_21-15-58+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:15:59] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_21-15-58+0000.html
+[2025-12-25 21:15:59] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 21:15:59] [server] "GET /export-2025-12-25_21-15-58+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:16:36] [server] shutdown complete
+[2025-12-25 21:16:39] App init: launching parser UI
+[2025-12-25 21:16:39] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 21:16:39] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 21:16:39] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 21:16:39] [server] ensure_export_server: server available
+[2025-12-25 21:16:39] [server] already running on port 8765
+[2025-12-25 21:16:42] [server] ensure_export_server: already running
+[2025-12-25 21:16:42] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_21-16-42+0000.html
+[2025-12-25 21:16:43] [server] "GET /export-2025-12-25_21-16-42+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:16:43] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_21-16-42+0000.html
+[2025-12-25 21:16:43] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 21:16:43] [server] "GET /export-2025-12-25_21-16-42+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:16:53] [server] shutdown complete
+[2025-12-25 21:17:40] App init: launching parser UI
+[2025-12-25 21:17:40] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 21:17:40] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 21:17:40] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 21:17:40] [server] ensure_export_server: server available
+[2025-12-25 21:17:40] [server] already running on port 8765
+[2025-12-25 21:17:42] [server] ensure_export_server: already running
+[2025-12-25 21:17:42] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_21-17-42+0000.html
+[2025-12-25 21:17:43] [server] "GET /export-2025-12-25_21-17-42+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:17:43] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_21-17-42+0000.html
+[2025-12-25 21:17:43] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 21:17:43] [server] "GET /export-2025-12-25_21-17-42+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:24:36] [server] shutdown complete
+[2025-12-25 21:24:37] App init: launching parser UI
+[2025-12-25 21:24:37] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 21:24:37] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 21:24:37] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 21:24:37] [server] ensure_export_server: server available
+[2025-12-25 21:24:37] [server] already running on port 8765
+[2025-12-25 21:24:40] [server] ensure_export_server: already running
+[2025-12-25 21:24:40] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_21-24-40+0000.html
+[2025-12-25 21:24:41] [server] "GET /export-2025-12-25_21-24-40+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:24:41] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_21-24-40+0000.html
+[2025-12-25 21:24:41] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 21:24:41] [server] "GET /export-2025-12-25_21-24-40+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:38:39] App init: launching parser UI
+[2025-12-25 21:38:39] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 21:38:39] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 21:38:39] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 21:38:39] [server] ensure_export_server: server available
+[2025-12-25 21:38:39] [server] already running on port 8765
+[2025-12-25 21:38:42] [server] ensure_export_server: already running
+[2025-12-25 21:38:42] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_21-38-42+0000.html
+[2025-12-25 21:38:43] [server] "GET /export-2025-12-25_21-38-42+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:38:43] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_21-38-42+0000.html
+[2025-12-25 21:38:43] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 21:38:43] [server] "GET /export-2025-12-25_21-38-42+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:40:44] App init: launching parser UI
+[2025-12-25 21:40:44] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 21:40:44] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 21:40:44] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 21:40:44] [server] ensure_export_server: server available
+[2025-12-25 21:40:44] [server] already running on port 8765
+[2025-12-25 21:40:47] [server] ensure_export_server: already running
+[2025-12-25 21:40:47] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_21-40-47+0000.html
+[2025-12-25 21:40:47] [server] "GET /export-2025-12-25_21-40-47+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:40:47] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_21-40-47+0000.html
+[2025-12-25 21:40:47] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 21:40:48] [server] "GET /export-2025-12-25_21-40-47+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:42:18] App init: launching parser UI
+[2025-12-25 21:42:18] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 21:42:18] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 21:42:18] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 21:42:18] [server] ensure_export_server: server available
+[2025-12-25 21:42:18] [server] already running on port 8765
+[2025-12-25 21:42:21] [server] ensure_export_server: already running
+[2025-12-25 21:42:21] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_21-42-21+0000.html
+[2025-12-25 21:42:22] [server] "GET /export-2025-12-25_21-42-21+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:42:22] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_21-42-21+0000.html
+[2025-12-25 21:42:22] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 21:42:22] [server] "GET /export-2025-12-25_21-42-21+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:48:41] [server] shutdown complete
+[2025-12-25 21:48:43] App init: launching parser UI
+[2025-12-25 21:48:43] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 21:48:43] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 21:48:43] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 21:48:43] [server] ensure_export_server: server available
+[2025-12-25 21:48:43] [server] already running on port 8765
+[2025-12-25 21:48:45] [server] ensure_export_server: already running
+[2025-12-25 21:48:45] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_21-48-45+0000.html
+[2025-12-25 21:48:46] [server] "GET /export-2025-12-25_21-48-45+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:48:46] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_21-48-45+0000.html
+[2025-12-25 21:48:46] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 21:48:46] [server] "GET /export-2025-12-25_21-48-45+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:51:14] App init: launching parser UI
+[2025-12-25 21:51:14] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 21:51:14] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 21:51:14] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 21:51:14] [server] ensure_export_server: server available
+[2025-12-25 21:51:14] [server] already running on port 8765
+[2025-12-25 21:51:17] [server] ensure_export_server: already running
+[2025-12-25 21:51:17] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_21-51-17+0000.html
+[2025-12-25 21:51:17] [server] "GET /export-2025-12-25_21-51-17+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:51:17] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_21-51-17+0000.html
+[2025-12-25 21:51:17] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 21:51:17] [server] "GET /export-2025-12-25_21-51-17+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:51:38] [server] ensure_export_server: already running
+[2025-12-25 21:51:38] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_21-51-38+0000.html
+[2025-12-25 21:51:38] [server] "GET /export-2025-12-25_21-51-38+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:51:38] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_21-51-38+0000.html
+[2025-12-25 21:51:38] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 21:51:38] [server] "GET /export-2025-12-25_21-51-38+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:56:00] [server] shutdown complete
+[2025-12-25 21:56:02] App init: launching parser UI
+[2025-12-25 21:56:02] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 21:56:02] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 21:56:02] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 21:56:02] [server] ensure_export_server: server available
+[2025-12-25 21:56:02] [server] already running on port 8765
+[2025-12-25 21:56:05] [server] ensure_export_server: already running
+[2025-12-25 21:56:05] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_21-56-05+0000.html
+[2025-12-25 21:56:06] [server] "GET /export-2025-12-25_21-56-05+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:56:06] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_21-56-05+0000.html
+[2025-12-25 21:56:06] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 21:56:06] [server] "GET /export-2025-12-25_21-56-05+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:59:22] [server] shutdown complete
+[2025-12-25 21:59:26] App init: launching parser UI
+[2025-12-25 21:59:26] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 21:59:26] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 21:59:26] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 21:59:26] [server] ensure_export_server: server available
+[2025-12-25 21:59:26] [server] already running on port 8765
+[2025-12-25 21:59:29] [server] ensure_export_server: already running
+[2025-12-25 21:59:29] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_21-59-29+0000.html
+[2025-12-25 21:59:30] [server] "GET /export-2025-12-25_21-59-29+0000.html HTTP/1.1" 200 -
+[2025-12-25 21:59:30] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_21-59-29+0000.html
+[2025-12-25 21:59:30] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 21:59:30] [server] "GET /export-2025-12-25_21-59-29+0000.html HTTP/1.1" 200 -
+[2025-12-25 22:02:42] App init: launching parser UI
+[2025-12-25 22:02:42] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 22:02:42] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 22:02:42] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 22:02:42] [server] ensure_export_server: server available
+[2025-12-25 22:02:42] [server] already running on port 8765
+[2025-12-25 22:02:45] [server] ensure_export_server: already running
+[2025-12-25 22:02:45] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_22-02-45+0000.html
+[2025-12-25 22:02:46] [server] "GET /export-2025-12-25_22-02-45+0000.html HTTP/1.1" 200 -
+[2025-12-25 22:02:46] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_22-02-45+0000.html
+[2025-12-25 22:02:46] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 22:02:46] [server] "GET /export-2025-12-25_22-02-45+0000.html HTTP/1.1" 200 -
+[2025-12-25 22:05:22] App init: launching parser UI
+[2025-12-25 22:05:22] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 22:05:22] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 22:05:22] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 22:05:22] [server] ensure_export_server: server available
+[2025-12-25 22:05:22] [server] already running on port 8765
+[2025-12-25 22:05:25] [server] ensure_export_server: already running
+[2025-12-25 22:05:25] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_22-05-25+0000.html
+[2025-12-25 22:05:26] [server] "GET /export-2025-12-25_22-05-25+0000.html HTTP/1.1" 200 -
+[2025-12-25 22:05:26] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_22-05-25+0000.html
+[2025-12-25 22:05:26] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 22:05:26] [server] "GET /export-2025-12-25_22-05-25+0000.html HTTP/1.1" 200 -
+[2025-12-25 22:13:56] App init: launching parser UI
+[2025-12-25 22:13:56] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 22:13:56] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 22:13:56] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 22:13:56] [server] ensure_export_server: server available
+[2025-12-25 22:13:56] [server] already running on port 8765
+[2025-12-25 22:13:59] [server] ensure_export_server: already running
+[2025-12-25 22:13:59] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_22-13-59+0000.html
+[2025-12-25 22:14:00] [server] "GET /export-2025-12-25_22-13-59+0000.html HTTP/1.1" 200 -
+[2025-12-25 22:14:00] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_22-13-59+0000.html
+[2025-12-25 22:14:00] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 22:14:00] [server] "GET /export-2025-12-25_22-13-59+0000.html HTTP/1.1" 200 -
+[2025-12-25 22:43:37] [server] shutdown complete
+[2025-12-25 22:43:52] App init: launching parser UI
+[2025-12-25 22:43:52] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 22:43:52] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 22:43:52] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 22:43:52] [server] ensure_export_server: server available
+[2025-12-25 22:43:52] [server] already running on port 8765
+[2025-12-25 22:43:55] [server] ensure_export_server: already running
+[2025-12-25 22:43:55] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_22-43-55+0000.html
+[2025-12-25 22:43:55] [server] "GET /export-2025-12-25_22-43-55+0000.html HTTP/1.1" 200 -
+[2025-12-25 22:43:55] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_22-43-55+0000.html
+[2025-12-25 22:43:55] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 22:43:56] [server] "GET /export-2025-12-25_22-43-55+0000.html HTTP/1.1" 200 -
+[2025-12-25 22:47:33] [server] shutdown complete
+[2025-12-25 22:47:35] App init: launching parser UI
+[2025-12-25 22:47:35] Init export server state. preferred_port=8765 frozen=False
+[2025-12-25 22:47:36] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 22:47:36] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 22:47:36] [server] ensure_export_server: server available
+[2025-12-25 22:47:36] [server] already running on port 8765
+[2025-12-25 22:47:39] [server] ensure_export_server: already running
+[2025-12-25 22:47:39] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_22-47-39+0000.html
+[2025-12-25 22:47:40] [server] "GET /export-2025-12-25_22-47-39+0000.html HTTP/1.1" 200 -
+[2025-12-25 22:47:40] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_22-47-39+0000.html
+[2025-12-25 22:47:40] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 22:47:40] [server] "GET /export-2025-12-25_22-47-39+0000.html HTTP/1.1" 200 -
+[2025-12-25 23:18:45] App init: launching parser UI
+[2025-12-25 23:18:45] Init export server state. preferred_port=8765 frozen=True
+[2025-12-25 23:18:45] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-25 23:18:45] [server] serving exports at http://127.0.0.1:8765
+[2025-12-25 23:18:45] [server] ensure_export_server: server available
+[2025-12-25 23:18:45] [server] already running on port 8765
+[2025-12-25 23:18:47] [export] open_recent_export called for C:\Users\andre\Documents\FlowerTrack\Exports\export-2025-12-25_22-47-39+0000.html
+[2025-12-25 23:18:47] [server] ensure_export_server: already running
+[2025-12-25 23:18:47] [export] opening recent via server: http://127.0.0.1:8765/export-2025-12-25_22-47-39+0000.html
+[2025-12-25 23:18:47] [server] "GET /export-2025-12-25_22-47-39+0000.html HTTP/1.1" 200 -
+[2025-12-25 23:18:47] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_22-47-39+0000.html
+[2025-12-25 23:18:47] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 23:18:47] [server] "GET /export-2025-12-25_22-47-39+0000.html HTTP/1.1" 200 -
+[2025-12-25 23:19:14] [server] ensure_export_server: already running
+[2025-12-25 23:19:14] [export] opening via server: http://127.0.0.1:8765/export-2025-12-25_23-19-14+0000.html
+[2025-12-25 23:19:15] [server] "GET /export-2025-12-25_23-19-14+0000.html HTTP/1.1" 200 -
+[2025-12-25 23:19:15] [export] opening URL http://127.0.0.1:8765/export-2025-12-25_23-19-14+0000.html
+[2025-12-25 23:19:15] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-25 23:19:15] [server] "GET /export-2025-12-25_23-19-14+0000.html HTTP/1.1" 200 -
+[2025-12-26 00:08:34] [server] ensure_export_server: already running
+[2025-12-26 00:08:34] [export] opening via server: http://127.0.0.1:8765/export-2025-12-26_00-08-34+0000.html
+[2025-12-26 00:08:34] [server] "GET /export-2025-12-26_00-08-34+0000.html HTTP/1.1" 200 -
+[2025-12-26 00:08:34] [export] opening URL http://127.0.0.1:8765/export-2025-12-26_00-08-34+0000.html
+[2025-12-26 00:08:34] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-26 00:08:34] [server] "GET /export-2025-12-26_00-08-34+0000.html HTTP/1.1" 200 -
+[2025-12-26 00:08:54] [server] shutdown complete
+[2025-12-26 00:58:20] App init: launching parser UI
+[2025-12-26 00:58:20] Init export server state. preferred_port=8765 frozen=False
+[2025-12-26 00:58:21] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-26 00:58:21] [server] serving exports at http://127.0.0.1:8765
+[2025-12-26 00:58:21] [server] ensure_export_server: server available
+[2025-12-26 00:58:21] [server] already running on port 8765
+[2025-12-26 00:58:54] [server] ensure_export_server: already running
+[2025-12-26 00:58:54] [export] opening via server: http://127.0.0.1:8765/export-2025-12-26_00-58-54+0000.html
+[2025-12-26 00:58:54] [server] "GET /export-2025-12-26_00-58-54+0000.html HTTP/1.1" 200 -
+[2025-12-26 00:58:54] [export] opening URL http://127.0.0.1:8765/export-2025-12-26_00-58-54+0000.html
+[2025-12-26 00:58:54] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-26 00:58:55] [server] "GET /export-2025-12-26_00-58-54+0000.html HTTP/1.1" 200 -
+[2025-12-26 01:00:24] [server] shutdown complete
+[2025-12-26 01:07:10] App init: launching parser UI
+[2025-12-26 01:07:10] Init export server state. preferred_port=8765 frozen=True
+[2025-12-26 01:07:10] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-26 01:07:10] [server] serving exports at http://127.0.0.1:8765
+[2025-12-26 01:07:10] [server] ensure_export_server: server available
+[2025-12-26 01:07:10] [server] already running on port 8765
+[2025-12-26 01:07:18] [server] ensure_export_server: already running
+[2025-12-26 01:07:18] [export] opening via server: http://127.0.0.1:8765/export-2025-12-26_01-07-18+0000.html
+[2025-12-26 01:07:19] [server] "GET /export-2025-12-26_01-07-18+0000.html HTTP/1.1" 200 -
+[2025-12-26 01:07:19] [export] opening URL http://127.0.0.1:8765/export-2025-12-26_01-07-18+0000.html
+[2025-12-26 01:07:19] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-26 01:07:19] [server] "GET /export-2025-12-26_01-07-18+0000.html HTTP/1.1" 200 -
+[2025-12-26 01:07:38] [server] ensure_export_server: already running
+[2025-12-26 01:07:38] [export] opening via server: http://127.0.0.1:8765/export-2025-12-26_01-07-38+0000.html
+[2025-12-26 01:07:38] [server] "GET /export-2025-12-26_01-07-38+0000.html HTTP/1.1" 200 -
+[2025-12-26 01:07:38] [export] opening URL http://127.0.0.1:8765/export-2025-12-26_01-07-38+0000.html
+[2025-12-26 01:07:38] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-26 01:07:38] [server] "GET /export-2025-12-26_01-07-38+0000.html HTTP/1.1" 200 -
+[2025-12-26 01:07:44] [server] ensure_export_server: already running
+[2025-12-26 01:07:44] [export] opening via server: http://127.0.0.1:8765/export-2025-12-26_01-07-44+0000.html
+[2025-12-26 01:07:45] [server] "GET /export-2025-12-26_01-07-44+0000.html HTTP/1.1" 200 -
+[2025-12-26 01:07:45] [export] opening URL http://127.0.0.1:8765/export-2025-12-26_01-07-44+0000.html
+[2025-12-26 01:07:45] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-26 01:07:45] [server] "GET /export-2025-12-26_01-07-44+0000.html HTTP/1.1" 200 -
+[2025-12-26 01:08:46] [server] shutdown complete
+[2025-12-26 01:13:21] App init: launching parser UI
+[2025-12-26 01:13:21] Init export server state. preferred_port=8765 frozen=True
+[2025-12-26 01:13:21] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-26 01:13:21] [server] serving exports at http://127.0.0.1:8765
+[2025-12-26 01:13:21] [server] ensure_export_server: server available
+[2025-12-26 01:13:21] [server] already running on port 8765
+[2025-12-26 01:13:30] [server] ensure_export_server: already running
+[2025-12-26 01:13:30] [export] opening via server: http://127.0.0.1:8765/export-2025-12-26_01-13-30+0000.html
+[2025-12-26 01:13:31] [server] "GET /export-2025-12-26_01-13-30+0000.html HTTP/1.1" 200 -
+[2025-12-26 01:13:31] [export] opening URL http://127.0.0.1:8765/export-2025-12-26_01-13-30+0000.html
+[2025-12-26 01:13:31] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-26 01:13:31] [server] "GET /export-2025-12-26_01-13-30+0000.html HTTP/1.1" 200 -
+[2025-12-26 01:14:09] [server] shutdown complete
+[2025-12-26 13:18:58] App init: launching parser UI
+[2025-12-26 13:18:58] Init export server state. preferred_port=8765 frozen=True
+[2025-12-26 13:18:58] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-26 13:18:58] [server] serving exports at http://127.0.0.1:8765
+[2025-12-26 13:18:58] [server] ensure_export_server: server available
+[2025-12-26 13:18:58] [server] already running on port 8765
+[2025-12-26 13:19:17] [server] ensure_export_server: already running
+[2025-12-26 13:19:17] [export] opening via server: http://127.0.0.1:8765/export-2025-12-26_13-19-17+0000.html
+[2025-12-26 13:19:17] [server] "GET /export-2025-12-26_13-19-17+0000.html HTTP/1.1" 200 -
+[2025-12-26 13:19:17] [export] opening URL http://127.0.0.1:8765/export-2025-12-26_13-19-17+0000.html
+[2025-12-26 13:19:17] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-26 13:19:18] [server] "GET /export-2025-12-26_13-19-17+0000.html HTTP/1.1" 200 -
+[2025-12-26 13:43:52] [server] shutdown complete
+[2025-12-26 16:06:13] App init: launching parser UI
+[2025-12-26 16:06:13] Init export server state. preferred_port=8765 frozen=True
+[2025-12-26 16:06:14] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-26 16:06:14] [server] serving exports at http://127.0.0.1:8765
+[2025-12-26 16:06:14] [server] ensure_export_server: server available
+[2025-12-26 16:06:14] [server] already running on port 8765
+[2025-12-26 16:06:14] [export] open_recent_export called for C:\Users\andre\Documents\FlowerTrack\Exports\export-2025-12-26_13-19-17+0000.html
+[2025-12-26 16:06:14] [server] ensure_export_server: already running
+[2025-12-26 16:06:14] [export] opening recent via server: http://127.0.0.1:8765/export-2025-12-26_13-19-17+0000.html
+[2025-12-26 16:06:14] [server] "GET /export-2025-12-26_13-19-17+0000.html HTTP/1.1" 200 -
+[2025-12-26 16:06:14] [export] opening URL http://127.0.0.1:8765/export-2025-12-26_13-19-17+0000.html
+[2025-12-26 16:06:14] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-26 16:06:15] [server] "GET /export-2025-12-26_13-19-17+0000.html HTTP/1.1" 200 -
+[2025-12-26 21:18:12] App init: launching parser UI
+[2025-12-26 21:18:12] Init export server state. preferred_port=8765 frozen=False
+[2025-12-26 21:18:12] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-26 21:18:12] [server] serving exports at http://127.0.0.1:8765
+[2025-12-26 21:18:12] [server] ensure_export_server: server available
+[2025-12-26 21:18:12] [server] already running on port 8765
+[2025-12-26 21:21:44] [server] ensure_export_server: already running
+[2025-12-26 21:21:44] [export] opening via server: http://127.0.0.1:8765/export-2025-12-26_21-21-44+0000.html
+[2025-12-26 21:21:45] [server] "GET /export-2025-12-26_21-21-44+0000.html HTTP/1.1" 200 -
+[2025-12-26 21:21:45] [export] opening URL http://127.0.0.1:8765/export-2025-12-26_21-21-44+0000.html
+[2025-12-26 21:21:45] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-26 21:21:45] [server] "GET /export-2025-12-26_21-21-44+0000.html HTTP/1.1" 200 -
+[2025-12-26 21:26:41] [server] shutdown complete
+[2025-12-26 21:26:43] App init: launching parser UI
+[2025-12-26 21:26:43] Init export server state. preferred_port=8765 frozen=False
+[2025-12-26 21:26:43] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-26 21:26:43] [server] serving exports at http://127.0.0.1:8765
+[2025-12-26 21:26:43] [server] ensure_export_server: server available
+[2025-12-26 21:26:43] [server] already running on port 8765
+[2025-12-26 21:26:55] [server] ensure_export_server: already running
+[2025-12-26 21:26:56] [export] opening via server: http://127.0.0.1:8765/export-2025-12-26_21-26-55+0000.html
+[2025-12-26 21:26:56] [server] "GET /export-2025-12-26_21-26-55+0000.html HTTP/1.1" 200 -
+[2025-12-26 21:26:56] [export] opening URL http://127.0.0.1:8765/export-2025-12-26_21-26-55+0000.html
+[2025-12-26 21:26:56] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-26 21:26:56] [server] "GET /export-2025-12-26_21-26-55+0000.html HTTP/1.1" 200 -
+[2025-12-26 21:29:21] [server] shutdown complete
+[2025-12-26 22:50:19] App init: launching parser UI
+[2025-12-26 22:50:19] Init export server state. preferred_port=8765 frozen=True
+[2025-12-26 22:50:19] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-26 22:50:19] [server] serving exports at http://127.0.0.1:8765
+[2025-12-26 22:50:19] [server] ensure_export_server: server available
+[2025-12-26 22:50:19] [server] already running on port 8765
+[2025-12-26 22:51:21] [server] ensure_export_server: already running
+[2025-12-26 22:51:21] [export] opening via server: http://127.0.0.1:8765/export-2025-12-26_22-51-21+0000.html
+[2025-12-26 22:51:22] [server] "GET /export-2025-12-26_22-51-21+0000.html HTTP/1.1" 200 -
+[2025-12-26 22:51:22] [export] opening URL http://127.0.0.1:8765/export-2025-12-26_22-51-21+0000.html
+[2025-12-26 22:51:22] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-26 22:51:22] [server] "GET /export-2025-12-26_22-51-21+0000.html HTTP/1.1" 200 -
+[2025-12-26 22:56:29] [server] shutdown complete
+[2025-12-26 22:57:00] App init: launching parser UI
+[2025-12-26 22:57:00] Init export server state. preferred_port=8765 frozen=False
+[2025-12-26 22:57:00] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-26 22:57:00] [server] serving exports at http://127.0.0.1:8765
+[2025-12-26 22:57:00] [server] ensure_export_server: server available
+[2025-12-26 22:57:00] [server] already running on port 8765
+[2025-12-26 22:57:03] [server] ensure_export_server: already running
+[2025-12-26 22:57:03] [export] opening via server: http://127.0.0.1:8765/export-2025-12-26_22-57-03+0000.html
+[2025-12-26 22:57:03] [server] "GET /export-2025-12-26_22-57-03+0000.html HTTP/1.1" 200 -
+[2025-12-26 22:57:03] [export] opening URL http://127.0.0.1:8765/export-2025-12-26_22-57-03+0000.html
+[2025-12-26 22:57:03] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-26 22:57:04] [server] "GET /export-2025-12-26_22-57-03+0000.html HTTP/1.1" 200 -
+[2025-12-26 23:00:37] [server] shutdown complete
+[2025-12-26 23:01:31] App init: launching parser UI
+[2025-12-26 23:01:31] Init export server state. preferred_port=8765 frozen=False
+[2025-12-26 23:01:31] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-26 23:01:31] [server] serving exports at http://127.0.0.1:8765
+[2025-12-26 23:01:31] [server] ensure_export_server: server available
+[2025-12-26 23:01:31] [server] already running on port 8765
+[2025-12-26 23:01:34] [server] ensure_export_server: already running
+[2025-12-26 23:01:34] [export] opening via server: http://127.0.0.1:8765/export-2025-12-26_23-01-34+0000.html
+[2025-12-26 23:01:35] [server] "GET /export-2025-12-26_23-01-34+0000.html HTTP/1.1" 200 -
+[2025-12-26 23:01:35] [export] opening URL http://127.0.0.1:8765/export-2025-12-26_23-01-34+0000.html
+[2025-12-26 23:01:35] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-26 23:01:35] [server] "GET /export-2025-12-26_23-01-34+0000.html HTTP/1.1" 200 -
+[2025-12-26 23:01:42] [server] shutdown complete
+[2025-12-26 23:09:56] App init: launching parser UI
+[2025-12-26 23:09:56] Init export server state. preferred_port=8765 frozen=False
+[2025-12-26 23:09:56] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-26 23:09:56] [server] serving exports at http://127.0.0.1:8765
+[2025-12-26 23:09:56] [server] ensure_export_server: server available
+[2025-12-26 23:09:56] [server] already running on port 8765
+[2025-12-26 23:09:59] [server] ensure_export_server: already running
+[2025-12-26 23:09:59] [export] opening via server: http://127.0.0.1:8765/export-2025-12-26_23-09-59+0000.html
+[2025-12-26 23:10:00] [server] "GET /export-2025-12-26_23-09-59+0000.html HTTP/1.1" 200 -
+[2025-12-26 23:10:00] [export] opening URL http://127.0.0.1:8765/export-2025-12-26_23-09-59+0000.html
+[2025-12-26 23:10:00] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-26 23:10:00] [server] "GET /export-2025-12-26_23-09-59+0000.html HTTP/1.1" 200 -
+[2025-12-27 15:43:44] App init: launching parser UI
+[2025-12-27 15:43:44] Init export server state. preferred_port=8765 frozen=True
+[2025-12-27 15:43:44] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-27 15:43:44] [server] serving exports at http://127.0.0.1:8765
+[2025-12-27 15:43:44] [server] ensure_export_server: server available
+[2025-12-27 15:43:44] [server] already running on port 8765
+[2025-12-27 15:44:23] [server] ensure_export_server: already running
+[2025-12-27 15:44:23] [export] opening via server: http://127.0.0.1:8765/export-2025-12-27_15-44-23+0000.html
+[2025-12-27 15:44:23] [server] "GET /export-2025-12-27_15-44-23+0000.html HTTP/1.1" 200 -
+[2025-12-27 15:44:23] [export] opening URL http://127.0.0.1:8765/export-2025-12-27_15-44-23+0000.html
+[2025-12-27 15:44:23] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-27 15:44:24] [server] "GET /export-2025-12-27_15-44-23+0000.html HTTP/1.1" 200 -
+[2025-12-27 15:44:24] [server] code 404, message File not found
+[2025-12-27 15:44:24] [server] "GET /favicon.ico HTTP/1.1" 404 -
+[2025-12-27 15:44:24] [server] client disconnected early: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-27 15:51:41] [export] open_recent_export called for C:\Users\andre\Documents\FlowerTrack\Exports\export-2025-12-27_15-44-23+0000.html
+[2025-12-27 15:51:41] [server] ensure_export_server: already running
+[2025-12-27 15:51:41] [export] opening recent via server: http://127.0.0.1:8765/export-2025-12-27_15-44-23+0000.html
+[2025-12-27 15:51:41] [server] "GET /export-2025-12-27_15-44-23+0000.html HTTP/1.1" 200 -
+[2025-12-27 15:51:41] [export] opening URL http://127.0.0.1:8765/export-2025-12-27_15-44-23+0000.html
+[2025-12-27 15:51:41] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-27 15:51:41] [server] "GET /export-2025-12-27_15-44-23+0000.html HTTP/1.1" 304 -
+[2025-12-27 16:03:39] [server] shutdown complete
+[2025-12-27 16:18:55] App init: launching parser UI
+[2025-12-27 16:18:55] Init export server state. preferred_port=8765 frozen=True
+[2025-12-27 16:18:55] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-27 16:18:55] [server] serving exports at http://127.0.0.1:8765
+[2025-12-27 16:18:55] [server] ensure_export_server: server available
+[2025-12-27 16:18:55] [server] already running on port 8765
+[2025-12-27 16:19:01] [export] open_recent_export called for C:\Users\andre\Documents\FlowerTrack\Exports\export-2025-12-27_15-44-23+0000.html
+[2025-12-27 16:19:01] [server] ensure_export_server: already running
+[2025-12-27 16:19:01] [export] opening recent via server: http://127.0.0.1:8765/export-2025-12-27_15-44-23+0000.html
+[2025-12-27 16:19:01] [server] "GET /export-2025-12-27_15-44-23+0000.html HTTP/1.1" 200 -
+[2025-12-27 16:19:01] [export] opening URL http://127.0.0.1:8765/export-2025-12-27_15-44-23+0000.html
+[2025-12-27 16:19:01] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-27 16:19:02] [server] "GET /export-2025-12-27_15-44-23+0000.html HTTP/1.1" 304 -
+[2025-12-27 17:38:56] [server] shutdown complete
+[2025-12-27 23:57:46] App init: launching parser UI
+[2025-12-27 23:57:46] Init export server state. preferred_port=8765 frozen=True
+[2025-12-27 23:57:46] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-27 23:57:46] [server] serving exports at http://127.0.0.1:8765
+[2025-12-27 23:57:46] [server] ensure_export_server: server available
+[2025-12-27 23:57:46] [server] already running on port 8765
+[2025-12-28 00:02:38] [server] ensure_export_server: already running
+[2025-12-28 00:02:38] [export] opening via server: http://127.0.0.1:8765/export-2025-12-28_00-02-38+0000.html
+[2025-12-28 00:02:39] [server] "GET /export-2025-12-28_00-02-38+0000.html HTTP/1.1" 200 -
+[2025-12-28 00:02:39] [export] opening URL http://127.0.0.1:8765/export-2025-12-28_00-02-38+0000.html
+[2025-12-28 00:02:39] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-28 00:02:39] [server] "GET /export-2025-12-28_00-02-38+0000.html HTTP/1.1" 200 -
+[2025-12-28 00:14:12] [server] shutdown complete
+[2025-12-28 00:16:28] App init: launching parser UI
+[2025-12-28 00:16:28] Init export server state. preferred_port=8765 frozen=True
+[2025-12-28 00:16:28] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-28 00:16:28] [server] serving exports at http://127.0.0.1:8765
+[2025-12-28 00:16:28] [server] ensure_export_server: server available
+[2025-12-28 00:16:28] [server] already running on port 8765
+[2025-12-28 00:16:30] [export] open_recent_export called for C:\Users\andre\Documents\FlowerTrack\Exports\export-2025-12-28_00-02-38+0000.html
+[2025-12-28 00:16:30] [server] ensure_export_server: already running
+[2025-12-28 00:16:30] [export] opening recent via server: http://127.0.0.1:8765/export-2025-12-28_00-02-38+0000.html
+[2025-12-28 00:16:30] [server] "GET /export-2025-12-28_00-02-38+0000.html HTTP/1.1" 200 -
+[2025-12-28 00:16:30] [export] opening URL http://127.0.0.1:8765/export-2025-12-28_00-02-38+0000.html
+[2025-12-28 00:16:30] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-28 00:16:30] [server] "GET /export-2025-12-28_00-02-38+0000.html HTTP/1.1" 200 -
+[2025-12-28 00:22:15] [server] ensure_export_server: already running
+[2025-12-28 00:22:15] [export] opening via server: http://127.0.0.1:8765/export-2025-12-28_00-22-15+0000.html
+[2025-12-28 00:22:16] [server] "GET /export-2025-12-28_00-22-15+0000.html HTTP/1.1" 200 -
+[2025-12-28 00:22:16] [export] opening URL http://127.0.0.1:8765/export-2025-12-28_00-22-15+0000.html
+[2025-12-28 00:22:16] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-28 00:22:16] [server] "GET /export-2025-12-28_00-22-15+0000.html HTTP/1.1" 200 -
+[2025-12-28 01:01:51] [server] shutdown complete
+[2025-12-28 04:55:27] App init: launching parser UI
+[2025-12-28 04:55:27] Init export server state. preferred_port=8765 frozen=True
+[2025-12-28 04:55:27] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-28 04:55:27] [server] serving exports at http://127.0.0.1:8765
+[2025-12-28 04:55:27] [server] ensure_export_server: server available
+[2025-12-28 04:55:27] [server] already running on port 8765
+[2025-12-28 04:55:28] [export] open_recent_export called for C:\Users\andre\Documents\FlowerTrack\Exports\export-2025-12-28_00-22-15+0000.html
+[2025-12-28 04:55:28] [server] ensure_export_server: already running
+[2025-12-28 04:55:28] [export] opening recent via server: http://127.0.0.1:8765/export-2025-12-28_00-22-15+0000.html
+[2025-12-28 04:55:29] [server] "GET /export-2025-12-28_00-22-15+0000.html HTTP/1.1" 200 -
+[2025-12-28 04:55:29] [export] opening URL http://127.0.0.1:8765/export-2025-12-28_00-22-15+0000.html
+[2025-12-28 04:55:29] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-28 04:55:29] [server] "GET /export-2025-12-28_00-22-15+0000.html HTTP/1.1" 200 -
+[2025-12-28 04:59:16] [server] shutdown complete
+[2025-12-28 11:51:33] App init: launching parser UI
+[2025-12-28 11:51:33] Init export server state. preferred_port=8765 frozen=True
+[2025-12-28 11:51:33] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-28 11:51:33] [server] serving exports at http://127.0.0.1:8765
+[2025-12-28 11:51:33] [server] ensure_export_server: server available
+[2025-12-28 11:51:33] [server] already running on port 8765
+[2025-12-28 11:51:38] [server] ensure_export_server: already running
+[2025-12-28 11:51:38] [export] opening via server: http://127.0.0.1:8765/export-2025-12-28_11-51-38+0000.html
+[2025-12-28 11:51:38] [server] "GET /export-2025-12-28_11-51-38+0000.html HTTP/1.1" 200 -
+[2025-12-28 11:51:38] [export] opening URL http://127.0.0.1:8765/export-2025-12-28_11-51-38+0000.html
+[2025-12-28 11:51:38] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-28 11:51:39] [server] "GET /export-2025-12-28_11-51-38+0000.html HTTP/1.1" 200 -
+[2025-12-28 11:54:53] [export] open_recent_export called for C:\Users\andre\Documents\FlowerTrack\Exports\export-2025-12-28_11-51-38+0000.html
+[2025-12-28 11:54:53] [server] ensure_export_server: already running
+[2025-12-28 11:54:53] [export] opening recent via server: http://127.0.0.1:8765/export-2025-12-28_11-51-38+0000.html
+[2025-12-28 11:54:53] [server] "GET /export-2025-12-28_11-51-38+0000.html HTTP/1.1" 200 -
+[2025-12-28 11:54:53] [export] opening URL http://127.0.0.1:8765/export-2025-12-28_11-51-38+0000.html
+[2025-12-28 11:54:53] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-28 11:54:53] [server] "GET /export-2025-12-28_11-51-38+0000.html HTTP/1.1" 304 -
+[2025-12-28 16:41:37] [server] shutdown complete
+[2025-12-28 18:41:02] App init: launching parser UI
+[2025-12-28 18:41:02] Init export server state. preferred_port=8765 frozen=True
+[2025-12-28 18:41:02] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-28 18:41:02] [server] serving exports at http://127.0.0.1:8765
+[2025-12-28 18:41:02] [server] ensure_export_server: server available
+[2025-12-28 18:41:02] [server] already running on port 8765
+[2025-12-28 18:41:13] [server] ensure_export_server: already running
+[2025-12-28 18:41:13] [export] opening via server: http://127.0.0.1:8765/export-2025-12-28_18-41-13+0000.html
+[2025-12-28 18:41:13] [server] "GET /export-2025-12-28_18-41-13+0000.html HTTP/1.1" 200 -
+[2025-12-28 18:41:13] [export] opening URL http://127.0.0.1:8765/export-2025-12-28_18-41-13+0000.html
+[2025-12-28 18:41:13] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-28 18:41:13] [server] "GET /export-2025-12-28_18-41-13+0000.html HTTP/1.1" 200 -
+[2025-12-28 20:23:38] [server] shutdown complete
+[2025-12-29 03:57:02] App init: launching parser UI
+[2025-12-29 03:57:02] Init export server state. preferred_port=8765 frozen=False
+[2025-12-29 03:57:02] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-29 03:57:02] [server] serving exports at http://127.0.0.1:8765
+[2025-12-29 03:57:02] [server] ensure_export_server: server available
+[2025-12-29 03:57:02] [server] already running on port 8765
+[2025-12-29 03:57:07] [server] shutdown complete
+[2025-12-29 05:19:40] App init: launching parser UI
+[2025-12-29 05:19:40] Init export server state. preferred_port=8765 frozen=False
+[2025-12-29 05:19:40] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-29 05:19:40] [server] serving exports at http://127.0.0.1:8765
+[2025-12-29 05:19:40] [server] ensure_export_server: server available
+[2025-12-29 05:19:40] [server] already running on port 8765
+[2025-12-29 05:19:42] [server] shutdown complete
+[2025-12-29 05:22:35] App init: launching parser UI
+[2025-12-29 05:22:35] Init export server state. preferred_port=8765 frozen=False
+[2025-12-29 05:22:35] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-29 05:22:35] [server] serving exports at http://127.0.0.1:8765
+[2025-12-29 05:22:35] [server] ensure_export_server: server available
+[2025-12-29 05:22:35] [server] already running on port 8765
+[2025-12-29 05:22:36] [export] open_recent_export called for C:\Users\andre\Documents\FlowerTrack\Exports\export-2025-12-28_18-41-13+0000.html
+[2025-12-29 05:22:36] [server] ensure_export_server: already running
+[2025-12-29 05:22:36] [export] opening recent via server: http://127.0.0.1:8765/export-2025-12-28_18-41-13+0000.html
+[2025-12-29 05:22:37] [server] "GET /export-2025-12-28_18-41-13+0000.html HTTP/1.1" 200 -
+[2025-12-29 05:22:37] [export] opening URL http://127.0.0.1:8765/export-2025-12-28_18-41-13+0000.html
+[2025-12-29 05:22:37] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-29 05:22:37] [server] "GET /export-2025-12-28_18-41-13+0000.html HTTP/1.1" 200 -
+[2025-12-29 05:22:47] [server] shutdown complete
+[2025-12-29 05:50:11] App init: launching parser UI
+[2025-12-29 05:50:11] Init export server state. preferred_port=8765 frozen=False
+[2025-12-29 05:50:11] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-29 05:50:11] [server] serving exports at http://127.0.0.1:8765
+[2025-12-29 05:50:11] [server] ensure_export_server: server available
+[2025-12-29 05:50:11] [server] already running on port 8765
+[2025-12-29 05:50:12] [server] shutdown complete
+[2025-12-29 06:00:39] App init: launching parser UI
+[2025-12-29 06:00:39] Init export server state. preferred_port=8765 frozen=True
+[2025-12-29 06:00:39] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-29 06:00:39] [server] serving exports at http://127.0.0.1:8765
+[2025-12-29 06:00:39] [server] ensure_export_server: server available
+[2025-12-29 06:00:39] [server] already running on port 8765
+[2025-12-29 06:00:41] [server] shutdown complete
+[2025-12-29 06:07:56] App init: launching parser UI
+[2025-12-29 06:07:56] Init export server state. preferred_port=8765 frozen=True
+[2025-12-29 06:07:56] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-29 06:07:56] [server] serving exports at http://127.0.0.1:8765
+[2025-12-29 06:07:56] [server] ensure_export_server: server available
+[2025-12-29 06:07:56] [server] already running on port 8765
+[2025-12-29 06:08:00] [server] shutdown complete
+[2025-12-29 06:09:15] App init: launching parser UI
+[2025-12-29 06:09:15] Init export server state. preferred_port=8765 frozen=False
+[2025-12-29 06:09:15] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-29 06:09:15] [server] serving exports at http://127.0.0.1:8765
+[2025-12-29 06:09:15] [server] ensure_export_server: server available
+[2025-12-29 06:09:15] [server] already running on port 8765
+[2025-12-29 06:09:18] [server] shutdown complete
+[2025-12-29 06:09:23] App init: launching parser UI
+[2025-12-29 06:09:23] Init export server state. preferred_port=8765 frozen=False
+[2025-12-29 06:09:23] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-29 06:09:23] [server] serving exports at http://127.0.0.1:8765
+[2025-12-29 06:09:23] [server] ensure_export_server: server available
+[2025-12-29 06:09:23] [server] already running on port 8765
+[2025-12-29 06:09:25] [server] shutdown complete
+[2025-12-29 10:16:51] App init: launching parser UI
+[2025-12-29 10:16:51] Init export server state. preferred_port=8765 frozen=False
+[2025-12-29 10:16:51] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-29 10:16:51] [server] serving exports at http://127.0.0.1:8765
+[2025-12-29 10:16:51] [server] ensure_export_server: server available
+[2025-12-29 10:16:51] [server] already running on port 8765
+[2025-12-29 10:16:53] [server] shutdown complete
+[2025-12-29 10:16:56] App init: launching parser UI
+[2025-12-29 10:16:56] Init export server state. preferred_port=8765 frozen=False
+[2025-12-29 10:16:56] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-29 10:16:56] [server] serving exports at http://127.0.0.1:8765
+[2025-12-29 10:16:56] [server] ensure_export_server: server available
+[2025-12-29 10:16:56] [server] already running on port 8765
+[2025-12-29 10:16:57] [server] shutdown complete
+[2025-12-29 10:24:47] App init: launching parser UI
+[2025-12-29 10:24:47] Init export server state. preferred_port=8765 frozen=False
+[2025-12-29 10:24:47] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-29 10:24:47] [server] serving exports at http://127.0.0.1:8765
+[2025-12-29 10:24:47] [server] ensure_export_server: server available
+[2025-12-29 10:24:47] [server] already running on port 8765
+[2025-12-29 10:24:59] [server] shutdown complete
+[2025-12-29 10:28:26] App init: launching parser UI
+[2025-12-29 10:28:26] Init export server state. preferred_port=8765 frozen=False
+[2025-12-29 10:28:26] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-29 10:28:26] [server] serving exports at http://127.0.0.1:8765
+[2025-12-29 10:28:26] [server] ensure_export_server: server available
+[2025-12-29 10:28:26] [server] already running on port 8765
+[2025-12-29 10:28:27] [server] shutdown complete
+[2025-12-29 10:40:16] App init: launching parser UI
+[2025-12-29 10:40:16] Init export server state. preferred_port=8765 frozen=True
+[2025-12-29 10:40:16] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-29 10:40:16] [server] serving exports at http://127.0.0.1:8765
+[2025-12-29 10:40:16] [server] ensure_export_server: server available
+[2025-12-29 10:40:16] [server] already running on port 8765
+[2025-12-29 10:40:18] [server] shutdown complete
+[2025-12-29 10:40:29] App init: launching parser UI
+[2025-12-29 10:40:29] Init export server state. preferred_port=8765 frozen=False
+[2025-12-29 10:40:29] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-29 10:40:29] [server] serving exports at http://127.0.0.1:8765
+[2025-12-29 10:40:29] [server] ensure_export_server: server available
+[2025-12-29 10:40:29] [server] already running on port 8765
+[2025-12-29 10:40:30] [server] shutdown complete
+[2025-12-29 10:45:20] App init: launching parser UI
+[2025-12-29 10:45:20] Init export server state. preferred_port=8765 frozen=True
+[2025-12-29 10:45:20] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-29 10:45:20] [server] serving exports at http://127.0.0.1:8765
+[2025-12-29 10:45:20] [server] ensure_export_server: server available
+[2025-12-29 10:45:20] [server] already running on port 8765
+[2025-12-29 10:45:50] [server] ensure_export_server: already running
+[2025-12-29 10:45:50] [export] opening via server: http://127.0.0.1:8765/export-2025-12-29_10-45-50+0000.html
+[2025-12-29 10:45:51] [server] "GET /export-2025-12-29_10-45-50+0000.html HTTP/1.1" 200 -
+[2025-12-29 10:45:51] [export] opening URL http://127.0.0.1:8765/export-2025-12-29_10-45-50+0000.html
+[2025-12-29 10:45:51] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-29 10:45:51] [server] "GET /export-2025-12-29_10-45-50+0000.html HTTP/1.1" 200 -
+[2025-12-29 10:47:01] [server] shutdown complete
+[2025-12-29 17:04:52] App init: launching parser UI
+[2025-12-29 17:04:52] Init export server state. preferred_port=8765 frozen=True
+[2025-12-29 17:04:52] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-29 17:04:52] [server] serving exports at http://127.0.0.1:8765
+[2025-12-29 17:04:52] [server] ensure_export_server: server available
+[2025-12-29 17:04:52] [server] already running on port 8765
+[2025-12-29 17:05:13] [server] ensure_export_server: already running
+[2025-12-29 17:05:13] [export] opening via server: http://127.0.0.1:8765/export-2025-12-29_17-05-13+0000.html
+[2025-12-29 17:05:13] [server] "GET /export-2025-12-29_17-05-13+0000.html HTTP/1.1" 200 -
+[2025-12-29 17:05:13] [export] opening URL http://127.0.0.1:8765/export-2025-12-29_17-05-13+0000.html
+[2025-12-29 17:05:13] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-29 17:05:13] [server] "GET /export-2025-12-29_17-05-13+0000.html HTTP/1.1" 200 -
+[2025-12-29 17:05:14] [server] code 404, message File not found
+[2025-12-29 17:05:14] [server] "GET /favicon.ico HTTP/1.1" 404 -
+[2025-12-29 17:05:51] [server] shutdown complete
+[2025-12-29 23:48:56] App init: launching parser UI
+[2025-12-29 23:48:56] Init export server state. preferred_port=8765 frozen=True
+[2025-12-29 23:48:56] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-29 23:48:56] [server] serving exports at http://127.0.0.1:8765
+[2025-12-29 23:48:56] [server] ensure_export_server: server available
+[2025-12-29 23:48:56] [server] already running on port 8765
+[2025-12-29 23:49:18] [server] ensure_export_server: already running
+[2025-12-29 23:49:18] [export] opening via server: http://127.0.0.1:8765/export-2025-12-29_23-49-18+0000.html
+[2025-12-29 23:49:19] [server] "GET /export-2025-12-29_23-49-18+0000.html HTTP/1.1" 200 -
+[2025-12-29 23:49:19] [export] opening URL http://127.0.0.1:8765/export-2025-12-29_23-49-18+0000.html
+[2025-12-29 23:49:19] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-29 23:49:19] [server] "GET /export-2025-12-29_23-49-18+0000.html HTTP/1.1" 200 -
+[2025-12-29 23:49:59] [server] shutdown complete
+[2025-12-30 15:03:58] App init: launching parser UI
+[2025-12-30 15:03:58] Init export server state. preferred_port=8765 frozen=True
+[2025-12-30 15:03:58] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-30 15:03:58] [server] serving exports at http://127.0.0.1:8765
+[2025-12-30 15:03:58] [server] ensure_export_server: server available
+[2025-12-30 15:03:58] [server] already running on port 8765
+[2025-12-30 15:04:09] [server] ensure_export_server: already running
+[2025-12-30 15:04:09] [export] opening via server: http://127.0.0.1:8765/export-2025-12-30_15-04-09+0000.html
+[2025-12-30 15:04:09] [server] "GET /export-2025-12-30_15-04-09+0000.html HTTP/1.1" 200 -
+[2025-12-30 15:04:09] [export] opening URL http://127.0.0.1:8765/export-2025-12-30_15-04-09+0000.html
+[2025-12-30 15:04:09] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-30 15:04:10] [server] "GET /export-2025-12-30_15-04-09+0000.html HTTP/1.1" 200 -
+[2025-12-30 15:04:10] [server] code 404, message File not found
+[2025-12-30 15:04:10] [server] "GET /favicon.ico HTTP/1.1" 404 -
+[2025-12-30 15:04:10] [server] client disconnected early: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-30 15:08:08] [server] shutdown complete
+[2025-12-31 05:39:01] App init: launching parser UI
+[2025-12-31 05:39:01] Init export server state. preferred_port=8765 frozen=True
+[2025-12-31 05:39:01] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 05:39:01] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 05:39:01] [server] ensure_export_server: server available
+[2025-12-31 05:39:01] [server] already running on port 8765
+[2025-12-31 05:39:51] [server] ensure_export_server: already running
+[2025-12-31 05:39:51] [export] opening via server: http://127.0.0.1:8765/export-2025-12-31_05-39-51+0000.html
+[2025-12-31 05:39:52] [server] "GET /export-2025-12-31_05-39-51+0000.html HTTP/1.1" 200 -
+[2025-12-31 05:39:52] [export] opening URL http://127.0.0.1:8765/export-2025-12-31_05-39-51+0000.html
+[2025-12-31 05:39:52] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-31 05:39:52] [server] "GET /export-2025-12-31_05-39-51+0000.html HTTP/1.1" 200 -
+[2025-12-31 05:39:52] [server] code 404, message File not found
+[2025-12-31 05:39:52] [server] "GET /favicon.ico HTTP/1.1" 404 -
+[2025-12-31 05:44:10] [server] shutdown complete
+[2025-12-31 05:44:51] App init: launching parser UI
+[2025-12-31 05:44:51] Init export server state. preferred_port=8765 frozen=True
+[2025-12-31 05:44:51] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 05:44:51] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 05:44:51] [server] ensure_export_server: server available
+[2025-12-31 05:44:51] [server] already running on port 8765
+[2025-12-31 05:44:56] [export] open_recent_export called for C:\Users\andre\Documents\FlowerTrack\Exports\export-2025-12-31_05-39-51+0000.html
+[2025-12-31 05:44:56] [server] ensure_export_server: already running
+[2025-12-31 05:44:56] [export] opening recent via server: http://127.0.0.1:8765/export-2025-12-31_05-39-51+0000.html
+[2025-12-31 05:44:56] [server] "GET /export-2025-12-31_05-39-51+0000.html HTTP/1.1" 200 -
+[2025-12-31 05:44:56] [export] opening URL http://127.0.0.1:8765/export-2025-12-31_05-39-51+0000.html
+[2025-12-31 05:44:56] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-31 05:44:56] [server] "GET /export-2025-12-31_05-39-51+0000.html HTTP/1.1" 200 -
+[2025-12-31 05:45:01] [export] open_recent_export called for C:\Users\andre\Documents\FlowerTrack\Exports\export-2025-12-31_05-39-51+0000.html
+[2025-12-31 05:45:01] [server] ensure_export_server: already running
+[2025-12-31 05:45:01] [export] opening recent via server: http://127.0.0.1:8765/export-2025-12-31_05-39-51+0000.html
+[2025-12-31 05:45:01] [server] "GET /export-2025-12-31_05-39-51+0000.html HTTP/1.1" 200 -
+[2025-12-31 05:45:01] [export] opening URL http://127.0.0.1:8765/export-2025-12-31_05-39-51+0000.html
+[2025-12-31 05:45:01] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-31 05:45:30] [server] shutdown complete
+[2025-12-31 06:38:48] App init: launching parser UI
+[2025-12-31 06:38:48] Init export server state. preferred_port=8765 frozen=True
+[2025-12-31 06:38:48] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 06:38:48] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 06:38:48] [server] ensure_export_server: server available
+[2025-12-31 06:38:48] [server] already running on port 8765
+[2025-12-31 06:38:49] [export] open_recent_export called for C:\Users\andre\Documents\FlowerTrack\Exports\export-2025-12-31_05-39-51+0000.html
+[2025-12-31 06:38:49] [server] ensure_export_server: already running
+[2025-12-31 06:38:49] [export] opening recent via server: http://127.0.0.1:8765/export-2025-12-31_05-39-51+0000.html
+[2025-12-31 06:38:49] [server] "GET /export-2025-12-31_05-39-51+0000.html HTTP/1.1" 200 -
+[2025-12-31 06:38:49] [export] opening URL http://127.0.0.1:8765/export-2025-12-31_05-39-51+0000.html
+[2025-12-31 06:38:49] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-31 06:38:49] [server] "GET /export-2025-12-31_05-39-51+0000.html HTTP/1.1" 304 -
+[2025-12-31 06:50:37] [server] ensure_export_server: already running
+[2025-12-31 06:50:37] [export] opening via server: http://127.0.0.1:8765/export-2025-12-31_06-50-37+0000.html
+[2025-12-31 06:50:37] [server] "GET /export-2025-12-31_06-50-37+0000.html HTTP/1.1" 200 -
+[2025-12-31 06:50:37] [export] opening URL http://127.0.0.1:8765/export-2025-12-31_06-50-37+0000.html
+[2025-12-31 06:50:37] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-31 06:50:37] [server] "GET /export-2025-12-31_06-50-37+0000.html HTTP/1.1" 200 -
+[2025-12-31 07:23:38] [server] shutdown complete
+[2025-12-31 10:27:16] App init: launching parser UI
+[2025-12-31 10:27:16] Init export server state. preferred_port=8765 frozen=True
+[2025-12-31 10:27:16] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 10:27:16] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 10:27:16] [server] ensure_export_server: server available
+[2025-12-31 10:27:16] [server] already running on port 8765
+[2025-12-31 10:27:27] [server] ensure_export_server: already running
+[2025-12-31 10:27:27] [export] opening via server: http://127.0.0.1:8765/export-2025-12-31_10-27-27+0000.html
+[2025-12-31 10:27:28] [server] "GET /export-2025-12-31_10-27-27+0000.html HTTP/1.1" 200 -
+[2025-12-31 10:27:28] [export] opening URL http://127.0.0.1:8765/export-2025-12-31_10-27-27+0000.html
+[2025-12-31 10:27:28] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-31 10:27:28] [server] "GET /export-2025-12-31_10-27-27+0000.html HTTP/1.1" 200 -
+[2025-12-31 10:27:28] [server] code 404, message File not found
+[2025-12-31 10:27:28] [server] "GET /favicon.ico HTTP/1.1" 404 -
+[2025-12-31 10:36:48] [server] ensure_export_server: already running
+[2025-12-31 10:36:48] [export] opening via server: http://127.0.0.1:8765/export-2025-12-31_10-36-48+0000.html
+[2025-12-31 10:36:49] [server] "GET /export-2025-12-31_10-36-48+0000.html HTTP/1.1" 200 -
+[2025-12-31 10:36:49] [export] opening URL http://127.0.0.1:8765/export-2025-12-31_10-36-48+0000.html
+[2025-12-31 10:36:49] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-31 10:36:49] [server] "GET /export-2025-12-31_10-36-48+0000.html HTTP/1.1" 200 -
+[2025-12-31 10:37:49] [server] shutdown complete
+[2025-12-31 10:40:44] App init: launching parser UI
+[2025-12-31 10:40:44] Init export server state. preferred_port=8765 frozen=True
+[2025-12-31 10:40:44] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 10:40:44] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 10:40:44] [server] ensure_export_server: server available
+[2025-12-31 10:40:44] [server] already running on port 8765
+[2025-12-31 10:43:41] [server] ensure_export_server: already running
+[2025-12-31 10:43:41] [export] opening via server: http://127.0.0.1:8765/export-2025-12-31_10-43-41+0000.html
+[2025-12-31 10:43:42] [server] "GET /export-2025-12-31_10-43-41+0000.html HTTP/1.1" 200 -
+[2025-12-31 10:43:42] [export] opening URL http://127.0.0.1:8765/export-2025-12-31_10-43-41+0000.html
+[2025-12-31 10:43:42] [server] copy aborted: [WinError 10053] An established connection was aborted by the software in your host machine
+[2025-12-31 10:43:42] [server] "GET /export-2025-12-31_10-43-41+0000.html HTTP/1.1" 200 -
+[2025-12-31 11:02:14] [server] shutdown complete
+[2025-12-31 11:35:23] App init: launching parser UI
+[2025-12-31 11:35:23] Init export server state. preferred_port=8765 frozen=False
+[2025-12-31 11:35:23] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 11:35:23] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 11:35:23] [server] ensure_export_server: server available
+[2025-12-31 11:35:23] [server] already running on port 8765
+[2025-12-31 11:37:19] [server] shutdown complete
+[2025-12-31 11:40:43] App init: launching parser UI
+[2025-12-31 11:40:43] Init export server state. preferred_port=8765 frozen=False
+[2025-12-31 11:40:43] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 11:40:43] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 11:40:43] [server] ensure_export_server: server available
+[2025-12-31 11:40:43] [server] already running on port 8765
+[2025-12-31 11:40:51] [server] shutdown complete
+[2025-12-31 11:48:18] App init: launching parser UI
+[2025-12-31 11:48:18] Init export server state. preferred_port=8765 frozen=False
+[2025-12-31 11:48:18] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 11:48:18] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 11:48:18] [server] ensure_export_server: server available
+[2025-12-31 11:48:18] [server] already running on port 8765
+[2025-12-31 11:48:27] App init: launching parser UI
+[2025-12-31 11:48:27] Init export server state. preferred_port=8765 frozen=False
+[2025-12-31 11:48:27] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 11:48:27] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 11:48:27] [server] ensure_export_server: server available
+[2025-12-31 11:48:27] [server] already running on port 8765
+[2025-12-31 11:48:43] App init: launching parser UI
+[2025-12-31 11:48:43] Init export server state. preferred_port=8765 frozen=False
+[2025-12-31 11:48:43] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 11:48:43] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 11:48:43] [server] ensure_export_server: server available
+[2025-12-31 11:48:43] [server] already running on port 8765
+[2025-12-31 11:48:47] [server] shutdown complete
+[2025-12-31 11:50:26] App init: launching parser UI
+[2025-12-31 11:50:26] Init export server state. preferred_port=8765 frozen=False
+[2025-12-31 11:50:26] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 11:50:26] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 11:50:26] [server] ensure_export_server: server available
+[2025-12-31 11:50:26] [server] already running on port 8765
+[2025-12-31 11:50:52] [server] shutdown complete
+[2025-12-31 11:50:55] App init: launching parser UI
+[2025-12-31 11:50:55] Init export server state. preferred_port=8765 frozen=False
+[2025-12-31 11:50:55] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 11:50:55] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 11:50:55] [server] ensure_export_server: server available
+[2025-12-31 11:50:55] [server] already running on port 8765
+[2025-12-31 11:50:57] [server] shutdown complete
+[2025-12-31 11:51:28] App init: launching parser UI
+[2025-12-31 11:51:28] Init export server state. preferred_port=8765 frozen=False
+[2025-12-31 11:51:28] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 11:51:28] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 11:51:28] [server] ensure_export_server: server available
+[2025-12-31 11:51:28] [server] already running on port 8765
+[2025-12-31 11:52:49] [server] shutdown complete
+[2025-12-31 11:52:50] App init: launching parser UI
+[2025-12-31 11:52:50] Init export server state. preferred_port=8765 frozen=False
+[2025-12-31 11:52:50] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 11:52:50] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 11:52:50] [server] ensure_export_server: server available
+[2025-12-31 11:52:50] [server] already running on port 8765
+[2025-12-31 11:53:46] App init: launching parser UI
+[2025-12-31 11:53:46] Init export server state. preferred_port=8765 frozen=False
+[2025-12-31 11:53:46] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 11:53:46] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 11:53:46] [server] ensure_export_server: server available
+[2025-12-31 11:53:46] [server] already running on port 8765
+[2025-12-31 11:58:16] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2025-12-31 11:58:17] [capture] Attempting login...
+[2025-12-31 11:58:17] [capture] Waiting 3.0s after login
+[2025-12-31 11:58:20] [capture] Revisiting https://medicann-patient.scriptassist.co.uk/request-repeat after login
+[2025-12-31 11:58:20] [capture] Waiting 30.0s after navigation
+[2025-12-31 11:59:51] [capture] Waiting 30.0s after navigation
+[2025-12-31 12:00:04] [capture] Auto-capture error: Page.wait_for_timeout: Target page, context or browser has been closed
+[2025-12-31 12:00:07] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2025-12-31 12:00:07] [capture] Attempting login...
+[2025-12-31 12:00:08] [capture] Waiting 3.0s after login
+[2025-12-31 12:00:10] [capture] Auto-capture error: Page.wait_for_timeout: Target page, context or browser has been closed
+[2025-12-31 12:00:14] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2025-12-31 12:00:15] [capture] Attempting login...
+[2025-12-31 12:00:15] [capture] Waiting 3.0s after login
+[2025-12-31 12:00:18] [capture] Revisiting https://medicann-patient.scriptassist.co.uk/request-repeat after login
+[2025-12-31 12:00:18] [capture] Waiting 30.0s after navigation
+[2025-12-31 12:01:02] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2025-12-31 12:01:02] [capture] Attempting login...
+[2025-12-31 12:01:03] [capture] Waiting 3.0s after login
+[2025-12-31 12:01:06] [capture] Revisiting https://medicann-patient.scriptassist.co.uk/request-repeat after login
+[2025-12-31 12:01:06] [capture] Waiting 30.0s after navigation
+[2025-12-31 12:01:37] [capture] Home Assistant error: <urlopen error unknown url type: 192.168.0.100>
+[2025-12-31 12:01:49] [capture] Home Assistant error: <urlopen error [SSL: WRONG_VERSION_NUMBER] wrong version number (_ssl.c:1000)>
+[2025-12-31 12:02:04] [capture] Home Assistant error: HTTP Error 405: Method Not Allowed
+[2025-12-31 12:03:31] [capture] Home Assistant error: HTTP Error 500: Internal Server Error
+[2025-12-31 12:03:34] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2025-12-31 12:03:34] [capture] Attempting login...
+[2025-12-31 12:03:35] [capture] Waiting 3.0s after login
+[2025-12-31 12:03:36] [capture] Home Assistant error: HTTP Error 500: Internal Server Error
+[2025-12-31 12:03:38] [capture] Revisiting https://medicann-patient.scriptassist.co.uk/request-repeat after login
+[2025-12-31 12:03:38] [capture] Waiting 30.0s after navigation
+[2025-12-31 12:03:43] [capture] Home Assistant error: <urlopen error unknown url type: 192.168.0.100>
+[2025-12-31 12:03:50] [capture] Home Assistant error: <urlopen error [SSL: WRONG_VERSION_NUMBER] wrong version number (_ssl.c:1000)>
+[2025-12-31 12:03:58] [capture] Home Assistant error: <urlopen error [SSL: WRONG_VERSION_NUMBER] wrong version number (_ssl.c:1000)>
+[2025-12-31 12:03:59] [capture] Home Assistant error: <urlopen error [SSL: WRONG_VERSION_NUMBER] wrong version number (_ssl.c:1000)>
+[2025-12-31 12:04:09] [capture] Home Assistant error: <urlopen error [SSL: WRONG_VERSION_NUMBER] wrong version number (_ssl.c:1000)>
+[2025-12-31 12:05:08] [capture] Waiting 30.0s after navigation
+[2025-12-31 12:05:39] [capture] Home Assistant error: <urlopen error [SSL: WRONG_VERSION_NUMBER] wrong version number (_ssl.c:1000)>
+[2025-12-31 12:06:38] [capture] Waiting 30.0s after navigation
+[2025-12-31 12:07:09] [capture] Home Assistant error: <urlopen error [SSL: WRONG_VERSION_NUMBER] wrong version number (_ssl.c:1000)>
+[2025-12-31 12:08:08] [capture] Waiting 30.0s after navigation
+[2025-12-31 12:08:39] [capture] Home Assistant error: <urlopen error [SSL: WRONG_VERSION_NUMBER] wrong version number (_ssl.c:1000)>
+[2025-12-31 12:09:39] [capture] Waiting 30.0s after navigation
+[2025-12-31 12:10:19] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2025-12-31 12:10:20] [capture] Attempting login...
+[2025-12-31 12:10:20] [capture] Waiting 3.0s after login
+[2025-12-31 12:10:21] [capture] Sent data to Home Assistant.
+[2025-12-31 12:10:23] [capture] Revisiting https://medicann-patient.scriptassist.co.uk/request-repeat after login
+[2025-12-31 12:10:23] [capture] Waiting 30.0s after navigation
+[2025-12-31 12:10:54] [capture] Sent data to Home Assistant.
+[2025-12-31 12:11:53] [capture] Waiting 30.0s after navigation
+[2025-12-31 12:12:24] [capture] Sent data to Home Assistant.
+[2025-12-31 12:13:24] [capture] Waiting 30.0s after navigation
+[2025-12-31 12:13:55] [capture] Sent data to Home Assistant.
+[2025-12-31 12:14:22] [server] shutdown complete
+[2025-12-31 12:16:52] App init: launching parser UI
+[2025-12-31 12:16:53] Init export server state. preferred_port=8765 frozen=False
+[2025-12-31 12:16:53] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 12:16:53] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 12:16:53] [server] ensure_export_server: server available
+[2025-12-31 12:16:53] [server] already running on port 8765
+[2025-12-31 12:20:28] [server] shutdown complete
+[2025-12-31 12:20:29] App init: launching parser UI
+[2025-12-31 12:20:29] Init export server state. preferred_port=8765 frozen=False
+[2025-12-31 12:20:29] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 12:20:29] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 12:20:29] [server] ensure_export_server: server available
+[2025-12-31 12:20:29] [server] already running on port 8765
+[2025-12-31 12:20:32] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2025-12-31 12:20:33] [capture] Attempting login...
+[2025-12-31 12:20:33] [capture] Waiting 3.0s after login
+[2025-12-31 12:20:36] [capture] Revisiting https://medicann-patient.scriptassist.co.uk/request-repeat after login
+[2025-12-31 12:20:36] [capture] Waiting 30.0s after navigation
+[2025-12-31 12:20:53] [server] shutdown complete
+[2025-12-31 12:21:00] App init: launching parser UI
+[2025-12-31 12:21:00] Init export server state. preferred_port=8765 frozen=False
+[2025-12-31 12:21:00] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 12:21:00] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 12:21:00] [server] ensure_export_server: server available
+[2025-12-31 12:21:00] [server] already running on port 8765
+[2025-12-31 12:21:35] [server] shutdown complete
+[2025-12-31 12:21:36] App init: launching parser UI
+[2025-12-31 12:21:36] Init export server state. preferred_port=8765 frozen=False
+[2025-12-31 12:21:36] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 12:21:36] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 12:21:36] [server] ensure_export_server: server available
+[2025-12-31 12:21:36] [server] already running on port 8765
+[2025-12-31 12:21:51] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2025-12-31 12:21:52] [capture] Attempting login...
+[2025-12-31 12:21:52] [capture] Waiting 3.0s after login
+[2025-12-31 12:21:55] [capture] Revisiting https://medicann-patient.scriptassist.co.uk/request-repeat after login
+[2025-12-31 12:21:55] [capture] Waiting 5.0s after navigation
+[2025-12-31 12:22:29] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2025-12-31 12:22:30] [capture] Attempting login...
+[2025-12-31 12:22:30] [capture] Waiting 3.0s after login
+[2025-12-31 12:22:31] [capture] Sent data to Home Assistant.
+[2025-12-31 12:22:33] [capture] Revisiting https://medicann-patient.scriptassist.co.uk/request-repeat after login
+[2025-12-31 12:22:33] [capture] Waiting 15.0s after navigation
+[2025-12-31 12:22:49] [capture] Sent data to Home Assistant.
+[2025-12-31 12:23:48] [capture] Waiting 15.0s after navigation
+[2025-12-31 12:24:04] [capture] No changes detected; skipping HA notification.
+[2025-12-31 12:24:44] [server] shutdown complete
+[2025-12-31 12:24:46] App init: launching parser UI
+[2025-12-31 12:24:46] Init export server state. preferred_port=8765 frozen=False
+[2025-12-31 12:24:46] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 12:24:46] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 12:24:46] [server] ensure_export_server: server available
+[2025-12-31 12:24:46] [server] already running on port 8765
+[2025-12-31 12:24:49] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2025-12-31 12:24:50] [capture] Attempting login...
+[2025-12-31 12:24:50] [capture] Waiting 3.0s after login
+[2025-12-31 12:24:53] [capture] Revisiting https://medicann-patient.scriptassist.co.uk/request-repeat after login
+[2025-12-31 12:24:53] [capture] Waiting 15.0s after navigation
+[2025-12-31 12:25:09] [capture] No changes detected; skipping HA notification.
+[2025-12-31 12:26:08] [capture] Waiting 15.0s after navigation
+[2025-12-31 12:26:24] [capture] No changes detected; skipping HA notification.
+[2025-12-31 12:27:23] [capture] Waiting 15.0s after navigation
+[2025-12-31 12:27:28] [server] shutdown complete
+[2025-12-31 18:57:38] App init: launching parser UI
+[2025-12-31 18:57:38] Init export server state. preferred_port=8765 frozen=True
+[2025-12-31 18:57:38] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2025-12-31 18:57:38] [server] serving exports at http://127.0.0.1:8765
+[2025-12-31 18:57:38] [server] ensure_export_server: server available
+[2025-12-31 18:57:38] [server] already running on port 8765
+[2025-12-31 18:57:48] [server] ensure_export_server: already running
+[2025-12-31 18:57:48] [export] opening via server: http://127.0.0.1:8765/export-2025-12-31_18-57-48+0000.html
+[2025-12-31 18:57:48] [export] probe failed for http://127.0.0.1:8765/export-2025-12-31_18-57-48+0000.html: HTTP Error 404: File not found
+[2025-12-31 18:57:48] [export] falling back to file:// for C:\Users\andre\Documents\FlowerTrack\Exports\export-2025-12-31_18-57-48+0000.html
+[2025-12-31 18:58:46] [export] open_recent_export called for C:\Users\andre\Documents\FlowerTrack\Exports\export-2025-12-31_18-57-48+0000.html
+[2025-12-31 18:58:46] [server] ensure_export_server: already running
+[2025-12-31 18:58:46] [export] opening recent via server: http://127.0.0.1:8765/export-2025-12-31_18-57-48+0000.html
+[2025-12-31 18:58:46] [export] probe failed for http://127.0.0.1:8765/export-2025-12-31_18-57-48+0000.html: HTTP Error 404: File not found
+[2025-12-31 18:58:46] [export] falling back to file:// for C:\Users\andre\Documents\FlowerTrack\Exports\export-2025-12-31_18-57-48+0000.html
+[2025-12-31 18:59:33] [server] shutdown complete
+[2026-01-01 17:37:01] App init: launching parser UI
+[2026-01-01 17:37:01] Init export server state. preferred_port=8765 frozen=False
+[2026-01-01 17:37:01] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2026-01-01 17:37:01] [server] serving exports at http://127.0.0.1:8765
+[2026-01-01 17:37:01] [server] ensure_export_server: server available
+[2026-01-01 17:37:01] [server] already running on port 8765
+[2026-01-01 17:37:07] [server] shutdown complete
+[2026-01-02 05:00:29] App init: launching parser UI
+[2026-01-02 05:00:29] Init export server state. preferred_port=8765 frozen=True
+[2026-01-02 05:00:29] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2026-01-02 05:00:29] [server] serving exports at http://127.0.0.1:8765
+[2026-01-02 05:00:29] [server] ensure_export_server: server available
+[2026-01-02 05:00:29] [server] already running on port 8765
+[2026-01-02 05:00:34] [server] ensure_export_server: already running
+[2026-01-02 05:00:34] [export] opening via server: http://127.0.0.1:8765/export-2026-01-02_05-00-34+0000.html
+[2026-01-02 05:00:34] [export] probe failed for http://127.0.0.1:8765/export-2026-01-02_05-00-34+0000.html: HTTP Error 404: File not found
+[2026-01-02 05:00:34] [export] falling back to file:// for C:\Users\andre\Documents\FlowerTrack\Exports\export-2026-01-02_05-00-34+0000.html
+[2026-01-02 05:08:00] [server] shutdown complete
+[2026-01-02 06:25:17] App init: launching parser UI
+[2026-01-02 06:25:17] Init export server state. preferred_port=8765 frozen=True
+[2026-01-02 06:25:17] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2026-01-02 06:25:17] [server] serving exports at http://127.0.0.1:8765
+[2026-01-02 06:25:17] [server] ensure_export_server: server available
+[2026-01-02 06:25:17] [server] already running on port 8765
+[2026-01-02 06:25:19] [server] shutdown complete
+[2026-01-02 21:57:11] App init: launching parser UI
+[2026-01-02 21:57:11] Init export server state. preferred_port=8765 frozen=True
+[2026-01-02 21:57:11] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2026-01-02 21:57:11] [server] serving exports at http://127.0.0.1:8765
+[2026-01-02 21:57:11] [server] ensure_export_server: server available
+[2026-01-02 21:57:11] [server] already running on port 8765
+[2026-01-02 21:57:15] [server] shutdown complete
+[2026-01-03 04:40:57] App init: launching parser UI
+[2026-01-03 04:40:57] Init export server state. preferred_port=8765 frozen=True
+[2026-01-03 04:40:57] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2026-01-03 04:40:57] [server] serving exports at http://127.0.0.1:8765
+[2026-01-03 04:40:57] [server] ensure_export_server: server available
+[2026-01-03 04:40:57] [server] already running on port 8765
+[2026-01-03 04:40:59] [server] shutdown complete
+[2026-01-05 09:01:48] App init: launching parser UI
+[2026-01-05 09:01:48] Init export server state. preferred_port=8765 frozen=True
+[2026-01-05 09:01:48] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2026-01-05 09:01:48] [server] serving exports at http://127.0.0.1:8765
+[2026-01-05 09:01:48] [server] ensure_export_server: server available
+[2026-01-05 09:01:48] [server] already running on port 8765
+[2026-01-05 09:01:52] [server] ensure_export_server: already running
+[2026-01-05 09:01:52] [export] opening via server: http://127.0.0.1:8765/export-2026-01-05_09-01-52+0000.html
+[2026-01-05 09:01:52] [export] probe failed for http://127.0.0.1:8765/export-2026-01-05_09-01-52+0000.html: HTTP Error 404: File not found
+[2026-01-05 09:01:52] [export] falling back to file:// for C:\Users\andre\Documents\FlowerTrack\Exports\export-2026-01-05_09-01-52+0000.html
+[2026-01-05 09:14:33] [server] shutdown complete
+[2026-01-06 19:45:45] App init: launching parser UI
+[2026-01-06 19:45:45] Init export server state. preferred_port=8765 frozen=True
+[2026-01-06 19:45:45] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2026-01-06 19:45:45] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 19:45:45] [server] ensure_export_server: server available
+[2026-01-06 19:45:45] [server] already running on port 8765
+[2026-01-06 19:45:46] [server] shutdown complete
+[2026-01-06 21:08:15] App init: launching scraper UI
+[2026-01-06 21:08:15] Init export server state. preferred_port=8765 frozen=True
+[2026-01-06 21:08:15] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:08:15] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:08:15] [server] ensure_export_server: server available
+[2026-01-06 21:08:15] [server] already running on port 8765
+[2026-01-06 21:09:11] [server] shutdown complete
+[2026-01-06 21:09:22] App init: launching scraper UI
+[2026-01-06 21:09:22] Init export server state. preferred_port=8765 frozen=True
+[2026-01-06 21:09:22] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:09:22] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:09:22] [server] ensure_export_server: server available
+[2026-01-06 21:09:22] [server] already running on port 8765
+[2026-01-06 21:09:22] [capture] Auto-capture started.
+[2026-01-06 21:09:23] [capture] Playwright browser missing; attempting download...
+[2026-01-06 21:09:23] [capture] Downloading Playwright browser (this may take a minute)...
+[2026-01-06 21:10:02] [capture] Auto-capture started.
+[2026-01-06 21:10:04] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 21:10:04] [capture] Attempting login...
+[2026-01-06 21:10:07] [capture] Filled username via union selector.
+[2026-01-06 21:10:07] [capture] Filled password via union selector.
+[2026-01-06 21:10:07] [capture] Clicked login via union selector.
+[2026-01-06 21:10:07] [capture] Waiting 5.0s after login
+[2026-01-06 21:10:12] [capture] Waiting 30.0s after navigation
+[2026-01-06 21:10:24] [capture] Minimized to tray.
+[2026-01-06 21:10:24] [capture] Minimized to tray.
+[2026-01-06 21:10:42] [server] shutdown complete
+[2026-01-06 21:10:55] App init: launching scraper UI
+[2026-01-06 21:10:55] Init export server state. preferred_port=8765 frozen=True
+[2026-01-06 21:10:55] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:10:55] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:10:55] [server] ensure_export_server: server available
+[2026-01-06 21:10:55] [server] already running on port 8765
+[2026-01-06 21:10:56] [capture] Auto-capture started.
+[2026-01-06 21:10:57] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 21:10:58] [capture] Attempting login...
+[2026-01-06 21:10:58] [capture] Minimized to tray.
+[2026-01-06 21:10:58] [capture] Minimized to tray.
+[2026-01-06 21:11:01] [capture] Filled username via union selector.
+[2026-01-06 21:11:01] [capture] Filled password via union selector.
+[2026-01-06 21:11:01] [capture] Clicked login via union selector.
+[2026-01-06 21:11:01] [capture] Waiting 5.0s after login
+[2026-01-06 21:11:06] [capture] Waiting 30.0s after navigation
+[2026-01-06 21:11:36] [capture] Page ready; collecting text.
+[2026-01-06 21:11:37] [capture] Exported snapshot: export-2026-01-06_21-11-37+0000.html
+[2026-01-06 21:11:37] [capture] Sending Windows notification: New: Curaleaf CURALEAF QUE MEDICAL INHALATION DEVICE QMID; Clearleaf CLEARLEAF WED ROSIN; Green Karat GREEN KARAT PV PAVE S1 Pavé S1; Common Roots CMN-3 COMMON ROOTS WRZ Watermelon Zkittlez; Big Narstie Medical BIG NARSTIE MEDICAL PAPAYA BANT... | Removed: Curaleaf CURA-ZAS Zour Apples; Green Karat GREEN KARAT MG MODIFIED GAS Modified Gas; 4C Labs 4C LABS HCB HUCKLEBERRY Huckleberry; Green Karat GREEN KARAT SD Supreme Diesel; 4C Labs 4C LABS ZKF ZKITTLES FUEL Zkittlez Fuel; 4C Labs 4C LABS... | Stock: Aurora: In Stock → IN STOCK; Curaleaf: In Stock → IN STOCK; 4C Labs: In Stock → LOW STOCK; Clearleaf: In Stock → IN STOCK; Clearleaf: In Stock → IN STOCK; Curaleaf: In Stock → IN STOCK; Lot420 Gelato #33: In Stock → IN STOCK; 4C Labs Col...
+[2026-01-06 21:11:38] [capture] Exported snapshot: export-2026-01-06_21-11-37+0000.html
+[2026-01-06 21:16:36] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 21:16:36] [capture] Waiting 30.0s after navigation
+[2026-01-06 21:17:06] [capture] Page ready; collecting text.
+[2026-01-06 21:17:07] [capture] No changes detected; skipping HA notification.
+[2026-01-06 21:18:32] [server] shutdown complete
+[2026-01-06 21:18:34] App init: launching scraper UI
+[2026-01-06 21:18:34] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:18:34] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:18:34] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:18:34] [server] ensure_export_server: server available
+[2026-01-06 21:18:34] [server] already running on port 8765
+[2026-01-06 21:18:35] [server] shutdown complete
+[2026-01-06 21:19:46] App init: launching scraper UI
+[2026-01-06 21:19:46] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:19:47] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:19:47] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:19:47] [server] ensure_export_server: server available
+[2026-01-06 21:19:47] [server] already running on port 8765
+[2026-01-06 21:20:05] [server] shutdown complete
+[2026-01-06 21:20:52] App init: launching scraper UI
+[2026-01-06 21:20:52] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:20:52] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:20:52] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:20:52] [server] ensure_export_server: server available
+[2026-01-06 21:20:52] [server] already running on port 8765
+[2026-01-06 21:20:55] [capture] Auto-capture started.
+[2026-01-06 21:21:00] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 21:21:01] [capture] Attempting login...
+[2026-01-06 21:21:04] [capture] Filled username via union selector.
+[2026-01-06 21:21:04] [capture] Filled password via union selector.
+[2026-01-06 21:21:04] [capture] Clicked login via union selector.
+[2026-01-06 21:21:04] [capture] Waiting 5.0s after login
+[2026-01-06 21:21:09] [capture] Waiting 30.0s after navigation
+[2026-01-06 21:21:39] [capture] Page ready; collecting text.
+[2026-01-06 21:21:40] [capture] Sending Windows notification: Stock: Clearleaf: IN STOCK → LOW STOCK
+[2026-01-06 21:21:41] [capture] Exported snapshot: export-2026-01-06_21-21-40+0000.html
+[2026-01-06 21:21:48] [server] shutdown complete
+[2026-01-06 21:21:51] App init: launching scraper UI
+[2026-01-06 21:21:51] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:21:51] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:21:51] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:21:51] [server] ensure_export_server: server available
+[2026-01-06 21:21:51] [server] already running on port 8765
+[2026-01-06 21:21:55] [server] shutdown complete
+[2026-01-06 21:22:09] App init: launching scraper UI
+[2026-01-06 21:22:09] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:22:09] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:22:09] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:22:09] [server] ensure_export_server: server available
+[2026-01-06 21:22:09] [server] already running on port 8765
+[2026-01-06 21:22:12] [server] shutdown complete
+[2026-01-06 21:24:29] App init: launching scraper UI
+[2026-01-06 21:24:29] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:24:29] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:24:29] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:24:29] [server] ensure_export_server: server available
+[2026-01-06 21:24:29] [server] already running on port 8765
+[2026-01-06 21:24:32] [capture] Minimized to tray.
+[2026-01-06 21:24:32] [capture] Minimized to tray.
+[2026-01-06 21:24:38] [server] shutdown complete
+[2026-01-06 21:40:28] App init: launching scraper UI
+[2026-01-06 21:40:28] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:40:28] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:40:28] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:40:28] [server] ensure_export_server: server available
+[2026-01-06 21:40:28] [server] already running on port 8765
+[2026-01-06 21:40:29] [capture] Scraper window hidden.
+[2026-01-06 21:40:29] [capture] Scraper window hidden.
+[2026-01-06 21:40:34] [capture] Scraper window hidden.
+[2026-01-06 21:40:34] [capture] Scraper window hidden.
+[2026-01-06 21:40:44] [capture] Scraper window hidden.
+[2026-01-06 21:40:44] [capture] Scraper window hidden.
+[2026-01-06 21:40:48] [capture] Auto-capture started.
+[2026-01-06 21:40:48] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 21:40:49] [capture] Attempting login...
+[2026-01-06 21:40:49] [capture] Scraper window hidden.
+[2026-01-06 21:40:49] [capture] Scraper window hidden.
+[2026-01-06 21:40:52] [capture] Filled username via union selector.
+[2026-01-06 21:40:52] [capture] Filled password via union selector.
+[2026-01-06 21:40:52] [capture] Clicked login via union selector.
+[2026-01-06 21:40:52] [capture] Waiting 5.0s after login
+[2026-01-06 21:40:57] [capture] Waiting 30.0s after navigation
+[2026-01-06 21:41:27] [capture] Page ready; collecting text.
+[2026-01-06 21:41:28] [capture] Sending Windows notification: New: Circle CIRCLE CANNABIS SUBLINGUAL OIL BALANCE MINT; Circle CIRCLE; Circle CIRCLE; Circle CIRCLE BALANCE; Circle CIRCLE BALANCE; Circle CIRCLE BALANCE | Removed: Circle Balance CIRCLE CANNABIS SUBLINGUAL OIL BALANCE MINT; Circle Balance CIRCLE BALANCE; Circle Balance CIRCLE BALANCE; Circle Balance CIRCLE BALANCE; Circle Balance CIRCLE; Circle Balance CIRCLE | Stock: MUZO LM Lemon MAC: IN STOCK → LOW STOCK
+[2026-01-06 21:41:28] [capture] Exported snapshot: export-2026-01-06_21-41-28+0000.html
+[2026-01-06 21:41:31] [server] ensure_export_server: already running
+[2026-01-06 21:41:31] [capture] Opening http://127.0.0.1:8765/export-2026-01-06_21-41-28+0000.html
+[2026-01-06 21:41:31] [server] "GET /export-2026-01-06_21-41-28+0000.html HTTP/1.1" 200 -
+[2026-01-06 21:42:19] [capture] Scraper window hidden.
+[2026-01-06 21:42:19] [capture] Scraper window hidden.
+[2026-01-06 21:44:21] [capture] Scraper window hidden.
+[2026-01-06 21:44:21] [capture] Scraper window hidden.
+[2026-01-06 21:44:52] [capture] Scraper window hidden.
+[2026-01-06 21:44:52] [capture] Scraper window hidden.
+[2026-01-06 21:45:38] App init: launching scraper UI
+[2026-01-06 21:45:38] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:45:38] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:45:38] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:45:38] [server] ensure_export_server: server available
+[2026-01-06 21:45:38] [server] already running on port 8765
+[2026-01-06 21:45:42] [capture] Auto-capture started.
+[2026-01-06 21:45:42] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 21:45:43] [capture] Attempting login...
+[2026-01-06 21:45:45] [capture] Scraper window hidden.
+[2026-01-06 21:45:45] [capture] Scraper window hidden.
+[2026-01-06 21:45:46] [capture] Filled username via union selector.
+[2026-01-06 21:45:46] [capture] Filled password via union selector.
+[2026-01-06 21:45:46] [capture] Clicked login via union selector.
+[2026-01-06 21:45:46] [capture] Waiting 5.0s after login
+[2026-01-06 21:45:51] [capture] Waiting 30.0s after navigation
+[2026-01-06 21:45:56] [capture] Scraper window hidden.
+[2026-01-06 21:45:56] [capture] Scraper window hidden.
+[2026-01-06 21:46:31] [capture] Scraper window hidden.
+[2026-01-06 21:46:31] [capture] Scraper window hidden.
+[2026-01-06 21:46:37] [capture] Scraper window hidden.
+[2026-01-06 21:46:37] [capture] Scraper window hidden.
+[2026-01-06 21:46:58] [capture] Scraper window hidden.
+[2026-01-06 21:46:58] [capture] Scraper window hidden.
+[2026-01-06 21:47:43] App init: launching scraper UI
+[2026-01-06 21:47:43] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:47:43] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:47:43] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:47:43] [server] ensure_export_server: server available
+[2026-01-06 21:47:43] [server] already running on port 8765
+[2026-01-06 21:47:44] [capture] Scraper window hidden.
+[2026-01-06 21:47:44] [capture] Scraper window hidden.
+[2026-01-06 21:49:25] App init: launching scraper UI
+[2026-01-06 21:49:25] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:49:25] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:49:25] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:49:25] [server] ensure_export_server: server available
+[2026-01-06 21:49:25] [server] already running on port 8765
+[2026-01-06 21:49:27] [capture] Scraper window hidden.
+[2026-01-06 21:49:27] [capture] Scraper window hidden.
+[2026-01-06 21:49:32] [server] shutdown complete
+[2026-01-06 21:49:36] App init: launching scraper UI
+[2026-01-06 21:49:36] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:49:36] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:49:36] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:49:36] [server] ensure_export_server: server available
+[2026-01-06 21:49:36] [server] already running on port 8765
+[2026-01-06 21:49:39] [capture] Scraper window hidden.
+[2026-01-06 21:49:39] [capture] Scraper window hidden.
+[2026-01-06 21:49:47] [capture] Scraper window hidden.
+[2026-01-06 21:49:47] [capture] Scraper window hidden.
+[2026-01-06 21:49:53] [server] shutdown complete
+[2026-01-06 21:51:34] App init: launching scraper UI
+[2026-01-06 21:51:34] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:51:34] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:51:34] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:51:34] [server] ensure_export_server: server available
+[2026-01-06 21:51:34] [server] already running on port 8765
+[2026-01-06 21:51:35] [capture] Auto-capture started.
+[2026-01-06 21:51:36] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 21:51:36] [capture] Attempting login...
+[2026-01-06 21:51:38] [capture] Scraper window hidden.
+[2026-01-06 21:51:38] [capture] Scraper window hidden.
+[2026-01-06 21:54:13] App init: launching scraper UI
+[2026-01-06 21:54:13] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:54:13] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:54:13] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:54:13] [server] ensure_export_server: server available
+[2026-01-06 21:54:13] [server] already running on port 8765
+[2026-01-06 21:54:14] [capture] Auto-capture started.
+[2026-01-06 21:54:15] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 21:54:15] [capture] Attempting login...
+[2026-01-06 21:54:15] [capture] Scraper window hidden.
+[2026-01-06 21:54:16] [capture] Scraper window hidden.
+[2026-01-06 21:54:18] [capture] Filled username via union selector.
+[2026-01-06 21:54:18] [capture] Filled password via union selector.
+[2026-01-06 21:54:18] [capture] Clicked login via union selector.
+[2026-01-06 21:54:18] [capture] Waiting 5.0s after login
+[2026-01-06 21:54:23] [capture] Waiting 30.0s after navigation
+[2026-01-06 21:54:26] [capture] Scraper window hidden.
+[2026-01-06 21:54:26] [capture] Scraper window hidden.
+[2026-01-06 21:55:19] [capture] Scraper window hidden.
+[2026-01-06 21:55:19] [capture] Scraper window hidden.
+[2026-01-06 21:55:36] [capture] Scraper window hidden.
+[2026-01-06 21:55:36] [capture] Scraper window hidden.
+[2026-01-06 21:55:43] App init: launching scraper UI
+[2026-01-06 21:55:43] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:55:43] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:55:43] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:55:43] [server] ensure_export_server: server available
+[2026-01-06 21:55:43] [server] already running on port 8765
+[2026-01-06 21:55:46] [capture] Auto-capture started.
+[2026-01-06 21:55:47] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 21:55:47] [capture] Attempting login...
+[2026-01-06 21:55:49] [capture] Scraper window hidden.
+[2026-01-06 21:55:49] [capture] Scraper window hidden.
+[2026-01-06 21:55:50] [capture] Filled username via union selector.
+[2026-01-06 21:55:50] [capture] Filled password via union selector.
+[2026-01-06 21:55:50] [capture] Clicked login via union selector.
+[2026-01-06 21:55:50] [capture] Waiting 5.0s after login
+[2026-01-06 21:56:02] App init: launching scraper UI
+[2026-01-06 21:56:02] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:56:02] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:56:02] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:56:02] [server] ensure_export_server: server available
+[2026-01-06 21:56:02] [server] already running on port 8765
+[2026-01-06 21:56:03] [capture] Scraper window hidden.
+[2026-01-06 21:56:03] [capture] Scraper window hidden.
+[2026-01-06 21:56:49] App init: launching scraper UI
+[2026-01-06 21:56:49] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:56:49] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:56:49] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:56:49] [server] ensure_export_server: server available
+[2026-01-06 21:56:49] [server] already running on port 8765
+[2026-01-06 21:56:50] [capture] Auto-capture started.
+[2026-01-06 21:56:50] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 21:56:51] [capture] Attempting login...
+[2026-01-06 21:56:52] [capture] Scraper window hidden.
+[2026-01-06 21:56:52] [capture] Scraper window hidden.
+[2026-01-06 21:56:54] [capture] Filled username via union selector.
+[2026-01-06 21:56:54] [capture] Filled password via union selector.
+[2026-01-06 21:56:54] [capture] Clicked login via union selector.
+[2026-01-06 21:56:54] [capture] Waiting 5.0s after login
+[2026-01-06 21:56:55] [capture] Scraper window hidden.
+[2026-01-06 21:56:55] [capture] Scraper window hidden.
+[2026-01-06 21:57:04] App init: launching scraper UI
+[2026-01-06 21:57:04] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:57:04] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:57:04] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:57:04] [server] ensure_export_server: server available
+[2026-01-06 21:57:04] [server] already running on port 8765
+[2026-01-06 21:57:05] [capture] Scraper window hidden.
+[2026-01-06 21:57:05] [capture] Scraper window hidden.
+[2026-01-06 21:58:11] App init: launching scraper UI
+[2026-01-06 21:58:11] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 21:58:11] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 21:58:11] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 21:58:11] [server] ensure_export_server: server available
+[2026-01-06 21:58:11] [server] already running on port 8765
+[2026-01-06 21:58:13] [capture] Auto-capture started.
+[2026-01-06 21:58:14] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 21:58:14] [capture] Attempting login...
+[2026-01-06 21:58:15] [capture] Scraper window hidden.
+[2026-01-06 21:58:15] [capture] Scraper window hidden.
+[2026-01-06 22:00:54] App init: launching scraper UI
+[2026-01-06 22:00:54] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 22:00:54] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 22:00:54] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 22:00:54] [server] ensure_export_server: server available
+[2026-01-06 22:00:54] [server] already running on port 8765
+[2026-01-06 22:00:56] [capture] Auto-capture started.
+[2026-01-06 22:00:57] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 22:00:57] [capture] Attempting login...
+[2026-01-06 22:00:59] [capture] Scraper window hidden.
+[2026-01-06 22:00:59] [capture] Scraper window hidden.
+[2026-01-06 22:01:00] [capture] Filled username via union selector.
+[2026-01-06 22:01:01] [capture] Filled password via union selector.
+[2026-01-06 22:01:01] [capture] Clicked login via union selector.
+[2026-01-06 22:01:01] [capture] Waiting 5.0s after login
+[2026-01-06 22:01:05] [capture] Scraper window hidden.
+[2026-01-06 22:01:05] [capture] Scraper window hidden.
+[2026-01-06 22:01:10] [capture] Scraper window hidden.
+[2026-01-06 22:01:10] [capture] Scraper window hidden.
+[2026-01-06 22:01:16] [capture] Auto-capture started.
+[2026-01-06 22:01:17] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 22:01:17] [capture] Attempting login...
+[2026-01-06 22:01:20] [capture] Scraper window hidden.
+[2026-01-06 22:01:20] [capture] Scraper window hidden.
+[2026-01-06 22:01:20] [capture] Filled username via union selector.
+[2026-01-06 22:01:20] [capture] Filled password via union selector.
+[2026-01-06 22:01:20] [capture] Clicked login via union selector.
+[2026-01-06 22:01:20] [capture] Waiting 5.0s after login
+[2026-01-06 22:01:26] [capture] Waiting 30.0s after navigation
+[2026-01-06 22:01:56] [capture] Page ready; collecting text.
+[2026-01-06 22:01:57] [capture] No changes detected; skipping HA notification.
+[2026-01-06 22:03:14] App init: launching scraper UI
+[2026-01-06 22:03:14] Init export server state. preferred_port=8765 frozen=True
+[2026-01-06 22:03:14] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 22:03:14] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 22:03:14] [server] ensure_export_server: server available
+[2026-01-06 22:03:14] [server] already running on port 8765
+[2026-01-06 22:03:17] [capture] Scraper window hidden.
+[2026-01-06 22:03:17] [capture] Scraper window hidden.
+[2026-01-06 22:03:21] [capture] Scraper window hidden.
+[2026-01-06 22:03:21] [capture] Scraper window hidden.
+[2026-01-06 22:03:24] [capture] Auto-capture started.
+[2026-01-06 22:03:25] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 22:03:25] [capture] Attempting login...
+[2026-01-06 22:03:26] [capture] Scraper window hidden.
+[2026-01-06 22:03:26] [capture] Scraper window hidden.
+[2026-01-06 22:03:28] [capture] Filled username via union selector.
+[2026-01-06 22:03:28] [capture] Filled password via union selector.
+[2026-01-06 22:03:28] [capture] Clicked login via union selector.
+[2026-01-06 22:03:28] [capture] Waiting 5.0s after login
+[2026-01-06 22:03:33] [capture] Scraper window hidden.
+[2026-01-06 22:03:33] [capture] Scraper window hidden.
+[2026-01-06 22:03:34] [capture] Waiting 30.0s after navigation
+[2026-01-06 22:03:53] [capture] Scraper window hidden.
+[2026-01-06 22:03:53] [capture] Scraper window hidden.
+[2026-01-06 22:04:04] [capture] Page ready; collecting text.
+[2026-01-06 22:04:05] [capture] No changes detected; skipping HA notification.
+[2026-01-06 22:04:25] [capture] Scraper window hidden.
+[2026-01-06 22:04:25] [capture] Scraper window hidden.
+[2026-01-06 22:04:39] [server] ensure_export_server: already running
+[2026-01-06 22:04:39] [capture] Opening http://127.0.0.1:8765/export-2026-01-06_21-41-28+0000.html
+[2026-01-06 22:04:39] [server] "GET /export-2026-01-06_21-41-28+0000.html HTTP/1.1" 200 -
+[2026-01-06 22:05:34] [capture] Scraper window hidden.
+[2026-01-06 22:05:34] [capture] Scraper window hidden.
+[2026-01-06 22:09:04] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 22:09:04] [capture] Waiting 30.0s after navigation
+[2026-01-06 22:09:34] [capture] Page ready; collecting text.
+[2026-01-06 22:09:35] [capture] No changes detected; skipping HA notification.
+[2026-01-06 22:14:34] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 22:14:34] [capture] Waiting 30.0s after navigation
+[2026-01-06 22:15:04] [capture] Page ready; collecting text.
+[2026-01-06 22:15:05] [capture] No changes detected; skipping HA notification.
+[2026-01-06 22:15:53] [capture] Scraper window hidden.
+[2026-01-06 22:15:53] [capture] Scraper window hidden.
+[2026-01-06 22:16:01] [capture] Scraper window hidden.
+[2026-01-06 22:16:01] [capture] Scraper window hidden.
+[2026-01-06 22:25:34] App init: launching scraper UI
+[2026-01-06 22:25:34] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 22:25:34] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 22:25:34] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 22:25:34] [server] ensure_export_server: server available
+[2026-01-06 22:25:34] [server] already running on port 8765
+[2026-01-06 22:25:36] [capture] Auto-capture started.
+[2026-01-06 22:25:37] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 22:25:37] [capture] Attempting login...
+[2026-01-06 22:25:38] [capture] Scraper window hidden.
+[2026-01-06 22:25:38] [capture] Scraper window hidden.
+[2026-01-06 22:26:19] App init: launching scraper UI
+[2026-01-06 22:26:19] Init export server state. preferred_port=8765 frozen=True
+[2026-01-06 22:26:19] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 22:26:19] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 22:26:19] [server] ensure_export_server: server available
+[2026-01-06 22:26:19] [server] already running on port 8765
+[2026-01-06 22:26:20] [capture] Auto-capture started.
+[2026-01-06 22:26:22] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 22:26:22] [capture] Attempting login...
+[2026-01-06 22:26:25] [capture] Scraper window hidden.
+[2026-01-06 22:26:25] [capture] Scraper window hidden.
+[2026-01-06 22:26:25] [capture] Filled username via union selector.
+[2026-01-06 22:26:25] [capture] Filled password via union selector.
+[2026-01-06 22:26:25] [capture] Clicked login via union selector.
+[2026-01-06 22:26:25] [capture] Waiting 5.0s after login
+[2026-01-06 22:26:30] [capture] Waiting 30.0s after navigation
+[2026-01-06 22:27:00] [capture] Page ready; collecting text.
+[2026-01-06 22:27:01] [capture] Sending Windows notification: New: MUZO SDZ Sudz
+[2026-01-06 22:27:02] [capture] Exported snapshot: export-2026-01-06_22-27-01+0000.html
+[2026-01-06 22:27:10] [server] ensure_export_server: already running
+[2026-01-06 22:27:10] [capture] Opening http://127.0.0.1:8765/export-2026-01-06_22-27-01+0000.html
+[2026-01-06 22:27:10] [server] "GET /export-2026-01-06_22-27-01+0000.html HTTP/1.1" 200 -
+[2026-01-06 22:30:15] [capture] Scraper window hidden.
+[2026-01-06 22:30:15] [capture] Scraper window hidden.
+[2026-01-06 22:32:00] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 22:32:01] [capture] Waiting 30.0s after navigation
+[2026-01-06 22:32:31] [capture] Page ready; collecting text.
+[2026-01-06 22:32:32] [capture] Sending Windows notification: Removed: MUZO SDZ Sudz
+[2026-01-06 22:32:32] [capture] Exported snapshot: export-2026-01-06_22-32-32+0000.html
+[2026-01-06 22:32:59] [server] ensure_export_server: already running
+[2026-01-06 22:32:59] [capture] Opening http://127.0.0.1:8765/export-2026-01-06_22-32-32+0000.html
+[2026-01-06 22:32:59] [server] "GET /export-2026-01-06_22-32-32+0000.html HTTP/1.1" 200 -
+[2026-01-06 22:33:37] [capture] Scraper window hidden.
+[2026-01-06 22:33:37] [capture] Scraper window hidden.
+[2026-01-06 22:35:13] App init: launching parser UI
+[2026-01-06 22:35:13] Init export server state. preferred_port=8765 frozen=True
+[2026-01-06 22:35:13] [server] attempting to start on port 8765 serving C:\Users\andre\Documents\FlowerTrack\Exports
+[2026-01-06 22:35:13] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 22:35:13] [server] ensure_export_server: server available
+[2026-01-06 22:35:13] [server] already running on port 8765
+[2026-01-06 22:35:15] [server] shutdown complete
+[2026-01-06 22:37:31] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 22:37:31] [capture] Waiting 30.0s after navigation
+[2026-01-06 22:38:01] [capture] Page ready; collecting text.
+[2026-01-06 22:38:02] [capture] No changes detected; skipping HA notification.
+[2026-01-06 22:42:55] [capture] Scraper window hidden.
+[2026-01-06 22:42:55] [capture] Scraper window hidden.
+[2026-01-06 22:43:06] App init: launching scraper UI
+[2026-01-06 22:43:06] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 22:43:06] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 22:43:06] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 22:43:06] [server] ensure_export_server: server available
+[2026-01-06 22:43:06] [server] already running on port 8765
+[2026-01-06 22:43:09] [capture] Auto-capture started.
+[2026-01-06 22:43:09] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 22:43:10] [capture] Attempting login...
+[2026-01-06 22:43:10] [capture] Scraper window hidden.
+[2026-01-06 22:43:10] [capture] Scraper window hidden.
+[2026-01-06 22:43:13] [capture] Filled username via union selector.
+[2026-01-06 22:43:13] [capture] Filled password via union selector.
+[2026-01-06 22:43:13] [capture] Clicked login via union selector.
+[2026-01-06 22:43:13] [capture] Waiting 5.0s after login
+[2026-01-06 22:43:18] [capture] Waiting 30.0s after navigation
+[2026-01-06 22:43:22] [capture] Scraper window hidden.
+[2026-01-06 22:43:22] [capture] Scraper window hidden.
+[2026-01-06 22:43:26] [capture] Scraper window hidden.
+[2026-01-06 22:43:26] [capture] Scraper window hidden.
+[2026-01-06 22:43:51] [capture] Scraper window hidden.
+[2026-01-06 22:43:51] [capture] Scraper window hidden.
+[2026-01-06 22:43:57] [capture] Auto-capture started.
+[2026-01-06 22:43:57] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 22:43:58] [capture] Attempting login...
+[2026-01-06 22:44:01] [capture] Filled username via union selector.
+[2026-01-06 22:44:01] [capture] Filled password via union selector.
+[2026-01-06 22:44:01] [capture] Clicked login via union selector.
+[2026-01-06 22:44:01] [capture] Waiting 5.0s after login
+[2026-01-06 22:44:03] [capture] Scraper window hidden.
+[2026-01-06 22:44:03] [capture] Scraper window hidden.
+[2026-01-06 22:45:15] App init: launching scraper UI
+[2026-01-06 22:45:15] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 22:45:15] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 22:45:15] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 22:45:15] [server] ensure_export_server: server available
+[2026-01-06 22:45:15] [server] already running on port 8765
+[2026-01-06 22:45:18] [capture] Auto-capture started.
+[2026-01-06 22:45:19] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 22:45:19] [capture] Attempting login...
+[2026-01-06 22:45:21] [capture] Scraper window hidden.
+[2026-01-06 22:45:21] [capture] Scraper window hidden.
+[2026-01-06 22:46:02] App init: launching scraper UI
+[2026-01-06 22:46:02] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 22:46:02] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 22:46:02] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 22:46:02] [server] ensure_export_server: server available
+[2026-01-06 22:46:02] [server] already running on port 8765
+[2026-01-06 22:46:04] [capture] Auto-capture started.
+[2026-01-06 22:46:04] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 22:46:05] [capture] Attempting login...
+[2026-01-06 22:46:08] [capture] Filled username via union selector.
+[2026-01-06 22:46:08] [capture] Filled password via union selector.
+[2026-01-06 22:46:08] [capture] Clicked login via union selector.
+[2026-01-06 22:46:08] [capture] Waiting 5.0s after login
+[2026-01-06 22:46:08] [capture] Scraper window hidden.
+[2026-01-06 22:46:08] [capture] Scraper window hidden.
+[2026-01-06 22:46:13] [capture] Waiting 30.0s after navigation
+[2026-01-06 22:46:43] [capture] Page ready; collecting text.
+[2026-01-06 22:46:44] [capture] No changes detected; skipping HA notification.
+[2026-01-06 22:49:58] App init: launching scraper UI
+[2026-01-06 22:49:58] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 22:49:58] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 22:49:58] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 22:49:58] [server] ensure_export_server: server available
+[2026-01-06 22:49:58] [server] already running on port 8765
+[2026-01-06 22:49:59] [capture] Scraper window hidden.
+[2026-01-06 22:49:59] [capture] Scraper window hidden.
+[2026-01-06 22:53:16] App init: launching scraper UI
+[2026-01-06 22:53:16] Init export server state. preferred_port=8765 frozen=True
+[2026-01-06 22:53:16] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 22:53:16] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 22:53:16] [server] ensure_export_server: server available
+[2026-01-06 22:53:16] [server] already running on port 8765
+[2026-01-06 22:53:19] [capture] Auto-capture started.
+[2026-01-06 22:53:20] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 22:53:21] [capture] Attempting login...
+[2026-01-06 22:53:23] [capture] Scraper window hidden.
+[2026-01-06 22:53:23] [capture] Scraper window hidden.
+[2026-01-06 22:53:24] [capture] Filled username via union selector.
+[2026-01-06 22:53:24] [capture] Filled password via union selector.
+[2026-01-06 22:53:24] [capture] Clicked login via union selector.
+[2026-01-06 22:53:24] [capture] Waiting 5.0s after login
+[2026-01-06 22:53:29] [capture] Waiting 30.0s after navigation
+[2026-01-06 22:53:59] [capture] Page ready; collecting text.
+[2026-01-06 22:54:00] [capture] No changes detected; skipping HA notification.
+[2026-01-06 22:54:18] [capture] Scraper window hidden.
+[2026-01-06 22:54:18] [capture] Scraper window hidden.
+[2026-01-06 23:09:42] App init: launching scraper UI
+[2026-01-06 23:09:42] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 23:09:42] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 23:09:42] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 23:09:42] [server] ensure_export_server: server available
+[2026-01-06 23:09:42] [server] already running on port 8765
+[2026-01-06 23:09:44] [capture] Auto-capture started.
+[2026-01-06 23:09:44] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 23:09:45] [capture] Attempting login...
+[2026-01-06 23:09:47] [capture] Scraper window hidden.
+[2026-01-06 23:09:47] [capture] Scraper window hidden.
+[2026-01-06 23:09:48] [capture] Filled username via union selector.
+[2026-01-06 23:09:48] [capture] Filled password via union selector.
+[2026-01-06 23:09:48] [capture] Clicked login via union selector.
+[2026-01-06 23:09:48] [capture] Waiting 5.0s after login
+[2026-01-06 23:09:53] [capture] Waiting 30.0s after navigation
+[2026-01-06 23:12:02] App init: launching scraper UI
+[2026-01-06 23:12:02] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 23:12:02] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 23:12:02] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 23:12:02] [server] ensure_export_server: server available
+[2026-01-06 23:12:02] [server] already running on port 8765
+[2026-01-06 23:12:10] [capture] Auto-capture started.
+[2026-01-06 23:12:10] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 23:12:11] [capture] Attempting login...
+[2026-01-06 23:12:12] [capture] Scraper window hidden.
+[2026-01-06 23:12:12] [capture] Scraper window hidden.
+[2026-01-06 23:12:14] [capture] Filled username via union selector.
+[2026-01-06 23:12:14] [capture] Filled password via union selector.
+[2026-01-06 23:12:14] [capture] Clicked login via union selector.
+[2026-01-06 23:12:14] [capture] Waiting 5.0s after login
+[2026-01-06 23:13:57] App init: launching scraper UI
+[2026-01-06 23:13:57] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 23:13:57] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 23:13:57] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 23:13:57] [server] ensure_export_server: server available
+[2026-01-06 23:13:57] [server] already running on port 8765
+[2026-01-06 23:14:28] [capture] Scraper window hidden.
+[2026-01-06 23:14:28] [capture] Scraper window hidden.
+[2026-01-06 23:14:50] [capture] Scraper window hidden.
+[2026-01-06 23:14:50] [capture] Scraper window hidden.
+[2026-01-06 23:14:55] App init: launching scraper UI
+[2026-01-06 23:14:55] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 23:14:55] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 23:14:55] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 23:14:55] [server] ensure_export_server: server available
+[2026-01-06 23:14:55] [server] already running on port 8765
+[2026-01-06 23:14:56] [capture] Auto-capture started.
+[2026-01-06 23:14:57] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 23:14:57] [capture] Attempting login...
+[2026-01-06 23:14:59] [capture] Scraper window hidden.
+[2026-01-06 23:14:59] [capture] Scraper window hidden.
+[2026-01-06 23:15:00] [capture] Filled username via union selector.
+[2026-01-06 23:15:00] [capture] Filled password via union selector.
+[2026-01-06 23:15:00] [capture] Clicked login via union selector.
+[2026-01-06 23:15:00] [capture] Waiting 5.0s after login
+[2026-01-06 23:15:06] [capture] Waiting 30.0s after navigation
+[2026-01-06 23:15:15] [capture] Scraper window hidden.
+[2026-01-06 23:15:15] [capture] Scraper window hidden.
+[2026-01-06 23:15:36] [capture] Page ready; collecting text.
+[2026-01-06 23:15:37] [capture] Sending Windows notification: Stock: Big Narstie Medical Candyland: IN STOCK → LOW STOCK
+[2026-01-06 23:15:37] [capture] Exported snapshot: export-2026-01-06_23-15-37+0000.html
+[2026-01-06 23:22:49] App init: launching scraper UI
+[2026-01-06 23:22:49] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 23:22:49] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 23:22:49] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 23:22:49] [server] ensure_export_server: server available
+[2026-01-06 23:22:49] [server] already running on port 8765
+[2026-01-06 23:22:51] [capture] Auto-capture started.
+[2026-01-06 23:22:51] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 23:22:52] [capture] Attempting login...
+[2026-01-06 23:22:53] [capture] Scraper window hidden.
+[2026-01-06 23:22:53] [capture] Scraper window hidden.
+[2026-01-06 23:22:55] [capture] Filled username via union selector.
+[2026-01-06 23:22:55] [capture] Filled password via union selector.
+[2026-01-06 23:22:55] [capture] Clicked login via union selector.
+[2026-01-06 23:22:55] [capture] Waiting 5.0s after login
+[2026-01-06 23:23:06] App init: launching scraper UI
+[2026-01-06 23:23:06] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 23:23:06] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 23:23:06] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 23:23:06] [server] ensure_export_server: server available
+[2026-01-06 23:23:06] [server] already running on port 8765
+[2026-01-06 23:23:07] [capture] Scraper window hidden.
+[2026-01-06 23:23:07] [capture] Scraper window hidden.
+[2026-01-06 23:26:00] App init: launching scraper UI
+[2026-01-06 23:26:00] Init export server state. preferred_port=8765 frozen=True
+[2026-01-06 23:26:00] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 23:26:00] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 23:26:00] [server] ensure_export_server: server available
+[2026-01-06 23:26:00] [server] already running on port 8765
+[2026-01-06 23:26:01] [capture] Auto-capture started.
+[2026-01-06 23:26:02] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 23:26:02] [capture] Scraper window hidden.
+[2026-01-06 23:26:02] [capture] Scraper window hidden.
+[2026-01-06 23:26:03] [capture] Attempting login...
+[2026-01-06 23:26:03] [server] "GET /export-2026-01-06_23-15-37+0000.html HTTP/1.1" 304 -
+[2026-01-06 23:26:06] [capture] Filled username via union selector.
+[2026-01-06 23:26:06] [capture] Filled password via union selector.
+[2026-01-06 23:26:06] [capture] Clicked login via union selector.
+[2026-01-06 23:26:06] [capture] Waiting 5.0s after login
+[2026-01-06 23:26:11] [capture] Waiting 30.0s after navigation
+[2026-01-06 23:26:31] [capture] Scraper window hidden.
+[2026-01-06 23:26:31] [capture] Scraper window hidden.
+[2026-01-06 23:26:41] [capture] Page ready; collecting text.
+[2026-01-06 23:26:42] [capture] No changes detected; skipping HA notification.
+[2026-01-06 23:29:00] App init: launching scraper UI
+[2026-01-06 23:29:00] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 23:29:00] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 23:29:00] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 23:29:00] [server] ensure_export_server: server available
+[2026-01-06 23:29:00] [server] already running on port 8765
+[2026-01-06 23:29:01] [capture] Auto-capture started.
+[2026-01-06 23:29:01] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 23:29:02] [capture] Attempting login...
+[2026-01-06 23:29:03] [capture] Scraper window hidden.
+[2026-01-06 23:29:03] [capture] Scraper window hidden.
+[2026-01-06 23:29:05] [capture] Filled username via union selector.
+[2026-01-06 23:29:05] [capture] Filled password via union selector.
+[2026-01-06 23:29:05] [capture] Clicked login via union selector.
+[2026-01-06 23:29:05] [capture] Waiting 5.0s after login
+[2026-01-06 23:29:10] [capture] Scraper window hidden.
+[2026-01-06 23:29:10] [capture] Scraper window hidden.
+[2026-01-06 23:30:58] App init: launching scraper UI
+[2026-01-06 23:30:58] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 23:30:58] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 23:30:58] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 23:30:58] [server] ensure_export_server: server available
+[2026-01-06 23:30:58] [server] already running on port 8765
+[2026-01-06 23:30:59] [capture] Auto-capture started.
+[2026-01-06 23:30:59] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 23:31:00] [capture] Attempting login...
+[2026-01-06 23:31:00] [capture] Scraper window hidden.
+[2026-01-06 23:31:00] [capture] Scraper window hidden.
+[2026-01-06 23:31:03] [capture] Filled username via union selector.
+[2026-01-06 23:31:03] [capture] Filled password via union selector.
+[2026-01-06 23:31:03] [capture] Clicked login via union selector.
+[2026-01-06 23:31:03] [capture] Waiting 5.0s after login
+[2026-01-06 23:31:06] [capture] Scraper window hidden.
+[2026-01-06 23:31:06] [capture] Scraper window hidden.
+[2026-01-06 23:31:11] [server] "GET /export-2026-01-06_23-15-37+0000.html HTTP/1.1" 304 -
+[2026-01-06 23:35:53] App init: launching scraper UI
+[2026-01-06 23:35:53] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 23:35:53] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 23:35:53] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 23:35:53] [server] ensure_export_server: server available
+[2026-01-06 23:35:53] [server] already running on port 8765
+[2026-01-06 23:35:53] [config] Config load failed: 'minimize_to_tray'
+[2026-01-06 23:36:00] [capture] Scraper window hidden.
+[2026-01-06 23:36:00] [capture] Scraper window hidden.
+[2026-01-06 23:40:29] App init: launching scraper UI
+[2026-01-06 23:40:29] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 23:40:29] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 23:40:29] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 23:40:29] [server] ensure_export_server: server available
+[2026-01-06 23:40:29] [server] already running on port 8765
+[2026-01-06 23:40:29] [config] Config load failed: 'minimize_to_tray'
+[2026-01-06 23:40:40] [capture] Scraper window hidden.
+[2026-01-06 23:40:40] [capture] Scraper window hidden.
+[2026-01-06 23:42:10] App init: launching scraper UI
+[2026-01-06 23:42:10] Init export server state. preferred_port=8765 frozen=False
+[2026-01-06 23:42:10] [server] attempting to start on port 8765 serving C:\Users\andre\AppData\Roaming\FlowerTrack\Exports
+[2026-01-06 23:42:10] [server] serving exports at http://127.0.0.1:8765
+[2026-01-06 23:42:10] [server] ensure_export_server: server available
+[2026-01-06 23:42:10] [server] already running on port 8765
+[2026-01-06 23:42:16] [capture] Auto-capture started.
+[2026-01-06 23:42:16] [capture] Navigating to https://medicann-patient.scriptassist.co.uk/request-repeat
+[2026-01-06 23:42:17] [capture] Attempting login...
+[2026-01-06 23:42:20] [capture] Filled username via union selector.
+[2026-01-06 23:42:20] [capture] Filled password via union selector.
+[2026-01-06 23:42:20] [capture] Clicked login via union selector.
+[2026-01-06 23:42:20] [capture] Waiting 5.0s after login
+[2026-01-06 23:42:22] [capture] Scraper window hidden.
+[2026-01-06 23:42:23] [capture] Scraper window hidden.
+[2026-01-06 23:42:25] [capture] Waiting 30.0s after navigation
+[2026-01-06 23:42:37] [server] "GET /export-2026-01-06_23-15-37+0000.html HTTP/1.1" 304 -
+[2026-01-06 23:42:55] [capture] Page ready; collecting text.
+[2026-01-06 23:42:56] [capture] No changes detected; skipping HA notification.
+[2026-01-06 23:42:59] [capture] Scraper window hidden.
+[2026-01-06 23:42:59] [capture] Scraper window hidden.
+[2026-01-06 23:43:05] [capture] Scraper window hidden.
+[2026-01-06 23:43:05] [capture] Scraper window hidden.

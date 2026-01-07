@@ -1,0 +1,389 @@
+from __future__ import annotations
+
+import base64
+import html
+import json
+import math
+import os
+import re
+import urllib.parse
+import webbrowser
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
+from export_template import HTML_TEMPLATE
+
+try:
+    from parser import get_google_medicann_link  # type: ignore
+except Exception:
+
+    def get_google_medicann_link(producer, strain):
+        q = " ".join([p for p in (producer or "", strain or "") if p]).strip()
+        return "https://www.google.com/search?q=" + urllib.parse.quote(q + " medbud.wiki")
+
+_ASSET_CACHE: dict[str, str] | None = None
+_ASSETS_DIR: Optional[Path] = None
+_EXPORTS_DIR: Optional[Path] = None
+
+
+def _ensure_assets_dir(default: Optional[Path] = None) -> None:
+    """Ensure assets dir is set; fallback to provided default or ./assets next to this file."""
+    global _ASSETS_DIR, _ASSET_CACHE
+    if _ASSETS_DIR is None:
+        candidate = default or (Path(__file__).resolve().parent / "assets")
+        if candidate.exists():
+            _ASSETS_DIR = candidate
+            if _ASSET_CACHE is None:
+                _ASSET_CACHE = {}
+def _load_asset(name: str) -> str | None:
+    """Return data URI for a given asset name (filename)."""
+    global _ASSET_CACHE
+    if _ASSET_CACHE is None:
+        _ASSET_CACHE = {}
+    if name in _ASSET_CACHE:
+        return _ASSET_CACHE[name]
+    if _ASSETS_DIR is None:
+        return None
+    img_path = _ASSETS_DIR / name
+    try:
+        raw = img_path.read_bytes()
+        encoded = base64.b64encode(raw).decode("ascii")
+        uri = f"data:image/png;base64,{encoded}"
+        _ASSET_CACHE[name] = uri
+        return uri
+    except Exception:
+        return None
+
+
+def _normalize_val(val):
+    if val is None:
+        return ""
+    if isinstance(val, float):
+        try:
+            return f"{val:.4f}"
+        except Exception:
+            return str(val)
+    return str(val).strip().lower()
+
+
+def make_identity_key(item: dict) -> str:
+    parts = [
+        _normalize_val(item.get("product_id")),
+        _normalize_val(item.get("producer")),
+        _normalize_val(item.get("brand")),
+        _normalize_val(item.get("strain")),
+        _normalize_val(item.get("grams")),
+        _normalize_val(item.get("ml")),
+        _normalize_val(item.get("product_type")),
+        _normalize_val(item.get("strain_type")),
+        _normalize_val(item.get("is_smalls")),
+        _normalize_val(item.get("thc")),
+        _normalize_val(item.get("thc_unit")),
+        _normalize_val(item.get("cbd")),
+        _normalize_val(item.get("cbd_unit")),
+    ]
+    return "|".join(parts)
+
+
+def format_brand(value: str | None) -> str:
+    """Simple brand formatter for exports."""
+    if not value:
+        return ""
+    parts = []
+    for tok in str(value).split():
+        parts.append(tok if tok.isupper() else tok.title())
+    return " ".join(parts)
+
+def init_exports(assets_dir: Path, exports_dir: Optional[Path] = None) -> None:
+    global _ASSETS_DIR, _EXPORTS_DIR, _ASSET_CACHE
+    _ASSETS_DIR = assets_dir
+    _EXPORTS_DIR = Path(exports_dir) if exports_dir else (assets_dir.parent / "Exports")
+    _ASSET_CACHE = {}
+
+def set_exports_dir(exports_dir: Path) -> None:
+    global _EXPORTS_DIR
+    _EXPORTS_DIR = exports_dir
+
+
+def build_launch_url(producer: str | None, strain: str | None) -> str:
+    """Reusable launcher URL for search links."""
+    return get_google_medicann_link(producer or "", strain)
+
+
+# ---------------- EXPORT HTML ----------------
+
+
+def esc(value):
+    return html.escape("" if value is None else str(value))
+
+
+def esc_attr(value):
+    return html.escape("" if value is None else str(value), quote=True)
+
+
+def export_html(data, path, fetch_images=False):
+    _ensure_assets_dir()
+    out_path = Path(path)
+    cards: list[str] = []
+
+    def get_badge_src(strain_type: str | None) -> str | None:
+        """Return a data URI for the strain badge image if available."""
+        if not strain_type:
+            return None
+        return _load_asset(f"{strain_type.title()}.png")
+
+    def get_type_icon(pt: str | None, theme: str) -> str | None:
+        """Return a data URI for product-type icon respecting theme (dark/light)."""
+        if not pt:
+            return None
+        if pt.lower() == "vape":
+            return _load_asset("VapeLight.png" if theme == "light" else "VapeDark.png")
+        if pt.lower() == "oil":
+            return _load_asset("OilLight.png" if theme == "light" else "OilDark.png")
+        return None
+
+    def normalize_pct(value, unit):
+        if value is None:
+            return None
+        if not unit:
+            return value
+        u = unit.lower()
+        try:
+            if "mg" in u:
+                return float(value) / 10.0
+            if "%" in u:
+                return float(value)
+        except Exception:
+            return None
+        return float(value)
+
+    def norm(s: str | None) -> str:
+        if not s:
+            return ""
+        return re.sub(r"[^a-z0-9]+", "-", str(s).lower()).strip("-")
+
+    # Pre-compute slider bounds
+    price_values = [float(it.get("price")) for it in data if isinstance(it.get("price"), (int, float))]
+    price_min_bound = math.floor(min(price_values)) if price_values else 0
+    price_max_bound = math.ceil(max(price_values)) if price_values else 0
+    thc_values: list[float] = []
+    for it in data:
+        val = normalize_pct(it.get("thc"), it.get("thc_unit"))
+        if isinstance(val, (int, float)):
+            thc_values.append(float(val))
+    thc_min_bound = math.floor(min(thc_values)) if thc_values else 0
+    thc_max_bound = math.ceil(max(thc_values)) if thc_values else 0
+
+    def fav_key_for(item: dict) -> str:
+        brand_norm = norm(format_brand(item.get("brand") or item.get("producer") or ""))
+        strain_norm = norm(item.get("strain") or "")
+        if brand_norm or strain_norm:
+            combo = f"{brand_norm}-{strain_norm}".strip("-")
+        else:
+            prod_norm = norm(item.get("producer"))
+            pid_norm = norm(item.get("product_id"))
+            combo = f"{prod_norm}-{pid_norm}".strip("-")
+        if not combo:
+            combo = f"item-{abs(hash(str(item)))%10_000_000}"
+        return combo
+
+    for it in data:
+        price = it.get("price")
+        if it.get("is_removed") and not isinstance(price, (int, float)):
+            price = 0
+        grams = it.get("grams")
+        ppg = (price / grams) if isinstance(price, (int, float)) and isinstance(grams, (int, float)) and grams else None
+        qty = ""
+        if it.get("grams") is not None:
+            qty = f"{it['grams']}g"
+        elif it.get("ml") is not None:
+            qty = f"{it['ml']}ml"
+
+        thc_raw = it.get("thc")
+        thc_unit = it.get("thc_unit")
+        cbd_raw = it.get("cbd")
+        cbd_unit = it.get("cbd_unit")
+        thc_pct = normalize_pct(thc_raw, thc_unit)
+        cbd_pct = normalize_pct(cbd_raw, cbd_unit)
+
+        def clean_name(s):
+            if not s:
+                return s
+            out = str(s)
+            out = re.sub(
+                r"\b(IN STOCK|LOW STOCK|OUT OF STOCK|NOT PRESCRIBABLE|NOT PRESCRIBABLE DO NOT SELECT|FORMULATION ONLY|FULL SPECTRUM)\b",
+                "",
+                out,
+                flags=re.I,
+            )
+            out = re.sub(r"\b(SMALLS?|SMLS?|SML)\b", "", out, flags=re.I)
+            out = re.sub(r"\bT\d+(?::C?\d+)?\b", "", out, flags=re.I)
+            out = re.sub(r"THC[:~\s]*[\d./%]+.*$", "", out, flags=re.I)
+            out = re.sub(r"CBD[:~\s]*[\d./%]+.*$", "", out, flags=re.I)
+            out = re.sub(r"[\s\-_/]+", " ", out).strip()
+            return out
+
+        strain_name = clean_name(it.get("strain") or "")
+        if it.get("brand"):
+            b = format_brand(it.get("brand"))
+            if b and strain_name:
+                pat = re.compile(re.escape(str(b)), re.I)
+                strain_name = pat.sub("", strain_name).strip()
+                first_tok = b.split()[0]
+                strain_name = re.sub(rf"\b{re.escape(first_tok)}\b", "", strain_name, flags=re.I).strip()
+                strain_name = re.sub(r"\s{2,}", " ", strain_name).strip()
+        heading = strain_name or clean_name(it.get("product_id") or it.get("producer") or it.get("product_type") or "-")
+        if it.get("is_smalls") and heading:
+            heading = f"{heading} (Smalls)"
+        brand = format_brand(it.get("brand") or it.get("producer") or "")
+
+        def display_strength(raw, unit, pct):
+            if raw is None:
+                return "?"
+            base = f"{raw} {unit or ''}".strip()
+            if pct is not None and (unit and "%" not in unit):
+                return f"{base} ({pct:.1f}%)"
+            return base
+
+        disp_thc = display_strength(thc_raw, thc_unit, thc_pct)
+        disp_cbd = display_strength(cbd_raw, cbd_unit, cbd_pct)
+        data_price_attr = "" if price is None else str(price)
+        data_thc_attr = "" if thc_pct is None else f"{thc_pct}"
+        data_cbd_attr = "" if cbd_pct is None else f"{cbd_pct}"
+        card_key = make_identity_key(it)
+        fav_key = fav_key_for(it)
+        price_delta = it.get("price_delta")
+        price_class = "pill"
+        delta_text = ""
+        if isinstance(price_delta, (int, float)) and price is not None:
+            if price_delta > 0:
+                price_class += " price-up"
+                delta_text = f" (+£{abs(price_delta):.2f})"
+            elif price_delta < 0:
+                price_class += " price-down"
+                delta_text = f" (-£{abs(price_delta):.2f})"
+        price_label = "??" if price is None else f"£{price:.2f}"
+        price_pill = f"<span class='{price_class}' data-pricedelta='{esc_attr(price_delta if price_delta is not None else '')}'>{esc(price_label + delta_text)}</span>"
+        price_badge = ""
+        price_border_class = ""
+        if isinstance(price_delta, (int, float)) and price_delta:
+            badge_cls = "badge-price-up" if price_delta > 0 else "badge-price-down"
+            badge_text = f"New price {'+' if price_delta>0 else '-'}£{abs(price_delta):.2f}"
+            price_badge = f"<span class='{badge_cls}'>{esc(badge_text)}</span>"
+            price_border_class = " card-price-up" if price_delta > 0 else " card-price-down"
+        stock_indicator = (
+            f"<span class='stock-indicator "
+            f"{('stock-not-prescribable' if (it.get('stock') and 'NOT' in (it.get('stock') or '').upper()) else ('stock-in' if (it.get('stock') and 'IN STOCK' in (it.get('stock') or '').upper()) else ('stock-low' if (it.get('stock') and 'LOW' in (it.get('stock') or '').upper()) else ('stock-out' if (it.get('stock') and 'OUT' in (it.get('stock') or '').upper()) else ''))))}"
+            f"' title='{esc(it.get('stock') or '')}'></span>"
+        )
+        heading_html = f"{stock_indicator}{esc(heading)}"
+        card_classes = "card card-removed" if it.get("is_removed") else ("card card-new" if it.get("is_new") else "card")
+        cards.append(
+            f"""
+    <div class='{card_classes}{price_border_class}' style='position:relative;'
+          data-price='{esc_attr(data_price_attr)}'
+      data-thc='{esc_attr(data_thc_attr)}'
+      data-cbd='{esc_attr(data_cbd_attr)}'
+      data-pt='{esc_attr((it.get("product_type") or "").lower())}'
+      data-strain-type='{esc_attr(it.get("strain_type") or "")}'
+      data-strain='{esc_attr(it.get("strain") or "")}'
+      data-brand='{esc_attr(brand or "")}'
+      data-producer='{esc_attr(it.get("producer") or "")}'
+      data-product-id='{esc_attr(it.get("product_id") or "")}'
+      data-stock='{esc_attr((it.get("stock") or "").strip())}'
+      data-key='{esc_attr(card_key)}'
+      data-favkey='{esc_attr(fav_key)}'
+      data-smalls='{1 if it.get("is_smalls") else 0}'
+      data-removed='{1 if it.get("is_removed") else 0}'>
+    <button class='fav-btn' onclick='toggleFavorite(this)' title='Favorite this item'>★</button>
+    {("<img class='type-badge' data-theme-icon='dark' src='" + esc_attr(get_type_icon(it.get('product_type'), 'dark')) + "' alt='" + esc_attr(it.get('product_type') or '') + "' />") if get_type_icon(it.get('product_type'), 'dark') else ""}
+    {("<img class='type-badge' data-theme-icon='light' src='" + esc_attr(get_type_icon(it.get('product_type'), 'light')) + "' alt='" + esc_attr(it.get('product_type') or '') + "' style='display:none;' />") if get_type_icon(it.get('product_type'), 'light') else ""}
+    {("<img class='strain-badge' src='" + esc_attr(get_badge_src(it.get('strain_type'))) + "' alt='" + esc_attr(it.get('strain_type') or '') + "' />") if get_badge_src(it.get("strain_type")) else ""}
+    {("<span class='badge-new'>New</span>") if it.get("is_new") else ("<span class='badge-removed'>Removed</span>" if it.get("is_removed") else "")}
+    <div style='display:flex;flex-direction:column;align-items:flex-start;gap:4px;'>
+      {price_badge}
+      <h3 class='card-title'>{heading_html}</h3>
+    </div>
+<a class='search' style='position:absolute;bottom:12px;right:44px;font-size:18px;padding:6px 8px;border-radius:6px;min-width:auto;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none' href='{esc_attr(build_launch_url(it.get('producer'), it.get('strain')))}' target='_blank' title='Search Medbud.wiki'>🔎</a>
+      <p class="brand-line"><strong>{esc(brand)}</strong></p>
+      {("<p class='small'>Removed since last parse</p>") if it.get("is_removed") else ""}
+        <p class='small'>
+        {(esc(it.get('product_id') or '') + (' - ' + esc((it.get('product_type') or '').title()) if it.get('product_type') and it.get('product_id') else esc((it.get('product_type') or '').title()))) if (it.get('product_id') or it.get('product_type')) else ''}
+        </p>
+  <div class='card-content'>
+    <div>
+      {price_pill}
+      <span class='pill'>{qty or '?'}</span>
+        {f"<span class='pill'>?/g {ppg:.2f}</span>" if ppg is not None else ''}
+        {f"<span class='pill'>{esc(it.get('strain_type'))}</span>" if it.get('strain_type') else ''}
+    </div>
+    <div class='small'>🎉 THC: {esc(disp_thc)}</div>
+    <div class='small'>🌱 CBD: {esc(disp_cbd)}</div>
+    <div class='card-actions'>
+      <button class='btn-basket' onclick='addToBasket(this)' onmouseenter='basketHover(this,true)' onmouseleave='basketHover(this,false)'>Add to basket</button>
+    </div>
+  </div>
+</div>
+"""
+        )
+    cards_html = "".join(cards)
+    html_text = HTML_TEMPLATE.replace("__CARDS__", cards_html)
+    html_text = html_text.replace("{price_min_bound}", str(price_min_bound))
+    html_text = html_text.replace("{price_max_bound}", str(price_max_bound))
+    html_text = html_text.replace("{thc_min_bound}", str(thc_min_bound))
+    html_text = html_text.replace("{thc_max_bound}", str(thc_max_bound))
+    out_path.write_text(html_text, encoding="utf-8")
+    
+def export_html_auto(
+    data, exports_dir: Optional[Path] = None, open_file: bool = False, fetch_images=False, max_files: int = 20
+):
+
+    _ensure_assets_dir()
+    d = Path(exports_dir or _EXPORTS_DIR or ".")
+    d.mkdir(parents=True, exist_ok=True)
+    ts = datetime.now().astimezone().strftime('%Y-%m-%d_%H-%M-%S%z')
+    fname = f"export-{ts}.html"
+    path = d / fname
+    export_html(data, path, fetch_images=fetch_images)
+    cleanup_html_exports(d, max_files=max_files)
+    if open_file:
+        try:
+            if os.name == 'nt':
+                os.startfile(path)
+            else:
+                webbrowser.open(path.as_uri())
+        except Exception:
+            pass
+    return path
+
+def export_json_auto(data, exports_dir: Optional[Path] = None, open_file: bool = False):
+
+    d = Path(exports_dir or _EXPORTS_DIR or ".")
+    d.mkdir(parents=True, exist_ok=True)
+    ts = datetime.now().astimezone().strftime('%Y-%m-%d_%H-%M-%S%z')
+    fname = f"export-{ts}.json"
+    path = d / fname
+    Path(path).write_text(json.dumps(data, indent=2), encoding="utf-8")
+    if open_file:
+        try:
+            if os.name == 'nt':
+                os.startfile(path)
+            else:
+                webbrowser.open(path.as_uri())
+        except Exception:
+            pass
+    return path
+
+def cleanup_html_exports(exports_dir: Optional[Path] = None, max_files: int = 20) -> None:
+    """Keep only the newest `max_files` HTML exports."""
+    try:
+        d = Path(exports_dir or _EXPORTS_DIR or ".")
+        files = sorted(d.glob("export-*.html"), key=lambda p: p.stat().st_mtime, reverse=True)
+        for old in files[max_files:]:
+            try:
+                old.unlink()
+            except Exception:
+                pass
+    except Exception:
+        pass
