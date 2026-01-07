@@ -21,6 +21,10 @@ def start_export_server(preferred_port: int, exports_dir: Path, log: Callable[[s
     """Start a lightweight HTTP server to serve exports; returns (httpd, thread, port) or (None, None, None) on failure."""
     exports_dir.mkdir(parents=True, exist_ok=True)
 
+    if _port_ready("127.0.0.1", preferred_port):
+        log(f"[server] already running on port {preferred_port}")
+        return None, None, preferred_port
+
     class QuietHandler(http.server.SimpleHTTPRequestHandler):
         def log_message(self, fmt, *args):
             log("[server] " + fmt % args)

@@ -16,7 +16,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 import importlib.util
 import importlib.machinery
 import traceback
-from app_core import APP_DIR, EXPORTS_DIR_DEFAULT, LAST_PARSE_FILE  # use shared app data root
+from app_core import APP_DIR, EXPORTS_DIR_DEFAULT, LAST_PARSE_FILE, _load_capture_config, _save_capture_config  # use shared app data root
 from tray import tray_supported, update_tray_icon
 from tracker_ui_helpers import build_tray_image, resolve_scraper_status
 from ui_theme import apply_style_theme, compute_colors, set_titlebar_dark
@@ -92,6 +92,7 @@ class CannabisTracker:
         self.minimize_to_tray = False
         self.close_to_tray = False
         self.show_scraper_status_icon = True
+        self.scraper_notify_windows = True
         self.enable_stock_coloring = True
         self.enable_stock_coloring_thc = True
         self.enable_stock_coloring_cbd = True
@@ -224,6 +225,9 @@ class CannabisTracker:
             if httpd and port:
                 self.export_server = httpd
                 self.export_thread = thread
+                self.export_port = port
+                return True
+            if port and not httpd:
                 self.export_port = port
                 return True
         except Exception:
@@ -1086,6 +1090,14 @@ class CannabisTracker:
         if hasattr(self, 'scraper_status_icon_var'):
             self.show_scraper_status_icon = bool(self.scraper_status_icon_var.get())
         self._apply_scraper_status_visibility()
+        if hasattr(self, 'scraper_notify_windows_var'):
+            self.scraper_notify_windows = bool(self.scraper_notify_windows_var.get())
+            try:
+                cap_cfg = _load_capture_config()
+                cap_cfg["notify_windows"] = self.scraper_notify_windows
+                _save_capture_config(cap_cfg)
+            except Exception:
+                pass
         # Update note to reflect efficiencies
         self.note_label.config(
             text=f"THC/CBD estimates based on flower and RoA (vaped {self.roa_options.get('Vaped',0)*100:.0f}%, "
@@ -1665,6 +1677,11 @@ class CannabisTracker:
         self.minimize_to_tray = bool(cfg.get("minimize_to_tray", self.minimize_to_tray))
         self.close_to_tray = bool(cfg.get("close_to_tray", self.close_to_tray))
         self.show_scraper_status_icon = bool(cfg.get("show_scraper_status_icon", self.show_scraper_status_icon))
+        try:
+            cap_cfg = _load_capture_config()
+            self.scraper_notify_windows = bool(cap_cfg.get("notify_windows", self.scraper_notify_windows))
+        except Exception:
+            pass
         self.total_green_threshold = float(cfg.get("total_green_threshold", self.total_green_threshold))
         self.total_red_threshold = float(cfg.get("total_red_threshold", self.total_red_threshold))
         self.single_green_threshold = float(cfg.get("single_green_threshold", self.single_green_threshold))

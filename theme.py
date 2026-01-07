@@ -93,6 +93,12 @@ def set_titlebar_dark(window, enable: bool) -> None:
     """Attempt to set a window's titlebar to dark mode on Windows."""
     try:
         hwnd = window.winfo_id()
+        # Walk up to the top-level window handle (Tk can return a child handle)
+        get_parent = ctypes.windll.user32.GetParent
+        parent = get_parent(hwnd)
+        while parent:
+            hwnd = parent
+            parent = get_parent(hwnd)
         value = ctypes.c_int(1 if enable else 0)
         DWMWA_USE_IMMERSIVE_DARK_MODE = 20
         DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19

@@ -25,6 +25,36 @@ class NotificationService:
         self.notify_windows: Callable[[], bool] = notify_windows
         self.log: Callable[[str], None] = logger
 
+
+    @staticmethod
+    def _join(parts: list[str], max_len: int = 240) -> str:
+        txt = "; ".join(parts)
+        return txt if len(txt) <= max_len else (txt[: max_len - 3] + "...")
+
+    def format_windows_body(self, payload: dict, summary: str) -> str:
+        body_parts: list[str] = []
+        new_items = payload.get("new_item_summaries") or []
+        removed_items = payload.get("removed_item_summaries") or []
+        price_changes = payload.get("price_change_summaries") or []
+        stock_changes = payload.get("stock_change_summaries") or []
+        if new_items:
+            body_parts.append("New: " + self._join(list(new_items)))
+        if removed_items:
+            body_parts.append("Removed: " + self._join(list(removed_items)))
+        if price_changes:
+            body_parts.append("Price: " + self._join(list(price_changes)))
+        if stock_changes:
+            body_parts.append("Stock: " + self._join(list(stock_changes)))
+        return " | ".join(body_parts) or summary
+
+    def format_test_body(self, status: int | None) -> str:
+        status_text = status if status is not None else "error"
+        return (
+            f"HA test status: {status_text} | "
+            "New: Alpha Kush, Beta OG | Removed: None | "
+            "Price: Gamma Glue £2.50; Delta Dream £1.00 | "
+            "Stock: Zeta Zen: 10 → 8"
+        )
     def send_windows(self, title: str, body: str, icon: Optional[Path], launch_url: Optional[str] = None) -> bool:
         if not self.notify_windows():
             return False

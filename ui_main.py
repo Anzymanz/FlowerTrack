@@ -969,19 +969,7 @@ class App(tk.Tk):
             f"{len(price_changes)} price changes, {len(stock_changes)} stock changes"
         )
         # Build detailed desktop notification text and launch target
-        def _join(lst, max_len=240):
-            txt = "; ".join(lst)
-            return txt if len(txt) <= max_len else (txt[: max_len - 3] + "...")
-        body_parts = []
-        if new_item_summaries:
-            body_parts.append("New: " + _join(new_item_summaries))
-        if removed_item_summaries:
-            body_parts.append("Removed: " + _join(removed_item_summaries))
-        if price_change_summaries:
-            body_parts.append("Price: " + _join(price_change_summaries))
-        if stock_change_summaries:
-            body_parts.append("Stock: " + _join(stock_change_summaries))
-        windows_body = " | ".join(body_parts) or summary
+        windows_body = self.notify_service.format_windows_body(payload, summary)
         launch_url = self.cap_url.get().strip() or self._latest_export_url()
         icon_path = ASSETS_DIR / "icon.ico"
         # Windows toast (always allowed when enabled)
@@ -1072,6 +1060,9 @@ class App(tk.Tk):
         exports_dir = Path(EXPORTS_DIR_DEFAULT)
         httpd, thread, port = srv_start_export_server(self.server_port, exports_dir, _log_debug)
         if not httpd:
+            if port:
+                self.server_port = port
+                return True
             if not self._server_failed:
                 self._server_failed = True
                 messagebox.showerror("Export Server", "Could not start export server on localhost. Exports will open from file:// instead.")
@@ -1303,7 +1294,7 @@ class App(tk.Tk):
                         if self.error_count >= self.error_threshold:
                             msg = "Repeated empty captures; auto-scraper stopped."
                             self._log_console(msg)
-                            _maybe_send_windows_notification("Medicann error", msg, ASSETS_DIR / "icon.ico")
+                            self.notify_service.send_windows("Medicann error", msg, ASSETS_DIR / "icon.ico")
                             if self.cap_auto_notify_ha.get():
                                 self._send_ha_error(msg)
                             self.stop_auto_capture()

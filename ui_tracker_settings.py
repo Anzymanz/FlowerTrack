@@ -169,7 +169,7 @@ def open_tracker_settings(app) -> None:
     )
     app.close_var_check = ttk.Checkbutton(frame, text="Minimize to tray when closing", variable=app.close_var)
     app.close_var_check.grid(
-        row=sep_row + 10, column=0, columnspan=2, sticky="w", pady=(4, 0)
+        row=sep_row + 10, column=0, columnspan=2, sticky="w"
     )
 
     app.total_green_entry.insert(0, f"{app.total_green_threshold}")
@@ -219,7 +219,7 @@ def open_tracker_settings(app) -> None:
             pass
 
     ttk.Button(frame, text="Save", command=app._save_settings).grid(
-        row=sep_row + 10, column=2, columnspan=2, sticky="e", pady=(4, 0)
+        row=sep_row + 11, column=2, columnspan=2, sticky="e", pady=(4, 0)
     )
     # Place after layout to avoid resize flash
     app._prepare_toplevel(win)
