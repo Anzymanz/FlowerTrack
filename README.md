@@ -5,8 +5,11 @@ FlowerTrack is a Windows desktop app for tracking medical cannabis usage and sto
 ## Screenshots
 ![Tracker](docs/TrackerSS.png)
 ![Tracker Settings](docs/TrackerSettingSS.png)
+![Usage Stats](docs/StatsSS.png)
+![Library](docs/LibrarySS.png)
 ![Scraper Settings](docs/ScraperSS.png)
 ![Flower Browser](docs/WebpageSS.png)
+![Flower Browser Favorites](docs/WebpageFavoriteSS.png)
 ![Flower Browser Basket](docs/WebpageBasketSS.png)
 ![Mix Calculator](docs/MixcalcSS.png)
 
