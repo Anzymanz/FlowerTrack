@@ -23,8 +23,8 @@ Stores strains, notes, and metadata.
 
 <img src="docs/LibrarySS.png" width="960" />
 
-### Scraper settings
-Configure automation, retries, selectors, and notifications.
+### Scraper window
+Shows auto-scraper controls, progress, and log output.
 
 <img src="docs/ScraperSS.png" width="750" />
 
