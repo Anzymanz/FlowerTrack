@@ -6,7 +6,7 @@ FlowerTrack is a Windows desktop app for tracking medical cannabis usage and sto
 ### Tracker dashboard
 The main tracker puts usage, stock, and daily targets in one view so you can act fast.
 
-<img src="docs/TrackerSS.png" width="760" />
+<img src="docs/TrackerSS.png" width="960" />
 
 ### Tracker settings
 Tune thresholds, routes, and visuals without digging through config files.
