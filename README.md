@@ -2,6 +2,14 @@
 
 FlowerTrack is a Windows desktop app for tracking medical cannabis usage and stock, with an integrated scraper that monitors a Medicann page for changes. It combines a dosage tracker, flower library, and automated price/stock change detection with optional Home Assistant notifications and local HTML snapshots.
 
+## Screenshots
+![Tracker](docs/TrackerSS.png)
+![Tracker Settings](docs/TrackerSettingSS.png)
+![Scraper Settings](docs/ScraperSS.png)
+![Flower Browser](docs/WebpageSS.png)
+![Flower Browser Basket](docs/WebpageBasketSS.png)
+![Mix Calculator](docs/MixcalcSS.png)
+
 ## Features
 - Track flower stock, THC/CBD potency, remaining grams, and daily targets.
 - Log doses by route of administration with per-day totals.
@@ -9,6 +17,16 @@ FlowerTrack is a Windows desktop app for tracking medical cannabis usage and sto
 - Scraper for Medicann page data with change detection (new/removed items, price/stock changes).
 - Home Assistant webhook notifications and optional Windows desktop notifications.
 - HTML snapshots served locally for quick browsing (favorites and filters preserved).
+
+## The Flower Browser (local webpage)
+The scraper generates a local HTML page that you can open from the app. It’s designed for fast scanning and filtering of the live product list.
+
+Key features:
+- Search, filter, and sort by brand, strain, type, or stock.
+- Visual badges for new/removed items and price movements.
+- THC/CBD normalization and clear per-gram price display.
+- Favorites are saved locally in your browser session.
+- Basket mode lets you stage products for quick comparisons.
 
 ## Requirements
 - Windows 10/11
