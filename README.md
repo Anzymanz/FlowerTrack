@@ -11,37 +11,37 @@ The main tracker puts usage, stock, and daily targets in one view so you can act
 ### Tracker settings
 Tune thresholds, routes, and visuals without digging through config files.
 
-<img src="docs/TrackerSettingSS.png" width="200" />
+<img src="docs/TrackerSettingSS.png" width="500" />
 
 ### Usage stats
 Quick history and trend views to see how patterns shift over time.
 
-<img src="docs/StatsSS.png" width="200" />
+<img src="docs/StatsSS.png" width="360" />
 
 ### Flower library
 Keep curated strains, notes, and metadata in your personal library.
 
-<img src="docs/LibrarySS.png" width="760" />
+<img src="docs/LibrarySS.png" width="960" />
 
 ### Scraper settings
 Control automation, retries, selectors, and notification behavior.
 
-<img src="docs/ScraperSS.png" width="500" />
+<img src="docs/ScraperSS.png" width="750" />
 
 ### Flower Browser
 The local webpage offers fast filters, badges, and scanning of product changes.
 
-<img src="docs/WebpageSS.png" width="760" />
+<img src="docs/WebpageSS.png" width="960" />
 
 ### Flower Browser favorites
 Mark favorites for instant recall across sessions.
 
-<img src="docs/WebpageFavoriteSS.png" width="760" />
+<img src="docs/WebpageFavoriteSS.png" width="960" />
 
 ### Flower Browser basket
 Stage items side-by-side for quick comparisons.
 
-<img src="docs/WebpageBasketSS.png" width="760" />
+<img src="docs/WebpageBasketSS.png" width="960" />
 
 ### Mix calculator
 Plan blends and ratios with clear, simple controls.
