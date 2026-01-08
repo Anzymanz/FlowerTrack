@@ -1134,6 +1134,7 @@ class App(tk.Tk):
             "message": "Medicann Scraper test notification",
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
+        quiet_hours = self._quiet_hours_active()
         ok, status, body = self.notify_service.send_home_assistant_test(payload)
         if ok:
             self._log_console(f"Test notification sent (status {status}).")
@@ -1147,8 +1148,8 @@ class App(tk.Tk):
             self._log_console("Sending Windows test notification.")
             test_body = (
                 f"HA test status: {status or 'error'} | "
-                "New: Alpha Kush, Beta OG | Removed: None | Price: Gamma Glue £2.50; Delta Dream £1.00 | "
-                "Stock: Zeta Zen: 10 → 8"
+                "New: Alpha Kush, Beta OG | Removed: None | Price: Gamma Glue GBP 2.50; Delta Dream GBP 1.00 | "
+                "Stock: Zeta Zen: 10 -> 8"
             )
             launch_url = self.cap_url.get().strip() or self._latest_export_url()
             if launch_url is None:
