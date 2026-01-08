@@ -4,47 +4,47 @@ FlowerTrack is a Windows desktop app for tracking medical cannabis usage and sto
 
 ## Screenshots
 ### Tracker dashboard
-The main tracker puts usage, stock, and daily targets in one view so you can act fast.
+Shows usage, stock, and daily targets in a single view.
 
 <img src="docs/TrackerSS.png" width="960" />
 
 ### Tracker settings
-Tune thresholds, routes, and visuals without digging through config files.
+Configure thresholds, routes, and display options.
 
 <img src="docs/TrackerSettingSS.png" width="500" />
 
 ### Usage stats
-Quick history and trend views to see how patterns shift over time.
+Shows usage history and trends over time.
 
 <img src="docs/StatsSS.png" width="360" />
 
 ### Flower library
-Keep curated strains, notes, and metadata in your personal library.
+Stores strains, notes, and metadata.
 
 <img src="docs/LibrarySS.png" width="960" />
 
 ### Scraper settings
-Control automation, retries, selectors, and notification behavior.
+Configure automation, retries, selectors, and notifications.
 
 <img src="docs/ScraperSS.png" width="750" />
 
 ### Flower Browser
-The local webpage offers fast filters, badges, and scanning of product changes.
+Local webpage with filters, badges, and change highlights.
 
 <img src="docs/WebpageSS.png" width="960" />
 
 ### Flower Browser favorites
-Mark favorites for instant recall across sessions.
+Favorites list for quick access.
 
 <img src="docs/WebpageFavoriteSS.png" width="960" />
 
 ### Flower Browser basket
-Stage items side-by-side for quick comparisons.
+Basket view for comparing items.
 
 <img src="docs/WebpageBasketSS.png" width="960" />
 
 ### Mix calculator
-Plan blends and ratios with clear, simple controls.
+Calculator for blend ratios.
 
 <img src="docs/MixcalcSS.png" width="500" />
 
@@ -54,7 +54,7 @@ Plan blends and ratios with clear, simple controls.
 - Flower Library and Mix Calculator tools.
 - Scraper for Medicann page data with change detection (new/removed items, price/stock changes).
 - Home Assistant webhook notifications and optional Windows desktop notifications.
-- HTML snapshots served locally for quick browsing (favorites and filters preserved).
+- HTML snapshots served locally (favorites and filters preserved).
 
 ## The Flower Browser (local webpage)
 The scraper generates a local HTML page that you can open from the app. It’s designed for fast scanning and filtering of the live product list.
