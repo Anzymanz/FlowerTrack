@@ -315,7 +315,7 @@ def export_html(data, path, fetch_images=False):
     <div>
       {price_pill}
       <span class='pill'>{qty or '?'}</span>
-        {f"<span class='pill'>?/g {ppg:.2f}</span>" if ppg is not None else ''}
+        {f"<span class='pill'£/g {ppg:.2f}</span>" if ppg is not None else ''}
         {f"<span class='pill'>{esc(it.get('strain_type'))}</span>" if it.get('strain_type') else ''}
     </div>
     <div class='small'>🎉 THC: {esc(disp_thc)}</div>
