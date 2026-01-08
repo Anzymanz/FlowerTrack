@@ -3,15 +3,50 @@
 FlowerTrack is a Windows desktop app for tracking medical cannabis usage and stock, with an integrated scraper that monitors a Medicann page for changes. It combines a dosage tracker, flower library, and automated price/stock change detection with optional Home Assistant notifications and local HTML snapshots.
 
 ## Screenshots
-![Tracker](docs/TrackerSS.png)
-![Tracker Settings](docs/TrackerSettingSS.png)
-![Usage Stats](docs/StatsSS.png)
-![Library](docs/LibrarySS.png)
-![Scraper Settings](docs/ScraperSS.png)
-![Flower Browser](docs/WebpageSS.png)
-![Flower Browser Favorites](docs/WebpageFavoriteSS.png)
-![Flower Browser Basket](docs/WebpageBasketSS.png)
-![Mix Calculator](docs/MixcalcSS.png)
+### Tracker dashboard
+The main tracker puts usage, stock, and daily targets in one view so you can act fast.
+
+<img src="docs/TrackerSS.png" width="760" />
+
+### Tracker settings
+Tune thresholds, routes, and visuals without digging through config files.
+
+<img src="docs/TrackerSettingSS.png" width="760" />
+
+### Usage stats
+Quick history and trend views to see how patterns shift over time.
+
+<img src="docs/StatsSS.png" width="760" />
+
+### Flower library
+Keep curated strains, notes, and metadata in your personal library.
+
+<img src="docs/LibrarySS.png" width="760" />
+
+### Scraper settings
+Control automation, retries, selectors, and notification behavior.
+
+<img src="docs/ScraperSS.png" width="760" />
+
+### Flower Browser
+The local webpage offers fast filters, badges, and scanning of product changes.
+
+<img src="docs/WebpageSS.png" width="760" />
+
+### Flower Browser favorites
+Mark favorites for instant recall across sessions.
+
+<img src="docs/WebpageFavoriteSS.png" width="760" />
+
+### Flower Browser basket
+Stage items side-by-side for quick comparisons.
+
+<img src="docs/WebpageBasketSS.png" width="760" />
+
+### Mix calculator
+Plan blends and ratios with clear, simple controls.
+
+<img src="docs/MixcalcSS.png" width="760" />
 
 ## Features
 - Track flower stock, THC/CBD potency, remaining grams, and daily targets.
