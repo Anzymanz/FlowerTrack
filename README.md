@@ -11,12 +11,12 @@ The main tracker puts usage, stock, and daily targets in one view so you can act
 ### Tracker settings
 Tune thresholds, routes, and visuals without digging through config files.
 
-<img src="docs/TrackerSettingSS.png" width="760" />
+<img src="docs/TrackerSettingSS.png" width="200" />
 
 ### Usage stats
 Quick history and trend views to see how patterns shift over time.
 
-<img src="docs/StatsSS.png" width="760" />
+<img src="docs/StatsSS.png" width="200" />
 
 ### Flower library
 Keep curated strains, notes, and metadata in your personal library.
@@ -26,7 +26,7 @@ Keep curated strains, notes, and metadata in your personal library.
 ### Scraper settings
 Control automation, retries, selectors, and notification behavior.
 
-<img src="docs/ScraperSS.png" width="760" />
+<img src="docs/ScraperSS.png" width="500" />
 
 ### Flower Browser
 The local webpage offers fast filters, badges, and scanning of product changes.
@@ -46,7 +46,7 @@ Stage items side-by-side for quick comparisons.
 ### Mix calculator
 Plan blends and ratios with clear, simple controls.
 
-<img src="docs/MixcalcSS.png" width="760" />
+<img src="docs/MixcalcSS.png" width="500" />
 
 ## Features
 - Track flower stock, THC/CBD potency, remaining grams, and daily targets.
