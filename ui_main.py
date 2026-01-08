@@ -1295,6 +1295,7 @@ class App(tk.Tk):
         raw = self.text.get("1.0", "end")
         items = parse_clinic_text(raw)
         prev_items = load_last_parse(LAST_PARSE_FILE)
+        identity_cache = _build_identity_cache(prev_items)
         prev_keys = { _identity_key_cached(it, identity_cache) for it in prev_items }
         prev_price_map = {}
         for pit in prev_items:
