@@ -320,6 +320,13 @@
     "display": null
   },
   {
+    "brand": "Four20",
+    "patterns": [
+      "FOUR"
+    ],
+    "display": "Four20"
+  },
+  {
     "brand": "Geyscales",
     "patterns": [
       "GRY-3",
@@ -344,6 +351,13 @@
       "GRASSROOTS"
     ],
     "display": null
+  },
+  {
+    "brand": "Green Britannia",
+    "patterns": [
+      "GB"
+    ],
+    "display": "Green Britannia"
   },
   {
     "brand": "Green Joy",
@@ -396,6 +410,13 @@
       "HEXACAN"
     ],
     "display": null
+  },
+  {
+    "brand": "HighGreens",
+    "patterns": [
+      "HGR"
+    ],
+    "display": "HighGreens"
   },
   {
     "brand": "Hilltop Leaf",
@@ -451,7 +472,7 @@
     "display": null
   },
   {
-    "brand": "LOT420",
+    "brand": "Lot420",
     "patterns": [
       "AAAA",
       "LOT420"
