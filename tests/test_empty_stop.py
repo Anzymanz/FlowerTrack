@@ -1,6 +1,6 @@
 import unittest
 
-from ui_main import _should_stop_on_empty
+from ui_scraper import _should_stop_on_empty
 
 
 class TestEmptyStop(unittest.TestCase):

@@ -25,7 +25,7 @@ def main() -> None:
             messagebox.showerror("Cannot launch", f"Failed to start mix calculator:\n{exc}")
         return
     if "--scraper" in sys.argv or "--parser" in sys.argv:
-        from ui_main import App
+        from ui_scraper import App
         app = App()
         app.mainloop()
         return

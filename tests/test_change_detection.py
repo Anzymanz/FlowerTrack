@@ -1,7 +1,7 @@
 import unittest
 from types import SimpleNamespace
 
-import ui_main
+import ui_scraper
 from parser import make_identity_key
 
 
@@ -30,7 +30,7 @@ class DummyNotifyService:
 
 class ChangeDetectionTests(unittest.TestCase):
     def setUp(self):
-        ui_main.append_change_log = lambda *args, **kwargs: None
+        ui_scraper.append_change_log = lambda *args, **kwargs: None
 
     def _make_item(self, **overrides):
         base = {
@@ -75,7 +75,7 @@ class ChangeDetectionTests(unittest.TestCase):
         cur = [self._make_item(price=9.0, stock="LOW STOCK")]
         app = self._make_app(cur, prev)
 
-        ui_main.App.send_home_assistant(app, log_only=False)
+        ui_scraper.App.send_home_assistant(app, log_only=False)
         payload = app.notify_service.payload
         self.assertIsNotNone(payload)
         self.assertEqual(payload["new_count"], 0)
@@ -92,7 +92,7 @@ class ChangeDetectionTests(unittest.TestCase):
         cur = [self._make_item(product_id="NEW1")]
         app = self._make_app(cur, prev)
 
-        ui_main.App.send_home_assistant(app, log_only=False)
+        ui_scraper.App.send_home_assistant(app, log_only=False)
         payload = app.notify_service.payload
         self.assertEqual(payload["new_count"], 1)
         self.assertEqual(payload["removed_count"], 1)
