@@ -49,6 +49,15 @@ except ImportError:  # Pillow may not be installed; tray icon will be disabled
 def resolve_scraper_status(child_procs) -> tuple[bool, bool]:
     return resolve_scraper_status_core(child_procs, SCRAPER_STATE_FILE)
 
+
+
+def _build_scraper_status_image(child_procs):
+    try:
+        running, warn = resolve_scraper_status_core(child_procs, SCRAPER_STATE_FILE)
+        return make_tray_image(running=running, warn=warn)
+    except Exception:
+        return None
+
 def _resource_path(filename: str) -> str:
     """Return absolute path to resource, works for dev and PyInstaller."""
     base_path = getattr(sys, "_MEIPASS", None) or os.getcwd()
@@ -275,6 +284,7 @@ class CannabisTracker:
         self.scraper_status_img = None
         self.scraper_status_label = ttk.Label(top_bar, text="")
         self.scraper_status_label.grid(row=0, column=7, sticky="e", padx=(6, 0))
+        self._apply_scraper_status_visibility()
         top_bar.columnconfigure(5, weight=1)
 
         # Stock list
@@ -2153,7 +2163,7 @@ class CannabisTracker:
     def _build_tray_image(self) -> "Image.Image":
         """Use colored status dot based on scraper running state; fallback to icon."""
         try:
-            img = build_tray_image(getattr(self, "child_procs", []))
+            img = _build_scraper_status_image(getattr(self, "child_procs", []))
             if img is not None:
                 return img
         except Exception:
@@ -2232,19 +2242,13 @@ class CannabisTracker:
             if not self.show_scraper_status_icon:
                 self._apply_scraper_status_visibility()
                 return
-            img = build_tray_image(getattr(self, "child_procs", []))
+            img = _build_scraper_status_image(getattr(self, "child_procs", []))
             if img and ImageTk is not None:
                 tk_img = ImageTk.PhotoImage(img)
                 self.scraper_status_img = tk_img
                 self.scraper_status_label.configure(image=tk_img, text="")
             else:
-                if warn:
-                    color = "#e6c200"
-                elif running:
-                    color = "#0f0"
-                else:
-                    color = "#f00"
-                self.scraper_status_label.configure(image="", text="●", foreground=color)
+                self.scraper_status_label.configure(image="", text="")
         except Exception:
             self.scraper_status_label.configure(image="", text="")
         finally:
