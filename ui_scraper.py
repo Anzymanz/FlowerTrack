@@ -143,6 +143,7 @@ class App(tk.Tk):
         self.style = ttk.Style(self)
         self.dark_mode_var = tk.BooleanVar(value=self._config_dark)
         self.settings_window = None
+        self.manual_parse_window = None
         self.tray_icon = None
         self.capture_status = "idle"
         self.error_count = 0
@@ -261,6 +262,7 @@ class App(tk.Tk):
         cfg = _load_capture_config()
         self.capture_window = None
         self.settings_window = None
+        self.manual_parse_window = None
         self.capture_config_path = Path(CONFIG_FILE)
         # Notification toggles from config
         self.notify_price_changes = tk.BooleanVar(value=cfg.get("notify_price_changes", True))
@@ -486,6 +488,68 @@ class App(tk.Tk):
                 os.startfile(latest)
             except Exception as exc:
                 messagebox.showerror("Open Export", f"Could not open export:\n{exc}")
+
+    def _open_manual_parse_window(self):
+        if self.manual_parse_window and tk.Toplevel.winfo_exists(self.manual_parse_window):
+            try:
+                self.manual_parse_window.deiconify()
+                self.manual_parse_window.lift()
+                self.manual_parse_window.focus_force()
+            except Exception:
+                pass
+            return
+        win = tk.Toplevel(self)
+        win.title("Manual Parse")
+        win.geometry("720x520")
+        win.minsize(600, 420)
+        self.manual_parse_window = win
+        try:
+            dark = bool(self.dark_mode_var.get())
+            colors = compute_colors(dark)
+            apply_style_theme(self.style, colors)
+            win.configure(bg=colors["bg"])
+            win.after(50, lambda: set_titlebar_dark(win, dark))
+        except Exception:
+            pass
+
+        def on_close():
+            try:
+                win.destroy()
+            except Exception:
+                pass
+            self.manual_parse_window = None
+
+        win.protocol("WM_DELETE_WINDOW", on_close)
+
+        frame = ttk.Frame(win, padding=10)
+        frame.pack(fill="both", expand=True)
+        ttk.Label(frame, text="Paste page text below, then parse.").pack(anchor="w")
+        text_frame = ttk.Frame(frame)
+        text_frame.pack(fill="both", expand=True, pady=(6, 8))
+        text_box = tk.Text(text_frame, wrap="word", height=18)
+        scroll = ttk.Scrollbar(text_frame, orient="vertical", command=text_box.yview, style="Dark.Vertical.TScrollbar")
+        text_box.configure(yscrollcommand=scroll.set)
+        text_box.pack(side="left", fill="both", expand=True)
+        scroll.pack(side="right", fill="y")
+        try:
+            colors = compute_colors(bool(self.dark_mode_var.get()))
+            text_box.configure(bg=colors["bg"], fg=colors["fg"], insertbackground=colors["fg"])
+        except Exception:
+            pass
+
+        btns = ttk.Frame(frame)
+        btns.pack(fill="x")
+
+        def do_parse_export_open():
+            raw = text_box.get("1.0", "end").strip()
+            if not raw:
+                messagebox.showwarning("Manual Parser", "Copy and paste your request repeat page here.")
+                return
+            self._apply_captured_text(raw)
+            self.open_latest_export()
+
+        ttk.Button(btns, text="Parse and open browser", command=do_parse_export_open).pack(side="left")
+        ttk.Button(btns, text="Close", command=on_close).pack(side="right")
 
     def _capture_log(self, msg: str):
         _log_debug(f"[capture] {msg}")

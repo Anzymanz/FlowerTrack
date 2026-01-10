@@ -51,11 +51,11 @@ body{background:var(--bg);color:var(--fg);font-family:Arial;padding:16px;margin:
 .range-line{display:flex;align-items:center;gap:3px;min-width:140px;position:relative;padding-top:14px;padding-bottom:6px}
 .range-slider{position:relative;flex:1;min-width:120px;height:36px}
 .range-slider::before{content:"";position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:6px;background:var(--border);border-radius:999px;z-index:1}
-.range-slider input[type=range]{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:36px;width:100%;margin:0;background:transparent;pointer-events:none;-webkit-appearance:none;appearance:none;z-index:5}
+.range-slider input[type=range]{position:absolute;left:0;right:0;top:50%;transform:translateY(-54%);height:36px;width:100%;margin:0;background:transparent;pointer-events:none;-webkit-appearance:none;appearance:none;z-index:5}
 .range-slider input.range-max{z-index:6}
 .range-slider input.range-min{z-index:7}
-.range-slider input[type=range]::-webkit-slider-thumb{pointer-events:auto;position:relative;z-index:10}
-.range-slider input[type=range]::-moz-range-thumb{pointer-events:auto;position:relative;z-index:10}
+.range-slider input[type=range]::-webkit-slider-thumb{pointer-events:auto;position:relative;z-index:10;margin-top:-6px}
+.range-slider input[type=range]::-moz-range-thumb{pointer-events:auto;position:relative;z-index:10;top:-4px}
 .range-slider input[type=range]::-webkit-slider-runnable-track{height:6px;background:transparent;border-radius:999px}
 .range-slider input[type=range]::-moz-range-track{height:6px;background:transparent;border-radius:999px}
 .range-label{font-size:12px;color:var(--muted)}
