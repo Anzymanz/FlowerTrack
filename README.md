@@ -66,22 +66,6 @@ Key features:
 - Favorites are saved locally in your browser session.
 - Basket mode lets you stage products for quick comparisons.
 
-## Requirements
-- Windows 10/11
-- Python 3.12 (dev only)
-- Playwright browsers (auto-installed on first run or via `playwright install`)
-
-## Quick start (development)
-```powershell
-py .\flowertracker.py
-```
-
-## Build (single exe)
-Use the one-liner in `buildline.txt`, or:
-```powershell
-pyinstaller --noconfirm --clean --onefile --windowed --icon assets/icon.ico --add-data "assets;assets" --add-data "flowerlibrary.py;." --add-data "mixcalc.py;." --name FlowerTrack flowertracker.py
-```
-
 ## Configuration and data
 All user data and configs are stored under:
 ```
@@ -116,6 +100,22 @@ Credentials and tokens are stored encrypted (DPAPI on Windows).
   ```
 - If the scraper logs "No products parsed", increase wait time or retries.
 - Use the console log in-app for detailed scrape output.
+
+## Requirements
+- Windows 10/11
+- Python 3.12 (dev only)
+- Playwright browsers (auto-installed on first run or via `playwright install`)
+
+## Quick start (development)
+```powershell
+py .\flowertracker.py
+```
+
+## Build (single exe)
+Use the one-liner in `buildline.txt`, or:
+```powershell
+pyinstaller --noconfirm --clean --onefile --windowed --icon assets/icon.ico --add-data "assets;assets" --add-data "flowerlibrary.py;." --add-data "mixcalc.py;." --name FlowerTrack flowertracker.py
+```
 
 ## Tests
 ```powershell

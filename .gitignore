@@ -10,3 +10,4 @@ FlowerTrack - Shortcut.lnk
 *.spec
 .venv/
 .env
+TODO.md
