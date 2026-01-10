@@ -10,29 +10,6 @@ FlowerTrack is a Windows desktop app for tracking medical cannabis usage and sto
 - Home Assistant webhook notifications and optional Windows desktop notifications.
 - HTML snapshots served locally (favorites and filters preserved).
 
-## The Flower Browser (local webpage)
-The scraper generates a local HTML page that you can open from the app. It’s designed for fast scanning and filtering of the live product list.
-- Search, filter, and sort by brand, strain, type, or stock.
-- Visual badges for new/removed items and price movements.
-- THC/CBD normalization and clear per-gram price display.
-- Favorites are saved locally in your browser session.
-- Basket mode lets you stage products for quick comparisons.
-
-## Scraper behavior
-- Logs in (if configured), waits after login, then revisits the target page.
-- Waits after navigation, then collects page text.
-- Retries on empty parses using the retry settings.
-- Sends notifications only when there are real changes.
-
-## Home Assistant notifications
-- Set the webhook URL and (optional) token in the scraper settings.
-- Payload includes new/removed items, price changes, and stock changes.
-- Quiet hours and summary/full detail are configurable.
-
-## Desktop notifications
-- Enable "Send Windows desktop notifications" in scraper settings.
-- Uses win10toast for toasts. (No click-through actions available.)
-
 ## Screenshots
 ### Tracker dashboard
 Shows usage, stock, and daily targets in a single view.
@@ -79,6 +56,43 @@ Calculator for blend ratios.
 
 <img src="docs/MixcalcSS.png" width="500" />
 
+## The Flower Browser (local webpage)
+The scraper generates a local HTML page that you can open from the app. It’s designed for fast scanning and filtering of the live product list.
+
+Key features:
+- Search, filter, and sort by brand, strain, type, or stock.
+- Visual badges for new/removed items and price movements.
+- THC/CBD normalization and clear per-gram price display.
+- Favorites are saved locally in your browser session.
+- Basket mode lets you stage products for quick comparisons.
+
+## Scraper behavior
+- Logs in (if configured), waits after login, then revisits the target page.
+- Waits after navigation, then collects page text.
+- Retries on empty parses using the retry settings.
+- Sends notifications only when there are real changes.
+
+## Home Assistant notifications
+- Set the webhook URL and (optional) token in the scraper settings.
+- Payload includes new/removed items, price changes, and stock changes.
+- Quiet hours and summary/full detail are configurable.
+
+## Desktop notifications
+- Enable "Send Windows desktop notifications" in scraper settings.
+- Uses win10toast for toasts. (No click-through actions available.)
+
+## Configuration and data
+All user data and configs are stored under:
+```
+%APPDATA%\FlowerTrack
+```
+Key files:
+- `flowertrack_config.json` (unified tracker + scraper settings)
+- Tracker data and library JSON files
+- `Exports\` (HTML snapshots)
+
+Credentials and tokens are stored encrypted (DPAPI on Windows).
+
 ## Requirements
 - Windows 10/11
 - Python 3.12 (dev only)
@@ -94,17 +108,11 @@ Use the one-liner in `buildline.txt`, or:
 ```powershell
 pyinstaller --noconfirm --clean --onefile --windowed --icon assets/icon.ico --add-data "assets;assets" --add-data "flowerlibrary.py;." --add-data "mixcalc.py;." --name FlowerTrack flowertracker.py
 ```
-## Configuration and data
-All user data and configs are stored under:
-```
-%APPDATA%\FlowerTrack
-```
-Key files:
-- `flowertrack_config.json` (unified tracker + scraper settings)
-- Tracker data and library JSON files
-- `Exports\` (HTML snapshots)
 
-Credentials and tokens are stored encrypted (DPAPI on Windows).
+## Tests
+```powershell
+py -m unittest
+```
 
 ## Troubleshooting
 - If Playwright browsers are missing, run:
@@ -113,11 +121,6 @@ Credentials and tokens are stored encrypted (DPAPI on Windows).
   ```
 - If the scraper logs "No products parsed", increase wait time or retries.
 - Use the console log in-app for detailed scrape output.
-
-## Tests
-```powershell
-py -m unittest
-```
 
 ## Repository layout
 - `flowertracker.py` entry point
