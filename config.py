@@ -37,6 +37,7 @@ DEFAULT_CAPTURE_CONFIG = {
     "quiet_hours_enabled": False,
     "quiet_hours_start": "22:00",
     "quiet_hours_end": "07:00",
+    "quiet_hours_interval_seconds": 3600.0,
     "notification_detail": "full",
     "minimize_to_tray": False,
     "close_to_tray": False,
@@ -224,6 +225,7 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["quiet_hours_enabled"] = _coerce_bool(raw.get("quiet_hours_enabled"), DEFAULT_CAPTURE_CONFIG["quiet_hours_enabled"])
     cfg["quiet_hours_start"] = str(raw.get("quiet_hours_start") or DEFAULT_CAPTURE_CONFIG["quiet_hours_start"]).strip()
     cfg["quiet_hours_end"] = str(raw.get("quiet_hours_end") or DEFAULT_CAPTURE_CONFIG["quiet_hours_end"]).strip()
+    cfg["quiet_hours_interval_seconds"] = _coerce_float(raw.get("quiet_hours_interval_seconds"), DEFAULT_CAPTURE_CONFIG["quiet_hours_interval_seconds"], 1.0)
     cfg["notification_detail"] = str(raw.get("notification_detail") or DEFAULT_CAPTURE_CONFIG["notification_detail"]).strip() or "full"
     cfg["minimize_to_tray"] = _coerce_bool(raw.get("minimize_to_tray"), DEFAULT_CAPTURE_CONFIG["minimize_to_tray"])
     cfg["close_to_tray"] = _coerce_bool(raw.get("close_to_tray"), DEFAULT_CAPTURE_CONFIG["close_to_tray"])
@@ -248,14 +250,10 @@ def _normalize_unified_config(raw: dict) -> dict:
 
 def load_unified_config(
     path: Path,
-    legacy_tracker_paths: list[Path] | None = None,
-    legacy_scraper_paths: list[Path] | None = None,
     decrypt_scraper_keys: list[str] | None = None,
     logger=None,
     write_back: bool = True,
 ) -> dict:
-    legacy_tracker_paths = legacy_tracker_paths or []
-    legacy_scraper_paths = legacy_scraper_paths or []
     decrypt_scraper_keys = decrypt_scraper_keys or []
 
     raw = _read_json(path)
@@ -269,18 +267,6 @@ def load_unified_config(
                 unified_raw["scraper"] = raw
             elif _looks_like_tracker(raw):
                 unified_raw["tracker"] = raw
-        if "tracker" not in unified_raw:
-            for legacy in legacy_tracker_paths:
-                legacy_raw = _read_json(legacy)
-                if legacy_raw:
-                    unified_raw["tracker"] = legacy_raw
-                    break
-        if "scraper" not in unified_raw:
-            for legacy in legacy_scraper_paths:
-                legacy_raw = _read_json(legacy)
-                if legacy_raw:
-                    unified_raw["scraper"] = legacy_raw
-                    break
 
     if "scraper" in unified_raw:
         for key in decrypt_scraper_keys:
@@ -294,7 +280,10 @@ def load_unified_config(
         try:
             save_unified_config(path, unified, encrypt_scraper_keys=decrypt_scraper_keys)
             if needs_migration:
-                _log_migration(f"Config migrated (source={'legacy' if not is_unified else 'unified'}) v{prev_version or 'none'} -> v{SCHEMA_VERSION}", logger=logger)
+                _log_migration(
+                    f"Config migrated v{prev_version or 'none'} -> v{SCHEMA_VERSION}",
+                    logger=logger,
+                )
         except Exception as exc:
             if logger:
                 try:
@@ -316,27 +305,13 @@ def save_unified_config(path: Path, data: dict, encrypt_scraper_keys: list[str] 
 def load_tracker_config(path: Path) -> dict:
     raw = _read_json(path)
     if not raw or not any(k in raw for k in ("tracker", "scraper", "ui")):
-        appdata = Path(os.getenv("APPDATA", os.path.expanduser("~")))
-        flower_dir = appdata / "FlowerTrack"
-        legacy_dir = appdata / "MedicannScraper"
         unified = load_unified_config(
             path,
-            legacy_tracker_paths=[
-                flower_dir / "tracker_settings.json",
-                flower_dir / "tracker_config.json",
-                legacy_dir / "tracker_settings.json",
-                legacy_dir / "tracker_config.json",
-            ],
-            legacy_scraper_paths=[
-                flower_dir / "scraper_config.json",
-                legacy_dir / "scraper_config.json",
-            ],
             decrypt_scraper_keys=["username", "password", "ha_token"],
         )
         return _validate_tracker_config(unified.get("tracker", {}))
     if any(k in raw for k in ("tracker", "scraper", "ui")):
         raw = raw.get("tracker", {})
-    # drop legacy tray flags if present
     merged = _validate_tracker_config(raw)
     return merged
 
@@ -466,24 +441,11 @@ def _migrate_capture_config(raw: dict) -> dict:
     return raw
 
 
-def load_capture_config(path: Path, legacy_paths: list[Path], decrypt_keys: list[str], logger=None) -> dict:
+def load_capture_config(path: Path, decrypt_keys: list[str], logger=None) -> dict:
     cfg = dict(DEFAULT_CAPTURE_CONFIG)
     try:
-        appdata = Path(os.getenv("APPDATA", os.path.expanduser("~")))
-        flower_dir = appdata / "FlowerTrack"
-        legacy_dir = appdata / "MedicannScraper"
         unified = load_unified_config(
             path,
-            legacy_tracker_paths=[
-                flower_dir / "tracker_settings.json",
-                flower_dir / "tracker_config.json",
-                legacy_dir / "tracker_settings.json",
-                legacy_dir / "tracker_config.json",
-            ],
-            legacy_scraper_paths=legacy_paths or [
-                flower_dir / "scraper_config.json",
-                legacy_dir / "scraper_config.json",
-            ],
             decrypt_scraper_keys=decrypt_keys,
             logger=logger,
         )
@@ -501,8 +463,6 @@ def save_capture_config(path: Path, data: dict, encrypt_keys: list[str]):
     try:
         unified = load_unified_config(
             path,
-            legacy_tracker_paths=[],
-            legacy_scraper_paths=[],
             decrypt_scraper_keys=encrypt_keys,
             write_back=False,
         )

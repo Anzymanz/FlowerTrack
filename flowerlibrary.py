@@ -11,29 +11,16 @@ APP_DIR = Path(os.getenv("APPDATA", Path.home())) / "FlowerTrack" / "data"
 APP_DIR.mkdir(parents=True, exist_ok=True)
 DATA_FILE = APP_DIR / "library_data.json"
 SETTINGS_FILE = APP_DIR / "library_config.json"
-LEGACY_APP_DATA_FILE = APP_DIR / "library.json"
-LEGACY_APP_SETTINGS_FILE = APP_DIR / "settings.json"
-LEGACY_DATA_FILE = Path(__file__).with_name("library.json")
-LEGACY_SETTINGS_FILE = Path(__file__).with_name("settings.json")
 TRACKER_CONFIG_FILE = Path(os.getenv("APPDATA", Path.home())) / "FlowerTrack" / "flowertrack_config.json"
 
 
 def load_entries() -> list[dict]:
     """Load entries from disk if the JSON file exists."""
-    sources = [
-        DATA_FILE,
-        LEGACY_APP_DATA_FILE,  # previous appdata filename
-        LEGACY_DATA_FILE,      # script folder legacy
-    ]
-    for source in sources:
-        if source.exists():
-            try:
-                data = json.loads(source.read_text(encoding="utf-8"))
-                if source != DATA_FILE:
-                    save_entries(data)
-                return data
-            except (json.JSONDecodeError, OSError):
-                messagebox.showwarning("Load Warning", f"Could not read {source.name}, starting with an empty list.")
+    if DATA_FILE.exists():
+        try:
+            return json.loads(DATA_FILE.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            messagebox.showwarning("Load Warning", f"Could not read {DATA_FILE.name}, starting with an empty list.")
     return []
 
 
@@ -43,16 +30,13 @@ def save_entries(entries: list[dict]) -> None:
 
 
 def load_settings() -> dict:
-    for source in (SETTINGS_FILE, LEGACY_APP_SETTINGS_FILE, LEGACY_SETTINGS_FILE):
-        if source.exists():
-            try:
-                data = json.loads(source.read_text(encoding="utf-8"))
-                if isinstance(data, dict):
-                    if source != SETTINGS_FILE:
-                        save_settings(data)
-                    return data
-            except (json.JSONDecodeError, OSError):
-                pass
+    if SETTINGS_FILE.exists():
+        try:
+            data = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return data
+        except (json.JSONDecodeError, OSError):
+            pass
     return {"dark_mode": True, "column_widths": {}}
 
 

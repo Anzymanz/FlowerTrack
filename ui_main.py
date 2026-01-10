@@ -31,12 +31,7 @@ from app_core import (  # shared globals/imports
     ASSETS_DIR,
     EXPORTS_DIR_DEFAULT,
     CONFIG_FILE,
-    LEGACY_CONFIG_FILE,
-    LOCAL_CONFIG_FILE,
     BRAND_HINTS_FILE,
-    LEGACY_BRAND_HINTS_FILE_APP,
-    LEGACY_BRAND_HINTS_FILE,
-    LEGACY_BRAND_HINTS_FILE_OLD_APP,
     LAST_PARSE_FILE,
     CHANGES_LOG_FILE,
     LAST_CHANGE_FILE,
@@ -224,6 +219,7 @@ class App(tk.Tk):
         self.cap_quiet_hours_enabled = tk.BooleanVar(value=False)
         self.cap_quiet_start = tk.StringVar(value="22:00")
         self.cap_quiet_end = tk.StringVar(value="07:00")
+        self.cap_quiet_interval = tk.StringVar(value="3600")
         self.cap_notify_detail = tk.StringVar(value="full")
         self.last_change_summary = "none"
         self._build_capture_controls()
@@ -273,6 +269,7 @@ class App(tk.Tk):
         self.cap_quiet_hours_enabled.set(bool(cfg.get("quiet_hours_enabled", False)))
         self.cap_quiet_start.set(cfg.get("quiet_hours_start", "22:00"))
         self.cap_quiet_end.set(cfg.get("quiet_hours_end", "07:00"))
+        self.cap_quiet_interval.set(str(cfg.get("quiet_hours_interval_seconds", 3600)))
         self.cap_notify_detail.set(cfg.get("notification_detail", "full"))
         self.cap_url = tk.StringVar(value=cfg.get("url", ""))
         self.cap_interval = tk.StringVar(value=str(cfg.get("interval_seconds", 60)))
@@ -420,6 +417,7 @@ class App(tk.Tk):
             "quiet_hours_enabled": self.cap_quiet_hours_enabled.get(),
             "quiet_hours_start": self.cap_quiet_start.get(),
             "quiet_hours_end": self.cap_quiet_end.get(),
+            "quiet_hours_interval_seconds": float(self.cap_quiet_interval.get() or 0),
             "notification_detail": self.cap_notify_detail.get(),
         }
         _save_capture_config(cfg)
@@ -738,7 +736,6 @@ class App(tk.Tk):
         try:
             cfg = load_capture_config(
                 Path(path),
-                [Path(path)],
                 ["username", "password", "ha_token"],
                 logger=None,
             )
@@ -768,6 +765,7 @@ class App(tk.Tk):
         self.cap_quiet_hours_enabled.set(bool(cfg.get("quiet_hours_enabled", False)))
         self.cap_quiet_start.set(cfg.get("quiet_hours_start", "22:00"))
         self.cap_quiet_end.set(cfg.get("quiet_hours_end", "07:00"))
+        self.cap_quiet_interval.set(str(cfg.get("quiet_hours_interval_seconds", 3600)))
         self.cap_notify_detail.set(cfg.get("notification_detail", "full"))
         self.minimize_to_tray.set(cfg.get("minimize_to_tray", False))
         self.close_to_tray.set(cfg.get("close_to_tray", False))
@@ -807,6 +805,7 @@ class App(tk.Tk):
             "quiet_hours_enabled": self.cap_quiet_hours_enabled.get(),
             "quiet_hours_start": self.cap_quiet_start.get(),
             "quiet_hours_end": self.cap_quiet_end.get(),
+            "quiet_hours_interval_seconds": float(self.cap_quiet_interval.get() or 0),
             "notification_detail": self.cap_notify_detail.get(),
             "minimize_to_tray": bool(self.minimize_to_tray.get()),
             "close_to_tray": bool(self.close_to_tray.get()),
@@ -843,6 +842,7 @@ class App(tk.Tk):
             "quiet_hours_enabled": self.cap_quiet_hours_enabled.get(),
             "quiet_hours_start": self.cap_quiet_start.get(),
             "quiet_hours_end": self.cap_quiet_end.get(),
+            "quiet_hours_interval_seconds": float(self.cap_quiet_interval.get() or 0),
             "notification_detail": self.cap_notify_detail.get(),
             "minimize_to_tray": bool(self.minimize_to_tray.get()),
             "close_to_tray": bool(self.close_to_tray.get()),

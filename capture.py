@@ -295,7 +295,7 @@ class CaptureWorker:
                     except Exception as exc:
                         self._set_status("retrying", f"Capture error: {exc}")
                     # Overnight slow-down
-                    interval = self.scheduler.next_interval(self.cfg["interval_seconds"])
+                    interval = self.scheduler.next_interval(self.cfg["interval_seconds"], self.cfg)
                     if self.empty_failures:
                         interval = self.retry_policy.interval_with_backoff(interval, self.empty_failures)
                     if self.scheduler.wait(interval, label="Waiting for next capture"):

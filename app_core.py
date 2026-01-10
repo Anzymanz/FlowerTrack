@@ -47,8 +47,6 @@ from parser import (
     make_item_key,
     parse_clinic_text,
     seed_brand_db_if_needed,
-    _load_brand_hints,
-    _save_brand_hints,
 )
 from storage import append_change_log, load_last_change, load_last_parse, save_last_change, save_last_parse, load_last_scrape, save_last_scrape
 from tray import create_tray_icon, make_tray_image, stop_tray_icon, tray_supported
@@ -66,26 +64,15 @@ except Exception:
 BASE_DIR = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 ASSETS_DIR = BASE_DIR / "assets"
 APP_DIR = os.path.join(os.getenv("APPDATA", os.path.expanduser("~")), "FlowerTrack")
-LEGACY_APP_DIR = os.path.join(os.getenv("APPDATA", os.path.expanduser("~")), "MedicannScraper")
 DATA_DIR = Path(APP_DIR) / "data"
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(APP_DIR, exist_ok=True)
-LOCAL_CONFIG_FILE = Path(__file__).parent / "config.json"
-# Unified config path; legacy files still read for migration
+# Unified config path
 UNIFIED_CONFIG_FILE = os.path.join(APP_DIR, "flowertrack_config.json")
 CONFIG_FILE = UNIFIED_CONFIG_FILE
-LEGACY_SCRAPER_CONFIG_FILE = os.path.join(APP_DIR, "scraper_config.json")
-LEGACY_TRACKER_CONFIG_FILE = os.path.join(APP_DIR, "tracker_settings.json")
-LEGACY_TRACKER_CONFIG_FILE_OLD = os.path.join(APP_DIR, "tracker_config.json")
-LEGACY_CONFIG_FILE = os.path.join(LEGACY_APP_DIR, "tracker_config.json")
 EXPORTS_DIR_DEFAULT = Path(os.path.join(os.getenv("APPDATA", os.path.expanduser("~")), "FlowerTrack", "Exports"))
 BRAND_HINTS_FILE = DATA_DIR / "parser_database.json"
-LEGACY_BRAND_HINTS_FILE_APP = Path(APP_DIR) / "parser_database.json"
-LEGACY_BRAND_HINTS_FILE = Path(__file__).parent / "parser_database.json"
-LEGACY_BRAND_HINTS_FILE_OLD_APP = Path(LEGACY_APP_DIR) / "parser_database.json"
-_BRAND_HINTS_CACHE: list[dict] | None = None
-_BADGE_CACHE: dict | None = None
-init_parser_paths(BRAND_HINTS_FILE, [LEGACY_BRAND_HINTS_FILE_APP, LEGACY_BRAND_HINTS_FILE_OLD_APP, LEGACY_BRAND_HINTS_FILE])
+init_parser_paths(BRAND_HINTS_FILE)
 LAST_PARSE_FILE = DATA_DIR / "last_parse.json"
 SERVER_LOG = DATA_DIR / "parser_server.log"
 CHANGES_LOG_FILE = DATA_DIR / "changes.ndjson"
@@ -123,12 +110,6 @@ def _load_tracker_dark_mode(default: bool = True) -> bool:
     try:
         unified = load_unified_config(
             Path(UNIFIED_CONFIG_FILE),
-            legacy_tracker_paths=[
-                Path(LEGACY_TRACKER_CONFIG_FILE),
-                Path(LEGACY_TRACKER_CONFIG_FILE_OLD),
-                Path(LEGACY_CONFIG_FILE),
-            ],
-            legacy_scraper_paths=[Path(LEGACY_SCRAPER_CONFIG_FILE), Path(LOCAL_CONFIG_FILE)],
             decrypt_scraper_keys=["username", "password", "ha_token"],
             logger=lambda m: _log_debug(f"[config] {m}"),
         )
@@ -144,12 +125,6 @@ def _save_tracker_dark_mode(enabled: bool) -> None:
     try:
         unified = load_unified_config(
             Path(UNIFIED_CONFIG_FILE),
-            legacy_tracker_paths=[
-                Path(LEGACY_TRACKER_CONFIG_FILE),
-                Path(LEGACY_TRACKER_CONFIG_FILE_OLD),
-                Path(LEGACY_CONFIG_FILE),
-            ],
-            legacy_scraper_paths=[Path(LEGACY_SCRAPER_CONFIG_FILE), Path(LOCAL_CONFIG_FILE)],
             decrypt_scraper_keys=["username", "password", "ha_token"],
             write_back=False,
         )
@@ -163,7 +138,6 @@ def _save_tracker_dark_mode(enabled: bool) -> None:
 def _load_capture_config() -> dict:
     return load_capture_config(
         Path(UNIFIED_CONFIG_FILE),
-        [Path(LEGACY_SCRAPER_CONFIG_FILE), Path(LOCAL_CONFIG_FILE)],
         ["username", "password", "ha_token"],
         logger=lambda m: _log_debug(f"[config] {m}"),
     )

@@ -2,19 +2,17 @@ import json
 import re
 import urllib.parse
 from pathlib import Path
-from typing import Callable, Iterable, Optional
+from typing import Callable, Optional
 from models import ItemDict
 
 BRAND_HINTS_FILE: Optional[Path] = None
-LEGACY_BRAND_HINTS: list[Path] = []
 _BRAND_HINTS_CACHE: list[dict] | None = None
 
 
-def init_parser_paths(brand_hints_file: Path, legacy_candidates: Iterable[Path]) -> None:
+def init_parser_paths(brand_hints_file: Path) -> None:
     """Configure where the parser reads/writes its brand database."""
-    global BRAND_HINTS_FILE, LEGACY_BRAND_HINTS, _BRAND_HINTS_CACHE
+    global BRAND_HINTS_FILE, _BRAND_HINTS_CACHE
     BRAND_HINTS_FILE = Path(brand_hints_file)
-    LEGACY_BRAND_HINTS = [Path(p) for p in legacy_candidates]
     _BRAND_HINTS_CACHE = None
 
 
@@ -77,17 +75,13 @@ def get_google_medicann_link(producer: str | None, strain: str | None) -> str:
 
 
 def _ensure_brand_file(logger: Optional[Callable[[str], None]] = None) -> None:
-    """Ensure the brand hints file exists by copying from any legacy source."""
+    """Ensure the brand hints file exists so reads don't fail."""
     if BRAND_HINTS_FILE is None or BRAND_HINTS_FILE.exists():
         return
-    for legacy in LEGACY_BRAND_HINTS:
-        if legacy.exists():
-            try:
-                BRAND_HINTS_FILE.write_text(legacy.read_text(encoding="utf-8"), encoding="utf-8")
-                _maybe_log(logger, f"Seeded brand database from {legacy}")
-                return
-            except Exception:
-                continue
+    try:
+        BRAND_HINTS_FILE.write_text("[]", encoding="utf-8")
+    except Exception:
+        pass
 
 
 def _load_brand_hints(logger: Optional[Callable[[str], None]] = None) -> list[dict]:

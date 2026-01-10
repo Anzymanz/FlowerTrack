@@ -159,6 +159,8 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Entry(quiet_frame, textvariable=app.cap_quiet_start, width=6).pack(side="left")
     ttk.Label(quiet_frame, text="To").pack(side="left", padx=(8, 2))
     ttk.Entry(quiet_frame, textvariable=app.cap_quiet_end, width=6).pack(side="left")
+    ttk.Label(quiet_frame, text="Interval (s)").pack(side="left", padx=(8, 2))
+    ttk.Entry(quiet_frame, textvariable=app.cap_quiet_interval, width=7).pack(side="left")
 
     detail_frame = ttk.Frame(notify_frame)
     detail_frame.pack(fill="x", pady=(2, 2))
@@ -350,7 +352,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     scraper_btns = ttk.Frame(scraper_tab)
     scraper_btns.pack(fill="x", pady=10)
     ttk.Button(scraper_btns, text="Load config", command=app.load_capture_config).pack(side="left", padx=4)
-    ttk.Button(scraper_btns, text="Save config", command=app._save_capture_window).pack(side="left", padx=4)
+    ttk.Button(scraper_btns, text="Export config", command=app.save_capture_config).pack(side="left", padx=4)
     ttk.Button(scraper_btns, text="Clear cache", command=app.clear_cache).pack(side="right", padx=4)
     ttk.Button(scraper_btns, text="Send test notification", command=app.send_test_notification).pack(side="right", padx=4)
 
