@@ -4,7 +4,7 @@ import sys
 import tkinter as tk
 from pathlib import Path
 from tkinter import Tk, Toplevel, StringVar, BooleanVar, ttk, messagebox, filedialog
-from ui_theme import apply_style_theme, compute_colors, set_titlebar_dark
+from theme import apply_style_theme, compute_colors, set_titlebar_dark
 
 
 APP_DIR = Path(os.getenv("APPDATA", Path.home())) / "FlowerTrack" / "data"

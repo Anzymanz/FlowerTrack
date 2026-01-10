@@ -66,8 +66,8 @@ import threading as _threading
 from notifications import _maybe_send_windows_notification
 from tray import create_tray_icon, stop_tray_icon, tray_supported, update_tray_icon, compute_tray_state
 from logger import UILogger
-from notification_service import NotificationService
-from ui_theme import apply_style_theme, set_titlebar_dark, compute_colors
+from notifications import NotificationService
+from theme import apply_style_theme, set_titlebar_dark, compute_colors
 
 
 

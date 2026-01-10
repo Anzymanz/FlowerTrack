@@ -18,10 +18,10 @@ import importlib.machinery
 import traceback
 from app_core import APP_DIR, EXPORTS_DIR_DEFAULT, LAST_PARSE_FILE, _load_capture_config, _save_capture_config  # use shared app data root
 from tray import tray_supported, update_tray_icon
-from tracker_ui_helpers import build_tray_image, resolve_scraper_status
-from ui_theme import apply_style_theme, compute_colors, set_titlebar_dark
+ build_tray_image, resolve_scraper_status
+from theme import apply_style_theme, compute_colors, set_titlebar_dark
 from ui_tracker_settings import open_tracker_settings
-from inventory_storage import (
+from inventory import (
     TRACKER_DATA_FILE,
     TRACKER_LIBRARY_FILE,
     TRACKER_CONFIG_FILE,
@@ -29,11 +29,11 @@ from inventory_storage import (
     save_tracker_data,
 )
 from storage import load_last_parse
-from inventory_services import add_stock_entry, log_dose_entry, is_cbd_dominant
+from inventory import add_stock_entry, log_dose_entry, is_cbd_dominant
 from exports import export_html_auto
 from export_server import start_export_server as srv_start_export_server, stop_export_server as srv_stop_export_server
 from config import load_tracker_config, save_tracker_config
-from models_inventory import Flower
+from inventory import Flower
 try:
     from PIL import Image, ImageDraw, ImageTk
 except ImportError:  # Pillow may not be installed; tray icon will be disabled
@@ -2246,3 +2246,22 @@ class CannabisTracker:
             except Exception:
                 pass
 
+from __future__ import annotations
+
+from typing import Tuple
+
+from app_core import SCRAPER_STATE_FILE
+from scraper_state import resolve_scraper_status as resolve_scraper_status_core
+from tray import make_tray_image
+
+
+def resolve_scraper_status(child_procs) -> Tuple[bool, bool]:
+    return resolve_scraper_status_core(child_procs, SCRAPER_STATE_FILE)
+
+
+def build_tray_image(child_procs):
+    try:
+        running, warn = resolve_scraper_status_core(child_procs, SCRAPER_STATE_FILE)
+        return make_tray_image(running=running, warn=warn)
+    except Exception:
+        return None
