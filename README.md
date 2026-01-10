@@ -2,52 +2,6 @@
 
 FlowerTrack is a Windows desktop app for tracking medical cannabis usage and stock, with an integrated scraper that monitors a Medicann page for changes. It combines a dosage tracker, flower library, and automated price/stock change detection with optional Home Assistant notifications and local HTML snapshots.
 
-## Screenshots
-### Tracker dashboard
-Shows usage, stock, and daily targets in a single view.
-
-<img src="docs/TrackerSS.png" width="960" />
-
-### Tracker settings
-Configure thresholds, routes, and display options.
-
-<img src="docs/TrackerSettingSS.png" width="500" />
-
-### Usage stats
-Shows usage history and trends over time.
-
-<img src="docs/StatsSS.png" width="360" />
-
-### Flower library
-Stores strains, notes, and metadata.
-
-<img src="docs/LibrarySS.png" width="960" />
-
-### Scraper window
-Shows auto-scraper controls, progress, and log output.
-
-<img src="docs/ScraperSS.png" width="750" />
-
-### Flower Browser
-Local webpage with filters, badges, and change highlights.
-
-<img src="docs/WebpageSS.png" width="960" />
-
-### Flower Browser favorites
-Favorites list for quick access.
-
-<img src="docs/WebpageFavoriteSS.png" width="960" />
-
-### Flower Browser basket
-Basket view for comparing items.
-
-<img src="docs/WebpageBasketSS.png" width="960" />
-
-### Mix calculator
-Calculator for blend ratios.
-
-<img src="docs/MixcalcSS.png" width="500" />
-
 ## Features
 - Track flower stock, THC/CBD potency, remaining grams, and daily targets.
 - Log doses by route of administration with per-day totals.
@@ -100,6 +54,56 @@ Credentials and tokens are stored encrypted (DPAPI on Windows).
   ```
 - If the scraper logs "No products parsed", increase wait time or retries.
 - Use the console log in-app for detailed scrape output.
+
+# FlowerTrack
+
+FlowerTrack is a Windows desktop app for tracking medical cannabis usage and stock, with an integrated scraper that monitors a Medicann page for changes. It combines a dosage tracker, flower library, and automated price/stock change detection with optional Home Assistant notifications and local HTML snapshots.
+
+## Screenshots
+### Tracker dashboard
+Shows usage, stock, and daily targets in a single view.
+
+<img src="docs/TrackerSS.png" width="960" />
+
+### Tracker settings
+Configure thresholds, routes, and display options.
+
+<img src="docs/TrackerSettingSS.png" width="500" />
+
+### Usage stats
+Shows usage history and trends over time.
+
+<img src="docs/StatsSS.png" width="360" />
+
+### Flower library
+Stores strains, notes, and metadata.
+
+<img src="docs/LibrarySS.png" width="960" />
+
+### Scraper window
+Shows auto-scraper controls, progress, and log output.
+
+<img src="docs/ScraperSS.png" width="750" />
+
+### Flower Browser
+Local webpage with filters, badges, and change highlights.
+
+<img src="docs/WebpageSS.png" width="960" />
+
+### Flower Browser favorites
+Favorites list for quick access.
+
+<img src="docs/WebpageFavoriteSS.png" width="960" />
+
+### Flower Browser basket
+Basket view for comparing items.
+
+<img src="docs/WebpageBasketSS.png" width="960" />
+
+### Mix calculator
+Calculator for blend ratios.
+
+<img src="docs/MixcalcSS.png" width="500" />
 
 ## Requirements
 - Windows 10/11
