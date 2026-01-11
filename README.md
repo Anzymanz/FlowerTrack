@@ -76,13 +76,20 @@ Key features:
 - Sends notifications only when there are real changes.
 
 ## Home Assistant notifications
-- Set the webhook URL and (optional) token in the scraper settings.
+## Home Assistant setup
+1. In Home Assistant, create a webhook automation (Settings → Automations → Create → Webhook).
+2. Set the webhook ID (e.g., `flowertrack`) and save the automation.
+3. Copy the webhook URL from the automation (it looks like `https://YOUR_HA/api/webhook/flowertrack`).
+4. In FlowerTrack → Scraper settings, paste the webhook URL into **Home Assistant webhook URL**.
+5. Optional: set a long‑lived access token in **Home Assistant token** if your HA instance requires it.
+6. Save settings and use **Send test notification** to verify.
+
 - Payload includes new/removed items, price changes, and stock changes.
 - Quiet hours and summary/full detail are configurable.
 
 ## Desktop notifications
 - Enable "Send Windows desktop notifications" in scraper settings.
-- Uses win10toast for toasts. (No click-through actions available.)
+- Uses win10toast for toasts.
 
 ## Configuration and data
 All user data and configs are stored under:
