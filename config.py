@@ -44,10 +44,20 @@ DEFAULT_CAPTURE_CONFIG = {
 }
 
 
+def _default_tracker_data_path() -> str:
+    appdata = Path(os.getenv("APPDATA", os.path.expanduser("~")))
+    return str(appdata / "FlowerTrack" / "data" / "tracker_data.json")
+
+
+def _default_library_data_path() -> str:
+    appdata = Path(os.getenv("APPDATA", os.path.expanduser("~")))
+    return str(appdata / "FlowerTrack" / "data" / "library_data.json")
+
+
 # Default schema for tracker config (centralized)
 DEFAULT_TRACKER_CONFIG = {
-    "data_path": "",
-    "library_data_path": "",
+    "data_path": _default_tracker_data_path(),
+    "library_data_path": _default_library_data_path(),
     "dark_mode": True,
     "minimize_to_tray": False,
     "close_to_tray": False,
@@ -183,6 +193,10 @@ def _validate_tracker_config(raw: dict) -> dict:
             cfg[key] = {str(k): float(v) for k, v in value.items() if v is not None}
         else:
             cfg[key] = value
+    if not cfg.get("data_path"):
+        cfg["data_path"] = _default_tracker_data_path()
+    if not cfg.get("library_data_path"):
+        cfg["library_data_path"] = _default_library_data_path()
     return cfg
 
 

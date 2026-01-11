@@ -15,9 +15,10 @@ class Flower:
     grams_remaining: float = 0.0
 
     def remove_by_grams(self, grams: float) -> None:
-        if grams > self.grams_remaining:
+        epsilon = 1e-6
+        if grams > self.grams_remaining + epsilon:
             raise ValueError("Not enough stock for this dose.")
-        self.grams_remaining -= grams
+        self.grams_remaining = max(0.0, self.grams_remaining - grams)
 
     def add_stock(self, grams: float, thc_pct: float, cbd_pct: float) -> None:
         if abs(thc_pct - self.thc_pct) > 1e-6 or abs(cbd_pct - self.cbd_pct) > 1e-6:
@@ -73,7 +74,14 @@ def add_stock_entry(
 ) -> None:
     """Add or update stock for a flower."""
     if name in flowers:
-        flowers[name].add_stock(grams, thc_pct, cbd_pct)
+        existing = flowers[name]
+        # Allow potency updates when the old stock is effectively empty.
+        if existing.grams_remaining <= 1e-6:
+            existing.thc_pct = thc_pct
+            existing.cbd_pct = cbd_pct
+            existing.grams_remaining = grams
+            return
+        existing.add_stock(grams, thc_pct, cbd_pct)
     else:
         flowers[name] = Flower(name=name, thc_pct=thc_pct, cbd_pct=cbd_pct, grams_remaining=grams)
 

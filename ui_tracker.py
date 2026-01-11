@@ -1985,6 +1985,16 @@ class CannabisTracker:
                 return float(mix_cbd) >= 5.0
             except Exception:
                 pass
+        # Fall back to deriving CBD% from the log values if available.
+        try:
+            grams_used = float(log.get("grams_used", 0.0))
+            eff = float(log.get("efficiency", 1.0)) or 1.0
+            if grams_used > 0 and eff > 0:
+                cbd_mg = float(log.get("cbd_mg", 0.0))
+                cbd_pct = (cbd_mg / eff) / (grams_used * 1000) * 100
+                return cbd_pct >= 5.0
+        except Exception:
+            pass
         name = str(log.get("flower", "")).strip()
         flower = self.flowers.get(name)
         if flower is None:
