@@ -1612,19 +1612,19 @@ class CannabisTracker:
             "enable_stock_coloring": self.enable_stock_coloring,
             "enable_usage_coloring": self.enable_usage_coloring,
         }
-        save_tracker_data(data, logger=lambda m: print(m))
+        save_tracker_data(data, path=Path(self.data_path), logger=lambda m: print(m))
         self._update_data_mtime()
         self._save_config()
 
     def load_data(self) -> None:
-        data = load_tracker_data(logger=lambda m: print(m))
+        data = load_tracker_data(path=Path(self.data_path), logger=lambda m: print(m))
         if not data:
             messagebox.showwarning("No data", f"No tracker data found at {self.data_path}")
             self._update_data_mtime(reset=True)
             return
 
         self.flowers = {}
-        loaded = load_tracker_data(logger=lambda m: print(m))
+        loaded = load_tracker_data(path=Path(self.data_path), logger=lambda m: print(m))
         if loaded:
             data = loaded
         self.flowers = {}

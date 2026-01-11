@@ -34,23 +34,24 @@ def ensure_dirs() -> None:
     TRACKER_DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
     TRACKER_LIBRARY_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-def load_tracker_data(logger: Optional[Callable[[str], None]] = None) -> dict:
-    ensure_dirs()
-    if not TRACKER_DATA_FILE.exists():
+def load_tracker_data(path: Path | None = None, logger: Optional[Callable[[str], None]] = None) -> dict:
+    target = Path(path) if path else TRACKER_DATA_FILE
+    if not target.exists():
         if logger:
-            logger(f"Tracker data not found at {TRACKER_DATA_FILE}")
+            logger(f"Tracker data not found at {target}")
         return {}
     try:
-        return json.loads(TRACKER_DATA_FILE.read_text(encoding="utf-8"))
+        return json.loads(target.read_text(encoding="utf-8"))
     except Exception as exc:
         if logger:
-            logger(f"Failed to load tracker data from {TRACKER_DATA_FILE}: {exc}")
+            logger(f"Failed to load tracker data from {target}: {exc}")
         return {}
 
-def save_tracker_data(data: dict, logger: Optional[Callable[[str], None]] = None) -> None:
-    ensure_dirs()
+def save_tracker_data(data: dict, path: Path | None = None, logger: Optional[Callable[[str], None]] = None) -> None:
+    target = Path(path) if path else TRACKER_DATA_FILE
     try:
-        TRACKER_DATA_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(data, indent=2), encoding="utf-8")
     except Exception as exc:
         if logger:
             logger(f"Failed to save tracker data: {exc}")
