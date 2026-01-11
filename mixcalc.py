@@ -30,6 +30,8 @@ LAST_PARSE_FILE = DATA_DIR / "last_parse.json"
 
 
 roa_options = {"Vaped": 0.6, "Smoked": 0.3, "Eaten": 0.1}
+MIX_MODE = os.environ.get("FT_MIX_MODE", "").strip().lower()
+IS_STOCK_MODE = MIX_MODE in {"stock", "blend", "stockblend"}
 
 
 def load_roa_options():
