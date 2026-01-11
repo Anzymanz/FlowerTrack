@@ -59,7 +59,7 @@ def is_cbd_dominant(flower: Flower | None) -> bool:
     if flower is None:
         return False
     try:
-        return float(flower.cbd_pct) >= float(flower.thc_pct)
+        return float(flower.cbd_pct) >= 5.0
     except Exception:
         return False
 

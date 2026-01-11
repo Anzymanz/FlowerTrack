@@ -354,8 +354,9 @@ class CannabisTracker:
         add_btn = ttk.Button(form, text="Add / Update Stock", command=self.add_stock)
         add_btn.grid(row=1, column=4, padx=(0, 8))
 
+        ttk.Button(form, text="Mix stock", command=lambda: self.launch_mix_calculator(mode="stock")).grid(row=1, column=6, padx=(0, 8))
         delete_btn = ttk.Button(form, text="Delete Selected", command=self.delete_stock)
-        delete_btn.grid(row=1, column=6)
+        delete_btn.grid(row=1, column=7)
         totals_frame = ttk.Frame(stock_frame)
         totals_frame.grid(row=2, column=0, columnspan=2, sticky="w", pady=(8, 0))
         self.total_label = ttk.Label(totals_frame, text="Total THC flower stock: 0.00 g", font=self.font_bold_small)
@@ -726,7 +727,9 @@ class CannabisTracker:
             new_flower = self.flowers[new_flower_name]
 
             # Roll back previous consumption on old flower
-            if old_flower:
+            if log.get("mix_sources") or log.get("mix_thc_pct") is not None:
+                self._restore_mix_stock(log)
+            elif old_flower:
                 old_flower.grams_remaining += current_grams
 
             # Apply new consumption to selected flower
@@ -761,6 +764,38 @@ class CannabisTracker:
         ttk.Button(buttons, text="Save", command=save_edit).grid(row=0, column=1, sticky="e")
         self._prepare_toplevel(dialog)
 
+    def _restore_mix_stock(self, log: dict) -> None:
+        name = str(log.get("flower", "")).strip()
+        if not name:
+            return
+        grams_used = float(log.get("grams_used", 0.0))
+        if grams_used <= 0:
+            return
+        thc_pct = log.get("mix_thc_pct")
+        cbd_pct = log.get("mix_cbd_pct")
+        if thc_pct is None or cbd_pct is None:
+            try:
+                eff = float(log.get("efficiency", 1.0)) or 1.0
+                thc_mg = float(log.get("thc_mg", 0.0))
+                cbd_mg = float(log.get("cbd_mg", 0.0))
+                if grams_used > 0 and eff > 0:
+                    thc_pct = (thc_mg / eff) / (grams_used * 1000) * 100
+                    cbd_pct = (cbd_mg / eff) / (grams_used * 1000) * 100
+            except Exception:
+                pass
+        flower = self.flowers.get(name)
+        if flower is None:
+            for f in self.flowers.values():
+                if f.name.strip().lower() == name.lower():
+                    flower = f
+                    break
+        if flower is None:
+            if thc_pct is None or cbd_pct is None:
+                return
+            flower = Flower(name=name, thc_pct=float(thc_pct), cbd_pct=float(cbd_pct), grams_remaining=0.0)
+            self.flowers[name] = flower
+        flower.grams_remaining += grams_used
+
     def delete_log_entry(self) -> None:
         selection = self.log_tree.selection()
         if not selection:
@@ -775,15 +810,18 @@ class CannabisTracker:
             return
         grams_used = float(log.get("grams_used", 0.0))
         flower_name = str(log.get("flower", "")).strip()
-        flower = self.flowers.get(flower_name)
-        if flower is None:
-            # Fallback to case-insensitive match in case the name casing changed
-            for f in self.flowers.values():
-                if f.name.strip().lower() == flower_name.lower():
-                    flower = f
-                    break
-        if flower:
-            flower.grams_remaining += grams_used
+        if log.get("mix_sources") or log.get("mix_thc_pct") is not None:
+            self._restore_mix_stock(log)
+        else:
+            flower = self.flowers.get(flower_name)
+            if flower is None:
+                # Fallback to case-insensitive match in case the name casing changed
+                for f in self.flowers.values():
+                    if f.name.strip().lower() == flower_name.lower():
+                        flower = f
+                        break
+            if flower:
+                flower.grams_remaining += grams_used
         del self.logs[idx]
         self._refresh_stock()
         self._refresh_log()
@@ -1941,6 +1979,12 @@ class CannabisTracker:
             return False
         if "is_cbd_dominant" in log:
             return bool(log.get("is_cbd_dominant"))
+        mix_cbd = log.get("mix_cbd_pct")
+        if mix_cbd is not None:
+            try:
+                return float(mix_cbd) >= 5.0
+            except Exception:
+                pass
         name = str(log.get("flower", "")).strip()
         flower = self.flowers.get(name)
         if flower is None:
@@ -2108,7 +2152,7 @@ class CannabisTracker:
         if self.tools_window and tk.Toplevel.winfo_exists(self.tools_window):
             self.tools_window.destroy()
 
-    def launch_mix_calculator(self, close_tools: bool = False) -> None:
+    def launch_mix_calculator(self, close_tools: bool = False, mode: str = "dose") -> None:
         try:
             if getattr(sys, "frozen", False):
                 args = [sys.executable, "--run-mixcalc"]
@@ -2120,8 +2164,10 @@ class CannabisTracker:
                 cwd = os.getcwd()
             # Hint to child to place near pointer (best-effort)
             env = os.environ.copy()
+            env["FT_MIX_MODE"] = mode
             env["FT_MOUSE_LAUNCH"] = "1"
             proc = subprocess.Popen(args, cwd=cwd, env=env)
+            self._watch_mixcalc_process(proc)
             if close_tools and self.tools_window and tk.Toplevel.winfo_exists(self.tools_window):
                 self.tools_window.destroy()
             try:
@@ -2130,6 +2176,25 @@ class CannabisTracker:
                 pass
         except Exception as exc:
             messagebox.showerror('Mix Calculator', f'Could not launch mix calculator.\n{exc}')
+
+    def _watch_mixcalc_process(self, proc: subprocess.Popen) -> None:
+        def poll() -> None:
+            try:
+                if proc.poll() is None:
+                    self.root.after(500, poll)
+                    return
+            except Exception:
+                return
+            try:
+                self.load_data()
+                self._refresh_stock()
+                self._refresh_log()
+            except Exception:
+                pass
+        try:
+            self.root.after(500, poll)
+        except Exception:
+            pass
 
     def launch_flower_library(self, close_tools: bool = False) -> None:
         # Launch a new process of the same executable in library mode, so no external Python is needed.
