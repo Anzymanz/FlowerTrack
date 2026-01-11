@@ -2,6 +2,9 @@
 
 FlowerTrack is a Windows desktop app for tracking medical cannabis usage and stock, with an integrated scraper that monitors a Medicann page for changes. It combines a dosage tracker, flower library, and automated price/stock change detection with optional Home Assistant notifications and local HTML snapshots.
 
+## Download (Windows)
+[Download](https://github.com/Anzymanz/FlowerTrack/releases/latest) the latest `FlowerTrack.exe` from Releases.
+
 ## Features
 - Track flower stock, THC/CBD potency, remaining grams, and daily targets.
 - Log doses by route of administration with per-day totals.
@@ -102,6 +105,10 @@ Credentials and tokens are stored encrypted (DPAPI on Windows).
 ```powershell
 py .\flowertracker.py
 ```
+
+## Quick start (Windows exe)
+1. [Download](https://github.com/Anzymanz/FlowerTrack/releases/latest) the latest `FlowerTrack.exe`.
+2. Run `FlowerTrack.exe` (first run may take a little longer).
 
 ## Build (single exe)
 Use the one-liner in `buildline.txt`, or:
