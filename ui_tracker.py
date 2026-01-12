@@ -1538,7 +1538,7 @@ class CannabisTracker:
             )
 
 
-    def _logs_for_period(self, period: str) -> tuple[list[dict[str, float]], str]:
+    def _logs_for_period(self, period: str) -> tuple[list[dict[str, float]], str, int]:
         end_date = self.current_date
         if period == "day":
             start_date = end_date
@@ -1564,12 +1564,19 @@ class CannabisTracker:
                 continue
             if start_date <= log_date <= end_date:
                 logs_subset.append(log)
-        return logs_subset, label
+        days_count = (end_date - start_date).days + 1
+        return logs_subset, label, max(days_count, 1)
 
     def _stats_text(
-        self, logs_subset: list[dict[str, float]], label: str, return_title: bool = False
+        self,
+        logs_subset: list[dict[str, float]],
+        label: str,
+        days_count: int,
+        return_title: bool = False,
     ) -> str | tuple[str, list[tuple[str, str]]]:
         stats = self._compute_stats(logs_subset)
+        total_dose = sum(float(log.get("grams_used", 0.0)) for log in logs_subset)
+        avg_daily = total_dose / max(days_count, 1)
         rows = [
             ("First dose", stats["first_time"]),
             ("Last dose", stats["last_time"]),
@@ -1579,6 +1586,7 @@ class CannabisTracker:
             ("Largest dose", stats["max_dose"]),
             ("Smallest dose", stats["min_dose"]),
             ("Average dose", stats["avg_dose"]),
+            ("Average daily usage", f"{avg_daily:.3f} g"),
         ]
         body = "\n".join(f"{k}: {v}" for k, v in rows)
         if return_title:
@@ -1912,8 +1920,8 @@ class CannabisTracker:
             self._set_dark_title_bar(self.dark_var.get(), target=win)
 
     def _show_stats_window(self, period: str = "day") -> None:
-        logs_for_period, label = self._logs_for_period(period)
-        title, stats_list = self._stats_text(logs_for_period, label, return_title=True)
+        logs_for_period, label, days_count = self._logs_for_period(period)
+        title, stats_list = self._stats_text(logs_for_period, label, days_count, return_title=True)
         win = tk.Toplevel(self.root)
         win.title("Usage stats")
         try:
@@ -1941,8 +1949,8 @@ class CannabisTracker:
         self._prepare_toplevel(win)
 
     def _update_stats_display(self, period: str, win: tk.Toplevel) -> None:
-        logs_for_period, label = self._logs_for_period(period)
-        title, stats_list = self._stats_text(logs_for_period, label, return_title=True)
+        logs_for_period, label, days_count = self._logs_for_period(period)
+        title, stats_list = self._stats_text(logs_for_period, label, days_count, return_title=True)
         if hasattr(self, "stats_title"):
             self.stats_title.config(text=title)
         if hasattr(self, "stats_frame"):
@@ -2233,7 +2241,16 @@ class CannabisTracker:
 
     def _quit_from_tray(self) -> None:
         self.is_hidden_to_tray = False
-        self.root.destroy()
+        try:
+            if getattr(self, "tray_icon", None):
+                try:
+                    self.tray_icon.stop()
+                except Exception:
+                    pass
+                self.tray_icon = None
+        except Exception:
+            pass
+        self._on_main_close()
 
     def _build_tray_image(self) -> "Image.Image":
         """Use colored status dot based on scraper running state; fallback to icon."""
