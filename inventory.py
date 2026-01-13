@@ -35,6 +35,34 @@ def ensure_dirs() -> None:
     TRACKER_DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
     TRACKER_LIBRARY_FILE.parent.mkdir(parents=True, exist_ok=True)
 
+def _normalize_log_entry(log: dict) -> dict:
+    if not isinstance(log, dict):
+        return log
+    if 'grams_used' not in log and 'grams' in log:
+        log['grams_used'] = log.get('grams')
+    if 'grams' not in log and 'grams_used' in log:
+        log['grams'] = log.get('grams_used')
+    if 'efficiency' not in log:
+        log['efficiency'] = 1.0
+    if 'time_display' not in log:
+        try:
+            if isinstance(log.get('time'), str) and ' ' in log['time']:
+                log['time_display'] = log['time'].split(' ')[-1]
+        except Exception:
+            pass
+    if 'date' not in log:
+        try:
+            if isinstance(log.get('time'), str) and ' ' in log['time']:
+                log['date'] = log['time'].split(' ')[0]
+        except Exception:
+            pass
+    if 'thc_mg' not in log:
+        log['thc_mg'] = 0.0
+    if 'cbd_mg' not in log:
+        log['cbd_mg'] = 0.0
+    return log
+
+
 def load_tracker_data(path: Path | None = None, logger: Optional[Callable[[str], None]] = None) -> dict:
     target = Path(path) if path else TRACKER_DATA_FILE
     if not target.exists():
@@ -42,7 +70,10 @@ def load_tracker_data(path: Path | None = None, logger: Optional[Callable[[str],
             logger(f"Tracker data not found at {target}")
         return {}
     try:
-        return json.loads(target.read_text(encoding="utf-8"))
+        data = json.loads(target.read_text(encoding="utf-8"))
+        if isinstance(data, dict) and isinstance(data.get('logs'), list):
+            data['logs'] = [_normalize_log_entry(log) for log in data['logs']]
+        return data
     except Exception as exc:
         if logger:
             logger(f"Failed to load tracker data from {target}: {exc}")

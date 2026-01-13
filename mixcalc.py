@@ -1,5 +1,6 @@
 
 import json
+from mix_utils import validate_blend_names
 import os
 from pathlib import Path
 from datetime import datetime
@@ -215,9 +216,6 @@ def log_dose():
         messagebox.showinfo("Cannot log", "Tracker data not available.")
         return
 
-    name_a = item_a.get("name")
-    name_b = item_b.get("name")
-
     def find_flower(name):
         for f in flowers:
             if f.get("name") == name:
@@ -321,6 +319,7 @@ def log_dose():
 
 
 
+
 def add_to_stock():
     idx_a = combo_a.current()
     idx_b = combo_b.current()
@@ -336,12 +335,15 @@ def add_to_stock():
         messagebox.showinfo("Weight", "Total grams must be greater than zero.")
         return
     blend_name = blend_name_var.get().strip()
-    if not blend_name:
-        messagebox.showinfo("Blend name", "Please enter a name for the blend.")
-        return
     target_ratio = ratio_var.get()
     item_a = items[idx_a]
     item_b = items[idx_b]
+    name_a = str(item_a.get("name", "")).strip()
+    name_b = str(item_b.get("name", "")).strip()
+    err = validate_blend_names(name_a, name_b, blend_name)
+    if err:
+        messagebox.showinfo("Blend name", err)
+        return
     result, err = compute_mix(total_g, target_ratio, item_a, item_b)
     if err:
         messagebox.showinfo("Cannot blend", err)
@@ -360,9 +362,6 @@ def add_to_stock():
     if not isinstance(flowers, list):
         messagebox.showinfo("Cannot blend", "Tracker data not available.")
         return
-
-    name_a = item_a.get("name")
-    name_b = item_b.get("name")
 
     def find_flower(name):
         for f in flowers:

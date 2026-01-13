@@ -173,6 +173,19 @@ class App(tk.Tk):
         ttk.Button(btns, text="Stop Auto-Scraper", command=self.stop_auto_capture).pack(side="left", padx=5)
         ttk.Button(btns, text="Open browser", command=self.open_latest_export).pack(side="left", padx=5)
         ttk.Button(btns, text="Settings", command=self._open_settings_window).pack(side="left", padx=5)
+
+        exports_frame = ttk.Frame(self)
+        exports_frame.pack(fill="x", padx=10, pady=(0, 6))
+        ttk.Label(exports_frame, text="Recent exports").pack(anchor="w")
+        exports_inner = ttk.Frame(exports_frame)
+        exports_inner.pack(fill="x")
+        self.exports_list = tk.Listbox(exports_inner, height=5)
+        self.exports_scroll = ttk.Scrollbar(exports_inner, orient="vertical", command=self.exports_list.yview, style="Dark.Vertical.TScrollbar")
+        self.exports_list.configure(yscrollcommand=self.exports_scroll.set)
+        self.exports_list.pack(side="left", fill="x", expand=True)
+        self.exports_scroll.pack(side="right", fill="y")
+        self.exports_list.bind("<Double-1>", lambda e: self._open_selected_export())
+        ttk.Button(exports_frame, text="Open selected", command=self._open_selected_export).pack(anchor="e", pady=(4, 0))
         self.progress = ttk.Progressbar(self, mode="determinate")
         self.progress.pack(fill="x", padx=10, pady=5)
         self.status = ttk.Label(self, text="Idle")
@@ -199,6 +212,7 @@ class App(tk.Tk):
         self.last_change_label.pack(pady=(0, 8))
         self.last_scrape_label = ttk.Label(self, text="Last successful scrape: none")
         self.last_scrape_label.pack(pady=(0, 8))
+        self._refresh_recent_exports()
         try:
             ts = load_last_scrape(LAST_SCRAPE_FILE)
             if ts:
@@ -465,10 +479,51 @@ class App(tk.Tk):
         self._empty_retry_pending = False
         self.capture_status = "idle"
 
+    def _refresh_recent_exports(self) -> None:
+        try:
+            exports_dir = Path(EXPORTS_DIR_DEFAULT)
+            exports_dir.mkdir(parents=True, exist_ok=True)
+            files = sorted(exports_dir.glob("export-*.html"), key=lambda p: p.stat().st_mtime, reverse=True)
+            self.recent_exports = files[:10]
+            if hasattr(self, "exports_list"):
+                self.exports_list.delete(0, tk.END)
+                for path in self.recent_exports:
+                    ts = datetime.fromtimestamp(path.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+                    self.exports_list.insert(tk.END, f"{ts}  {path.name}")
+        except Exception:
+            pass
+
+    def _open_selected_export(self) -> None:
+        if not getattr(self, "recent_exports", None):
+            messagebox.showinfo("Exports", "No exports available yet.")
+            return
+        try:
+            idx = self.exports_list.curselection()
+            if not idx:
+                messagebox.showinfo("Exports", "Select an export to open.")
+                return
+            path = self.recent_exports[idx[0]]
+        except Exception:
+            return
+        self._open_export_path(path)
+
+    def _open_export_path(self, path: Path) -> None:
+        try:
+            self._ensure_export_server()
+            if getattr(self, "server_port", None):
+                url = f"http://127.0.0.1:{self.server_port}/{path.name}"
+                self._open_url_with_fallback(url, path)
+            else:
+                webbrowser.open(path.as_uri())
+        except Exception as exc:
+            messagebox.showerror("Open Export", f"Could not open export:
+{exc}")
+
     def open_latest_export(self):
         """Open the most recent HTML export in the browser (served from the local server if available)."""
         exports_dir = Path(EXPORTS_DIR_DEFAULT)
         exports_dir.mkdir(parents=True, exist_ok=True)
+        self._refresh_recent_exports()
         html_files = sorted(exports_dir.glob("export-*.html"), key=lambda p: p.stat().st_mtime, reverse=True)
         if not html_files:
             try:
@@ -588,6 +643,7 @@ class App(tk.Tk):
             return
         path = export_html_auto(data, exports_dir=EXPORTS_DIR_DEFAULT, open_file=False, fetch_images=False)
         _cleanup_and_record_export(path, max_files=20)
+        self._refresh_recent_exports()
         self._capture_log(f"Exported snapshot: {path.name}")
 
     def _latest_export_url(self) -> str | None:
