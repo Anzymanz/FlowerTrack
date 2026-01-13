@@ -10,5 +10,5 @@ FlowerTrack - Shortcut.lnk
 *.spec
 .venv/
 .env
-CHANGELOG.md
 TODO.md
+build_helper.ps1

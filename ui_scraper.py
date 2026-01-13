@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import sys
 import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext, ttk
@@ -68,15 +67,8 @@ from tray import create_tray_icon, stop_tray_icon, tray_supported, update_tray_i
 from logger import UILogger
 from notifications import NotificationService
 from theme import apply_style_theme, set_titlebar_dark, compute_colors
-
-
-
 def _should_stop_on_empty(error_count: int, error_threshold: int) -> bool:
     return error_count >= error_threshold
-
-
-
-
 def _identity_key_cached(item: dict, cache: dict) -> str:
     key = id(item)
     cached = cache.get(key)
@@ -84,22 +76,16 @@ def _identity_key_cached(item: dict, cache: dict) -> str:
         cached = make_identity_key(item)
         cache[key] = cached
     return cached
-
-
 def _build_identity_cache(items: list[dict]) -> dict:
     cache = {}
     for it in items:
         cache[id(it)] = make_identity_key(it)
     return cache
-
-
 class App(tk.Tk):
     _instance = None
-
     @classmethod
     def instance(cls):
         return cls._instance
-
     def __init__(self):
         super().__init__()
         App._instance = self
@@ -173,19 +159,6 @@ class App(tk.Tk):
         ttk.Button(btns, text="Stop Auto-Scraper", command=self.stop_auto_capture).pack(side="left", padx=5)
         ttk.Button(btns, text="Open browser", command=self.open_latest_export).pack(side="left", padx=5)
         ttk.Button(btns, text="Settings", command=self._open_settings_window).pack(side="left", padx=5)
-
-        exports_frame = ttk.Frame(self)
-        exports_frame.pack(fill="x", padx=10, pady=(0, 6))
-        ttk.Label(exports_frame, text="Recent exports").pack(anchor="w")
-        exports_inner = ttk.Frame(exports_frame)
-        exports_inner.pack(fill="x")
-        self.exports_list = tk.Listbox(exports_inner, height=5)
-        self.exports_scroll = ttk.Scrollbar(exports_inner, orient="vertical", command=self.exports_list.yview, style="Dark.Vertical.TScrollbar")
-        self.exports_list.configure(yscrollcommand=self.exports_scroll.set)
-        self.exports_list.pack(side="left", fill="x", expand=True)
-        self.exports_scroll.pack(side="right", fill="y")
-        self.exports_list.bind("<Double-1>", lambda e: self._open_selected_export())
-        ttk.Button(exports_frame, text="Open selected", command=self._open_selected_export).pack(anchor="e", pady=(4, 0))
         self.progress = ttk.Progressbar(self, mode="determinate")
         self.progress.pack(fill="x", padx=10, pady=5)
         self.status = ttk.Label(self, text="Idle")
@@ -212,7 +185,6 @@ class App(tk.Tk):
         self.last_change_label.pack(pady=(0, 8))
         self.last_scrape_label = ttk.Label(self, text="Last successful scrape: none")
         self.last_scrape_label.pack(pady=(0, 8))
-        self._refresh_recent_exports()
         try:
             ts = load_last_scrape(LAST_SCRAPE_FILE)
             if ts:
@@ -252,22 +224,18 @@ class App(tk.Tk):
             self.after(150, lambda: self._set_win_titlebar_dark(self.dark_mode_var.get()))
         except Exception:
             pass
-
     def _show_placeholder(self) -> None:
         if not self.text.get("1.0", "end").strip():
             self.text.delete("1.0", "end")
             self.text.insert("1.0", self._placeholder)
             self.text.configure(foreground="#888888")
-
     def _on_text_focus_in(self, event=None) -> None:
         if self.text.get("1.0", "end").strip() == self._placeholder.strip():
             self.text.delete("1.0", "end")
             self.text.configure(foreground=self.style.lookup("TLabel", "foreground") or "#000000")
-
     def _on_text_focus_out(self, event=None) -> None:
         if not self.text.get("1.0", "end").strip():
             self._show_placeholder()
-
     def _clear_text(self) -> None:
         try:
             self.text.delete("1.0", "end")
@@ -275,7 +243,6 @@ class App(tk.Tk):
             pass
         self._show_placeholder()
         self._log_console("Cleared input text.")
-
     def _build_capture_controls(self):
         cfg = _load_capture_config()
         self.capture_window = None
@@ -315,7 +282,6 @@ class App(tk.Tk):
         self.cap_ha_token.set(decrypt_secret(cfg.get("ha_token", "")))
         self.minimize_to_tray = tk.BooleanVar(value=False)
         self.close_to_tray = tk.BooleanVar(value=False)
-
     def _open_settings_window(self):
         open_settings_window(self, self.assets_dir)
     def _require_playwright(self):
@@ -356,13 +322,11 @@ class App(tk.Tk):
         except Exception as exc:
             self._capture_log(f"Playwright install failed: {exc}")
             return False
-
     def _write_scraper_state(self, status: str) -> None:
         try:
             write_scraper_state(SCRAPER_STATE_FILE, status, pid=os.getpid())
         except Exception:
             pass
-
     def start_auto_capture(self):
         if self.capture_thread and self.capture_thread.is_alive():
             self._log_console("Auto-capture already running.")
@@ -464,7 +428,6 @@ class App(tk.Tk):
         except Exception:
             pass
         self._update_tray_status()
-
     def stop_auto_capture(self):
         self.capture_stop.set()
         if self.capture_thread and not self.capture_thread.is_alive():
@@ -478,52 +441,10 @@ class App(tk.Tk):
         self.error_count = 0
         self._empty_retry_pending = False
         self.capture_status = "idle"
-
-    def _refresh_recent_exports(self) -> None:
-        try:
-            exports_dir = Path(EXPORTS_DIR_DEFAULT)
-            exports_dir.mkdir(parents=True, exist_ok=True)
-            files = sorted(exports_dir.glob("export-*.html"), key=lambda p: p.stat().st_mtime, reverse=True)
-            self.recent_exports = files[:10]
-            if hasattr(self, "exports_list"):
-                self.exports_list.delete(0, tk.END)
-                for path in self.recent_exports:
-                    ts = datetime.fromtimestamp(path.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
-                    self.exports_list.insert(tk.END, f"{ts}  {path.name}")
-        except Exception:
-            pass
-
-    def _open_selected_export(self) -> None:
-        if not getattr(self, "recent_exports", None):
-            messagebox.showinfo("Exports", "No exports available yet.")
-            return
-        try:
-            idx = self.exports_list.curselection()
-            if not idx:
-                messagebox.showinfo("Exports", "Select an export to open.")
-                return
-            path = self.recent_exports[idx[0]]
-        except Exception:
-            return
-        self._open_export_path(path)
-
-    def _open_export_path(self, path: Path) -> None:
-        try:
-            self._ensure_export_server()
-            if getattr(self, "server_port", None):
-                url = f"http://127.0.0.1:{self.server_port}/{path.name}"
-                self._open_url_with_fallback(url, path)
-            else:
-                webbrowser.open(path.as_uri())
-        except Exception as exc:
-            messagebox.showerror("Open Export", f"Could not open export:
-{exc}")
-
     def open_latest_export(self):
         """Open the most recent HTML export in the browser (served from the local server if available)."""
         exports_dir = Path(EXPORTS_DIR_DEFAULT)
         exports_dir.mkdir(parents=True, exist_ok=True)
-        self._refresh_recent_exports()
         html_files = sorted(exports_dir.glob("export-*.html"), key=lambda p: p.stat().st_mtime, reverse=True)
         if not html_files:
             try:
@@ -553,7 +474,6 @@ class App(tk.Tk):
                 os.startfile(latest)
             except Exception as exc:
                 messagebox.showerror("Open Export", f"Could not open export:\n{exc}")
-
     def _open_manual_parse_window(self):
         if self.manual_parse_window and tk.Toplevel.winfo_exists(self.manual_parse_window):
             try:
@@ -576,7 +496,6 @@ class App(tk.Tk):
             win.after(50, lambda: set_titlebar_dark(win, dark))
         except Exception:
             pass
-
         def on_close():
             try:
                 self.manual_parse_geometry = win.geometry()
@@ -591,9 +510,7 @@ class App(tk.Tk):
             except Exception:
                 pass
             self.manual_parse_window = None
-
         win.protocol("WM_DELETE_WINDOW", on_close)
-
         frame = ttk.Frame(win, padding=10)
         frame.pack(fill="both", expand=True)
         ttk.Label(frame, text="Paste page text below, then parse.").pack(anchor="w")
@@ -609,10 +526,8 @@ class App(tk.Tk):
             text_box.configure(bg=colors["bg"], fg=colors["fg"], insertbackground=colors["fg"])
         except Exception:
             pass
-
         btns = ttk.Frame(frame)
         btns.pack(fill="x")
-
         def do_parse_export_open():
             raw = text_box.get("1.0", "end").strip()
             if not raw:
@@ -620,10 +535,8 @@ class App(tk.Tk):
                 return
             self._apply_captured_text(raw)
             self.open_latest_export()
-
         ttk.Button(btns, text="Parse and open browser", command=do_parse_export_open).pack(side="left")
         ttk.Button(btns, text="Close", command=on_close).pack(side="right")
-
     def _capture_log(self, msg: str):
         _log_debug(f"[capture] {msg}")
         if hasattr(self, "logger") and self.logger:
@@ -635,7 +548,6 @@ class App(tk.Tk):
             self.status.config(text=msg)
         except Exception:
             pass
-
     def _generate_change_export(self, items: list[dict] | None = None):
         """Generate an HTML snapshot for the latest items and keep only recent ones."""
         data = items if items is not None else self._get_export_items()
@@ -643,9 +555,7 @@ class App(tk.Tk):
             return
         path = export_html_auto(data, exports_dir=EXPORTS_DIR_DEFAULT, open_file=False, fetch_images=False)
         _cleanup_and_record_export(path, max_files=20)
-        self._refresh_recent_exports()
         self._capture_log(f"Exported snapshot: {path.name}")
-
     def _latest_export_url(self) -> str | None:
         """Return URL (or file://) for latest export, preferring local server."""
         exports_dir = Path(EXPORTS_DIR_DEFAULT)
@@ -658,11 +568,9 @@ class App(tk.Tk):
         if getattr(self, "server_port", None):
             return f"http://127.0.0.1:{self.server_port}/{latest.name}"
         return latest.as_uri()
-
     # ------------- Tray helpers -------------
     def _tray_supported(self) -> bool:
         return tray_supported()
-
     def _minimize_to_tray(self):
         """Hide the scraper window while keeping capture running (no tray icon)."""
         try:
@@ -672,7 +580,6 @@ class App(tk.Tk):
         except Exception as exc:
             self._log_console(f"Hide failed; falling back. ({exc})")
             self.iconify()
-
     def _restore_from_tray(self):
         try:
             self.deiconify()
@@ -682,34 +589,27 @@ class App(tk.Tk):
             self._restore_settings_window()
         except Exception:
             pass
-
     def _exit_from_tray(self, icon=None, item=None):
         self.after(0, self._exit_app)
-
     def _show_tray_icon(self):
         # Scraper no longer owns a tray icon; tracker controls tray visibility/status.
         return
-
     def _hide_tray_icon(self):
         self.tray_icon = None
-
     def _on_unmap(self, event):
         try:
             if event.widget is self:
                 self.after(50, self._minimize_to_tray)
         except Exception:
             pass
-
     def _on_map(self, event):
         try:
             if event.widget is self:
                 pass
         except Exception:
             pass
-
     def _is_capture_running(self) -> bool:
         return bool(self.capture_thread and self.capture_thread.is_alive())
-
     def _update_tray_status(self):
         """Update tray icon color based on capture running state."""
         try:
@@ -723,7 +623,6 @@ class App(tk.Tk):
                 update_tray_icon(self.tray_icon, running, warn)
         except Exception:
             pass
-
     def _hide_settings_window(self):
         try:
             self._save_capture_window()
@@ -734,7 +633,6 @@ class App(tk.Tk):
                 self.settings_window.withdraw()
         except Exception:
             pass
-
     def _restore_settings_window(self):
         try:
             if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window):
@@ -742,8 +640,6 @@ class App(tk.Tk):
                 self.settings_window.lift()
         except Exception:
             pass
-
-
     def _log_console(self, msg: str):
         # If already timestamped, don't double-stamp.
         if msg.startswith("[") and "]" in msg[:12]:
@@ -762,7 +658,6 @@ class App(tk.Tk):
             self.status.config(text=msg)
         except Exception:
             pass
-
     def _update_last_change(self, summary: str):
         ts_line = f"{datetime.now().astimezone().strftime('%Y-%m-%d %H:%M:%S%z')} | {summary}"
         save_last_change(LAST_CHANGE_FILE, ts_line)
@@ -770,7 +665,6 @@ class App(tk.Tk):
             self.last_change_label.config(text=f"Last change detected: {ts_line}")
         except Exception:
             pass
-
     def _update_last_scrape(self):
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         save_last_scrape(LAST_SCRAPE_FILE, ts)
@@ -778,7 +672,6 @@ class App(tk.Tk):
             self.last_scrape_label.config(text=f"Last successful scrape: {ts}")
         except Exception:
             pass
-
     def _goto_with_log(self, page, url: str, PlaywrightTimeoutError):
         try:
             page.goto(url, wait_until="domcontentloaded", timeout=60000)
@@ -786,7 +679,6 @@ class App(tk.Tk):
             self._capture_log("Navigation timed out; continuing.")
         except Exception as exc:
             self._capture_log(f"Navigation error: {exc}")
-
     def _attempt_login(self, page, cfg: dict, PlaywrightTimeoutError):
         self._capture_log("Attempting login...")
         try:
@@ -802,12 +694,10 @@ class App(tk.Tk):
             self._capture_log("Login timed out.")
         except Exception as exc:
             self._capture_log(f"Login error: {exc}")
-
     def _wait_after_navigation(self, seconds: float):
         if seconds and seconds > 0:
             self._capture_log(f"Waiting {seconds}s after navigation")
             self._responsive_wait(seconds, label="Waiting after navigation")
-
     def _apply_captured_text(self, text: str):
         def _apply():
             try:
@@ -817,7 +707,6 @@ class App(tk.Tk):
             except Exception as exc:
                 self._capture_log(f"Apply error: {exc}")
         self.after(0, _apply)
-
     def _responsive_wait(self, seconds: float, label: str | None = None) -> bool:
         """Wait in small slices so Stop reacts quickly. Returns True if stop was requested."""
         target = max(0.0, float(seconds or 0))
@@ -852,7 +741,6 @@ class App(tk.Tk):
         except Exception:
             pass
         return self.capture_stop.is_set()
-
     def _on_capture_status(self, status: str, msg: str | None = None):
         """Handle worker status updates; reflect in UI/tray."""
         self.capture_status = status
@@ -864,7 +752,6 @@ class App(tk.Tk):
         except Exception:
             pass
         self._update_tray_status()
-
     def load_capture_config(self):
         path = filedialog.askopenfilename(
             title="Select capture config JSON",
@@ -912,7 +799,6 @@ class App(tk.Tk):
         self.minimize_to_tray.set(cfg.get("minimize_to_tray", False))
         self.close_to_tray.set(cfg.get("close_to_tray", False))
         messagebox.showinfo("Capture Config", f"Loaded capture config from {path}")
-
     def save_capture_config(self):
         path = filedialog.asksaveasfilename(
             title="Save capture config JSON",
@@ -961,7 +847,6 @@ class App(tk.Tk):
             messagebox.showerror("Capture Config", f"Could not save config:\n{exc}")
             return
         messagebox.showinfo("Capture Config", f"Saved capture config to {path}")
-
     def _save_capture_window(self):
         target = Path(self.capture_config_path) if getattr(self, "capture_config_path", None) else Path(CONFIG_FILE)
         cfg = {
@@ -1000,7 +885,6 @@ class App(tk.Tk):
             self._log_console(f"Saved config to {target}")
         except Exception as exc:
             self._log_console(f"Failed to save config: {exc}")
-
     def _post_process_actions(self):
         # Called after poll completes processing
         items = getattr(self, "data", [])
@@ -1020,7 +904,6 @@ class App(tk.Tk):
         else:
             # Still log changes even if HA notifications are disabled
             self.send_home_assistant(log_only=True)
-
     def _quiet_hours_active(self) -> bool:
         if not self.cap_quiet_hours_enabled.get():
             return False
@@ -1044,7 +927,6 @@ class App(tk.Tk):
         if start_t <= end_t:
             return start_t <= now < end_t
         return now >= start_t or now < end_t
-
     def send_home_assistant(self, log_only: bool = False):
         url = self.cap_ha_webhook.get().strip()
         if not url and not log_only:
@@ -1253,7 +1135,6 @@ class App(tk.Tk):
                 self._generate_change_export(self._get_export_items())
         except Exception as exc:
             self._capture_log(f"Export generation error: {exc}")
-
     def _send_ha_error(self, message: str):
         url = self.cap_ha_webhook.get().strip()
         if not url:
@@ -1270,7 +1151,6 @@ class App(tk.Tk):
             self._capture_log(f"Sent error to Home Assistant (status {status}).")
         except Exception as exc:
             self._capture_log(f"Home Assistant error notify failed: {exc}")
-
     def send_test_notification(self):
         """Send a simple test payload to Home Assistant to validate settings."""
         url = self.cap_ha_webhook.get().strip()
@@ -1309,13 +1189,10 @@ class App(tk.Tk):
                 except Exception:
                     launch_url = None
             _maybe_send_windows_notification("Medicann test", test_body, icon_path, launch_url=launch_url)
-
     def open_exports_folder(self):
         messagebox.showinfo("Exports", "Exports disabled; only HA notifications and local cache remain.")
-
     def open_recent_export(self):
         messagebox.showinfo("Exports", "Exports disabled; only HA notifications and local cache remain.")
-
     def start_export_server(self):
         if self.httpd:
             _log_debug(f"[server] already running on port {self.server_port}")
@@ -1334,7 +1211,6 @@ class App(tk.Tk):
         self.http_thread = thread
         self.server_port = port
         return True
-
     def _ensure_export_server(self):
         if self.httpd:
             _log_debug("[server] ensure_export_server: already running")
@@ -1350,17 +1226,14 @@ class App(tk.Tk):
         else:
             _log_debug("[server] ensure_export_server: server available")
         return ok
-
     def stop_export_server(self):
         if self.httpd:
             srv_stop_export_server(self.httpd, self.http_thread, _log_debug)
             self.httpd = None
             self.http_thread = None
-
     def _on_close(self):
         # Always hide instead of exiting; capture continues running
         self._minimize_to_tray()
-
     def _exit_app(self):
         try:
             # mark scraper stopped
@@ -1388,7 +1261,6 @@ class App(tk.Tk):
             self.destroy()
         except Exception:
             pass
-
     def _open_url_with_fallback(self, url: str, file_path: Path) -> None:
         """
         Try to hit the server URL; if unreachable, fall back to opening the file:// version.
@@ -1408,7 +1280,6 @@ class App(tk.Tk):
         else:
             _log_debug(f"[export] falling back to file:// for {file_path}")
             webbrowser.open(file_path.as_uri())
-
     def _on_text_right_click(self, event=None) -> None:
         try:
             clip = self.clipboard_get()
@@ -1418,7 +1289,6 @@ class App(tk.Tk):
             if self.text.get("1.0", "end").strip() == self._placeholder.strip():
                 self.text.delete("1.0", "end")
             self.text.insert("insert", clip)
-
     def _on_click_anywhere(self, event) -> None:
         # If click is outside the text widget, clear selection and focus
         widget = event.widget
@@ -1432,14 +1302,12 @@ class App(tk.Tk):
             except Exception:
                 pass
     @staticmethod
-
     def _is_descendant(parent, widget) -> bool:
         while widget:
             if widget == parent:
                 return True
             widget = getattr(widget, "master", None)
         return False
-
     def process(self):
         raw = self.text.get("1.0", "end")
         items = parse_clinic_text(raw)
@@ -1492,7 +1360,6 @@ class App(tk.Tk):
         except Exception:
             pass
         self.status.config(text="Processing.")
-
         def worker():
             try:
                 total = len(deduped)
@@ -1507,7 +1374,6 @@ class App(tk.Tk):
         if not self._polling:
             self._polling = True
             self.after(50, self.poll)
-
     def poll(self):
         try:
             while True:
@@ -1608,15 +1474,12 @@ class App(tk.Tk):
                 self.last_scrape_label.config(text=f"Last successful scrape: {ts}")
         except Exception:
             pass
-
     def _get_export_items(self):
         combined = list(self.data)
         if getattr(self, "removed_data", None):
             combined.extend(self.removed_data)
         return combined
-
     # Export functions removed (no longer used)
-
     def clear_cache(self):
         self.data.clear()
         self.prev_items = []
@@ -1633,7 +1496,6 @@ class App(tk.Tk):
             pass
         self.status.config(text="Cache cleared")
         messagebox.showinfo("Cleared", "Cache cleared (including previous parse).")
-
     def _set_busy_ui(self, busy, message=None):
         try:
             if busy:
@@ -1649,7 +1511,6 @@ class App(tk.Tk):
                 self.status.config(text="Idle")
         except Exception:
             pass
-
     def open_parser_settings(self):
         hints = [dict(brand=h.get("brand"), patterns=list(h.get("patterns") or h.get("phrases") or []), display=h.get("display")) for h in _load_brand_hints()]
         win = tk.Toplevel(self)
@@ -1688,10 +1549,8 @@ class App(tk.Tk):
         brand_entry.pack(fill="x", pady=2)
         pattern_entry = ttk.Entry(right, textvariable=pattern_var, style=entry_style)
         pattern_entry.pack(fill="x", pady=2)
-
         def sort_hints():
             hints.sort(key=lambda h: (h.get("brand") or "").lower())
-
         def refresh_brands(sel_index=0):
             sort_hints()
             brand_list.delete(0, tk.END)
@@ -1701,7 +1560,6 @@ class App(tk.Tk):
                 idx = min(sel_index, len(hints) - 1)
                 brand_list.select_set(idx)
                 brand_list.event_generate("<<ListboxSelect>>")
-
         def refresh_patterns():
             pattern_list.delete(0, tk.END)
             sel = brand_list.curselection()
@@ -1710,7 +1568,6 @@ class App(tk.Tk):
             pats = hints[sel[0]].get("patterns") or []
             for p in pats:
                 pattern_list.insert(tk.END, p)
-
         def on_brand_select(event=None):
             sel = brand_list.curselection()
             if not sel:
@@ -1718,7 +1575,6 @@ class App(tk.Tk):
             brand_var.set(hints[sel[0]].get("brand") or "")
             refresh_patterns()
         brand_list.bind("<<ListboxSelect>>", on_brand_select)
-
         def add_brand():
             name = brand_var.get().strip()
             if not name:
@@ -1726,7 +1582,6 @@ class App(tk.Tk):
                 return
             hints.append({"brand": name, "patterns": []})
             refresh_brands(len(hints) - 1)
-
         def update_brand():
             sel = brand_list.curselection()
             if not sel:
@@ -1738,14 +1593,12 @@ class App(tk.Tk):
                 return
             hints[sel[0]]["brand"] = name
             refresh_brands(sel[0])
-
         def delete_brand():
             sel = brand_list.curselection()
             if not sel:
                 return
             del hints[sel[0]]
             refresh_brands(max(sel[0] - 1, 0))
-
         def add_pattern():
             sel = brand_list.curselection()
             if not sel:
@@ -1759,7 +1612,6 @@ class App(tk.Tk):
             if pat not in pats:
                 pats.append(pat)
                 refresh_patterns()
-
         def replace_pattern():
             bsel = brand_list.curselection()
             psel = pattern_list.curselection()
@@ -1774,7 +1626,6 @@ class App(tk.Tk):
             pats[psel[0]] = pat
             refresh_patterns()
             pattern_list.select_set(psel[0])
-
         def delete_pattern():
             bsel = brand_list.curselection()
             psel = pattern_list.curselection()
@@ -1784,7 +1635,6 @@ class App(tk.Tk):
             if 0 <= psel[0] < len(pats):
                 del pats[psel[0]]
             refresh_patterns()
-
         def save_and_close():
             _save_brand_hints(hints)
             messagebox.showinfo("Saved", "Parser brand settings saved.")
@@ -1805,7 +1655,6 @@ class App(tk.Tk):
         win.configure(bg=bg)
         self.after(50, lambda: self._set_window_titlebar_dark(win, dark))
         refresh_brands()
-
     def apply_theme(self):
         dark = self.dark_mode_var.get()
         colors = compute_colors(dark)
@@ -1899,14 +1748,11 @@ class App(tk.Tk):
             self._set_window_titlebar_dark(self, dark)
         except Exception:
             pass
-
     def toggle_theme(self):
         self.apply_theme()
         _save_tracker_dark_mode(self.dark_mode_var.get())
-
     def _load_dark_mode(self) -> bool:
         return _load_tracker_dark_mode(True)
-
     def _resource_path(self, relative: str) -> str:
         """Return absolute path to resource, works for dev and PyInstaller."""
         path = Path(BASE_DIR) / relative
@@ -1915,7 +1761,6 @@ class App(tk.Tk):
             if alt.exists():
                 path = alt
         return str(path)
-
     def _set_win_titlebar_dark(self, enable: bool):
         """On Windows 10/11, ask DWM for a dark title bar to match the theme."""
         if os.name != 'nt':
@@ -1937,7 +1782,6 @@ class App(tk.Tk):
                 ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value))
         except Exception:
             pass
-
     def _set_window_titlebar_dark(self, window, enable: bool):
         """Apply dark title bar to a specific window."""
         if os.name != 'nt':
@@ -1957,7 +1801,6 @@ class App(tk.Tk):
                 ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value))
         except Exception:
             pass
-
     def _apply_theme_recursive(self, widget, bg, fg, ctrl_bg, accent, dark):
         """Lightweight recursive theming for child widgets."""
         try:
@@ -2019,7 +1862,6 @@ class App(tk.Tk):
                 self._apply_theme_recursive(child, bg, fg, ctrl_bg, accent, dark)
         except Exception:
             pass
-
     def _apply_theme_to_window(self, window):
         dark = self.dark_mode_var.get()
         colors = compute_colors(dark)
