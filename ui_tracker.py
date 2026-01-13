@@ -17,9 +17,8 @@ import importlib.util
 import importlib.machinery
 import traceback
 from app_core import APP_DIR, EXPORTS_DIR_DEFAULT, LAST_PARSE_FILE, _load_capture_config, _save_capture_config, SCRAPER_STATE_FILE  # use shared app data root
-from tray import tray_supported, update_tray_icon
+from tray import tray_supported, update_tray_icon, stop_tray_icon, make_tray_image
 from scraper_state import resolve_scraper_status as resolve_scraper_status_core
-from tray import make_tray_image
 from theme import apply_style_theme, compute_colors, set_titlebar_dark
 from ui_tracker_settings import open_tracker_settings
 from inventory import (
@@ -2073,6 +2072,19 @@ class CannabisTracker:
         widget.bind("<Leave>", lambda e: self._hide_tooltip())
 
     # --- Tray helpers ---
+    def _stop_tray_icon(self) -> None:
+        try:
+            stop_tray_icon(getattr(self, "tray_icon", None))
+        except Exception:
+            pass
+        try:
+            if getattr(self, "tray_thread", None):
+                self.tray_thread.join(timeout=1.0)
+        except Exception:
+            pass
+        self.tray_icon = None
+        self.tray_thread = None
+
     def _on_main_close(self) -> None:
         try:
             self._persist_tree_widths()
@@ -2082,6 +2094,7 @@ class CannabisTracker:
         self._shutdown_children()
         self._destroy_child_windows()
         self._stop_export_server()
+        self._stop_tray_icon()
         self.root.destroy()
 
     def _on_close_to_tray(self) -> None:
@@ -2241,15 +2254,6 @@ class CannabisTracker:
 
     def _quit_from_tray(self) -> None:
         self.is_hidden_to_tray = False
-        try:
-            if getattr(self, "tray_icon", None):
-                try:
-                    self.tray_icon.stop()
-                except Exception:
-                    pass
-                self.tray_icon = None
-        except Exception:
-            pass
         self._on_main_close()
 
     def _build_tray_image(self) -> "Image.Image":
