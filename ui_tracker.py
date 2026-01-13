@@ -17,7 +17,7 @@ import importlib.util
 import importlib.machinery
 import traceback
 from app_core import APP_DIR, EXPORTS_DIR_DEFAULT, LAST_PARSE_FILE, _load_capture_config, _save_capture_config, SCRAPER_STATE_FILE  # use shared app data root
-from tray import tray_supported, update_tray_icon, stop_tray_icon, make_tray_image
+from tray import tray_supported, update_tray_icon, stop_tray_icon, make_tray_image, create_tray_icon
 from scraper_state import resolve_scraper_status as resolve_scraper_status_core
 from theme import apply_style_theme, compute_colors, set_titlebar_dark
 from ui_tracker_settings import open_tracker_settings
@@ -2148,35 +2148,28 @@ class CannabisTracker:
             )
             self.root.destroy()
             return
-        try:
-            import pystray
-        except Exception:
-            messagebox.showwarning(
-                "Tray unavailable",
-                "pystray is not installed; install with 'pip install pystray Pillow'. Closing instead.",
-            )
-            self.root.destroy()
-            return
 
         self.is_hidden_to_tray = True
         self.root.withdraw()
 
-        def on_restore(icon: "pystray.Icon", item=None) -> None:
+        def on_open() -> None:
             self.root.after(0, self._restore_from_tray)
-            icon.stop()
 
-        def on_quit(icon: "pystray.Icon", item=None) -> None:
+        def on_quit() -> None:
             self.root.after(0, self._quit_from_tray)
-            icon.stop()
 
+        running, warn = resolve_scraper_status(getattr(self, "child_procs", []))
         icon_image = self._build_tray_image()
-        menu = pystray.Menu(
-            pystray.MenuItem("Restore", on_restore, default=True),
-            pystray.MenuItem("Quit", on_quit),
+        self.tray_icon = create_tray_icon(
+            "FlowerTrack",
+            "FlowerTrack",
+            running,
+            warn,
+            on_open,
+            on_quit,
+            image=icon_image,
         )
-        self.tray_icon = pystray.Icon("FlowerTrack", icon_image, "FlowerTrack", menu, on_click=None)
-        self.tray_thread = threading.Thread(target=self.tray_icon.run, daemon=True)
-        self.tray_thread.start()
+        self.tray_thread = None
 
     def _open_scraper_from_tools(self) -> None:
         self.open_parser()
@@ -2247,6 +2240,7 @@ class CannabisTracker:
 
     def _restore_from_tray(self) -> None:
         self.is_hidden_to_tray = False
+        self._stop_tray_icon()
         self.root.deiconify()
         self.root.state("normal")
         self.root.lift()

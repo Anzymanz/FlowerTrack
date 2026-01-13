@@ -40,12 +40,18 @@ def compute_tray_state(is_running: bool, status: str | None = None, error_count:
 
 
 def create_tray_icon(
-    name: str, title: str, running: bool, warn: bool, on_open: Callable[[], None], on_quit: Callable[[], None]
+    name: str,
+    title: str,
+    running: bool,
+    warn: bool,
+    on_open: Callable[[], None],
+    on_quit: Callable[[], None],
+    image=None,
 ):
     if not tray_supported():
         return None
     try:
-        img = make_tray_image(running, warn)
+        img = image if image is not None else make_tray_image(running, warn)
         menu = pystray.Menu(
             pystray.MenuItem("Open", lambda icon, item: on_open(), default=True),
             pystray.MenuItem("Quit", lambda icon, item: on_quit()),
