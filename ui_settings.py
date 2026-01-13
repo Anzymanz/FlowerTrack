@@ -24,7 +24,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     win = tk.Toplevel(app)
     app.settings_window = win
     win.title("Settings")
-    win.geometry("560x960")
+    win.geometry(getattr(app, "scraper_settings_geometry", "560x960"))
     try:
         icon_path = assets_dir / "icon.ico"
         if icon_path.exists():

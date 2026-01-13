@@ -1587,6 +1587,19 @@ class CannabisTracker:
             ("Average dose", stats["avg_dose"]),
             ("Average daily usage", f"{avg_daily:.3f} g"),
         ]
+        if getattr(self, "track_cbd_usage", False):
+            cbd_total = sum(
+                float(log.get("grams_used", 0.0))
+                for log in logs_subset
+                if self._log_counts_for_cbd(log)
+            )
+            cbd_avg_daily = cbd_total / max(days_count, 1)
+            rows.extend(
+                [
+                    ("CBD total", f"{cbd_total:.3f} g"),
+                    ("CBD average daily", f"{cbd_avg_daily:.3f} g"),
+                ]
+            )
         body = "\n".join(f"{k}: {v}" for k, v in rows)
         if return_title:
             return label, rows

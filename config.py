@@ -5,6 +5,7 @@ import copy
 import ctypes
 import json
 import os
+import shutil
 from ctypes import wintypes
 from datetime import datetime
 from pathlib import Path
@@ -218,6 +219,9 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["username_selector"] = str(raw.get("username_selector") or "")
     cfg["password_selector"] = str(raw.get("password_selector") or "")
     cfg["login_button_selector"] = str(raw.get("login_button_selector") or "")
+    cfg["window_geometry"] = str(raw.get("window_geometry") or DEFAULT_CAPTURE_CONFIG["window_geometry"]).strip() or DEFAULT_CAPTURE_CONFIG["window_geometry"]
+    cfg["settings_geometry"] = str(raw.get("settings_geometry") or DEFAULT_CAPTURE_CONFIG["settings_geometry"]).strip() or DEFAULT_CAPTURE_CONFIG["settings_geometry"]
+    cfg["manual_parse_geometry"] = str(raw.get("manual_parse_geometry") or DEFAULT_CAPTURE_CONFIG["manual_parse_geometry"]).strip() or DEFAULT_CAPTURE_CONFIG["manual_parse_geometry"]
     cfg["interval_seconds"] = _coerce_float(raw.get("interval_seconds"), DEFAULT_CAPTURE_CONFIG["interval_seconds"], 1.0)
     cfg["login_wait_seconds"] = _coerce_float(raw.get("login_wait_seconds"), DEFAULT_CAPTURE_CONFIG["login_wait_seconds"], 0.0)
     cfg["post_nav_wait_seconds"] = _coerce_float(
@@ -307,13 +311,32 @@ def load_unified_config(
     return unified
 
 
+def _atomic_write_json(path: Path, data: dict) -> None:
+    ensure_dir(path.parent)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    backup = path.with_suffix(path.suffix + ".bak")
+    try:
+        if path.exists():
+            try:
+                shutil.copy2(path, backup)
+            except Exception:
+                pass
+        tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        os.replace(tmp, path)
+    finally:
+        try:
+            if tmp.exists():
+                tmp.unlink()
+        except Exception:
+            pass
+
+
 def save_unified_config(path: Path, data: dict, encrypt_scraper_keys: list[str] | None = None) -> None:
     encrypt_scraper_keys = encrypt_scraper_keys or []
     cfg = _normalize_unified_config(data or {})
     for key in encrypt_scraper_keys:
         cfg["scraper"][key] = encrypt_secret(cfg["scraper"].get(key, ""))
-    ensure_dir(path.parent)
-    path.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+    _atomic_write_json(path, cfg)
 
 
 def load_tracker_config(path: Path) -> dict:

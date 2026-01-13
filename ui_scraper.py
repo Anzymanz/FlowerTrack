@@ -104,7 +104,11 @@ class App(tk.Tk):
         super().__init__()
         App._instance = self
         self.title("Medicann Scraper")
-        self.geometry("900x720")
+        cfg = _load_capture_config()
+        self.scraper_window_geometry = cfg.get("window_geometry", "900x720") or "900x720"
+        self.scraper_settings_geometry = cfg.get("settings_geometry", "560x960") or "560x960"
+        self.manual_parse_geometry = cfg.get("manual_parse_geometry", "720x520") or "720x520"
+        self.geometry(self.scraper_window_geometry)
         self.assets_dir = ASSETS_DIR
         _log_debug("App init: launching scraper UI")
         self._config_dark = self._load_dark_mode()
@@ -263,6 +267,12 @@ class App(tk.Tk):
         self.capture_window = None
         self.settings_window = None
         self.manual_parse_window = None
+        if not hasattr(self, "scraper_window_geometry"):
+            self.scraper_window_geometry = cfg.get("window_geometry", "900x720") or "900x720"
+        if not hasattr(self, "scraper_settings_geometry"):
+            self.scraper_settings_geometry = cfg.get("settings_geometry", "560x960") or "560x960"
+        if not hasattr(self, "manual_parse_geometry"):
+            self.manual_parse_geometry = cfg.get("manual_parse_geometry", "720x520") or "720x520"
         self.capture_config_path = Path(CONFIG_FILE)
         # Notification toggles from config
         self.notify_price_changes = tk.BooleanVar(value=cfg.get("notify_price_changes", True))
@@ -500,7 +510,7 @@ class App(tk.Tk):
             return
         win = tk.Toplevel(self)
         win.title("Manual Parse")
-        win.geometry("720x520")
+        win.geometry(self.manual_parse_geometry or "720x520")
         win.minsize(600, 420)
         self.manual_parse_window = win
         try:
@@ -513,6 +523,14 @@ class App(tk.Tk):
             pass
 
         def on_close():
+            try:
+                self.manual_parse_geometry = win.geometry()
+            except Exception:
+                pass
+            try:
+                self._save_capture_window()
+            except Exception:
+                pass
             try:
                 win.destroy()
             except Exception:
@@ -651,6 +669,10 @@ class App(tk.Tk):
             pass
 
     def _hide_settings_window(self):
+        try:
+            self._save_capture_window()
+        except Exception:
+            pass
         try:
             if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window):
                 self.settings_window.withdraw()
@@ -873,6 +895,9 @@ class App(tk.Tk):
             "notification_detail": self.cap_notify_detail.get(),
             "minimize_to_tray": bool(self.minimize_to_tray.get()),
             "close_to_tray": bool(self.close_to_tray.get()),
+            "window_geometry": self.geometry(),
+            "settings_geometry": (self.settings_window.geometry() if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window) else self.scraper_settings_geometry),
+            "manual_parse_geometry": (self.manual_parse_window.geometry() if self.manual_parse_window and tk.Toplevel.winfo_exists(self.manual_parse_window) else self.manual_parse_geometry),
         }
         try:
             save_capture_config(self.capture_config_path, cfg, ["username", "password", "ha_token"])
@@ -910,6 +935,9 @@ class App(tk.Tk):
             "notification_detail": self.cap_notify_detail.get(),
             "minimize_to_tray": bool(self.minimize_to_tray.get()),
             "close_to_tray": bool(self.close_to_tray.get()),
+            "window_geometry": self.geometry(),
+            "settings_geometry": (self.settings_window.geometry() if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window) else self.scraper_settings_geometry),
+            "manual_parse_geometry": (self.manual_parse_window.geometry() if self.manual_parse_window and tk.Toplevel.winfo_exists(self.manual_parse_window) else self.manual_parse_geometry),
         }
         try:
             save_capture_config(target, cfg, ["username", "password", "ha_token"])
