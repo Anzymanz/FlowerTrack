@@ -7,6 +7,8 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 from app_core import APP_DIR
 
+SCHEMA_VERSION = 1
+
 @dataclass
 class Flower:
     name: str
@@ -63,6 +65,15 @@ def _normalize_log_entry(log: dict) -> dict:
     return log
 
 
+def _migrate_tracker_data(data: dict) -> dict:
+    if not isinstance(data, dict):
+        return {"schema_version": SCHEMA_VERSION, "logs": data if isinstance(data, list) else []}
+    schema_version = int(data.get("schema_version", 0) or 0)
+    if schema_version < SCHEMA_VERSION:
+        data["schema_version"] = SCHEMA_VERSION
+    return data
+
+
 def load_tracker_data(path: Path | None = None, logger: Optional[Callable[[str], None]] = None) -> dict:
     target = Path(path) if path else TRACKER_DATA_FILE
     if not target.exists():
@@ -70,7 +81,10 @@ def load_tracker_data(path: Path | None = None, logger: Optional[Callable[[str],
             logger(f"Tracker data not found at {target}")
         return {}
     try:
-        data = json.loads(target.read_text(encoding="utf-8"))
+        raw = json.loads(target.read_text(encoding="utf-8"))
+        if isinstance(raw, list):
+            raw = {"logs": raw}
+        data = _migrate_tracker_data(raw)
         if isinstance(data, dict) and isinstance(data.get('logs'), list):
             data['logs'] = [_normalize_log_entry(log) for log in data['logs']]
         return data
@@ -79,11 +93,35 @@ def load_tracker_data(path: Path | None = None, logger: Optional[Callable[[str],
             logger(f"Failed to load tracker data from {target}: {exc}")
         return {}
 
+def _backup_tracker_data(target: Path, max_backups: int = 5) -> None:
+    try:
+        if not target.exists():
+            return
+        backup_dir = target.parent / "backups"
+        backup_dir.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        backup_path = backup_dir / f"tracker_data-{stamp}.json"
+        backup_path.write_text(target.read_text(encoding="utf-8"), encoding="utf-8")
+        backups = sorted(backup_dir.glob("tracker_data-*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+        for old in backups[max_backups:]:
+            try:
+                old.unlink()
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+
 def save_tracker_data(data: dict, path: Path | None = None, logger: Optional[Callable[[str], None]] = None) -> None:
     target = Path(path) if path else TRACKER_DATA_FILE
     try:
+        payload = data
+        if isinstance(data, dict):
+            payload = dict(data)
+            payload.setdefault("schema_version", SCHEMA_VERSION)
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        _backup_tracker_data(target)
+        target.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     except Exception as exc:
         if logger:
             logger(f"Failed to save tracker data: {exc}")

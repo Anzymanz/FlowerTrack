@@ -18,6 +18,7 @@ from capture import ensure_browser_available, install_playwright_browsers, start
 from exports import export_html_auto
 from export_server import start_export_server as srv_start_export_server, stop_export_server as srv_stop_export_server
 from ui_settings import open_settings_window
+from scraper_constants import SCRAPER_PLACEHOLDER, SCRAPER_TITLE
 from app_core import (  # shared globals/imports
     _log_debug,
     _seed_brand_db_if_needed,
@@ -89,7 +90,7 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         App._instance = self
-        self.title("Medicann Scraper")
+        self.title(SCRAPER_TITLE)
         cfg = _load_capture_config()
         self.scraper_window_geometry = cfg.get("window_geometry", "900x720") or "900x720"
         self.scraper_settings_geometry = cfg.get("settings_geometry", "560x960") or "560x960"

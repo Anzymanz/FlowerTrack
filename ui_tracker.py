@@ -1,6 +1,6 @@
 from __future__ import annotations
-
 import json
+import csv
 import os
 import sys
 import webbrowser
@@ -40,23 +40,14 @@ except ImportError:  # Pillow may not be installed; tray icon will be disabled
     Image = None
     ImageDraw = None
     ImageTk = None
-
-
-
-
-
 def resolve_scraper_status(child_procs) -> tuple[bool, bool]:
     return resolve_scraper_status_core(child_procs, SCRAPER_STATE_FILE)
-
-
-
 def _build_scraper_status_image(child_procs):
     try:
         running, warn = resolve_scraper_status_core(child_procs, SCRAPER_STATE_FILE)
         return make_tray_image(running=running, warn=warn)
     except Exception:
         return None
-
 def _resource_path(filename: str) -> str:
     """Return absolute path to resource, works for dev and PyInstaller."""
     base_path = getattr(sys, "_MEIPASS", None) or os.getcwd()
@@ -64,18 +55,14 @@ def _resource_path(filename: str) -> str:
     if os.path.exists(asset_path):
         return asset_path
     return os.path.join(base_path, filename)
-
-
 class CannabisTracker:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
         self.root.title("FlowerTrack - Medical Cannabis Tracker")
         self._set_window_icon()
         self.child_procs: list[subprocess.Popen] = []
-
         self.style = ttk.Style(self.root)
         self.style.theme_use("clam")
-
         self.dark_var = tk.BooleanVar(value=False)
         self.total_green_threshold = 30.0
         self.total_red_threshold = 5.0
@@ -137,7 +124,6 @@ class CannabisTracker:
         self.current_date: date = date.today()
         self._last_seen_date: date = date.today()
         self._data_mtime: float | None = None
-
         self._build_ui()
         self._ensure_storage_dirs()
         self._load_config()
@@ -147,20 +133,17 @@ class CannabisTracker:
         self._refresh_stock()
         self._refresh_log()
         self._update_scraper_status_icon()
-
     def open_parser(self) -> None:
         """Launch the scraper UI in a separate process."""
         def focus_existing() -> bool:
             try:
                 import ctypes
                 from ctypes import wintypes
-
                 user32 = ctypes.WinDLL("user32", use_last_error=True)
                 HWND = wintypes.HWND
                 LPARAM = wintypes.LPARAM
                 WNDENUMPROC = ctypes.WINFUNCTYPE(wintypes.BOOL, HWND, LPARAM)
                 found = []
-
                 def enum_proc(hwnd, lParam):
                     buf = ctypes.create_unicode_buffer(512)
                     user32.GetWindowTextW(hwnd, buf, 512)
@@ -168,7 +151,6 @@ class CannabisTracker:
                     if "Medicann Scraper" in title or "FlowerTrack" in title and "Scraper" in title:
                         found.append(hwnd)
                     return True
-
                 user32.EnumWindows(WNDENUMPROC(enum_proc), 0)
                 if found:
                     hwnd = found[0]
@@ -178,7 +160,6 @@ class CannabisTracker:
             except Exception:
                 pass
             return False
-
         try:
             # First try to focus an existing scraper window
             if focus_existing():
@@ -196,7 +177,6 @@ class CannabisTracker:
                 pass
         except Exception as exc:
             messagebox.showerror("Open Scraper", f"Could not launch parser:\n{exc}")
-
     def open_flower_browser(self) -> None:
         exports_dir = Path(EXPORTS_DIR_DEFAULT)
         exports_dir.mkdir(parents=True, exist_ok=True)
@@ -223,14 +203,11 @@ class CannabisTracker:
                 os.startfile(latest)
             except Exception as exc:
                 messagebox.showerror("Flower Browser", f"Could not open export:\n{exc}")
-
-
     def _log_export(self, msg: str) -> None:
         try:
             print(msg)
         except Exception:
             pass
-
     def _ensure_export_server(self) -> bool:
         try:
             if self.export_server and self.export_port:
@@ -248,7 +225,6 @@ class CannabisTracker:
         except Exception:
             pass
         return False
-
     def _stop_export_server(self) -> None:
         try:
             srv_stop_export_server(self.export_server, self.export_thread, self._log_export)
@@ -256,7 +232,6 @@ class CannabisTracker:
             pass
         self.export_server = None
         self.export_thread = None
-
     def _build_ui(self) -> None:
         main = ttk.Frame(self.root, padding=12)
         main.grid(row=0, column=0, sticky="nsew")
@@ -265,7 +240,6 @@ class CannabisTracker:
         self.root.protocol("WM_DELETE_WINDOW", self._on_main_close)
         self.root.bind("<Unmap>", self._on_unmap)
         self.root.bind("<Configure>", self._on_root_configure)
-
         top_bar = ttk.Frame(main, padding=(0, 0, 0, 8))
         top_bar.grid(row=0, column=0, columnspan=2, sticky="ew")
         ttk.Checkbutton(top_bar, text="Dark mode", variable=self.dark_var, command=self._toggle_theme).grid(
@@ -285,13 +259,11 @@ class CannabisTracker:
         self.scraper_status_label.grid(row=0, column=7, sticky="e", padx=(6, 0))
         self._apply_scraper_status_visibility()
         top_bar.columnconfigure(5, weight=1)
-
         # Stock list
         stock_frame = ttk.LabelFrame(main, text="Flower Stock", padding=10)
         stock_frame.grid(row=1, column=0, sticky="nsew", padx=(0, 8))
         main.columnconfigure(0, weight=3)
         main.rowconfigure(1, weight=1)
-
         columns = ("name", "thc", "cbd", "grams")
         self.stock_tree = ttk.Treeview(
             stock_frame,
@@ -319,40 +291,31 @@ class CannabisTracker:
         self.stock_tree.column("grams", width=120, anchor="center")
         self.stock_tree.grid(row=0, column=0, sticky="nsew")
         self._bind_tree_resize(self.stock_tree, "stock_column_widths")
-
         stock_scroll = ttk.Scrollbar(stock_frame, orient="vertical", command=self.stock_tree.yview, style=self.vscroll_style)
         self.stock_tree.configure(yscrollcommand=stock_scroll.set)
         stock_scroll.grid(row=0, column=1, sticky="ns")
-
         stock_frame.rowconfigure(0, weight=1)
         stock_frame.columnconfigure(0, weight=1)
-
         # Stock controls
         form = ttk.Frame(stock_frame, padding=(0, 8, 0, 0))
         form.grid(row=1, column=0, columnspan=2, sticky="ew")
         stock_frame.columnconfigure(0, weight=1)
-
         ttk.Label(form, text="Name").grid(row=0, column=0, sticky="w")
         self.name_entry = ttk.Entry(form, width=18)
         self.name_entry.grid(row=1, column=0, padx=(0, 8))
-
         ttk.Label(form, text="THC %").grid(row=0, column=1, sticky="w")
         self.thc_entry = ttk.Entry(form, width=8)
         self.thc_entry.grid(row=1, column=1, padx=(0, 8))
-
         ttk.Label(form, text="CBD %").grid(row=0, column=2, sticky="w")
         self.cbd_entry = ttk.Entry(form, width=8)
         self.cbd_entry.grid(row=1, column=2, padx=(0, 8))
-
         ttk.Label(form, text="Grams").grid(row=0, column=3, sticky="w")
         self.grams_entry = ttk.Entry(form, width=10)
         self.grams_entry.grid(row=1, column=3, padx=(0, 8))
         for widget in (self.name_entry, self.thc_entry, self.cbd_entry, self.grams_entry):
             widget.bind("<Key>", self._mark_stock_form_dirty)
-
         add_btn = ttk.Button(form, text="Add / Update Stock", command=self.add_stock)
         add_btn.grid(row=1, column=4, padx=(0, 8))
-
         ttk.Button(form, text="Mix stock", command=lambda: self.launch_mix_calculator(mode="stock")).grid(row=1, column=6, padx=(0, 8))
         delete_btn = ttk.Button(form, text="Delete Selected", command=self.delete_stock)
         delete_btn.grid(row=1, column=7)
@@ -369,24 +332,18 @@ class CannabisTracker:
         )
         self.days_label_cbd.grid(row=4, column=0, columnspan=2, sticky="w", pady=(0, 2))
         self.days_label_cbd.grid_remove()
-
-
         # Dose + log area
         right = ttk.Frame(main)
         right.grid(row=1, column=1, sticky="nsew")
         main.columnconfigure(1, weight=4)
-
         dose_frame = ttk.LabelFrame(right, text="Log Dose", padding=10)
         dose_frame.grid(row=0, column=0, sticky="ew")
-
         ttk.Label(dose_frame, text="Flower").grid(row=0, column=0, sticky="w")
         self.flower_choice = ttk.Combobox(dose_frame, state="readonly", width=35, values=[], style=self.combo_style)
         self.flower_choice.grid(row=1, column=0, padx=(0, 8))
-
         ttk.Label(dose_frame, text="Dose (grams of flower)").grid(row=0, column=1, sticky="w")
         self.dose_entry = ttk.Entry(dose_frame, width=10)
         self.dose_entry.grid(row=1, column=1, padx=(0, 8))
-
         ttk.Label(dose_frame, text="Route").grid(row=0, column=2, sticky="w")
         self.roa_choice = ttk.Combobox(
             dose_frame,
@@ -398,11 +355,9 @@ class CannabisTracker:
         self.roa_choice.grid(row=1, column=2, padx=(0, 8))
         # Default order: Vaped, Eaten, Smoked; preselect Vaped
         self.roa_choice.set("Vaped")
-
         log_btn = ttk.Button(dose_frame, text="Log Dose", command=self.log_dose)
         log_btn.grid(row=1, column=3)
         ttk.Button(dose_frame, text="Mixed dose", command=self.launch_mix_calculator).grid(row=1, column=4, padx=(8, 0))
-
         note_text = (
             f"THC/CBD estimates based on flower THC/CBD and RoA "
             f"(vaped {self.roa_options.get('Vaped',0)*100:.0f}%, "
@@ -424,12 +379,10 @@ class CannabisTracker:
         )
         self.remaining_today_cbd_label.grid(row=4, column=0, columnspan=3, sticky="w", pady=(2, 0))
         self.remaining_today_cbd_label.grid_remove()
-
         log_frame = ttk.LabelFrame(right, text="Usage Log", padding=10)
         log_frame.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
         right.rowconfigure(1, weight=1)
         right.columnconfigure(0, weight=1)
-
         nav = ttk.Frame(log_frame)
         nav.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 6))
         prev_btn = ttk.Button(nav, text="< Prev", width=8, command=lambda: self._change_day(-1))
@@ -439,7 +392,6 @@ class CannabisTracker:
         next_btn = ttk.Button(nav, text="Next >", width=8, command=lambda: self._change_day(1))
         next_btn.grid(row=0, column=2, padx=(6, 0))
         nav.columnconfigure(1, weight=1)
-
         log_cols = ("time", "flower", "roa", "grams", "thc_mg", "cbd_mg", "remaining")
         self.log_tree = ttk.Treeview(log_frame, columns=log_cols, show="headings", height=12, style=self.tree_style)
         headings = {
@@ -462,16 +414,13 @@ class CannabisTracker:
         self.log_tree.column("remaining", width=110, anchor="center")
         self.log_tree.grid(row=2, column=0, sticky="nsew")
         self._bind_tree_resize(self.log_tree, "log_column_widths")
-
         log_scroll = ttk.Scrollbar(
             log_frame, orient="vertical", command=self.log_tree.yview, style=self.vscroll_style
         )
         self.log_tree.configure(yscrollcommand=log_scroll.set)
         log_scroll.grid(row=2, column=1, sticky="ns")
-
         log_frame.rowconfigure(2, weight=1)
         log_frame.columnconfigure(0, weight=1)
-
         log_actions = ttk.Frame(log_frame, padding=(0, 6, 0, 0))
         log_actions.grid(row=3, column=0, columnspan=2, sticky="ew")
         ttk.Button(log_actions, text="Edit Selected Log", command=self.edit_log_entry).grid(
@@ -489,12 +438,10 @@ class CannabisTracker:
         ttk.Button(log_actions, text="Stats", width=8, command=lambda: self._show_stats_window("day")).grid(
             row=0, column=3, sticky="e"
         )
-
         self.stock_tree.bind("<<TreeviewSelect>>", self._on_stock_select)
         self.stock_tree.bind("<ButtonRelease-1>", self._maybe_clear_stock_selection)
         self.log_tree.bind("<ButtonRelease-1>", self._maybe_clear_log_selection)
         self._update_clock()
-
     def _on_stock_select(self, event: tk.Event) -> None:
         selection = self.stock_tree.selection()
         if not selection:
@@ -516,7 +463,6 @@ class CannabisTracker:
             self.stock_form_dirty = False
         if name in self.flower_choice["values"]:
             self.flower_choice.set(name)
-
     def _maybe_clear_stock_selection(self, event: tk.Event) -> None:
         # If click is on empty space, clear selection
         if not self.stock_tree.identify_row(event.y):
@@ -526,21 +472,17 @@ class CannabisTracker:
         else:
             # user clicked a row; keep selection and do nothing else
             pass
-
     def _maybe_clear_log_selection(self, event: tk.Event) -> None:
         if not self.log_tree.identify_row(event.y):
             self.log_tree.selection_remove(self.log_tree.selection())
-
     def add_stock(self) -> None:
         name = self.name_entry.get().strip()
         thc_text = self.thc_entry.get().strip()
         cbd_text = self.cbd_entry.get().strip()
         grams_text = self.grams_entry.get().strip()
-
         if not name or not thc_text or not grams_text:
             messagebox.showwarning("Missing info", "Enter name, THC %, and grams. CBD % can be 0.")
             return
-
         try:
             thc_pct = float(thc_text)
             cbd_pct = float(cbd_text) if cbd_text else 0.0
@@ -548,22 +490,18 @@ class CannabisTracker:
         except ValueError:
             messagebox.showerror("Invalid input", "Potency and grams must be numbers.")
             return
-
         if thc_pct < 0 or cbd_pct < 0 or grams <= 0:
             messagebox.showerror("Invalid input", "Potency must be non-negative and grams must be positive.")
             return
-
         try:
             add_stock_entry(self.flowers, name=name, grams=grams, thc_pct=thc_pct, cbd_pct=cbd_pct)
         except ValueError as exc:
             messagebox.showerror("Cannot add stock", str(exc))
             return
-
         self._refresh_stock()
         self._clear_stock_inputs()
         self.save_data()
         self._save_config()
-
     def delete_stock(self) -> None:
         selection = self.stock_tree.selection()
         if not selection:
@@ -587,7 +525,6 @@ class CannabisTracker:
         self._save_config()
         self._clear_stock_inputs()
         self.stock_tree.selection_remove(selection)
-
     def _clear_stock_inputs(self) -> None:
         self.name_entry.delete(0, tk.END)
         self.thc_entry.delete(0, tk.END)
@@ -595,11 +532,9 @@ class CannabisTracker:
         self.grams_entry.delete(0, tk.END)
         self.stock_form_source = None
         self.stock_form_dirty = False
-
     def log_dose(self) -> None:
         name = self.flower_choice.get().strip()
         grams_text = self.dose_entry.get().strip()
-
         if not name:
             messagebox.showwarning("Select flower", "Choose a saved flower to log a dose.")
             return
@@ -609,17 +544,14 @@ class CannabisTracker:
         if not grams_text:
             messagebox.showwarning("Missing dose", "Enter a dose in grams of flower.")
             return
-
         try:
             grams_used = float(grams_text)
         except ValueError:
             messagebox.showerror("Invalid dose", "Dose must be numeric.")
             return
-
         if grams_used <= 0:
             messagebox.showerror("Invalid dose", "Dose must be positive.")
             return
-
         roa = self.roa_choice.get().strip() or "Vaped"
         try:
             remaining, log_entry = log_dose_entry(
@@ -633,13 +565,11 @@ class CannabisTracker:
         except ValueError as exc:
             messagebox.showerror("Cannot log dose", str(exc))
             return
-
         self._refresh_stock()
         self._refresh_log()
         self._update_scraper_status_icon()
         self.dose_entry.delete(0, tk.END)
         self.save_data()
-
     def edit_log_entry(self) -> None:
         selection = self.log_tree.selection()
         if not selection:
@@ -650,20 +580,16 @@ class CannabisTracker:
             messagebox.showerror("Not found", "Selected log entry is missing.")
             return
         log = self.logs[idx]
-
         current_flower = log["flower"]
         current_roa = log.get("roa", "Smoking")
         current_eff = float(log.get("efficiency", 1.0))
         current_grams = float(log.get("grams_used", 0.0))
         current_time = log.get("time_display") or log.get("time", "").split(" ")[-1]
-
         dialog = tk.Toplevel(self.root)
         dialog.title("Edit log entry")
         dialog.resizable(False, False)
-
         frame = ttk.Frame(dialog, padding=12)
         frame.grid(row=0, column=0, sticky="nsew")
-
         ttk.Label(frame, text="Flower").grid(row=0, column=0, sticky="w")
         flower_var = tk.StringVar(value=current_flower)
         flower_combo = ttk.Combobox(
@@ -675,29 +601,24 @@ class CannabisTracker:
             style=self.combo_style,
         )
         flower_combo.grid(row=1, column=0, sticky="w", padx=(0, 8))
-
         ttk.Label(frame, text="Route").grid(row=0, column=1, sticky="w")
         roa_var = tk.StringVar(value=current_roa if current_roa in self.roa_options else "Vaped")
         roa_combo = ttk.Combobox(
             frame, state="readonly", values=list(self.roa_options.keys()), textvariable=roa_var, width=12, style=self.combo_style
         )
         roa_combo.grid(row=1, column=1, sticky="w", padx=(0, 8))
-
         ttk.Label(frame, text="Dose (g)").grid(row=0, column=2, sticky="w")
         grams_var = tk.StringVar(value=f"{current_grams:.3f}")
         grams_entry = ttk.Entry(frame, textvariable=grams_var, width=12)
         grams_entry.grid(row=1, column=2, sticky="w")
-
         ttk.Label(frame, text="Time (HH:MM)").grid(row=0, column=3, sticky="w")
         time_var = tk.StringVar(value=current_time)
         time_entry = ttk.Entry(frame, textvariable=time_var, width=10)
         time_entry.grid(row=1, column=3, sticky="w", padx=(0, 8))
-
         buttons = ttk.Frame(dialog, padding=(12, 8, 12, 12))
         buttons.grid(row=1, column=0, sticky="ew")
         buttons.columnconfigure(0, weight=1)
         ttk.Button(buttons, text="Cancel", command=dialog.destroy).grid(row=0, column=0, sticky="w")
-
         def save_edit() -> None:
             new_flower_name = flower_var.get().strip()
             new_roa = roa_var.get().strip() or "Smoking"
@@ -719,18 +640,14 @@ class CannabisTracker:
             except Exception:
                 messagebox.showerror("Invalid time", "Enter time as HH:MM in 24-hour format.")
                 return
-
             efficiency = self.roa_options.get(new_roa, 1.0)
-
             old_flower = self.flowers.get(current_flower)
             new_flower = self.flowers[new_flower_name]
-
             # Roll back previous consumption on old flower
             if log.get("mix_sources") or log.get("mix_thc_pct") is not None:
                 self._restore_mix_stock(log)
             elif old_flower:
                 old_flower.grams_remaining += current_grams
-
             # Apply new consumption to selected flower
             try:
                 new_flower.remove_by_grams(new_grams)
@@ -743,7 +660,6 @@ class CannabisTracker:
                         pass
                 messagebox.showerror("Not enough stock", str(exc))
                 return
-
             log["flower"] = new_flower_name
             log["roa"] = new_roa
             log["efficiency"] = efficiency
@@ -754,15 +670,12 @@ class CannabisTracker:
             log["time"] = dt_obj.strftime("%Y-%m-%d %H:%M")
             log["time_display"] = dt_obj.strftime("%H:%M")
             log["is_cbd_dominant"] = self._is_cbd_dominant(new_flower)
-
             self._refresh_stock()
             self._refresh_log()
             self.save_data()
             dialog.destroy()
-
         ttk.Button(buttons, text="Save", command=save_edit).grid(row=0, column=1, sticky="e")
         self._prepare_toplevel(dialog)
-
     def _restore_mix_stock(self, log: dict) -> None:
         name = str(log.get("flower", "")).strip()
         if not name:
@@ -794,7 +707,6 @@ class CannabisTracker:
             flower = Flower(name=name, thc_pct=float(thc_pct), cbd_pct=float(cbd_pct), grams_remaining=0.0)
             self.flowers[name] = flower
         flower.grams_remaining += grams_used
-
     def delete_log_entry(self) -> None:
         selection = self.log_tree.selection()
         if not selection:
@@ -825,11 +737,9 @@ class CannabisTracker:
         self._refresh_stock()
         self._refresh_log()
         self.save_data()
-
     def _refresh_stock(self) -> None:
         for item in self.stock_tree.get_children():
             self.stock_tree.delete(item)
-
         total_all = 0.0
         total_counted = 0.0
         cbd_total = 0.0
@@ -862,7 +772,6 @@ class CannabisTracker:
                     f"{flower.grams_remaining:.3f}",
                 ),
             )
-
         self.total_label.config(text=f"Total THC stock: {total_counted:.2f} g")
         self.total_cbd_label.config(text=f"Total CBD stock: {cbd_total:.2f} g")
         total_color = (
@@ -895,7 +804,6 @@ class CannabisTracker:
             )
         else:
             self.remaining_today_label.config(text="Remaining today (THC): N/A", foreground=self.text_color)
-
         if getattr(self, "track_cbd_usage", False):
             target_cbd = getattr(self, "target_daily_cbd_grams", 0.0)
             if target_cbd > 0:
@@ -913,7 +821,6 @@ class CannabisTracker:
             self.remaining_today_cbd_label.grid()
         else:
             self.remaining_today_cbd_label.grid_remove()
-
         remaining_stock = max(total_counted, 0.0)
         days_target = "N/A"
         days_target_val: float | None = None
@@ -927,7 +834,6 @@ class CannabisTracker:
         if self.enable_usage_coloring and days_actual_val is not None and days_target_val is not None:
             actual_color = self.accent_green if days_actual_val >= days_target_val else self.accent_red
         self.days_label.config(text=f"Days of THC flower left - target: {days_target} | actual: {days_actual}", foreground=actual_color)
-
         if getattr(self, "track_cbd_usage", False):
             days_target_cbd = "N/A"
             days_target_val_cbd: float | None = None
@@ -946,17 +852,13 @@ class CannabisTracker:
             self.days_label_cbd.grid()
         else:
             self.days_label_cbd.grid_remove()
-
         self.flower_choice["values"] = [f.name for f in sorted(self.flowers.values(), key=lambda f: f.name.lower())]
         self._apply_stock_sort()
-
     def _refresh_log(self) -> None:
         for item in self.log_tree.get_children():
             self.log_tree.delete(item)
-
         day_str = self.current_date.isoformat()
         day_logs = [log for log in self.logs if log.get("date") == day_str]
-
         day_total = sum(float(log.get("grams_used", 0.0)) for log in day_logs if self._log_counts_for_totals(log))
         day_total_cbd = sum(float(log.get("grams_used", 0.0)) for log in day_logs if self._log_counts_for_cbd(log))
         if hasattr(self, "day_total_label"):
@@ -985,7 +887,6 @@ class CannabisTracker:
             else:
                 self.day_total_label.grid_remove()
                 self.day_total_cbd_label.grid_remove()
-
         for idx, log in enumerate(self.logs):
             if log.get("date") != day_str:
                 continue
@@ -1011,14 +912,11 @@ class CannabisTracker:
                 self.log_tree.yview_moveto(1.0)
             except Exception:
                 pass
-
         self.date_label.config(text=self.current_date.strftime("%Y-%m-%d"))
-
     def _change_day(self, delta_days: int) -> None:
         self.current_date += timedelta(days=delta_days)
         self._refresh_log()
         self._refresh_stock()
-
     @staticmethod
     def _color_for_value(value: float, high: float, low: float) -> str:
         """Return hex color between green (high) and red (low)."""
@@ -1033,20 +931,18 @@ class CannabisTracker:
         g = int(red[1] + (green[1] - red[1]) * ratio)
         b = int(red[2] + (green[2] - red[2]) * ratio)
         return f"#{r:02x}{g:02x}{b:02x}"
-
     def _toggle_theme(self) -> None:
         self.apply_theme(self.dark_var.get())
         self.save_data()
         self._save_config()
-
     def open_settings(self) -> None:
         open_tracker_settings(self)
-
     def open_tools(self) -> None:
         if self.tools_window and tk.Toplevel.winfo_exists(self.tools_window):
             self.tools_window.lift()
             return
         win = tk.Toplevel(self.root)
+        win._stats_period = period
         win.title("Tools")
         try:
             win.iconbitmap(self._resource_path('icon.ico'))
@@ -1063,7 +959,6 @@ class CannabisTracker:
         frame.rowconfigure(2, weight=1)
         frame.rowconfigure(3, weight=0)
         frame.rowconfigure(4, weight=0)
-
         ttk.Label(frame, text="Tools", font=self.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
         ttk.Button(frame, text="Medicann Scraper", command=lambda: self._open_scraper_from_tools()).grid(
             row=1, column=0, sticky="w", pady=(0, 6)
@@ -1076,7 +971,6 @@ class CannabisTracker:
         )
         ttk.Button(frame, text="Close", command=win.destroy).grid(row=4, column=0, sticky="se", pady=(12, 0))
         self._prepare_toplevel(win)
-
     def _save_settings(self) -> None:
         try:
             green = float(self.total_green_entry.get().strip())
@@ -1168,18 +1062,15 @@ class CannabisTracker:
         if self.settings_window:
             self.settings_window.destroy()
             self.settings_window = None
-
     def _mark_stock_form_dirty(self, event: tk.Event) -> None:
         # Any user typing marks the form dirty
         self.stock_form_dirty = True
-
     def _bind_tree_resize(self, tree: ttk.Treeview, key: str) -> None:
         tree.bind("<ButtonRelease-1>", lambda e, t=tree, k=key: self._store_tree_widths(t, k))
         tree.bind("<ButtonRelease-2>", lambda e, t=tree, k=key: self._store_tree_widths(t, k))
         tree.bind("<ButtonRelease-3>", lambda e, t=tree, k=key: self._store_tree_widths(t, k))
         tree.bind("<Configure>", lambda e, t=tree, k=key: self._store_tree_widths(t, k))
         tree.bind("<B1-Motion>", lambda e, t=tree, k=key: self._schedule_tree_widths(t, k))
-
     def _schedule_tree_widths(self, tree: ttk.Treeview, key: str) -> None:
         try:
             if not hasattr(self, "_tree_width_jobs"):
@@ -1193,14 +1084,12 @@ class CannabisTracker:
             self._tree_width_jobs[key] = self.root.after(200, lambda t=tree, k=key: self._commit_tree_widths(t, k))
         except Exception:
             self._commit_tree_widths(tree, key)
-
     def _store_tree_widths(self, tree: ttk.Treeview, key: str) -> None:
         try:
             # Delay slightly so the final width is applied after the drag ends.
             self.root.after(50, lambda t=tree, k=key: self._commit_tree_widths(t, k))
         except Exception:
             self._commit_tree_widths(tree, key)
-
     def _commit_tree_widths(self, tree: ttk.Treeview, key: str) -> None:
         widths = {col: int(tree.column(col, option="width")) for col in tree["columns"]}
         if key == "stock_column_widths":
@@ -1208,7 +1097,6 @@ class CannabisTracker:
         else:
             self.log_column_widths = widths
         self._save_config()
-
     def _persist_tree_widths(self) -> None:
         try:
             if hasattr(self, "stock_tree"):
@@ -1221,7 +1109,6 @@ class CannabisTracker:
                 }
         except Exception:
             pass
-
     def _on_root_configure(self, event: tk.Event) -> None:
         if event.widget is not self.root:
             return
@@ -1231,7 +1118,6 @@ class CannabisTracker:
             except Exception:
                 pass
         self._geometry_save_job = self.root.after(500, self._persist_geometry)
-
     def _persist_geometry(self) -> None:
         try:
             self.window_geometry = self.root.geometry()
@@ -1239,7 +1125,6 @@ class CannabisTracker:
             self._save_config()
         except Exception:
             pass
-
     def apply_theme(self, dark: bool) -> None:
         colors = compute_colors(dark)
         base = colors["bg"]
@@ -1250,11 +1135,9 @@ class CannabisTracker:
         border = colors["ctrl_bg"]
         scroll = "#2a2a2a" if dark else "#e6e6e6"
         cursor_color = text_color
-
         # Prefer dark title bar when dark mode is on
         self.root.after(0, lambda: self._set_dark_title_bar(dark))
         self.current_base_color = base
-
         self.root.configure(bg=base)
         apply_style_theme(self.style, colors)
         self.style.configure("TButton", background=panel, foreground=text_color, bordercolor=border)
@@ -1325,7 +1208,6 @@ class CannabisTracker:
             troughcolor=[("disabled", panel), ("!disabled", panel)],
             bordercolor=[("disabled", border), ("!disabled", border)],
         )
-
         # Update any open child windows to reflect title bar/background changes
         for win_name in ("settings_window", "tools_window", "library_window"):
             win = getattr(self, win_name, None)
@@ -1335,7 +1217,6 @@ class CannabisTracker:
                     win.configure(bg=base)
             except Exception:
                 pass
-
         self.text_color = text_color
         self.accent_green = "#2ecc71"
         self.accent_red = "#e74c3c"
@@ -1364,7 +1245,6 @@ class CannabisTracker:
         except Exception:
             pass
         self._apply_caret_color(cursor_color)
-
     def _apply_caret_color(self, color: str) -> None:
         """Force insert cursor color on text/entry-like widgets."""
         try:
@@ -1381,7 +1261,6 @@ class CannabisTracker:
             pass
         # Reapply stock colors after theme change
         self._refresh_stock()
-
     def _sort_stock(self, column: str, numeric: bool) -> None:
         if self.stock_sort_column == column:
             self.stock_sort_reverse = not self.stock_sort_reverse
@@ -1389,7 +1268,6 @@ class CannabisTracker:
             self.stock_sort_column = column
             self.stock_sort_reverse = False
         self._apply_stock_sort()
-
     def _apply_stock_sort(self) -> None:
         # Update heading text with arrow
         arrows = {"asc": " ^", "desc": " v"}
@@ -1405,7 +1283,6 @@ class CannabisTracker:
             else:
                 suffix = ""
             self.stock_tree.heading(col, text=base + suffix)
-
         children = list(self.stock_tree.get_children())
         if not children:
             return
@@ -1417,10 +1294,8 @@ class CannabisTracker:
                 except ValueError:
                     return (0.0, value)
             return (value.lower(), value)
-
         for index, iid in enumerate(sorted(children, key=sort_key, reverse=self.stock_sort_reverse)):
             self.stock_tree.move(iid, "", index)
-
     def _grams_used_on_day(self, day: date) -> float:
         day_str = day.isoformat()
         return sum(
@@ -1428,7 +1303,6 @@ class CannabisTracker:
             for log in self.logs
             if log.get("date") == day_str and self._log_counts_for_totals(log)
         )
-
     def _grams_used_on_day_cbd(self, day: date) -> float:
         day_str = day.isoformat()
         return sum(
@@ -1436,7 +1310,6 @@ class CannabisTracker:
             for log in self.logs
             if log.get("date") == day_str and self._log_counts_for_cbd(log)
         )
-
     def _average_daily_usage(self) -> float | None:
         if not self.logs:
             return None
@@ -1449,7 +1322,6 @@ class CannabisTracker:
         if not usage_by_day:
             return None
         return sum(usage_by_day.values()) / len(usage_by_day)
-
     def _average_daily_usage_cbd(self) -> float | None:
         if not self.logs:
             return None
@@ -1462,7 +1334,6 @@ class CannabisTracker:
         if not usage_by_day:
             return None
         return sum(usage_by_day.values()) / len(usage_by_day)
-
     def _update_clock(self) -> None:
         now = datetime.now()
         self.clock_label.config(text=now.strftime("%H:%M"))
@@ -1476,7 +1347,6 @@ class CannabisTracker:
             self._refresh_log()
         self._maybe_reload_external()
         self.root.after(1000, self._update_clock)
-
     def _compute_stats(self, logs_subset: list[dict[str, float]]) -> dict[str, str]:
         times = []
         doses = []
@@ -1486,7 +1356,6 @@ class CannabisTracker:
             except Exception:
                 continue
             doses.append(float(log.get("grams_used", 0.0)))
-
         stats = {
             "first_time": "N/A",
             "last_time": "N/A",
@@ -1497,7 +1366,6 @@ class CannabisTracker:
             "min_dose": "N/A",
             "avg_dose": "N/A",
         }
-
         if times:
             times_sorted = sorted(times)
             stats["first_time"] = times_sorted[0].strftime("%H:%M")
@@ -1513,9 +1381,7 @@ class CannabisTracker:
             stats["max_dose"] = f"{max(doses):.3f} g"
             stats["min_dose"] = f"{min(doses):.3f} g"
             stats["avg_dose"] = f"{(sum(doses)/len(doses)):.3f} g"
-
         return stats
-
     @staticmethod
     def _format_interval(seconds: float) -> str:
         seconds = int(seconds)
@@ -1526,7 +1392,6 @@ class CannabisTracker:
         if minutes:
             return f"{minutes}m {sec}s"
         return f"{sec}s"
-
     def _render_stats_rows(self, rows: list[tuple[str, str]]) -> None:
         for idx, (label, value) in enumerate(rows):
             ttk.Label(self.stats_frame, text=label, font=self.font_body, anchor="w").grid(
@@ -1535,8 +1400,6 @@ class CannabisTracker:
             ttk.Label(self.stats_frame, text=value, font=self.font_body, anchor="e").grid(
                 row=idx, column=1, sticky="e", padx=(50, 0), pady=(0, 2)
             )
-
-
     def _logs_for_period(self, period: str) -> tuple[list[dict[str, float]], str, int]:
         end_date = self.current_date
         if period == "day":
@@ -1554,7 +1417,6 @@ class CannabisTracker:
         else:
             start_date = end_date
             label = f"Day ({end_date.isoformat()})"
-
         logs_subset = []
         for log in self.logs:
             try:
@@ -1565,7 +1427,6 @@ class CannabisTracker:
                 logs_subset.append(log)
         days_count = (end_date - start_date).days + 1
         return logs_subset, label, max(days_count, 1)
-
     def _stats_text(
         self,
         logs_subset: list[dict[str, float]],
@@ -1604,7 +1465,6 @@ class CannabisTracker:
         if return_title:
             return label, rows
         return body
-
     def save_data(self) -> None:
         data = {
             "flowers": [
@@ -1635,14 +1495,12 @@ class CannabisTracker:
         save_tracker_data(data, path=Path(self.data_path), logger=lambda m: print(m))
         self._update_data_mtime()
         self._save_config()
-
     def load_data(self) -> None:
         data = load_tracker_data(path=Path(self.data_path), logger=lambda m: print(m))
         if not data:
             messagebox.showwarning("No data", f"No tracker data found at {self.data_path}")
             self._update_data_mtime(reset=True)
             return
-
         self.flowers = {}
         loaded = load_tracker_data(path=Path(self.data_path), logger=lambda m: print(m))
         if loaded:
@@ -1655,7 +1513,6 @@ class CannabisTracker:
                 cbd_pct=float(item.get("cbd_pct", 0.0)),
                 grams_remaining=float(item.get("grams_remaining", 0.0)),
             )
-
         self.logs = data.get("logs", [])
         self.dark_var.set(bool(data.get("dark_mode", False)))
         self.total_green_threshold = float(data.get("total_green_threshold", self.total_green_threshold))
@@ -1707,7 +1564,6 @@ class CannabisTracker:
             self.current_date = date.today()
         self._last_seen_date = self.current_date
         self._update_data_mtime()
-
     def choose_data_file(self) -> None:
         path = filedialog.askopenfilename(
             title="Load tracker data",
@@ -1726,7 +1582,6 @@ class CannabisTracker:
         self._refresh_stock()
         self._refresh_log()
         self._update_data_path_label()
-
     def export_data_file(self) -> None:
         path = filedialog.asksaveasfilename(
             title="Export tracker data",
@@ -1740,7 +1595,6 @@ class CannabisTracker:
         self.save_data()
         self._save_config()
         self._update_data_path_label()
-
     def _load_config(self) -> None:
         cfg = load_tracker_config(Path(TRACKER_CONFIG_FILE))
         self.data_path = cfg.get("data_path", str(TRACKER_DATA_FILE)) or str(TRACKER_DATA_FILE)
@@ -1796,7 +1650,6 @@ class CannabisTracker:
                 if col in self.log_tree["columns"]:
                     self.log_tree.column(col, width=width)
         self._apply_scraper_status_visibility()
-
     def _save_config(self) -> None:
         cfg = {
             "data_path": self.data_path or str(TRACKER_DATA_FILE),
@@ -1824,13 +1677,10 @@ class CannabisTracker:
             "show_scraper_status_icon": self.show_scraper_status_icon,
         }
         save_tracker_config(Path(TRACKER_CONFIG_FILE), cfg)
-
     def _settings_choose_data(self) -> None:
         self.choose_data_file()
-
     def _settings_export_data(self) -> None:
         self.export_data_file()
-
     def _settings_choose_library(self) -> None:
         path = filedialog.askopenfilename(
             title="Load library data",
@@ -1845,7 +1695,6 @@ class CannabisTracker:
         self.library_data_path = path
         self._save_config()
         self._update_library_path_label()
-
     def _settings_export_library(self) -> None:
         path = filedialog.asksaveasfilename(
             title="Export library data",
@@ -1867,15 +1716,20 @@ class CannabisTracker:
         self.library_data_path = path
         self._save_config()
         self._update_library_path_label()
+    def _settings_open_data_folder(self) -> None:
+        data_dir = Path(self.data_path).parent if self.data_path else Path(APP_DIR) / "data"
+        try:
+            data_dir.mkdir(parents=True, exist_ok=True)
+            os.startfile(str(data_dir))
+        except Exception as exc:
+            messagebox.showerror("Open folder", f"Could not open data folder:\n{exc}")
 
     def _update_data_path_label(self) -> None:
         if hasattr(self, "data_path_label"):
             self.data_path_label.config(text=self._format_path_display(self.data_path))
-
     def _update_library_path_label(self) -> None:
         if hasattr(self, "library_path_label"):
             self.library_path_label.config(text=self._format_path_display(self.library_data_path))
-
     def _update_data_mtime(self, reset: bool = False) -> None:
         """Track last modified time for external reloads."""
         if reset:
@@ -1885,7 +1739,6 @@ class CannabisTracker:
             self._data_mtime = os.path.getmtime(self.data_path)
         except OSError:
             self._data_mtime = None
-
     def _maybe_reload_external(self) -> None:
         """Reload data if tracker file changed externally (e.g., mix calculator)."""
         try:
@@ -1898,7 +1751,6 @@ class CannabisTracker:
             self._refresh_stock()
             self._refresh_log()
             self._data_mtime = current
-
     def _place_window_at_pointer(self, win: tk.Toplevel) -> None:
         try:
             x = self.root.winfo_pointerx()
@@ -1914,7 +1766,6 @@ class CannabisTracker:
             win.geometry(f"+{x_pos}+{y_pos}")
         except Exception:
             pass
-
     def _prepare_toplevel(self, win: tk.Toplevel) -> None:
         """Prevent white flash when opening toplevels by styling before showing."""
         try:
@@ -1930,11 +1781,44 @@ class CannabisTracker:
             # Fallback to basic placement
             self._place_window_at_pointer(win)
             self._set_dark_title_bar(self.dark_var.get(), target=win)
-
+    def _export_stats_csv(self, period: str) -> None:
+        logs_subset, label, _ = self._logs_for_period(period)
+        if not logs_subset:
+            messagebox.showinfo("Export CSV", "No logs available for this period.")
+            return
+        filename = f"usage-{period}-{self.current_date.isoformat()}.csv"
+        path = filedialog.asksaveasfilename(
+            title="Export usage CSV",
+            defaultextension=".csv",
+            initialfile=filename,
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+        )
+        if not path:
+            return
+        try:
+            with open(path, "w", newline="", encoding="utf-8") as fh:
+                writer = csv.writer(fh)
+                writer.writerow(["date", "time", "flower", "roa", "grams_used", "thc_mg", "cbd_mg", "remaining", "is_cbd_dominant"])
+                for log in logs_subset:
+                    writer.writerow([
+                        log.get("date", ""),
+                        log.get("time", ""),
+                        log.get("flower", ""),
+                        log.get("roa", ""),
+                        log.get("grams_used", log.get("grams", "")),
+                        log.get("thc_mg", ""),
+                        log.get("cbd_mg", ""),
+                        log.get("remaining", ""),
+                        log.get("is_cbd_dominant", ""),
+                    ])
+            messagebox.showinfo("Export CSV", f"Exported {len(logs_subset)} rows.")
+        except Exception as exc:
+            messagebox.showerror("Export CSV", f"Could not export CSV:\n{exc}")
     def _show_stats_window(self, period: str = "day") -> None:
         logs_for_period, label, days_count = self._logs_for_period(period)
         title, stats_list = self._stats_text(logs_for_period, label, days_count, return_title=True)
         win = tk.Toplevel(self.root)
+        win._stats_period = period
         win.title("Usage stats")
         try:
             win.iconbitmap(self._resource_path('icon.ico'))
@@ -1951,6 +1835,7 @@ class CannabisTracker:
             ttk.Button(btns, text=text, width=7, command=lambda per=p: self._update_stats_display(per, win)).grid(
                 row=0, column=idx, padx=(0 if idx == 0 else 6, 0)
             )
+        ttk.Button(btns, text="Export CSV", command=lambda: self._export_stats_csv(getattr(win, "_stats_period", period))).grid(row=0, column=4, padx=(12, 0))
         # Title line for period label
         self.stats_title = ttk.Label(frame, text=title, justify="left", font=self.font_bold_small, foreground="#555555")
         self.stats_title.grid(row=1, column=0, sticky="w", pady=(4, 2))
@@ -1959,8 +1844,8 @@ class CannabisTracker:
         self._render_stats_rows(stats_list)
         ttk.Button(frame, text="Close", command=win.destroy).grid(row=3, column=0, sticky="e", pady=(8, 0))
         self._prepare_toplevel(win)
-
     def _update_stats_display(self, period: str, win: tk.Toplevel) -> None:
+        win._stats_period = period
         logs_for_period, label, days_count = self._logs_for_period(period)
         title, stats_list = self._stats_text(logs_for_period, label, days_count, return_title=True)
         if hasattr(self, "stats_title"):
@@ -1969,12 +1854,10 @@ class CannabisTracker:
             for child in self.stats_frame.winfo_children():
                 child.destroy()
             self._render_stats_rows(stats_list)
-
     def _format_path_display(self, path: str, max_len: int = 28) -> str:
         if len(path) <= max_len:
             return path
         return path[: max_len // 2] + "..." + path[-(max_len // 2) :]
-
     def _ensure_storage_dirs(self) -> None:
         try:
             os.makedirs(os.path.dirname(TRACKER_DATA_FILE), exist_ok=True)
@@ -1983,17 +1866,14 @@ class CannabisTracker:
                 os.makedirs(os.path.dirname(self.data_path), exist_ok=True)
         except OSError:
             pass
-
     @staticmethod
     def _ensure_dir_for_path(path: str) -> None:
         try:
             os.makedirs(os.path.dirname(path), exist_ok=True)
         except OSError:
             pass
-
     def _is_cbd_dominant(self, flower: Flower | None) -> bool:
         return is_cbd_dominant(flower)
-
     def _log_is_cbd_dominant(self, log: dict) -> bool:
         if log is None:
             return False
@@ -2025,12 +1905,10 @@ class CannabisTracker:
         if flower is None:
             return False
         return self._is_cbd_dominant(flower)
-
     def _should_count_flower(self, flower: Flower | None) -> bool:
         if flower is None:
             return True
         return not self._is_cbd_dominant(flower)
-
     def _log_counts_for_totals(self, log: dict) -> bool:
         if getattr(self, "track_cbd_usage", False) and self._log_is_cbd_dominant(log):
             return False
@@ -2044,10 +1922,8 @@ class CannabisTracker:
         if flower is None:
             return True
         return self._should_count_flower(flower)
-
     def _log_counts_for_cbd(self, log: dict) -> bool:
         return self._log_is_cbd_dominant(log)
-
     def _set_window_icon(self) -> None:
         ico_path = self._resource_path('icon.ico')
         png_path = self._resource_path('icon.png')
@@ -2061,7 +1937,6 @@ class CannabisTracker:
                 self.root.iconphoto(True, tk.PhotoImage(file=png_path))
         except Exception:
             pass
-
     def _show_tooltip(self, text: str, event: tk.Event | None = None) -> None:
         self._hide_tooltip()
         try:
@@ -2074,16 +1949,13 @@ class CannabisTracker:
             label.pack()
         except Exception:
             self._tooltip_win = None
-
     def _hide_tooltip(self) -> None:
         if self._tooltip_win and tk.Toplevel.winfo_exists(self._tooltip_win):
             self._tooltip_win.destroy()
         self._tooltip_win = None
-
     def _bind_tooltip(self, widget: tk.Widget, text: str) -> None:
         widget.bind("<Enter>", lambda e: self._show_tooltip(text, e))
         widget.bind("<Leave>", lambda e: self._hide_tooltip())
-
     # --- Tray helpers ---
     def _stop_tray_icon(self) -> None:
         try:
@@ -2097,7 +1969,6 @@ class CannabisTracker:
             pass
         self.tray_icon = None
         self.tray_thread = None
-
     def _on_main_close(self) -> None:
         try:
             self._persist_tree_widths()
@@ -2109,18 +1980,15 @@ class CannabisTracker:
         self._stop_export_server()
         self._stop_tray_icon()
         self.root.destroy()
-
     def _on_close_to_tray(self) -> None:
         if self.close_to_tray:
             self._hide_to_tray()
         else:
             self._on_main_close()
-
     def _on_unmap(self, event: tk.Event) -> None:
         # On minimize, hide to tray; ignore when already hidden
         if self.minimize_to_tray and self.root.state() == "iconic" and not self.is_hidden_to_tray:
             self._hide_to_tray()
-
     def _shutdown_children(self) -> None:
         procs = getattr(self, 'child_procs', [])
         alive = []
@@ -2139,7 +2007,6 @@ class CannabisTracker:
                 continue
         self.child_procs = alive
         self._update_scraper_status_icon()
-
     def _destroy_child_windows(self) -> None:
         for win_name in ('tools_window', 'settings_window', 'library_window'):
             win = getattr(self, win_name, None)
@@ -2148,7 +2015,6 @@ class CannabisTracker:
                     win.destroy()
             except Exception:
                 pass
-
     def _hide_to_tray(self) -> None:
         if self.is_hidden_to_tray:
             return
@@ -2161,16 +2027,12 @@ class CannabisTracker:
             )
             self.root.destroy()
             return
-
         self.is_hidden_to_tray = True
         self.root.withdraw()
-
         def on_open() -> None:
             self.root.after(0, self._restore_from_tray)
-
         def on_quit() -> None:
             self.root.after(0, self._quit_from_tray)
-
         running, warn = resolve_scraper_status(getattr(self, "child_procs", []))
         icon_image = self._build_tray_image()
         self.tray_icon = create_tray_icon(
@@ -2183,12 +2045,10 @@ class CannabisTracker:
             image=icon_image,
         )
         self.tray_thread = None
-
     def _open_scraper_from_tools(self) -> None:
         self.open_parser()
         if self.tools_window and tk.Toplevel.winfo_exists(self.tools_window):
             self.tools_window.destroy()
-
     def launch_mix_calculator(self, close_tools: bool = False, mode: str = "dose") -> None:
         try:
             if getattr(sys, "frozen", False):
@@ -2213,7 +2073,6 @@ class CannabisTracker:
                 pass
         except Exception as exc:
             messagebox.showerror('Mix Calculator', f'Could not launch mix calculator.\n{exc}')
-
     def _watch_mixcalc_process(self, proc: subprocess.Popen) -> None:
         def poll() -> None:
             try:
@@ -2232,7 +2091,6 @@ class CannabisTracker:
             self.root.after(500, poll)
         except Exception:
             pass
-
     def launch_flower_library(self, close_tools: bool = False) -> None:
         # Launch a new process of the same executable in library mode, so no external Python is needed.
         try:
@@ -2250,7 +2108,6 @@ class CannabisTracker:
                 self.tools_window.destroy()
         except Exception as exc:
             messagebox.showerror("Cannot launch", f"Failed to launch flower library:\n{exc}")
-
     def _restore_from_tray(self) -> None:
         self.is_hidden_to_tray = False
         self._stop_tray_icon()
@@ -2258,11 +2115,9 @@ class CannabisTracker:
         self.root.state("normal")
         self.root.lift()
         self.root.focus_force()
-
     def _quit_from_tray(self) -> None:
         self.is_hidden_to_tray = False
         self._on_main_close()
-
     def _build_tray_image(self) -> "Image.Image":
         """Use colored status dot based on scraper running state; fallback to icon."""
         try:
@@ -2286,7 +2141,6 @@ class CannabisTracker:
         draw = ImageDraw.Draw(img)
         draw.ellipse((8, 8, size - 8, size - 8), fill=(0, 200, 0, 255))
         return img
-
     def _apply_scraper_status_visibility(self) -> None:
         label = getattr(self, 'scraper_status_label', None)
         if not label:
@@ -2301,10 +2155,8 @@ class CannabisTracker:
                 label.grid_remove()
             except Exception:
                 pass
-
     def _resource_path(self, filename: str) -> str:
         return _resource_path(filename)
-
     def _set_dark_title_bar(self, enable: bool, target: tk.Tk | tk.Toplevel | None = None) -> None:
         """On Windows 10/11, ask DWM for a dark title bar to match the theme."""
         if os.name != "nt":
@@ -2318,7 +2170,6 @@ class CannabisTracker:
             while parent:
                 hwnd = parent
                 parent = get_parent(hwnd)
-
             DWMWA_USE_IMMERSIVE_DARK_MODE = 20
             DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19
             BOOL = ctypes.c_int
@@ -2332,10 +2183,8 @@ class CannabisTracker:
                 )
         except Exception:
             pass
-
     def run(self) -> None:
         self.root.mainloop()
-
     def _update_scraper_status_icon(self) -> None:
         """Update small status dot near the clock to reflect scraper running state."""
         try:
@@ -2359,4 +2208,3 @@ class CannabisTracker:
                 self.root.after(1500, self._update_scraper_status_icon)
             except Exception:
                 pass
-

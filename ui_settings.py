@@ -23,6 +23,8 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
 
     win = tk.Toplevel(app)
     app.settings_window = win
+    if not hasattr(app, "show_advanced_scraper"):
+        app.show_advanced_scraper = tk.BooleanVar(value=False)
     win.title("Settings")
     win.geometry(getattr(app, "scraper_settings_geometry", "560x960"))
     try:
@@ -96,31 +98,50 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Separator(form, orient="horizontal").grid(row=row_idx, column=0, columnspan=2, sticky="ew", pady=6)
     row_idx += 1
 
-    ttk.Label(form, text="Username").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(form, textvariable=app.cap_user, width=40).grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
+    advanced_toggle = ttk.Checkbutton(form, text="Show advanced scraper settings", variable=app.show_advanced_scraper)
+    advanced_toggle.grid(row=row_idx, column=0, columnspan=2, sticky="w", padx=6, pady=(6, 2))
     row_idx += 1
 
-    ttk.Label(form, text="Password").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(form, textvariable=app.cap_pass, show="*", width=40).grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
-    row_idx += 1
+    advanced_frame = ttk.Frame(form)
+    advanced_frame.grid(row=row_idx, column=0, columnspan=2, sticky="ew", padx=0, pady=(0, 6))
+    advanced_frame.columnconfigure(1, weight=1)
+    adv_row = 0
 
-    ttk.Label(form, text="Username selector").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    user_sel_entry = ttk.Entry(form, textvariable=app.cap_user_sel, width=40)
-    user_sel_entry.grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
-    row_idx += 1
+    ttk.Label(advanced_frame, text="Username").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(advanced_frame, textvariable=app.cap_user, width=40).grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    adv_row += 1
 
-    ttk.Label(form, text="Password selector").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    pass_sel_entry = ttk.Entry(form, textvariable=app.cap_pass_sel, width=40)
-    pass_sel_entry.grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
-    row_idx += 1
+    ttk.Label(advanced_frame, text="Password").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(advanced_frame, textvariable=app.cap_pass, show="*", width=40).grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    adv_row += 1
 
-    ttk.Label(form, text="Login button selector").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    btn_sel_entry = ttk.Entry(form, textvariable=app.cap_btn_sel, width=40)
-    btn_sel_entry.grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
-    row_idx += 1
+    ttk.Label(advanced_frame, text="Username selector").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    user_sel_entry = ttk.Entry(advanced_frame, textvariable=app.cap_user_sel, width=40)
+    user_sel_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    adv_row += 1
 
-    selector_hint = ttk.Label(form, text="", style="Hint.TLabel")
-    selector_hint.grid(row=row_idx, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 6))
+    ttk.Label(advanced_frame, text="Password selector").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    pass_sel_entry = ttk.Entry(advanced_frame, textvariable=app.cap_pass_sel, width=40)
+    pass_sel_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    adv_row += 1
+
+    ttk.Label(advanced_frame, text="Login button selector").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    btn_sel_entry = ttk.Entry(advanced_frame, textvariable=app.cap_btn_sel, width=40)
+    btn_sel_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    adv_row += 1
+
+    selector_hint = ttk.Label(advanced_frame, text="", style="Hint.TLabel")
+    selector_hint.grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 6))
+    adv_row += 1
+
+    def toggle_advanced():
+        if app.show_advanced_scraper.get():
+            advanced_frame.grid()
+        else:
+            advanced_frame.grid_remove()
+
+    toggle_advanced()
+    advanced_toggle.config(command=toggle_advanced)
     row_idx += 1
 
     ttk.Separator(form, orient="horizontal").grid(row=row_idx, column=0, columnspan=2, sticky="ew", pady=6)
@@ -362,3 +383,5 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Button(btn_row, text="Save", command=save_and_close).pack(side="right", padx=4)
     app._apply_theme_to_window(win)
     return win
+
+

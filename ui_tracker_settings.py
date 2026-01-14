@@ -153,6 +153,11 @@ def open_tracker_settings(app) -> None:
         row=sep_row + 3, column=2, sticky="w", padx=(4, 0)
     )
 
+    app.open_data_folder_btn = ttk.Button(frame, text="Open data folder", command=app._settings_open_data_folder)
+    app.open_data_folder_btn.grid(
+        row=sep_row + 4, column=1, columnspan=2, sticky="w", padx=(4, 0), pady=(6, 0)
+    )
+
     ttk.Separator(frame, orient="horizontal").grid(row=sep_row + 6, column=0, columnspan=4, sticky="ew", pady=(10, 6))
     ttk.Label(frame, text="Window settings", font=app.font_bold_small).grid(row=sep_row + 7, column=0, sticky="w", pady=(0, 6))
     app.minimize_var = tk.BooleanVar(value=app.minimize_to_tray)
@@ -209,6 +214,7 @@ def open_tracker_settings(app) -> None:
     app._bind_tooltip(app.daily_target_cbd_entry, "Daily CBD target in grams used to compute CBD remaining/used today.")
     app._bind_tooltip(lbl_data_file, "Location of your tracker data file.")
     app._bind_tooltip(lbl_library_file, "Location of your flower library data file.")
+    app._bind_tooltip(app.open_data_folder_btn, "Open the data folder in File Explorer.")
     app._bind_tooltip(app.scraper_status_icon_check, "Show the scraper status dot in the main window.")
     app._bind_tooltip(app.minimize_var_check, "Hide to system tray when minimizing if enabled.")
     app._bind_tooltip(app.close_var_check, "Hide to system tray when closing if enabled.")
