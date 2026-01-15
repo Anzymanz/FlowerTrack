@@ -84,6 +84,7 @@ class CannabisTracker:
         self.stock_sort_column = "grams"
         self.stock_sort_reverse = True
         self.text_color = "#111111"
+        self.muted_color = "#666666"
         self.accent_green = "#2ecc71"
         self.accent_red = "#e74c3c"
         self.stock_form_source: str | None = None
@@ -1440,6 +1441,14 @@ class CannabisTracker:
         stats = self._compute_stats(logs_subset)
         total_dose = sum(float(log.get("grams_used", 0.0)) for log in logs_subset)
         avg_daily = total_dose / max(days_count, 1)
+        if getattr(self, "track_cbd_usage", False):
+            thc_total = sum(
+                float(log.get("grams_used", 0.0))
+                for log in logs_subset
+                if not self._log_counts_for_cbd(log)
+            )
+        else:
+            thc_total = total_dose
         rows = [
             ("First dose", stats["first_time"]),
             ("Last dose", stats["last_time"]),
@@ -1449,7 +1458,8 @@ class CannabisTracker:
             ("Largest dose", stats["max_dose"]),
             ("Smallest dose", stats["min_dose"]),
             ("Average dose", stats["avg_dose"]),
-            ("Average daily usage", f"{avg_daily:.3f} g"),
+            ("Total THC usage", f"{thc_total:.3f} g"),
+            ("Average daily THC usage", f"{avg_daily:.3f} g"),
         ]
         if getattr(self, "track_cbd_usage", False):
             cbd_total = sum(
@@ -1460,8 +1470,8 @@ class CannabisTracker:
             cbd_avg_daily = cbd_total / max(days_count, 1)
             rows.extend(
                 [
-                    ("CBD total", f"{cbd_total:.3f} g"),
-                    ("CBD average daily", f"{cbd_avg_daily:.3f} g"),
+                    ("Total CBD usage", f"{cbd_total:.3f} g"),
+                    ("Average daily CBD usage", f"{cbd_avg_daily:.3f} g"),
                 ]
             )
         body = "\n".join(f"{k}: {v}" for k, v in rows)
