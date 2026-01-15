@@ -759,6 +759,8 @@ class CannabisTracker:
                 row_color = self._color_for_value(flower.grams_remaining, green_thr, red_thr)
             else:
                 row_color = self.text_color
+            if flower.grams_remaining <= 1e-6:
+                row_color = self.muted_color
             tag = f"stock_{flower.name}"
             self.stock_tree.tag_configure(tag, foreground=row_color)
             self.stock_tree.insert(
@@ -1218,6 +1220,7 @@ class CannabisTracker:
             except Exception:
                 pass
         self.text_color = text_color
+        self.muted_color = "#777777" if dark else "#666666"
         self.accent_green = "#2ecc71"
         self.accent_red = "#e74c3c"
         self.note_label.configure(foreground=colors["fg"], background=base)
