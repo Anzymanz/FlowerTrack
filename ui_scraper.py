@@ -68,6 +68,17 @@ from tray import create_tray_icon, stop_tray_icon, tray_supported, update_tray_i
 from logger import UILogger
 from notifications import NotificationService
 from theme import apply_style_theme, set_titlebar_dark, compute_colors
+
+# Scraper UI constants
+SCRAPER_TITLE = "Medicann Scraper"
+SCRAPER_PLACEHOLDER = (
+    "Go to script assist / Medicann and go to available products."
+    "\n"
+    "Select all the text on the page and copy / paste it here (or use Auto Capture below)."
+    "\n"
+    "Press Process (or start Auto Capture). Notifications will only send when there are new/removed items or price changes."
+)
+
 def _should_stop_on_empty(error_count: int, error_threshold: int) -> bool:
     return error_count >= error_threshold
 def _identity_key_cached(item: dict, cache: dict) -> str:
