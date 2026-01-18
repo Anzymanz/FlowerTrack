@@ -18,7 +18,6 @@ from capture import ensure_browser_available, install_playwright_browsers, start
 from exports import export_html_auto
 from export_server import start_export_server as srv_start_export_server, stop_export_server as srv_stop_export_server
 from ui_settings import open_settings_window
-from scraper_constants import SCRAPER_PLACEHOLDER, SCRAPER_TITLE
 from app_core import (  # shared globals/imports
     _log_debug,
     _seed_brand_db_if_needed,
@@ -284,17 +283,57 @@ class App(tk.Tk):
         self.cap_retry_attempts = tk.IntVar(value=int(cfg.get("retry_attempts", 3)))
         self.cap_retry_wait = tk.StringVar(value=str(cfg.get("retry_wait_seconds", cfg.get("post_nav_wait_seconds", 30))))
         self.cap_retry_backoff = tk.StringVar(value=str(cfg.get("retry_backoff_max", 4)))
+        self.cap_scroll_times = tk.StringVar(value=str(cfg.get("scroll_times", 0)))
+        self.cap_scroll_pause = tk.StringVar(value=str(cfg.get("scroll_pause_seconds", 0.5)))
         self.cap_user = tk.StringVar(value=decrypt_secret(cfg.get("username", "")))
         self.cap_pass = tk.StringVar(value=decrypt_secret(cfg.get("password", "")))
         self.cap_user_sel = tk.StringVar(value=cfg.get("username_selector", ""))
         self.cap_pass_sel = tk.StringVar(value=cfg.get("password_selector", ""))
         self.cap_btn_sel = tk.StringVar(value=cfg.get("login_button_selector", ""))
+        self.cap_org = tk.StringVar(value=cfg.get("organization", ""))
+        self.cap_org_sel = tk.StringVar(value=cfg.get("organization_selector", ""))
         self.cap_auto_notify_ha.set(bool(cfg.get("auto_notify_ha", False)))
         self.cap_ha_webhook.set(cfg.get("ha_webhook_url", ""))
         self.cap_ha_token.set(decrypt_secret(cfg.get("ha_token", "")))
         self.minimize_to_tray = tk.BooleanVar(value=False)
         self.close_to_tray = tk.BooleanVar(value=False)
     def _open_settings_window(self):
+        try:
+            cfg = load_capture_config(
+                Path(CONFIG_FILE),
+                ["username", "password", "ha_token"],
+                logger=None,
+            )
+            self.cap_url.set(cfg.get("url", ""))
+            self.cap_interval.set(str(cfg.get("interval_seconds", 60)))
+            self.cap_login_wait.set(str(cfg.get("login_wait_seconds", 3)))
+            self.cap_post_wait.set(str(cfg.get("post_nav_wait_seconds", 30)))
+            self.cap_retry_attempts.set(int(cfg.get("retry_attempts", 3)))
+            self.cap_retry_wait.set(str(cfg.get("retry_wait_seconds", cfg.get("post_nav_wait_seconds", 30))))
+            self.cap_retry_backoff.set(str(cfg.get("retry_backoff_max", 4)))
+            self.cap_scroll_times.set(str(cfg.get("scroll_times", 0)))
+            self.cap_scroll_pause.set(str(cfg.get("scroll_pause_seconds", 0.5)))
+            self.cap_user.set(cfg.get("username", ""))
+            self.cap_pass.set(cfg.get("password", ""))
+            self.cap_user_sel.set(cfg.get("username_selector", ""))
+            self.cap_pass_sel.set(cfg.get("password_selector", ""))
+            self.cap_btn_sel.set(cfg.get("login_button_selector", ""))
+            self.cap_org.set(cfg.get("organization", ""))
+            self.cap_org_sel.set(str(cfg.get("organization_selector", "")).strip())
+            self.cap_headless.set(bool(cfg.get("headless", True)))
+            self.cap_auto_notify_ha.set(bool(cfg.get("auto_notify_ha", False)))
+            self.cap_ha_webhook.set(cfg.get("ha_webhook_url", ""))
+            self.cap_ha_token.set(cfg.get("ha_token", ""))
+            self.notify_price_changes.set(bool(cfg.get("notify_price_changes", True)))
+            self.notify_stock_changes.set(bool(cfg.get("notify_stock_changes", True)))
+            self.notify_windows.set(bool(cfg.get("notify_windows", True)))
+            self.cap_quiet_hours_enabled.set(bool(cfg.get("quiet_hours_enabled", False)))
+            self.cap_quiet_start.set(cfg.get("quiet_hours_start", "22:00"))
+            self.cap_quiet_end.set(cfg.get("quiet_hours_end", "07:00"))
+            self.cap_quiet_interval.set(str(cfg.get("quiet_hours_interval_seconds", 3600)))
+            self.cap_notify_detail.set(cfg.get("notification_detail", "full"))
+        except Exception:
+            pass
         open_settings_window(self, self.assets_dir)
     def _require_playwright(self):
         if self._playwright_available is False:
@@ -402,11 +441,15 @@ class App(tk.Tk):
             "retry_attempts": int(self.cap_retry_attempts.get() or 0),
             "retry_wait_seconds": float(self.cap_retry_wait.get() or 0),
             "retry_backoff_max": float(self.cap_retry_backoff.get() or 0),
+            "scroll_times": int(float(self.cap_scroll_times.get() or 0)),
+            "scroll_pause_seconds": float(self.cap_scroll_pause.get() or 0),
             "username": self.cap_user.get(),
             "password": self.cap_pass.get(),
             "username_selector": self.cap_user_sel.get(),
             "password_selector": self.cap_pass_sel.get(),
             "login_button_selector": self.cap_btn_sel.get(),
+            "organization": self.cap_org.get(),
+            "organization_selector": self.cap_org_sel.get(),
             "headless": self.cap_headless.get(),
             "auto_notify_ha": self.cap_auto_notify_ha.get(),
             "ha_webhook_url": self.cap_ha_webhook.get(),
@@ -545,7 +588,32 @@ class App(tk.Tk):
             if not raw:
                 messagebox.showwarning("Manual Parser", "Copy and paste your request repeat page here.")
                 return
-            self._apply_captured_text(raw)
+            try:
+                self.text.delete("1.0", "end")
+                self.text.insert("1.0", raw)
+            except Exception:
+                pass
+            try:
+                items = parse_clinic_text(raw)
+            except Exception as exc:
+                messagebox.showerror("Manual Parser", f"Could not parse text:\n{exc}")
+                return
+            if not items:
+                messagebox.showwarning("Manual Parser", "No products parsed from the pasted text.")
+                return
+            self.data = list(items)
+            self.removed_data = []
+            try:
+                save_last_parse(LAST_PARSE_FILE, self.data)
+                self._update_last_scrape()
+                self._log_console(f"Manual parse: {len(self.data)} items.")
+            except Exception as exc:
+                self._capture_log(f"Manual parse save error: {exc}")
+            try:
+                self._generate_change_export(self._get_export_items())
+            except Exception as exc:
+                messagebox.showinfo("Exports", f"Unable to generate export: {exc}")
+                return
             self.open_latest_export()
         ttk.Button(btns, text="Parse and open browser", command=do_parse_export_open).pack(side="left")
         ttk.Button(btns, text="Close", command=on_close).pack(side="right")
@@ -694,6 +762,18 @@ class App(tk.Tk):
     def _attempt_login(self, page, cfg: dict, PlaywrightTimeoutError):
         self._capture_log("Attempting login...")
         try:
+            org_value = (cfg.get("organization") or "").strip()
+            if org_value and cfg.get("organization_selector"):
+                try:
+                    page.select_option(cfg["organization_selector"], label=org_value, timeout=5000)
+                    self._capture_log("Selected organization via select option.")
+                except Exception:
+                    try:
+                        page.click(cfg["organization_selector"], timeout=5000)
+                        page.click(f"text={org_value}")
+                        self._capture_log("Selected organization via dropdown.")
+                    except Exception:
+                        self._capture_log("Organization selector not found.")
             if cfg.get("username") and cfg.get("username_selector"):
                 page.fill(cfg["username_selector"], cfg["username"], timeout=5000)
             if cfg.get("password") and cfg.get("password_selector"):
@@ -791,11 +871,15 @@ class App(tk.Tk):
         self.cap_retry_attempts.set(int(cfg.get("retry_attempts", 3)))
         self.cap_retry_wait.set(str(cfg.get("retry_wait_seconds", cfg.get("post_nav_wait_seconds", 30))))
         self.cap_retry_backoff.set(str(cfg.get("retry_backoff_max", 4)))
+        self.cap_scroll_times.set(str(cfg.get("scroll_times", 0)))
+        self.cap_scroll_pause.set(str(cfg.get("scroll_pause_seconds", 0.5)))
         self.cap_user.set(decrypt_secret(cfg.get("username", "")))
         self.cap_pass.set(decrypt_secret(cfg.get("password", "")))
         self.cap_user_sel.set(cfg.get("username_selector", ""))
         self.cap_pass_sel.set(cfg.get("password_selector", ""))
         self.cap_btn_sel.set(cfg.get("login_button_selector", ""))
+        self.cap_org.set(cfg.get("organization", ""))
+        self.cap_org_sel.set(cfg.get("organization_selector", ""))
         self.cap_headless.set(bool(cfg.get("headless", True)))
         self.cap_auto_notify_ha.set(bool(cfg.get("auto_notify_ha", False)))
         self.cap_ha_webhook.set(cfg.get("ha_webhook_url", ""))
@@ -830,11 +914,15 @@ class App(tk.Tk):
             "retry_attempts": int(self.cap_retry_attempts.get() or 0),
             "retry_wait_seconds": float(self.cap_retry_wait.get() or 0),
             "retry_backoff_max": float(self.cap_retry_backoff.get() or 0),
+            "scroll_times": int(float(self.cap_scroll_times.get() or 0)),
+            "scroll_pause_seconds": float(self.cap_scroll_pause.get() or 0),
             "username": self.cap_user.get(),
             "password": self.cap_pass.get(),
             "username_selector": self.cap_user_sel.get(),
             "password_selector": self.cap_pass_sel.get(),
             "login_button_selector": self.cap_btn_sel.get(),
+            "organization": self.cap_org.get(),
+            "organization_selector": self.cap_org_sel.get(),
             "headless": self.cap_headless.get(),
             "auto_notify_ha": self.cap_auto_notify_ha.get(),
             "ha_webhook_url": self.cap_ha_webhook.get(),
@@ -869,11 +957,15 @@ class App(tk.Tk):
             "retry_attempts": int(self.cap_retry_attempts.get() or 0),
             "retry_wait_seconds": float(self.cap_retry_wait.get() or 0),
             "retry_backoff_max": float(self.cap_retry_backoff.get() or 0),
+            "scroll_times": int(float(self.cap_scroll_times.get() or 0)),
+            "scroll_pause_seconds": float(self.cap_scroll_pause.get() or 0),
             "username": self.cap_user.get(),
             "password": self.cap_pass.get(),
             "username_selector": self.cap_user_sel.get(),
             "password_selector": self.cap_pass_sel.get(),
             "login_button_selector": self.cap_btn_sel.get(),
+            "organization": self.cap_org.get(),
+            "organization_selector": self.cap_org_sel.get(),
             "headless": self.cap_headless.get(),
             "auto_notify_ha": self.cap_auto_notify_ha.get(),
             "ha_webhook_url": self.cap_ha_webhook.get(),

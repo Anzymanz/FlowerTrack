@@ -127,9 +127,11 @@ def export_html(data, path, fetch_images=False):
     out_path = Path(path)
     cards: list[str] = []
 
-    def get_badge_src(strain_type: str | None) -> str | None:
+    def get_badge_src(strain_type: str | None, product_type: str | None) -> str | None:
         """Return a data URI for the strain badge image if available."""
         if not strain_type:
+            return None
+        if product_type and product_type.lower() in {"vape", "oil", "device"}:
             return None
         return _load_asset(f"{strain_type.title()}.png")
 
@@ -199,6 +201,11 @@ def export_html(data, path, fetch_images=False):
             qty = f"{it['grams']}g"
         elif it.get("ml") is not None:
             qty = f"{it['ml']}ml"
+
+        type_icon_dark = get_type_icon(it.get("product_type"), "dark")
+        type_icon_light = get_type_icon(it.get("product_type"), "light")
+        strain_badge_src = get_badge_src(it.get("strain_type"), it.get("product_type"))
+        has_type_icon = bool(type_icon_dark or type_icon_light)
 
         thc_raw = it.get("thc")
         thc_unit = it.get("thc_unit")
@@ -279,6 +286,8 @@ def export_html(data, path, fetch_images=False):
         )
         heading_html = f"{stock_indicator}{esc(heading)}"
         card_classes = "card card-removed" if it.get("is_removed") else ("card card-new" if it.get("is_new") else "card")
+        if has_type_icon:
+            card_classes += " has-type-icon"
         cards.append(
             f"""
     <div class='{card_classes}{price_border_class}' style='position:relative;'
@@ -297,9 +306,9 @@ def export_html(data, path, fetch_images=False):
       data-smalls='{1 if it.get("is_smalls") else 0}'
       data-removed='{1 if it.get("is_removed") else 0}'>
     <button class='fav-btn' onclick='toggleFavorite(this)' title='Favorite this item'>★</button>
-    {("<img class='type-badge' data-theme-icon='dark' src='" + esc_attr(get_type_icon(it.get('product_type'), 'dark')) + "' alt='" + esc_attr(it.get('product_type') or '') + "' />") if get_type_icon(it.get('product_type'), 'dark') else ""}
-    {("<img class='type-badge' data-theme-icon='light' src='" + esc_attr(get_type_icon(it.get('product_type'), 'light')) + "' alt='" + esc_attr(it.get('product_type') or '') + "' style='display:none;' />") if get_type_icon(it.get('product_type'), 'light') else ""}
-    {("<img class='strain-badge' src='" + esc_attr(get_badge_src(it.get('strain_type'))) + "' alt='" + esc_attr(it.get('strain_type') or '') + "' />") if get_badge_src(it.get("strain_type")) else ""}
+    {("<img class='type-badge' data-theme-icon='dark' src='" + esc_attr(type_icon_dark) + "' alt='" + esc_attr(it.get('product_type') or '') + "' />") if type_icon_dark else ""}
+    {("<img class='type-badge' data-theme-icon='light' src='" + esc_attr(type_icon_light) + "' alt='" + esc_attr(it.get('product_type') or '') + "' style='display:none;' />") if type_icon_light else ""}
+    {("<img class='strain-badge' src='" + esc_attr(strain_badge_src) + "' alt='" + esc_attr(it.get('strain_type') or '') + "' />") if strain_badge_src else ""}
     {("<span class='badge-new'>New</span>") if it.get("is_new") else ("<span class='badge-removed'>Removed</span>" if it.get("is_removed") else "")}
     <div style='display:flex;flex-direction:column;align-items:flex-start;gap:4px;'>
       {price_badge}

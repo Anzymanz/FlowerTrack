@@ -12,3 +12,6 @@ FlowerTrack - Shortcut.lnk
 .env
 TODO.md
 build_helper.ps1
+build_tmp/
+release_notes_v0.14.md
+tmp_export.html

@@ -21,6 +21,8 @@ DEFAULT_CAPTURE_CONFIG = {
     "username_selector": "",
     "password_selector": "",
     "login_button_selector": "",
+    "organization": "",
+    "organization_selector": "label:has-text(\"Organization\") + *",
     "window_geometry": "900x720",
     "settings_geometry": "560x960",
     "manual_parse_geometry": "720x520",
@@ -30,6 +32,8 @@ DEFAULT_CAPTURE_CONFIG = {
     "retry_attempts": 3,
     "retry_wait_seconds": 30.0,
     "retry_backoff_max": 4.0,
+    "scroll_times": 0,
+    "scroll_pause_seconds": 0.5,
     "timeout_ms": 45000,
     "headless": True,
     "auto_notify_ha": False,
@@ -222,6 +226,10 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["username_selector"] = str(raw.get("username_selector") or "")
     cfg["password_selector"] = str(raw.get("password_selector") or "")
     cfg["login_button_selector"] = str(raw.get("login_button_selector") or "")
+    cfg["organization"] = str(raw.get("organization") or "")
+    cfg["organization_selector"] = str(raw.get("organization_selector") or "").strip()
+    cfg["scroll_times"] = int(_coerce_float(raw.get("scroll_times"), DEFAULT_CAPTURE_CONFIG["scroll_times"], 0))
+    cfg["scroll_pause_seconds"] = _coerce_float(raw.get("scroll_pause_seconds"), DEFAULT_CAPTURE_CONFIG["scroll_pause_seconds"], 0.0)
     cfg["window_geometry"] = str(raw.get("window_geometry") or DEFAULT_CAPTURE_CONFIG["window_geometry"]).strip() or DEFAULT_CAPTURE_CONFIG["window_geometry"]
     cfg["settings_geometry"] = str(raw.get("settings_geometry") or DEFAULT_CAPTURE_CONFIG["settings_geometry"]).strip() or DEFAULT_CAPTURE_CONFIG["settings_geometry"]
     cfg["manual_parse_geometry"] = str(raw.get("manual_parse_geometry") or DEFAULT_CAPTURE_CONFIG["manual_parse_geometry"]).strip() or DEFAULT_CAPTURE_CONFIG["manual_parse_geometry"]

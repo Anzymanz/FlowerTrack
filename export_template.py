@@ -99,6 +99,7 @@ button:hover{background:var(--hover)}
 .stock-out{background:#e74c3c}
 .stock-not-prescribable{background:#999}
 .strain-badge{position:absolute;top:40px;right:8px;width:40px;height:40px;object-fit:contain;opacity:0.9}
+.card.has-type-icon .strain-badge{right:52px}
 .fav-btn{position:absolute;bottom:10px;right:10px;border:none;background:transparent;color:var(--muted);font-size:30px;cursor:pointer;line-height:1}
 .fav-btn.fav-on{color:var(--accent)}
 .fav-btn:hover{background:transparent;color:inherit}

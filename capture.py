@@ -207,6 +207,33 @@ class CaptureWorker:
                                 # Short wait for form to render
                                 time.sleep(3)
 
+                                org_value = (self.cfg.get("organization") or "").strip()
+                                if org_value:
+                                    org_sels = [
+                                        self.cfg.get("organization_selector") or "",
+                                        'select[name="organization"]',
+                                        'select#organization',
+                                        'input[data-path="organization"]',
+                                        'input[placeholder="Organization"]',
+                                        '[data-path="organization"]',
+                                    ]
+                                    org_union = ",".join([s for s in org_sels if s])
+                                    if org_union:
+                                        try:
+                                            page.select_option(org_union, label=org_value)
+                                            self.callbacks["capture_log"]("Selected organization via select option.")
+                                        except Exception:
+                                            try:
+                                                loc = page.wait_for_selector(org_union, timeout=5000)
+                                                loc.click()
+                                                try:
+                                                    page.click(f"text={org_value}")
+                                                except Exception:
+                                                    page.keyboard.type(org_value)
+                                                    page.keyboard.press("Enter")
+                                                self.callbacks["capture_log"]("Selected organization via dropdown.")
+                                            except Exception:
+                                                self.callbacks["capture_log"]("Organization selector not found.")
                                 if self.cfg.get("username") and user_union:
                                     try:
                                         loc = page.wait_for_selector(user_union, timeout=10000)
@@ -254,6 +281,32 @@ class CaptureWorker:
                             self.callbacks["capture_log"](f"Waiting {wait_post}s after navigation")
                             if self.callbacks["responsive_wait"](wait_post, label="Waiting after navigation"):
                                 break
+                        scroll_times = int(self.cfg.get("scroll_times", 0) or 0)
+                        scroll_pause = float(self.cfg.get("scroll_pause_seconds", 0) or 0)
+                        if scroll_times > 0:
+                            self.callbacks["capture_log"](f"Scrolling {scroll_times}x for lazy-loaded products.")
+                            try:
+                                page.wait_for_timeout(500)
+                            except Exception:
+                                time.sleep(0.5)
+                            for idx in range(scroll_times):
+                                if self.callbacks["stop_event"].is_set():
+                                    break
+                                try:
+                                    page.evaluate("() => window.scrollTo(0, document.body.scrollHeight)")
+                                except Exception:
+                                    try:
+                                        page.keyboard.press("PageDown")
+                                    except Exception:
+                                        pass
+                                try:
+                                    page.wait_for_timeout(int(max(0.1, scroll_pause) * 1000))
+                                except Exception:
+                                    time.sleep(max(0.1, scroll_pause))
+                            try:
+                                page.evaluate("() => window.scrollTo(0, 0)")
+                            except Exception:
+                                pass
                         def collect_once(refresh: bool) -> bool:
                             if refresh:
                                 try:

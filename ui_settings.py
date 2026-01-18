@@ -83,6 +83,14 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Entry(form, textvariable=app.cap_post_wait, width=10).grid(row=row_idx, column=1, sticky="w", padx=6, pady=2)
     row_idx += 1
 
+    ttk.Label(form, text="Scroll passes after navigation").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(form, textvariable=app.cap_scroll_times, width=10).grid(row=row_idx, column=1, sticky="w", padx=6, pady=2)
+    row_idx += 1
+
+    ttk.Label(form, text="Scroll pause (s)").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(form, textvariable=app.cap_scroll_pause, width=10).grid(row=row_idx, column=1, sticky="w", padx=6, pady=2)
+    row_idx += 1
+
     ttk.Label(form, text="Capture retries on failure").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
     ttk.Entry(form, textvariable=app.cap_retry_attempts, width=10).grid(row=row_idx, column=1, sticky="w", padx=6, pady=2)
     row_idx += 1
@@ -113,6 +121,17 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
 
     ttk.Label(advanced_frame, text="Password").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     ttk.Entry(advanced_frame, textvariable=app.cap_pass, show="*", width=40).grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    adv_row += 1
+
+    ttk.Label(advanced_frame, text="Organization").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    org_values = ["", "Medicann Isle of Mann", "Medicann Guernsey", "Medicann Jersey", "Medicann UK"]
+    org_combo = ttk.Combobox(advanced_frame, textvariable=app.cap_org, values=org_values, state="readonly", width=38)
+    org_combo.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    adv_row += 1
+
+    ttk.Label(advanced_frame, text="Organization selector").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    org_sel_entry = ttk.Entry(advanced_frame, textvariable=app.cap_org_sel, width=40)
+    org_sel_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Username selector").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
@@ -161,7 +180,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         else:
             selector_hint.config(text="")
 
-    for entry in (url_entry, user_sel_entry, pass_sel_entry, btn_sel_entry):
+    for entry in (url_entry, user_sel_entry, pass_sel_entry, btn_sel_entry, org_sel_entry):
         entry.bind("<FocusOut>", update_scraper_hints)
         entry.bind("<KeyRelease>", update_scraper_hints)
     update_scraper_hints()

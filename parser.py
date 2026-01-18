@@ -224,6 +224,9 @@ def parse_clinic_text(text: str) -> list[ItemDict]:
     """Parse the copied Medicann page text into structured items."""
     items: list[dict] = []
     lines = [l.strip() for l in text.splitlines() if l.strip()]
+    def _normalize_header_line(value: str) -> str:
+        return re.sub(r"\s+", " ", value or "").strip().lower()
+
     pending_stock = None
     product_keywords = (
         "CANNABIS FLOWER",
@@ -246,7 +249,17 @@ def parse_clinic_text(text: str) -> list[ItemDict]:
             product_id = (m.group("product_id").strip() if m and m.group("product_id") else None)
             producer = header
             is_smalls = bool(re.search(r"\b(SMALLS?|SMLS?|SML|SMALL BUDS?|BUDS?)\b", line, re.I))
+            grams_hint = None
+            if product_id:
+                gm_pid = re.search(r"(\d+(?:\.\d+)?)\s*(?:g|grams?)\b", product_id, re.I)
+                if gm_pid:
+                    grams_hint = float(gm_pid.group(1))
+            gm_head = re.search(r"(\d+(?:\.\d+)?)\s*(?:g|grams?)\b", line, re.I)
+            if grams_hint is None and gm_head:
+                grams_hint = float(gm_head.group(1))
             if product_id and re.search(r"\b(SMALLS?|SMLS?|SML|BUDS?)\b", product_id, re.I):
+                product_id = None
+            if product_id and re.search(r"\b(THC|CBD)\b", product_id, re.I):
                 product_id = None
             ut = line.upper()
             if "OIL" in ut:
@@ -262,13 +275,22 @@ def parse_clinic_text(text: str) -> list[ItemDict]:
             stock = pending_stock
             next_pending_stock = None
             grams = ml = price = None
+            if grams_hint is not None:
+                grams = grams_hint
             thc = cbd = None
             thc_unit = cbd_unit = None
+            price_found = False
+            price_index = None
             stop_index = None
             smalls_flag = is_smalls
+            last_index = i
             for j in range(i + 1, min(i + 12, len(lines))):
+                last_index = j
                 l = lines[j]
                 if any(k in l.upper() for k in product_keywords):
+                    if _normalize_header_line(l) == _normalize_header_line(line):
+                        continue
+                    stop_index = j - 1
                     break
                 if any(sk in l.upper() for sk in stock_keywords):
                     next_pending_stock = l.strip()
@@ -277,28 +299,51 @@ def parse_clinic_text(text: str) -> list[ItemDict]:
                 if re.search(r"\b(SMALLS?|SMLS?|SML)\b", l, re.I):
                     smalls_flag = True
                 if "|" in l and strain is None:
-                    left, right = [p.strip() for p in l.split("|", 1)]
-                    if not re.search(r"\b(IN STOCK|LOW STOCK|OUT OF STOCK|NOT PRESCRIBABLE|FORMULATION ONLY)\b", left, re.I):
-                        strain = left
-                        st_meta = right.lower()
-                        if "hybrid" in st_meta:
-                            strain_type = "Hybrid"
-                        elif "indica" in st_meta:
-                            strain_type = "Indica"
-                        elif "sativa" in st_meta:
-                            strain_type = "Sativa"
-                        else:
-                            whole = l.lower()
-                            if "hybrid" in whole:
-                                strain_type = "Hybrid"
-                            elif "indica" in whole:
-                                strain_type = "Indica"
-                            elif "sativa" in whole:
-                                strain_type = "Sativa"
+                    if re.search(r"\bTHC\b", l, re.I) and re.search(r"\bCBD\b", l, re.I):
+                        pass
+                    else:
+                        left, right = [p.strip() for p in l.split("|", 1)]
+                        if not re.search(r"\b(IN STOCK|LOW STOCK|OUT OF STOCK|NOT PRESCRIBABLE|FORMULATION ONLY)\b", left, re.I):
+                            left_lower = left.lower()
+                            right_lower = right.lower()
+                            type_tokens = {"hybrid", "indica", "sativa"}
+                            if left_lower in type_tokens:
+                                strain_type = left.title()
+                                strain = right
                             else:
-                                strain_type = None
+                                strain = left
+                                if "hybrid" in right_lower:
+                                    strain_type = "Hybrid"
+                                elif "indica" in right_lower:
+                                    strain_type = "Indica"
+                                elif "sativa" in right_lower:
+                                    strain_type = "Sativa"
+                                else:
+                                    whole = l.lower()
+                                    if "hybrid" in whole:
+                                        strain_type = "Hybrid"
+                                    elif "indica" in whole:
+                                        strain_type = "Indica"
+                                    elif "sativa" in whole:
+                                        strain_type = "Sativa"
+                                    else:
+                                        strain_type = None
+                elif strain_type is None and re.match(r"^(Hybrid|Indica|Sativa)\b", l, re.I):
+                    strain_type = l.strip().title()
                 num = r"(\d+(?:\.\d+)?|\.\d+)"
                 gm = re.search(rf"{num}\s*(?:g|grams?)\b", l, re.I)
+                if gm is None:
+                    gm = re.search(rf"{num}\s*(?:g|grams?)\b", line, re.I)
+                if gm is None:
+                    gm = re.search(rf"{num}\s*(?:g|grams?)\b", header, re.I)
+                if gm is None:
+                    gm = re.search(rf"{num}\s*(?:g|grams?)\b", product_id or "", re.I)
+                if gm is None:
+                    gm = re.search(rf"\bT\s*{num}\b", line, re.I)
+                if gm is None:
+                    gm = re.search(rf"\bT\s*{num}\b", header, re.I)
+                if gm is None:
+                    gm = re.search(rf"\bT\s*{num}\b", product_id or "", re.I)
                 mlm = re.search(rf"{num}\s*(?:ml|mL)\b", l, re.I)
                 if gm and grams is None:
                     try:
@@ -310,19 +355,27 @@ def parse_clinic_text(text: str) -> list[ItemDict]:
                         ml = float(mlm.group(1))
                     except Exception:
                         ml = None
-                pm = re.search(rf"(?:£|\$|€|GBP|USD|EUR|PRICE\s*:?)\s*{num}", l, re.I)
+                pm = re.search(r"(\d+(?:[.,]\d+)?)", l)
                 if pm and price is None:
-                    try:
-                        price = float(pm.group(1))
-                    except Exception:
-                        price = None
-                tm = re.search(rf"THC:\s*{num}\s*([a-z/%]+)", l, re.I)
+                    has_currency = bool(re.search(r"[£$€Ł]|GBP|USD|EUR|PLN|ZŁ|ZL", l, re.I)) or ("ś" in l)
+                    has_decimal = bool(re.search(r"\d+[.,]\d{2}", l))
+                    if has_currency or (has_decimal and len(l.strip()) <= 12):
+                        try:
+                            price = float(pm.group(1).replace(",", "."))
+                        except Exception:
+                            price = None
+                        if price is not None:
+                            price_found = True
+                            price_index = j
+                tm = re.search(rf"THC\s*<?\s*{num}\s*([a-z/%]+)?", l, re.I)
                 if tm and thc is None:
                     try:
                         thc = float(tm.group(1))
                     except Exception:
                         thc = None
-                    u = tm.group(2).strip().lower().replace(" ", "")
+                    u = (tm.group(2) or "").strip().lower().replace(" ", "")
+                    if not u and "%" in l[tm.start(): tm.end() + 8]:
+                        u = "%"
                     if "mg/ml" in u or "/ml" in u:
                         thc_unit = "mg/ml"
                     elif "mg/g" in u or "/g" in u:
@@ -330,14 +383,16 @@ def parse_clinic_text(text: str) -> list[ItemDict]:
                     elif "%" in u:
                         thc_unit = "%"
                     else:
-                        thc_unit = u
-                cm = re.search(rf"CBD:\s*{num}\s*([a-z/%]+)", l, re.I)
+                        thc_unit = u or None
+                cm = re.search(rf"CBD\s*<?\s*{num}\s*([a-z/%]+)?", l, re.I)
                 if cm and cbd is None:
                     try:
                         cbd = float(cm.group(1))
                     except Exception:
                         cbd = None
-                    u2 = cm.group(2).strip().lower().replace(" ", "")
+                    u2 = (cm.group(2) or "").strip().lower().replace(" ", "")
+                    if not u2 and "%" in l[cm.start(): cm.end() + 8]:
+                        u2 = "%"
                     if "mg/ml" in u2 or "/ml" in u2:
                         cbd_unit = "mg/ml"
                     elif "mg/g" in u2 or "/g" in u2:
@@ -345,7 +400,21 @@ def parse_clinic_text(text: str) -> list[ItemDict]:
                     elif "%" in u2:
                         cbd_unit = "%"
                     else:
-                        cbd_unit = u2
+                        cbd_unit = u2 or None
+                if price_found and price_index is not None:
+                    if strain_type is not None or (j - price_index) >= 2:
+                        stop_index = j
+                        break
+            if strain_type is None and product_type == "flower":
+                hay = " ".join([str(v) for v in (strain, header, product_id, line) if v])
+                if re.search(r"hybrid", hay, re.I):
+                    strain_type = "Hybrid"
+                elif re.search(r"indica", hay, re.I):
+                    strain_type = "Indica"
+                elif re.search(r"sativa", hay, re.I):
+                    strain_type = "Sativa"
+            if grams is None and product_type == "flower":
+                grams = 10.0
             items.append(
                 {
                     "product_id": product_id,
@@ -367,6 +436,8 @@ def parse_clinic_text(text: str) -> list[ItemDict]:
             )
             if stop_index is not None:
                 i = stop_index
+            else:
+                i = max(i, last_index)
             pending_stock = next_pending_stock
 
             def _clean_name(s):
@@ -395,7 +466,7 @@ def parse_clinic_text(text: str) -> list[ItemDict]:
             cleaned_pid = _clean_name(raw_product_id)
             if cleaned_pid and re.search(r"\b(SMALLS?|SMLS?|SML|BUDS?)\b", cleaned_pid, re.I):
                 cleaned_pid = None
-            items[-1]["product_id"] = cleaned_pid
+            items[-1]["product_id"] = cleaned_pid or None
             inferred = infer_brand(raw_producer, raw_product_id, raw_strain, line)
             items[-1]["brand"] = format_brand(inferred or items[-1].get("brand"))
         i += 1
