@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed strain-type parsing when lines precede product headers.
+- Added capture dump toggle and log output for debugging auto-capture text.
 - Added organization selection in scraper login (with default selector) and settings UI.
 - Added scroll-after-navigation passes for lazy-loaded products.
 - Improved parser block termination and strain type fallback to restore missing icons.

@@ -317,10 +317,32 @@ class CaptureWorker:
                                 except Exception as exc:
                                     self.callbacks["capture_log"](f"Refresh error; using current content. ({exc})")
                             self.callbacks["capture_log"]("Page ready; collecting text.")
-                            text = page.locator("body").inner_text()
+                            body = page.locator("body")
+                            text = None
+                            try:
+                                text = body.inner_text()
+                            except Exception:
+                                text = None
+                            if not text or len(text.strip()) < 500:
+                                try:
+                                    alt = page.evaluate("() => document.body.innerText")
+                                except Exception:
+                                    alt = None
+                                if alt and len(alt.strip()) > len(text or ""):
+                                    text = alt
                             if not text.strip():
                                 return False
                             self.empty_failures = 0
+                            if self.cfg.get("dump_capture_text"):
+                                try:
+                                    dump_dir = Path(self.app_dir) / "data"
+                                    dump_dir.mkdir(parents=True, exist_ok=True)
+                                    stamp = time.strftime("%Y%m%d_%H%M%S")
+                                    dump_path = dump_dir / f"capture_dump_{stamp}.txt"
+                                    dump_path.write_text(text, encoding="utf-8")
+                                    self.callbacks["capture_log"](f"Saved capture dump: {dump_path}")
+                                except Exception as exc:
+                                    self.callbacks["capture_log"](f"Capture dump failed: {exc}")
                             self.callbacks["apply_text"](text)
                             return True
 

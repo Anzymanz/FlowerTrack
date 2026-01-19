@@ -285,6 +285,7 @@ class App(tk.Tk):
         self.cap_retry_backoff = tk.StringVar(value=str(cfg.get("retry_backoff_max", 4)))
         self.cap_scroll_times = tk.StringVar(value=str(cfg.get("scroll_times", 0)))
         self.cap_scroll_pause = tk.StringVar(value=str(cfg.get("scroll_pause_seconds", 0.5)))
+        self.cap_dump_capture = tk.BooleanVar(value=bool(cfg.get("dump_capture_text", False)))
         self.cap_user = tk.StringVar(value=decrypt_secret(cfg.get("username", "")))
         self.cap_pass = tk.StringVar(value=decrypt_secret(cfg.get("password", "")))
         self.cap_user_sel = tk.StringVar(value=cfg.get("username_selector", ""))
@@ -313,6 +314,7 @@ class App(tk.Tk):
             self.cap_retry_backoff.set(str(cfg.get("retry_backoff_max", 4)))
             self.cap_scroll_times.set(str(cfg.get("scroll_times", 0)))
             self.cap_scroll_pause.set(str(cfg.get("scroll_pause_seconds", 0.5)))
+            self.cap_dump_capture.set(bool(cfg.get("dump_capture_text", False)))
             self.cap_user.set(cfg.get("username", ""))
             self.cap_pass.set(cfg.get("password", ""))
             self.cap_user_sel.set(cfg.get("username_selector", ""))
@@ -443,6 +445,7 @@ class App(tk.Tk):
             "retry_backoff_max": float(self.cap_retry_backoff.get() or 0),
             "scroll_times": int(float(self.cap_scroll_times.get() or 0)),
             "scroll_pause_seconds": float(self.cap_scroll_pause.get() or 0),
+            "dump_capture_text": bool(self.cap_dump_capture.get()),
             "username": self.cap_user.get(),
             "password": self.cap_pass.get(),
             "username_selector": self.cap_user_sel.get(),
@@ -873,6 +876,7 @@ class App(tk.Tk):
         self.cap_retry_backoff.set(str(cfg.get("retry_backoff_max", 4)))
         self.cap_scroll_times.set(str(cfg.get("scroll_times", 0)))
         self.cap_scroll_pause.set(str(cfg.get("scroll_pause_seconds", 0.5)))
+        self.cap_dump_capture.set(bool(cfg.get("dump_capture_text", False)))
         self.cap_user.set(decrypt_secret(cfg.get("username", "")))
         self.cap_pass.set(decrypt_secret(cfg.get("password", "")))
         self.cap_user_sel.set(cfg.get("username_selector", ""))
@@ -916,6 +920,7 @@ class App(tk.Tk):
             "retry_backoff_max": float(self.cap_retry_backoff.get() or 0),
             "scroll_times": int(float(self.cap_scroll_times.get() or 0)),
             "scroll_pause_seconds": float(self.cap_scroll_pause.get() or 0),
+            "dump_capture_text": bool(self.cap_dump_capture.get()),
             "username": self.cap_user.get(),
             "password": self.cap_pass.get(),
             "username_selector": self.cap_user_sel.get(),
@@ -959,6 +964,7 @@ class App(tk.Tk):
             "retry_backoff_max": float(self.cap_retry_backoff.get() or 0),
             "scroll_times": int(float(self.cap_scroll_times.get() or 0)),
             "scroll_pause_seconds": float(self.cap_scroll_pause.get() or 0),
+            "dump_capture_text": bool(self.cap_dump_capture.get()),
             "username": self.cap_user.get(),
             "password": self.cap_pass.get(),
             "username_selector": self.cap_user_sel.get(),

@@ -192,6 +192,8 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Checkbutton(notify_frame, text="Send Windows desktop notifications", variable=app.notify_windows).pack(anchor="w", pady=2)
     ttk.Checkbutton(notify_frame, text="Send Home Assistant notifications", variable=app.cap_auto_notify_ha).pack(anchor="w", pady=2)
 
+    ttk.Checkbutton(notify_frame, text="Dump captured text to file", variable=app.cap_dump_capture).pack(anchor="w", pady=2)
+
     quiet_frame = ttk.Frame(notify_frame)
     quiet_frame.pack(fill="x", pady=(6, 2))
     ttk.Checkbutton(quiet_frame, text="Quiet hours", variable=app.cap_quiet_hours_enabled).pack(side="left")

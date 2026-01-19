@@ -228,6 +228,9 @@ def parse_clinic_text(text: str) -> list[ItemDict]:
         return re.sub(r"\s+", " ", value or "").strip().lower()
 
     pending_stock = None
+    pending_strain_type = None
+    pending_strain = None
+    pending_strain_idx = None
     product_keywords = (
         "CANNABIS FLOWER",
         "CANNABIS OIL",
@@ -239,10 +242,32 @@ def parse_clinic_text(text: str) -> list[ItemDict]:
     i = 0
     while i < len(lines):
         line = lines[i]
-        if any(sk in line.upper() for sk in stock_keywords) and not any(k in line.upper() for k in product_keywords):
-            pending_stock = line.strip()
+        strain_line = None
+        if not any(k in line.upper() for k in product_keywords):
+            if re.match(r"^(Hybrid|Indica|Sativa)\b", line, re.I):
+                strain_line = line
+        if strain_line and ("|" in strain_line):
+            left, right = [p.strip() for p in strain_line.split("|", 1)]
+            pending_strain_type = left.title()
+            pending_strain = right
+            pending_strain_idx = i
             i += 1
             continue
+        elif strain_line:
+            pending_strain_type = strain_line.strip().title()
+            pending_strain = None
+            pending_strain_idx = i
+            i += 1
+            continue
+        if (
+            any(sk in line.upper() for sk in stock_keywords)
+            and not any(k in line.upper() for k in product_keywords)
+            and not re.match(r"^(Hybrid|Indica|Sativa)\b", line, re.I)
+        ):
+            if "|" not in line:
+                pending_stock = line.strip()
+                i += 1
+                continue
         if any(k in line.upper() for k in product_keywords):
             m = re.match(r"^(?P<header>[^\(]+)\s*(?:\((?P<product_id>[^)]+)\))?\s*(?P<producer>.*)?$", line)
             header = m.group("header").strip() if m and m.group("header") else line
@@ -272,6 +297,12 @@ def parse_clinic_text(text: str) -> list[ItemDict]:
                 product_type = "flower"
             strain = None
             strain_type = None
+            if pending_strain_idx is not None and (i - pending_strain_idx) <= 2:
+                if pending_strain_type and strain_type is None:
+                    strain_type = pending_strain_type
+                if pending_strain and strain is None:
+                    strain = pending_strain
+
             stock = pending_stock
             next_pending_stock = None
             grams = ml = price = None
@@ -279,8 +310,6 @@ def parse_clinic_text(text: str) -> list[ItemDict]:
                 grams = grams_hint
             thc = cbd = None
             thc_unit = cbd_unit = None
-            price_found = False
-            price_index = None
             stop_index = None
             smalls_flag = is_smalls
             last_index = i
@@ -292,10 +321,14 @@ def parse_clinic_text(text: str) -> list[ItemDict]:
                         continue
                     stop_index = j - 1
                     break
-                if any(sk in l.upper() for sk in stock_keywords):
-                    next_pending_stock = l.strip()
-                    stop_index = j
-                    break
+                if (
+                    any(sk in l.upper() for sk in stock_keywords)
+                    and not re.match(r"^(Hybrid|Indica|Sativa)\b", l, re.I)
+                ):
+                    if "|" not in l:
+                        next_pending_stock = l.strip()
+                        stop_index = j
+                        break
                 if re.search(r"\b(SMALLS?|SMLS?|SML)\b", l, re.I):
                     smalls_flag = True
                 if "|" in l and strain is None:
@@ -365,8 +398,8 @@ def parse_clinic_text(text: str) -> list[ItemDict]:
                         except Exception:
                             price = None
                         if price is not None:
-                            price_found = True
-                            price_index = j
+                            stop_index = j
+                            break
                 tm = re.search(rf"THC\s*<?\s*{num}\s*([a-z/%]+)?", l, re.I)
                 if tm and thc is None:
                     try:
@@ -401,17 +434,13 @@ def parse_clinic_text(text: str) -> list[ItemDict]:
                         cbd_unit = "%"
                     else:
                         cbd_unit = u2 or None
-                if price_found and price_index is not None:
-                    if strain_type is not None or (j - price_index) >= 2:
-                        stop_index = j
-                        break
             if strain_type is None and product_type == "flower":
                 hay = " ".join([str(v) for v in (strain, header, product_id, line) if v])
-                if re.search(r"hybrid", hay, re.I):
+                if re.search(r"\bhybrid\b", hay, re.I):
                     strain_type = "Hybrid"
-                elif re.search(r"indica", hay, re.I):
+                elif re.search(r"\bindica\b", hay, re.I):
                     strain_type = "Indica"
-                elif re.search(r"sativa", hay, re.I):
+                elif re.search(r"\bsativa\b", hay, re.I):
                     strain_type = "Sativa"
             if grams is None and product_type == "flower":
                 grams = 10.0
@@ -439,6 +468,9 @@ def parse_clinic_text(text: str) -> list[ItemDict]:
             else:
                 i = max(i, last_index)
             pending_stock = next_pending_stock
+            pending_strain_type = None
+            pending_strain = None
+            pending_strain_idx = None
 
             def _clean_name(s):
                 if not s:

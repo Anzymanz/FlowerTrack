@@ -34,6 +34,7 @@ DEFAULT_CAPTURE_CONFIG = {
     "retry_backoff_max": 4.0,
     "scroll_times": 0,
     "scroll_pause_seconds": 0.5,
+    "dump_capture_text": False,
     "timeout_ms": 45000,
     "headless": True,
     "auto_notify_ha": False,
@@ -230,6 +231,7 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["organization_selector"] = str(raw.get("organization_selector") or "").strip()
     cfg["scroll_times"] = int(_coerce_float(raw.get("scroll_times"), DEFAULT_CAPTURE_CONFIG["scroll_times"], 0))
     cfg["scroll_pause_seconds"] = _coerce_float(raw.get("scroll_pause_seconds"), DEFAULT_CAPTURE_CONFIG["scroll_pause_seconds"], 0.0)
+    cfg["dump_capture_text"] = _coerce_bool(raw.get("dump_capture_text"), DEFAULT_CAPTURE_CONFIG["dump_capture_text"])
     cfg["window_geometry"] = str(raw.get("window_geometry") or DEFAULT_CAPTURE_CONFIG["window_geometry"]).strip() or DEFAULT_CAPTURE_CONFIG["window_geometry"]
     cfg["settings_geometry"] = str(raw.get("settings_geometry") or DEFAULT_CAPTURE_CONFIG["settings_geometry"]).strip() or DEFAULT_CAPTURE_CONFIG["settings_geometry"]
     cfg["manual_parse_geometry"] = str(raw.get("manual_parse_geometry") or DEFAULT_CAPTURE_CONFIG["manual_parse_geometry"]).strip() or DEFAULT_CAPTURE_CONFIG["manual_parse_geometry"]
