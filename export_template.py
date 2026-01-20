@@ -171,7 +171,7 @@ function applyFilters() {
         const priceVal = parseFloat(c.dataset.price);
         const thcVal = parseFloat(c.dataset.thc);
         const priceOk = Number.isFinite(priceVal) ? (priceVal >= priceMinSel && priceVal <= priceMaxSel) : true;
-        const thcOk = Number.isFinite(thcVal) ? (thcVal >= thcMinSel && thcVal <= thcMaxSel) : true;
+        const thcOk = (pt === 'vape' || pt === 'oil' || pt === 'device') ? true : (Number.isFinite(thcVal) ? (thcVal >= thcMinSel && thcVal <= thcMaxSel) : true);
         const showType = isRemoved ? true : activeTypes.has(pt);
         const showStrain = (!st) ? true : activeStrains.has(st);
         const text = (c.dataset.strain || '') + ' ' + (c.dataset.brand || '') + ' ' + (c.dataset.producer || '') + ' ' + (c.dataset.productId || '');

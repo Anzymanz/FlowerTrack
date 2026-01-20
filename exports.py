@@ -224,9 +224,21 @@ def export_html(data, path, fetch_images=False):
     for it in data:
         val = normalize_pct(it.get("thc"), it.get("thc_unit"))
         if isinstance(val, (int, float)):
-            thc_values.append(float(val))
+            if (it.get("product_type") or "").lower() == "flower":
+                thc_values.append(float(val))
+    if not thc_values:
+        for it in data:
+            val = normalize_pct(it.get("thc"), it.get("thc_unit"))
+            if isinstance(val, (int, float)):
+                thc_values.append(float(val))
     thc_min_bound = math.floor(min(thc_values)) if thc_values else 0
     thc_max_bound = math.ceil(max(thc_values)) if thc_values else 0
+    if thc_max_bound < 40:
+        thc_max_bound = 40
+    elif thc_max_bound > 60:
+        thc_max_bound = 60
+    if thc_min_bound > thc_max_bound:
+        thc_min_bound = thc_max_bound
 
     def fav_key_for(item: dict) -> str:
         brand_norm = norm(format_brand(item.get("brand") or item.get("producer") or ""))
