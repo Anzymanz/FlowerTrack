@@ -108,7 +108,11 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
     specs = entry.get("specifications") or product.get("specifications") or {}
     metadata = product.get("metadata") or {}
     raw_name = entry.get("name") or product.get("name") or ""
+    long_name = raw_name or (metadata.get("name") if isinstance(metadata, dict) else None) or ""
     name = _clean_title(raw_name) or raw_name
+    if not name or str(name).strip().upper() in {"UNKNOWN", "N/A", "NA"}:
+        fallback = _clean_title(long_name) or long_name
+        name = fallback or name
     is_smalls = bool(re.search(r"\b(SMALLS?|SMALL BUDS?)\b", raw_name, re.I))
     external_ref = entry.get("externalReference") or specs.get("externalId") or metadata.get("externalId")
     product_id = external_ref or (str(entry.get("productId")) if entry.get("productId") is not None else None)
@@ -190,6 +194,7 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
 
 def parse_api_payloads(payloads: Iterable[dict]) -> list[ItemDict]:
     items: list[ItemDict] = []
+    seen: set[str] = set()
     for payload in payloads or []:
         if not isinstance(payload, dict):
             continue
@@ -201,7 +206,16 @@ def parse_api_payloads(payloads: Iterable[dict]) -> list[ItemDict]:
             continue
         for entry in data:
             parsed = _parse_formulary_item(entry)
-            if parsed:
-                items.append(parsed)
+            if not parsed:
+                continue
+            pid = parsed.get("product_id")
+            if pid:
+                key = f"id:{pid}"
+            else:
+                key = f"name:{parsed.get('title') or ''}|brand:{parsed.get('brand') or ''}|g:{parsed.get('grams') or ''}|ml:{parsed.get('ml') or ''}"
+            if key in seen:
+                continue
+            seen.add(key)
+            items.append(parsed)
     return items
 

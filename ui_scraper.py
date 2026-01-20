@@ -1168,6 +1168,22 @@ class App(tk.Tk):
             return
         items = list(api_items)
         self._capture_log(f"API items parsed: {len(items)}")
+        if items:
+            seen_ids = set()
+            deduped_api = []
+            for it in items:
+                pid = it.get("product_id")
+                if pid:
+                    key = f"id:{pid}"
+                else:
+                    key = f"name:{it.get('title') or ''}|brand:{it.get('brand') or ''}|g:{it.get('grams') or ''}|ml:{it.get('ml') or ''}"
+                if key in seen_ids:
+                    continue
+                seen_ids.add(key)
+                deduped_api.append(it)
+            if len(deduped_api) != len(items):
+                self._capture_log(f"Deduped {len(items) - len(deduped_api)} items with duplicate IDs.")
+            items = deduped_api
         prev_items = load_last_parse(LAST_PARSE_FILE)
         identity_cache = _build_identity_cache(prev_items)
         prev_keys = { _identity_key_cached(it, identity_cache) for it in prev_items }
