@@ -39,14 +39,9 @@ from config import (
 from exports import cleanup_html_exports, export_html, export_html_auto, init_exports, set_exports_dir
 from notifications import _maybe_send_windows_notification
 from parser import (
-    format_brand,
     get_google_medicann_link,
-    infer_brand,
-    init_parser_paths,
     make_identity_key,
     make_item_key,
-    parse_clinic_text,
-    seed_brand_db_if_needed,
 )
 from storage import append_change_log, load_last_change, load_last_parse, save_last_change, save_last_parse, load_last_scrape, save_last_scrape
 from tray import create_tray_icon, make_tray_image, stop_tray_icon, tray_supported
@@ -71,8 +66,6 @@ os.makedirs(APP_DIR, exist_ok=True)
 UNIFIED_CONFIG_FILE = os.path.join(APP_DIR, "flowertrack_config.json")
 CONFIG_FILE = UNIFIED_CONFIG_FILE
 EXPORTS_DIR_DEFAULT = Path(os.path.join(os.getenv("APPDATA", os.path.expanduser("~")), "FlowerTrack", "Exports"))
-BRAND_HINTS_FILE = DATA_DIR / "parser_database.json"
-init_parser_paths(BRAND_HINTS_FILE)
 LAST_PARSE_FILE = DATA_DIR / "last_parse.json"
 SERVER_LOG = DATA_DIR / "parser_server.log"
 CHANGES_LOG_FILE = DATA_DIR / "changes.ndjson"
@@ -134,14 +127,12 @@ def _save_tracker_dark_mode(enabled: bool) -> None:
     except Exception:
         pass
 
-
 def _load_capture_config() -> dict:
     return load_capture_config(
         Path(UNIFIED_CONFIG_FILE),
         ["username", "password", "ha_token"],
         logger=lambda m: _log_debug(f"[config] {m}"),
     )
-
 
 def _save_capture_config(data: dict) -> None:
     save_capture_config(
@@ -150,7 +141,6 @@ def _save_capture_config(data: dict) -> None:
         ["username", "password", "ha_token"],
     )
 
-
 def _cleanup_and_record_export(path: Path, max_files: int = 20):
     """Track latest export path and keep exports tidy."""
     try:
@@ -158,10 +148,3 @@ def _cleanup_and_record_export(path: Path, max_files: int = 20):
     except Exception:
         pass
 
-def _seed_brand_db_if_needed():
-    """On first run, seed the parser database from the bundled copy if none exists."""
-    try:
-        bundled = Path(BASE_DIR) / "parser_database.json"
-        seed_brand_db_if_needed(BRAND_HINTS_FILE, bundled, logger=_log_debug)
-    except Exception as exc:
-        _log_debug(f"Failed to seed parser database: {exc}")

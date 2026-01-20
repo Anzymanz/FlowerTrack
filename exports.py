@@ -95,6 +95,59 @@ def format_brand(value: str | None) -> str:
         parts.append(tok if tok.isupper() else tok.title())
     return " ".join(parts)
 
+
+def _country_flag(code: str | None) -> str | None:
+    if not code:
+        return None
+    raw = str(code).strip().upper()
+    alpha3_to_alpha2 = {
+        "CAN": "CA",
+        "USA": "US",
+        "US": "US",
+        "GBR": "GB",
+        "UK": "GB",
+        "DEU": "DE",
+        "DE": "DE",
+        "NLD": "NL",
+        "NL": "NL",
+        "AUS": "AU",
+        "AU": "AU",
+        "NZL": "NZ",
+        "NZ": "NZ",
+        "ESP": "ES",
+        "ES": "ES",
+        "PRT": "PT",
+        "PT": "PT",
+        "ITA": "IT",
+        "IT": "IT",
+        "ISR": "IL",
+        "IL": "IL",
+        "CHE": "CH",
+        "CH": "CH",
+        "DNK": "DK",
+        "DK": "DK",
+        "NOR": "NO",
+        "NO": "NO",
+        "SWE": "SE",
+        "SE": "SE",
+        "POL": "PL",
+        "PL": "PL",
+    }
+    code2 = alpha3_to_alpha2.get(raw, raw)
+    if len(code2) != 2 or not code2.isalpha():
+        return raw
+    return "".join(chr(127397 + ord(ch)) for ch in code2)
+
+def _country_label(code: str | None) -> str | None:
+    if not code:
+        return None
+    raw = str(code).strip().upper()
+    flag = _country_flag(raw)
+    if flag:
+        return f"{flag} {raw}"
+    return raw
+
+
 def init_exports(assets_dir: Path, exports_dir: Optional[Path] = None) -> None:
     global _ASSETS_DIR, _EXPORTS_DIR, _ASSET_CACHE
     _ASSETS_DIR = assets_dir
@@ -240,7 +293,7 @@ def export_html(data, path, fetch_images=False):
                 first_tok = b.split()[0]
                 strain_name = re.sub(rf"\b{re.escape(first_tok)}\b", "", strain_name, flags=re.I).strip()
                 strain_name = re.sub(r"\s{2,}", " ", strain_name).strip()
-        heading = strain_name or clean_name(it.get("product_id") or it.get("producer") or it.get("product_type") or "-")
+        heading = strain_name or clean_name(it.get("title") or it.get("producer") or it.get("product_type") or "-")
         if it.get("is_smalls") and heading:
             heading = f"{heading} (Smalls)"
         brand = format_brand(it.get("brand") or it.get("producer") or "")
@@ -279,10 +332,14 @@ def export_html(data, path, fetch_images=False):
             badge_text = f"New price {'+' if price_delta>0 else '-'}£{abs(price_delta):.2f}"
             price_badge = f"<span class='{badge_cls}'>{esc(badge_text)}</span>"
             price_border_class = " card-price-up" if price_delta > 0 else " card-price-down"
+        stock_text = (it.get("stock_detail") or it.get("stock_status") or it.get("stock") or "").strip()
+        if it.get("stock_remaining") is not None:
+            stock_text = f"{it.get('stock_remaining')} remaining"
+        stock_pill = f"<span class='pill'>{esc(stock_text)}</span>" if stock_text else ""
         stock_indicator = (
             f"<span class='stock-indicator "
-            f"{('stock-not-prescribable' if (it.get('stock') and 'NOT' in (it.get('stock') or '').upper()) else ('stock-in' if (it.get('stock') and 'IN STOCK' in (it.get('stock') or '').upper()) else ('stock-low' if (it.get('stock') and 'LOW' in (it.get('stock') or '').upper()) else ('stock-out' if (it.get('stock') and 'OUT' in (it.get('stock') or '').upper()) else ''))))}"
-            f"' title='{esc(it.get('stock') or '')}'></span>"
+            f"{('stock-not-prescribable' if ((it.get('stock_status') or it.get('stock')) and 'NOT' in ((it.get('stock_status') or it.get('stock') or '').upper())) else ('stock-in' if ((it.get('stock_status') or it.get('stock')) and 'IN STOCK' in ((it.get('stock_status') or it.get('stock') or '').upper())) else ('stock-low' if ((it.get('stock_status') or it.get('stock')) and 'LOW' in ((it.get('stock_status') or it.get('stock') or '').upper())) else ('stock-out' if ((it.get('stock_status') or it.get('stock')) and 'OUT' in ((it.get('stock_status') or it.get('stock') or '').upper())) else ''))))}"
+            f"' title='{esc(it.get('stock_detail') or it.get('stock') or '')}'></span>"
         )
         heading_html = f"{stock_indicator}{esc(heading)}"
         card_classes = "card card-removed" if it.get("is_removed") else ("card card-new" if it.get("is_new") else "card")
@@ -300,7 +357,7 @@ def export_html(data, path, fetch_images=False):
       data-brand='{esc_attr(brand or "")}'
       data-producer='{esc_attr(it.get("producer") or "")}'
       data-product-id='{esc_attr(it.get("product_id") or "")}'
-      data-stock='{esc_attr((it.get("stock") or "").strip())}'
+      data-stock='{esc_attr(stock_text)}'
       data-key='{esc_attr(card_key)}'
       data-favkey='{esc_attr(fav_key)}'
       data-smalls='{1 if it.get("is_smalls") else 0}'
@@ -318,14 +375,17 @@ def export_html(data, path, fetch_images=False):
       <p class="brand-line"><strong>{esc(brand)}</strong></p>
       {("<p class='small'>Removed since last parse</p>") if it.get("is_removed") else ""}
         <p class='small'>
-        {(esc(it.get('product_id') or '') + (' - ' + esc((it.get('product_type') or '').title()) if it.get('product_type') and it.get('product_id') else esc((it.get('product_type') or '').title()))) if (it.get('product_id') or it.get('product_type')) else ''}
+        {(esc((it.get('product_type') or '').title())) if it.get('product_type') else ''}
         </p>
   <div class='card-content'>
     <div>
       {price_pill}
       <span class='pill'>{qty or '?'}</span>
+      {stock_pill}
         {f"<span class='pill'>£/g {ppg:.2f}</span>" if ppg is not None else ''}
         {f"<span class='pill'>{esc(it.get('strain_type'))}</span>" if it.get('strain_type') else ''}
+        {f"<span class='pill pill-flag'>{esc(_country_label(it.get('origin_country')))}</span>" if it.get('origin_country') else ''}
+        {f"<span class='pill'>{esc(it.get('irradiation_type'))}</span>" if (it.get('irradiation_type') and (it.get('product_type') or '').lower() not in ('vape','oil','device')) else ''}
     </div>
     <div class='small'>🎉 THC: {esc(disp_thc)}</div>
     <div class='small'>🌱 CBD: {esc(disp_cbd)}</div>

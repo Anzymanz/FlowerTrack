@@ -1,7 +1,7 @@
 from __future__ import annotations
 import sys
 import tkinter as tk
-from tkinter import filedialog, messagebox, scrolledtext, ttk
+from tkinter import filedialog, messagebox, ttk
 import json
 import os
 import urllib.error
@@ -20,7 +20,6 @@ from export_server import start_export_server as srv_start_export_server, stop_e
 from ui_settings import open_settings_window
 from app_core import (  # shared globals/imports
     _log_debug,
-    _seed_brand_db_if_needed,
     _cleanup_and_record_export,
     _load_capture_config,
     _save_capture_config,
@@ -30,7 +29,6 @@ from app_core import (  # shared globals/imports
     ASSETS_DIR,
     EXPORTS_DIR_DEFAULT,
     CONFIG_FILE,
-    BRAND_HINTS_FILE,
     LAST_PARSE_FILE,
     CHANGES_LOG_FILE,
     LAST_CHANGE_FILE,
@@ -51,14 +49,9 @@ from app_core import (  # shared globals/imports
 from config import decrypt_secret, encrypt_secret, load_capture_config, save_capture_config
 from scraper_state import write_scraper_state
 from parser import (
-    _load_brand_hints,
-    _save_brand_hints,
-    format_brand,
-    infer_brand,
-    parse_clinic_text,
+    parse_api_payloads,
     make_item_key,
     make_identity_key,
-    get_google_medicann_link,
 )
 from models import Item
 import threading as _threading
@@ -70,14 +63,6 @@ from theme import apply_style_theme, set_titlebar_dark, compute_colors
 
 # Scraper UI constants
 SCRAPER_TITLE = "Medicann Scraper"
-SCRAPER_PLACEHOLDER = (
-    "Go to script assist / Medicann and go to available products."
-    "\n"
-    "Select all the text on the page and copy / paste it here (or use Auto Capture below)."
-    "\n"
-    "Press Process (or start Auto Capture). Notifications will only send when there are new/removed items or price changes."
-)
-
 def _should_stop_on_empty(error_count: int, error_threshold: int) -> bool:
     return error_count >= error_threshold
 def _identity_key_cached(item: dict, cache: dict) -> str:
@@ -104,25 +89,16 @@ class App(tk.Tk):
         cfg = _load_capture_config()
         self.scraper_window_geometry = cfg.get("window_geometry", "900x720") or "900x720"
         self.scraper_settings_geometry = cfg.get("settings_geometry", "560x960") or "560x960"
-        self.manual_parse_geometry = cfg.get("manual_parse_geometry", "720x520") or "720x520"
         self.geometry(self.scraper_window_geometry)
         self.assets_dir = ASSETS_DIR
         _log_debug("App init: launching scraper UI")
         self._config_dark = self._load_dark_mode()
         self.removed_data = []
-        _seed_brand_db_if_needed()
         self.httpd = None
         self.http_thread = None
         self.server_port = 8765
         self._server_failed = False
         _log_debug(f"Init export server state. preferred_port={self.server_port} frozen={getattr(sys, '_MEIPASS', None) is not None}")
-        self._placeholder = (
-            "Go to script assist / Medicann and go to available products."
-            "\n"
-            "Select all the text on the page and copy / paste it here (or use Auto Capture below)."
-            "\n"
-            "Press Process (or start Auto Capture). Notifications will only send when there are new/removed items or price changes."
-        )
         try:
             init_exports(ASSETS_DIR, EXPORTS_DIR_DEFAULT)
             set_exports_dir(EXPORTS_DIR_DEFAULT)
@@ -144,7 +120,7 @@ class App(tk.Tk):
         self.style = ttk.Style(self)
         self.dark_mode_var = tk.BooleanVar(value=self._config_dark)
         self.settings_window = None
-        self.manual_parse_window = None
+        self.capture_window = None
         self.tray_icon = None
         self.capture_status = "idle"
         self.error_count = 0
@@ -160,10 +136,6 @@ class App(tk.Tk):
             notify_windows=lambda: self.notify_windows.get(),
             logger=self._log_console,
         )
-        # Hidden text buffer retained for processing; not displayed
-        self.text = tk.Text(self, height=1)
-        self.text.pack_forget()
-        self._show_placeholder()
         btns = ttk.Frame(self)
         btns.pack(pady=5)
         ttk.Button(btns, text="Start Auto-Scraper", command=self.start_auto_capture).pack(side="left", padx=(5, 5))
@@ -215,14 +187,6 @@ class App(tk.Tk):
         self.capture_thread: _threading.Thread | None = None
         self.capture_stop = _threading.Event()
         self._playwright_available = None
-        self.cap_auto_notify_ha = tk.BooleanVar(value=False)
-        self.cap_ha_webhook = tk.StringVar(value="")
-        self.cap_ha_token = tk.StringVar(value="")
-        self.cap_quiet_hours_enabled = tk.BooleanVar(value=False)
-        self.cap_quiet_start = tk.StringVar(value="22:00")
-        self.cap_quiet_end = tk.StringVar(value="07:00")
-        self.cap_quiet_interval = tk.StringVar(value="3600")
-        self.cap_notify_detail = tk.StringVar(value="full")
         self.last_change_summary = "none"
         self._build_capture_controls()
         # Tray behavior
@@ -235,57 +199,19 @@ class App(tk.Tk):
             self.after(150, lambda: self._set_win_titlebar_dark(self.dark_mode_var.get()))
         except Exception:
             pass
-    def _show_placeholder(self) -> None:
-        if not self.text.get("1.0", "end").strip():
-            self.text.delete("1.0", "end")
-            self.text.insert("1.0", self._placeholder)
-            self.text.configure(foreground="#888888")
-    def _on_text_focus_in(self, event=None) -> None:
-        if self.text.get("1.0", "end").strip() == self._placeholder.strip():
-            self.text.delete("1.0", "end")
-            self.text.configure(foreground=self.style.lookup("TLabel", "foreground") or "#000000")
-    def _on_text_focus_out(self, event=None) -> None:
-        if not self.text.get("1.0", "end").strip():
-            self._show_placeholder()
-    def _clear_text(self) -> None:
-        try:
-            self.text.delete("1.0", "end")
-        except Exception:
-            pass
-        self._show_placeholder()
-        self._log_console("Cleared input text.")
-    def _build_capture_controls(self):
+    def _build_capture_controls(self) -> None:
         cfg = _load_capture_config()
-        self.capture_window = None
-        self.settings_window = None
-        self.manual_parse_window = None
-        if not hasattr(self, "scraper_window_geometry"):
-            self.scraper_window_geometry = cfg.get("window_geometry", "900x720") or "900x720"
-        if not hasattr(self, "scraper_settings_geometry"):
-            self.scraper_settings_geometry = cfg.get("settings_geometry", "560x960") or "560x960"
-        if not hasattr(self, "manual_parse_geometry"):
-            self.manual_parse_geometry = cfg.get("manual_parse_geometry", "720x520") or "720x520"
         self.capture_config_path = Path(CONFIG_FILE)
-        # Notification toggles from config
-        self.notify_price_changes = tk.BooleanVar(value=cfg.get("notify_price_changes", True))
-        self.notify_stock_changes = tk.BooleanVar(value=cfg.get("notify_stock_changes", True))
-        self.notify_windows = tk.BooleanVar(value=cfg.get("notify_windows", True))
-        self.cap_quiet_hours_enabled.set(bool(cfg.get("quiet_hours_enabled", False)))
-        self.cap_quiet_start.set(cfg.get("quiet_hours_start", "22:00"))
-        self.cap_quiet_end.set(cfg.get("quiet_hours_end", "07:00"))
-        self.cap_quiet_interval.set(str(cfg.get("quiet_hours_interval_seconds", 3600)))
-        self.cap_notify_detail.set(cfg.get("notification_detail", "full"))
         self.cap_url = tk.StringVar(value=cfg.get("url", ""))
         self.cap_interval = tk.StringVar(value=str(cfg.get("interval_seconds", 60)))
         self.cap_headless = tk.BooleanVar(value=bool(cfg.get("headless", True)))
         self.cap_login_wait = tk.StringVar(value=str(cfg.get("login_wait_seconds", 3)))
         self.cap_post_wait = tk.StringVar(value=str(cfg.get("post_nav_wait_seconds", 30)))
-        self.cap_retry_attempts = tk.IntVar(value=int(cfg.get("retry_attempts", 3)))
-        self.cap_retry_wait = tk.StringVar(value=str(cfg.get("retry_wait_seconds", cfg.get("post_nav_wait_seconds", 30))))
-        self.cap_retry_backoff = tk.StringVar(value=str(cfg.get("retry_backoff_max", 4)))
         self.cap_scroll_times = tk.StringVar(value=str(cfg.get("scroll_times", 0)))
         self.cap_scroll_pause = tk.StringVar(value=str(cfg.get("scroll_pause_seconds", 0.5)))
-        self.cap_dump_capture = tk.BooleanVar(value=bool(cfg.get("dump_capture_text", False)))
+        self.cap_retry_attempts = tk.StringVar(value=str(cfg.get("retry_attempts", 3)))
+        self.cap_retry_wait = tk.StringVar(value=str(cfg.get("retry_wait_seconds", cfg.get("post_nav_wait_seconds", 30))))
+        self.cap_retry_backoff = tk.StringVar(value=str(cfg.get("retry_backoff_max", 4)))
         self.cap_user = tk.StringVar(value=decrypt_secret(cfg.get("username", "")))
         self.cap_pass = tk.StringVar(value=decrypt_secret(cfg.get("password", "")))
         self.cap_user_sel = tk.StringVar(value=cfg.get("username_selector", ""))
@@ -293,159 +219,35 @@ class App(tk.Tk):
         self.cap_btn_sel = tk.StringVar(value=cfg.get("login_button_selector", ""))
         self.cap_org = tk.StringVar(value=cfg.get("organization", ""))
         self.cap_org_sel = tk.StringVar(value=cfg.get("organization_selector", ""))
-        self.cap_auto_notify_ha.set(bool(cfg.get("auto_notify_ha", False)))
-        self.cap_ha_webhook.set(cfg.get("ha_webhook_url", ""))
-        self.cap_ha_token.set(decrypt_secret(cfg.get("ha_token", "")))
-        self.minimize_to_tray = tk.BooleanVar(value=False)
-        self.close_to_tray = tk.BooleanVar(value=False)
-    def _open_settings_window(self):
-        try:
-            cfg = load_capture_config(
-                Path(CONFIG_FILE),
-                ["username", "password", "ha_token"],
-                logger=None,
-            )
-            self.cap_url.set(cfg.get("url", ""))
-            self.cap_interval.set(str(cfg.get("interval_seconds", 60)))
-            self.cap_login_wait.set(str(cfg.get("login_wait_seconds", 3)))
-            self.cap_post_wait.set(str(cfg.get("post_nav_wait_seconds", 30)))
-            self.cap_retry_attempts.set(int(cfg.get("retry_attempts", 3)))
-            self.cap_retry_wait.set(str(cfg.get("retry_wait_seconds", cfg.get("post_nav_wait_seconds", 30))))
-            self.cap_retry_backoff.set(str(cfg.get("retry_backoff_max", 4)))
-            self.cap_scroll_times.set(str(cfg.get("scroll_times", 0)))
-            self.cap_scroll_pause.set(str(cfg.get("scroll_pause_seconds", 0.5)))
-            self.cap_dump_capture.set(bool(cfg.get("dump_capture_text", False)))
-            self.cap_user.set(cfg.get("username", ""))
-            self.cap_pass.set(cfg.get("password", ""))
-            self.cap_user_sel.set(cfg.get("username_selector", ""))
-            self.cap_pass_sel.set(cfg.get("password_selector", ""))
-            self.cap_btn_sel.set(cfg.get("login_button_selector", ""))
-            self.cap_org.set(cfg.get("organization", ""))
-            self.cap_org_sel.set(str(cfg.get("organization_selector", "")).strip())
-            self.cap_headless.set(bool(cfg.get("headless", True)))
-            self.cap_auto_notify_ha.set(bool(cfg.get("auto_notify_ha", False)))
-            self.cap_ha_webhook.set(cfg.get("ha_webhook_url", ""))
-            self.cap_ha_token.set(cfg.get("ha_token", ""))
-            self.notify_price_changes.set(bool(cfg.get("notify_price_changes", True)))
-            self.notify_stock_changes.set(bool(cfg.get("notify_stock_changes", True)))
-            self.notify_windows.set(bool(cfg.get("notify_windows", True)))
-            self.cap_quiet_hours_enabled.set(bool(cfg.get("quiet_hours_enabled", False)))
-            self.cap_quiet_start.set(cfg.get("quiet_hours_start", "22:00"))
-            self.cap_quiet_end.set(cfg.get("quiet_hours_end", "07:00"))
-            self.cap_quiet_interval.set(str(cfg.get("quiet_hours_interval_seconds", 3600)))
-            self.cap_notify_detail.set(cfg.get("notification_detail", "full"))
-        except Exception:
-            pass
-        open_settings_window(self, self.assets_dir)
-    def _require_playwright(self):
-        if self._playwright_available is False:
-            messagebox.showerror("Playwright missing", "Install playwright with:\n pip install playwright\n playwright install chromium")
-            return None
-        if self._playwright_available is True:
-            from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError  # type: ignore
-            return sync_playwright, PlaywrightTimeoutError
-        try:
-            from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError  # type: ignore
-            self._playwright_available = True
-            return sync_playwright, PlaywrightTimeoutError
-        except Exception:
-            self._playwright_available = False
-            messagebox.showerror("Playwright missing", "Install playwright with:\n pip install playwright\n playwright install chromium")
-            return None
-    def _install_playwright_browsers(self):
-        """Attempt to download Playwright browsers (Chromium)."""
-        try:
-            self._capture_log("Downloading Playwright browser (this may take a minute)...")
-            # Call playwright CLI in-process to avoid spawning a new GUI instance in a frozen exe
-            try:
-                import playwright.__main__ as pw_main  # type: ignore
-            except Exception as exc:
-                self._capture_log(f"Playwright module missing: {exc}")
-                return False
-            env_path = os.environ.get("PLAYWRIGHT_BROWSERS_PATH", str(Path(APP_DIR) / "pw-browsers"))
-            os.environ["PLAYWRIGHT_BROWSERS_PATH"] = env_path
-            prev_argv = list(sys.argv)
-            sys.argv = ["playwright", "install", "chromium"]
-            try:
-                pw_main.main()
-            finally:
-                sys.argv = prev_argv
-            self._capture_log(f"Playwright browser installed to {env_path}.")
-            return True
-        except Exception as exc:
-            self._capture_log(f"Playwright install failed: {exc}")
-            return False
-    def _write_scraper_state(self, status: str) -> None:
-        try:
-            write_scraper_state(SCRAPER_STATE_FILE, status, pid=os.getpid())
-        except Exception:
-            pass
-    def start_auto_capture(self):
-        if self.capture_thread and self.capture_thread.is_alive():
-            self._log_console("Auto-capture already running.")
-            return
-        # Ensure playwright is available
-        install_cb = lambda: install_playwright_browsers(Path(APP_DIR), self._capture_log)
-        req = ensure_browser_available(Path(APP_DIR), self._capture_log, install_cb=install_cb)
-        if not req:
-            self._capture_log("Playwright is not installed or browsers missing.")
-            messagebox.showerror("Playwright", "Playwright is missing and could not be installed.")
-            return
-        sync_playwright, PlaywrightTimeoutError = req
-        url = self.cap_url.get().strip()
-        if not url:
-            self._log_console("URL is required.")
-            return
-        try:
-            interval = float(self.cap_interval.get())
-            if interval <= 0:
-                raise ValueError
-        except Exception:
-            self._log_console("Interval must be a positive number.")
-            return
-        try:
-            login_wait = float(self.cap_login_wait.get() or 0)
-            if login_wait < 0:
-                raise ValueError
-        except Exception:
-            self._log_console("Wait after login must be >= 0.")
-            return
-        try:
-            post_wait = float(self.cap_post_wait.get() or 0)
-            if post_wait < 0:
-                raise ValueError
-        except Exception:
-            self._log_console("Wait after navigation must be >= 0.")
-            return
-        if post_wait < 5:
-            post_wait = 5.0
-            self.cap_post_wait.set(str(post_wait))
-        try:
-            retry_wait = float(self.cap_retry_wait.get() or 0)
-            if retry_wait < 0:
-                raise ValueError
-        except Exception:
-            self._log_console("Retry wait must be >= 0.")
-            return
-        try:
-            retry_backoff = float(self.cap_retry_backoff.get() or 0)
-            if retry_backoff < 1:
-                retry_backoff = 1.0
-                self.cap_retry_backoff.set(str(retry_backoff))
-        except Exception:
-            self._log_console("Retry backoff max must be >= 1.")
-            return
-        cfg = {
-            "url": url,
-            "interval_seconds": interval,
-            "login_wait_seconds": login_wait,
-            "post_nav_wait_seconds": post_wait,
-            "retry_attempts": int(self.cap_retry_attempts.get() or 0),
+        self.cap_dump_html = tk.BooleanVar(value=bool(cfg.get("dump_capture_html", False)))
+        self.cap_dump_api = tk.BooleanVar(value=bool(cfg.get("dump_api_json", False)))
+        self.cap_auto_notify_ha = tk.BooleanVar(value=bool(cfg.get("auto_notify_ha", False)))
+        self.cap_ha_webhook = tk.StringVar(value=cfg.get("ha_webhook_url", ""))
+        self.cap_ha_token = tk.StringVar(value=decrypt_secret(cfg.get("ha_token", "")))
+        self.notify_price_changes = tk.BooleanVar(value=bool(cfg.get("notify_price_changes", True)))
+        self.notify_stock_changes = tk.BooleanVar(value=bool(cfg.get("notify_stock_changes", True)))
+        self.notify_windows = tk.BooleanVar(value=bool(cfg.get("notify_windows", True)))
+        self.cap_quiet_hours_enabled = tk.BooleanVar(value=bool(cfg.get("quiet_hours_enabled", False)))
+        self.cap_quiet_start = tk.StringVar(value=cfg.get("quiet_hours_start", "22:00"))
+        self.cap_quiet_end = tk.StringVar(value=cfg.get("quiet_hours_end", "07:00"))
+        self.cap_quiet_interval = tk.StringVar(value=str(cfg.get("quiet_hours_interval_seconds", 3600)))
+        self.cap_notify_detail = tk.StringVar(value=cfg.get("notification_detail", "full"))
+        self.minimize_to_tray = tk.BooleanVar(value=bool(cfg.get("minimize_to_tray", False)))
+        self.close_to_tray = tk.BooleanVar(value=bool(cfg.get("close_to_tray", False)))
+
+    def _collect_capture_cfg(self) -> dict:
+        return {
+            "url": self.cap_url.get(),
+            "interval_seconds": float(self.cap_interval.get() or 0),
+            "login_wait_seconds": float(self.cap_login_wait.get() or 0),
+            "post_nav_wait_seconds": float(self.cap_post_wait.get() or 0),
+            "retry_attempts": int(float(self.cap_retry_attempts.get() or 0)),
             "retry_wait_seconds": float(self.cap_retry_wait.get() or 0),
             "retry_backoff_max": float(self.cap_retry_backoff.get() or 0),
             "scroll_times": int(float(self.cap_scroll_times.get() or 0)),
             "scroll_pause_seconds": float(self.cap_scroll_pause.get() or 0),
-            "dump_capture_text": bool(self.cap_dump_capture.get()),
+            "dump_capture_html": bool(self.cap_dump_html.get()),
+            "dump_api_json": bool(self.cap_dump_api.get()),
             "username": self.cap_user.get(),
             "password": self.cap_pass.get(),
             "username_selector": self.cap_user_sel.get(),
@@ -453,173 +255,86 @@ class App(tk.Tk):
             "login_button_selector": self.cap_btn_sel.get(),
             "organization": self.cap_org.get(),
             "organization_selector": self.cap_org_sel.get(),
-            "headless": self.cap_headless.get(),
-            "auto_notify_ha": self.cap_auto_notify_ha.get(),
+            "headless": bool(self.cap_headless.get()),
+            "auto_notify_ha": bool(self.cap_auto_notify_ha.get()),
             "ha_webhook_url": self.cap_ha_webhook.get(),
             "ha_token": self.cap_ha_token.get(),
-            "minimize_to_tray": False,
-            "close_to_tray": False,
-            "notify_price_changes": self.notify_price_changes.get(),
-            "notify_stock_changes": self.notify_stock_changes.get(),
-            "notify_windows": self.notify_windows.get(),
-            "quiet_hours_enabled": self.cap_quiet_hours_enabled.get(),
+            "notify_price_changes": bool(self.notify_price_changes.get()),
+            "notify_stock_changes": bool(self.notify_stock_changes.get()),
+            "notify_windows": bool(self.notify_windows.get()),
+            "quiet_hours_enabled": bool(self.cap_quiet_hours_enabled.get()),
             "quiet_hours_start": self.cap_quiet_start.get(),
             "quiet_hours_end": self.cap_quiet_end.get(),
             "quiet_hours_interval_seconds": float(self.cap_quiet_interval.get() or 0),
             "notification_detail": self.cap_notify_detail.get(),
+            "minimize_to_tray": bool(self.minimize_to_tray.get()),
+            "close_to_tray": bool(self.close_to_tray.get()),
+            "window_geometry": self.geometry(),
+            "settings_geometry": (self.settings_window.geometry() if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window) else self.scraper_settings_geometry),
         }
-        _save_capture_config(cfg)
+
+    def start_auto_capture(self):
+        if self._is_capture_running():
+            self._capture_log("Auto-capture already running.")
+            return
+        try:
+            self._save_capture_window()
+        except Exception:
+            pass
+        cfg = self._collect_capture_cfg()
+        if not cfg.get("url"):
+            messagebox.showwarning("Auto-capture", "Please set the target URL before starting.")
+            return
         self.capture_stop.clear()
-        callbacks = {
-            "stop_event": self.capture_stop,
-            "capture_log": self._capture_log,
-            "apply_text": self._apply_captured_text,
-            "responsive_wait": self._responsive_wait,
-            "on_status": self._on_capture_status,
-            "on_stop": lambda: self._log_console("Auto-capture stopped."),
-        }
-        install_cb = lambda: install_playwright_browsers(Path(APP_DIR), self._capture_log)
-        self.capture_thread = start_capture_worker(cfg, callbacks, Path(APP_DIR), install_cb)
-        self._log_console("Auto-capture running...")
-        try:
-            self._write_scraper_state("running")
-        except Exception:
-            pass
-        self._update_tray_status()
-    def stop_auto_capture(self):
-        self.capture_stop.set()
-        if self.capture_thread and not self.capture_thread.is_alive():
-            self._log_console("Auto-capture stopped.")
-        try:
-            self._write_scraper_state("stopped")
-        except Exception:
-            pass
-        self._update_tray_status()
-        # Reset counters so next start is clean
         self.error_count = 0
         self._empty_retry_pending = False
-        self.capture_status = "idle"
-    def open_latest_export(self):
-        """Open the most recent HTML export in the browser (served from the local server if available)."""
-        exports_dir = Path(EXPORTS_DIR_DEFAULT)
-        exports_dir.mkdir(parents=True, exist_ok=True)
-        html_files = sorted(exports_dir.glob("export-*.html"), key=lambda p: p.stat().st_mtime, reverse=True)
-        if not html_files:
-            try:
-                self._log_console("No HTML exports found; generating a snapshot.")
-                data = load_last_parse(LAST_PARSE_FILE) or []
-                if not data:
-                    self._log_console("No parsed data available to export.")
-                    messagebox.showinfo("Exports", "No data available to export yet.")
-                    return
-                latest = export_html_auto(data, exports_dir=exports_dir, open_file=False, fetch_images=False)
-                self._log_console(f"Exported snapshot: {latest.name}")
-                html_files = [latest]
-            except Exception as exc:
-                messagebox.showinfo("Exports", f"Unable to generate export: {exc}")
-                return
-        latest = html_files[0]
-        self._ensure_export_server()
-        if hasattr(self, "server_port") and self.server_port:
-            url = f"http://127.0.0.1:{self.server_port}/{latest.name}"
-        else:
-            url = latest.as_uri()
+        self._update_tray_status()
+        def install_cb():
+            return install_playwright_browsers(Path(APP_DIR), self._capture_log)
+        req = ensure_browser_available(Path(APP_DIR), self._capture_log, install_cb=install_cb)
+        if not req:
+            messagebox.showerror("Auto-capture", "Playwright is not available. See logs for details.")
+            return
+        self._playwright_available = req
+        callbacks = {
+            "capture_log": self._capture_log,
+            "apply_text": self._apply_captured_text,
+            "on_status": self._on_capture_status,
+            "responsive_wait": self._responsive_wait,
+            "stop_event": self.capture_stop,
+        }
+        self.capture_thread = start_capture_worker(cfg, callbacks, app_dir=Path(APP_DIR), install_fn=install_cb)
+        self._capture_log("Auto-capture running...")
+        self._update_tray_status()
+
+    def stop_auto_capture(self):
+        if not self.capture_stop.is_set():
+            self.capture_stop.set()
+        self._capture_log("Auto-capture stopped.")
+        self._update_tray_status()
+
+    def _set_next_capture_timer(self, seconds: float) -> None:
         try:
-            webbrowser.open(url)
-            self._capture_log(f"Opening {url}")
+            if seconds and seconds > 0:
+                self.status.config(text=f"Next capture in {int(seconds)}s")
         except Exception:
+            pass
+
+    def _open_settings_window(self):
+        if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window):
             try:
-                os.startfile(latest)
-            except Exception as exc:
-                messagebox.showerror("Open Export", f"Could not open export:\n{exc}")
-    def _open_manual_parse_window(self):
-        if self.manual_parse_window and tk.Toplevel.winfo_exists(self.manual_parse_window):
-            try:
-                self.manual_parse_window.deiconify()
-                self.manual_parse_window.lift()
-                self.manual_parse_window.focus_force()
+                self.settings_window.deiconify()
+                self.settings_window.lift()
+                self.settings_window.focus_force()
             except Exception:
                 pass
             return
-        win = tk.Toplevel(self)
-        win.title("Manual Parse")
-        win.geometry(self.manual_parse_geometry or "720x520")
-        win.minsize(600, 420)
-        self.manual_parse_window = win
         try:
-            dark = bool(self.dark_mode_var.get())
-            colors = compute_colors(dark)
-            apply_style_theme(self.style, colors)
-            win.configure(bg=colors["bg"])
-            win.after(50, lambda: set_titlebar_dark(win, dark))
-        except Exception:
-            pass
-        def on_close():
-            try:
-                self.manual_parse_geometry = win.geometry()
-            except Exception:
-                pass
-            try:
-                self._save_capture_window()
-            except Exception:
-                pass
-            try:
-                win.destroy()
-            except Exception:
-                pass
-            self.manual_parse_window = None
-        win.protocol("WM_DELETE_WINDOW", on_close)
-        frame = ttk.Frame(win, padding=10)
-        frame.pack(fill="both", expand=True)
-        ttk.Label(frame, text="Paste page text below, then parse.").pack(anchor="w")
-        text_frame = ttk.Frame(frame)
-        text_frame.pack(fill="both", expand=True, pady=(6, 8))
-        text_box = tk.Text(text_frame, wrap="word", height=18)
-        scroll = ttk.Scrollbar(text_frame, orient="vertical", command=text_box.yview, style="Dark.Vertical.TScrollbar")
-        text_box.configure(yscrollcommand=scroll.set)
-        text_box.pack(side="left", fill="both", expand=True)
-        scroll.pack(side="right", fill="y")
-        try:
-            colors = compute_colors(bool(self.dark_mode_var.get()))
-            text_box.configure(bg=colors["bg"], fg=colors["fg"], insertbackground=colors["fg"])
-        except Exception:
-            pass
-        btns = ttk.Frame(frame)
-        btns.pack(fill="x")
-        def do_parse_export_open():
-            raw = text_box.get("1.0", "end").strip()
-            if not raw:
-                messagebox.showwarning("Manual Parser", "Copy and paste your request repeat page here.")
-                return
-            try:
-                self.text.delete("1.0", "end")
-                self.text.insert("1.0", raw)
-            except Exception:
-                pass
-            try:
-                items = parse_clinic_text(raw)
-            except Exception as exc:
-                messagebox.showerror("Manual Parser", f"Could not parse text:\n{exc}")
-                return
-            if not items:
-                messagebox.showwarning("Manual Parser", "No products parsed from the pasted text.")
-                return
-            self.data = list(items)
-            self.removed_data = []
-            try:
-                save_last_parse(LAST_PARSE_FILE, self.data)
-                self._update_last_scrape()
-                self._log_console(f"Manual parse: {len(self.data)} items.")
-            except Exception as exc:
-                self._capture_log(f"Manual parse save error: {exc}")
-            try:
-                self._generate_change_export(self._get_export_items())
-            except Exception as exc:
-                messagebox.showinfo("Exports", f"Unable to generate export: {exc}")
-                return
-            self.open_latest_export()
-        ttk.Button(btns, text="Parse and open browser", command=do_parse_export_open).pack(side="left")
-        ttk.Button(btns, text="Close", command=on_close).pack(side="right")
+            self.settings_window = open_settings_window(self, self.assets_dir)
+            self._apply_theme_to_window(self.settings_window)
+        except Exception as exc:
+            messagebox.showerror("Settings", f"Could not open settings:\n{exc}")
+
     def _capture_log(self, msg: str):
         _log_debug(f"[capture] {msg}")
         if hasattr(self, "logger") and self.logger:
@@ -639,6 +354,49 @@ class App(tk.Tk):
         path = export_html_auto(data, exports_dir=EXPORTS_DIR_DEFAULT, open_file=False, fetch_images=False)
         _cleanup_and_record_export(path, max_files=20)
         self._capture_log(f"Exported snapshot: {path.name}")
+    def open_fresh_export(self):
+        try:
+            if not self.data and LAST_PARSE_FILE.exists():
+                self.data = load_last_parse(LAST_PARSE_FILE)
+            if self.data:
+                self._generate_change_export(self._get_export_items())
+            else:
+                messagebox.showinfo("Open Export", "No data available to export yet.")
+                return
+        except Exception as exc:
+            messagebox.showerror("Open Export", f"Could not generate export:\n{exc}")
+            return
+        self.open_latest_export()
+
+    def open_latest_export(self):
+        url = self._latest_export_url()
+        if not url:
+            try:
+                if not self.data and LAST_PARSE_FILE.exists():
+                    self.data = load_last_parse(LAST_PARSE_FILE)
+                if self.data:
+                    self._generate_change_export(self._get_export_items())
+            except Exception as exc:
+                messagebox.showerror("Open Export", f"Could not generate export:\n{exc}")
+                return
+            url = self._latest_export_url()
+        if not url:
+            messagebox.showinfo("Open Export", "No exports available yet.")
+            return
+        self._ensure_export_server()
+        try:
+            latest_path = None
+            exports_dir = Path(EXPORTS_DIR_DEFAULT)
+            html_files = sorted(exports_dir.glob("export-*.html"), key=lambda p: p.stat().st_mtime, reverse=True)
+            if html_files:
+                latest_path = html_files[0]
+            if latest_path and url.startswith("http://"):
+                self._open_url_with_fallback(url, latest_path)
+            else:
+                webbrowser.open(url)
+        except Exception as exc:
+            messagebox.showerror("Open Export", f"Could not open export:\n{exc}")
+
     def _latest_export_url(self) -> str | None:
         """Return URL (or file://) for latest export, preferring local server."""
         exports_dir = Path(EXPORTS_DIR_DEFAULT)
@@ -796,8 +554,7 @@ class App(tk.Tk):
     def _apply_captured_text(self, text: str):
         def _apply():
             try:
-                self.text.delete("1.0", "end")
-                self.text.insert("1.0", text)
+                self._capture_log("Applying API capture...")
                 self.process()
             except Exception as exc:
                 self._capture_log(f"Apply error: {exc}")
@@ -876,7 +633,8 @@ class App(tk.Tk):
         self.cap_retry_backoff.set(str(cfg.get("retry_backoff_max", 4)))
         self.cap_scroll_times.set(str(cfg.get("scroll_times", 0)))
         self.cap_scroll_pause.set(str(cfg.get("scroll_pause_seconds", 0.5)))
-        self.cap_dump_capture.set(bool(cfg.get("dump_capture_text", False)))
+        self.cap_dump_html.set(bool(cfg.get("dump_capture_html", False)))
+        self.cap_dump_api.set(bool(cfg.get("dump_api_json", False)))
         self.cap_user.set(decrypt_secret(cfg.get("username", "")))
         self.cap_pass.set(decrypt_secret(cfg.get("password", "")))
         self.cap_user_sel.set(cfg.get("username_selector", ""))
@@ -920,7 +678,8 @@ class App(tk.Tk):
             "retry_backoff_max": float(self.cap_retry_backoff.get() or 0),
             "scroll_times": int(float(self.cap_scroll_times.get() or 0)),
             "scroll_pause_seconds": float(self.cap_scroll_pause.get() or 0),
-            "dump_capture_text": bool(self.cap_dump_capture.get()),
+            "dump_capture_html": bool(self.cap_dump_html.get()),
+            "dump_api_json": bool(self.cap_dump_api.get()),
             "username": self.cap_user.get(),
             "password": self.cap_pass.get(),
             "username_selector": self.cap_user_sel.get(),
@@ -944,7 +703,6 @@ class App(tk.Tk):
             "close_to_tray": bool(self.close_to_tray.get()),
             "window_geometry": self.geometry(),
             "settings_geometry": (self.settings_window.geometry() if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window) else self.scraper_settings_geometry),
-            "manual_parse_geometry": (self.manual_parse_window.geometry() if self.manual_parse_window and tk.Toplevel.winfo_exists(self.manual_parse_window) else self.manual_parse_geometry),
         }
         try:
             save_capture_config(self.capture_config_path, cfg, ["username", "password", "ha_token"])
@@ -964,7 +722,8 @@ class App(tk.Tk):
             "retry_backoff_max": float(self.cap_retry_backoff.get() or 0),
             "scroll_times": int(float(self.cap_scroll_times.get() or 0)),
             "scroll_pause_seconds": float(self.cap_scroll_pause.get() or 0),
-            "dump_capture_text": bool(self.cap_dump_capture.get()),
+            "dump_capture_html": bool(self.cap_dump_html.get()),
+            "dump_api_json": bool(self.cap_dump_api.get()),
             "username": self.cap_user.get(),
             "password": self.cap_pass.get(),
             "username_selector": self.cap_user_sel.get(),
@@ -988,7 +747,6 @@ class App(tk.Tk):
             "close_to_tray": bool(self.close_to_tray.get()),
             "window_geometry": self.geometry(),
             "settings_geometry": (self.settings_window.geometry() if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window) else self.scraper_settings_geometry),
-            "manual_parse_geometry": (self.manual_parse_window.geometry() if self.manual_parse_window and tk.Toplevel.winfo_exists(self.manual_parse_window) else self.manual_parse_geometry),
         }
         try:
             save_capture_config(target, cfg, ["username", "password", "ha_token"])
@@ -1390,37 +1148,26 @@ class App(tk.Tk):
         else:
             _log_debug(f"[export] falling back to file:// for {file_path}")
             webbrowser.open(file_path.as_uri())
-    def _on_text_right_click(self, event=None) -> None:
-        try:
-            clip = self.clipboard_get()
-        except Exception:
-            clip = ""
-        if clip:
-            if self.text.get("1.0", "end").strip() == self._placeholder.strip():
-                self.text.delete("1.0", "end")
-            self.text.insert("insert", clip)
-    def _on_click_anywhere(self, event) -> None:
-        # If click is outside the text widget, clear selection and focus
-        widget = event.widget
-        if not self._is_descendant(self.text, widget):
-            try:
-                self.text.tag_remove("sel", "1.0", "end")
-            except Exception:
-                pass
-            try:
-                widget.focus_set()
-            except Exception:
-                pass
-    @staticmethod
-    def _is_descendant(parent, widget) -> bool:
-        while widget:
-            if widget == parent:
-                return True
-            widget = getattr(widget, "master", None)
-        return False
     def process(self):
-        raw = self.text.get("1.0", "end")
-        items = parse_clinic_text(raw)
+        api_items = []
+        try:
+            payloads = None
+            latest_path = DATA_DIR / "api_latest.json"
+            if latest_path.exists():
+                payloads = json.loads(latest_path.read_text(encoding="utf-8"))
+            else:
+                api_files = sorted(DATA_DIR.glob("api_dump_*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+                if api_files:
+                    payloads = json.loads(api_files[0].read_text(encoding="utf-8"))
+            if payloads:
+                api_items = parse_api_payloads(payloads)
+        except Exception:
+            api_items = []
+        if not api_items:
+            self._capture_log("No API data found; skipping parse.")
+            return
+        items = list(api_items)
+        self._capture_log(f"API items parsed: {len(items)}")
         prev_items = load_last_parse(LAST_PARSE_FILE)
         identity_cache = _build_identity_cache(prev_items)
         prev_keys = { _identity_key_cached(it, identity_cache) for it in prev_items }
@@ -1433,16 +1180,12 @@ class App(tk.Tk):
         self.prev_items = prev_items
         self.prev_keys = prev_keys
         self.removed_data = []
-        seen = set()
-        deduped = []
         price_up = 0
         price_down = 0
+        deduped = []
         for it in items:
-            ident_key = make_identity_key(it)
-            if ident_key in seen:
-                continue
-            seen.add(ident_key)
             it = dict(it)
+            ident_key = make_identity_key(it)
             it["is_new"] = ident_key not in prev_keys
             # Price delta vs prior parse
             delta = None
@@ -1621,156 +1364,12 @@ class App(tk.Tk):
                 self.status.config(text="Idle")
         except Exception:
             pass
-    def open_parser_settings(self):
-        hints = [dict(brand=h.get("brand"), patterns=list(h.get("patterns") or h.get("phrases") or []), display=h.get("display")) for h in _load_brand_hints()]
-        win = tk.Toplevel(self)
-        win.title("Parser Settings - Brands")
-        win.geometry("620x520")
-        try:
-            win.iconbitmap(self._resource_path('assets/icon2.ico'))
-        except Exception:
-            pass
-        dark = self.dark_mode_var.get()
-        bg = "#111" if dark else "#f4f4f4"
-        fg = "#eee" if dark else "#111"
-        accent = "#4a90e2" if dark else "#666666"
-        list_bg = "#1e1e1e" if dark else "#ffffff"
-        list_fg = fg
-        entry_bg = list_bg
-        win.configure(bg=bg)
-        brand_var = tk.StringVar()
-        pattern_var = tk.StringVar()
-        entry_style = "ParserEntry.TEntry"
-        try:
-            self.style.configure(entry_style, fieldbackground=entry_bg, background=entry_bg, foreground=fg, insertcolor=fg)
-        except Exception:
-            pass
-        left = ttk.Frame(win, padding=8)
-        left.pack(side="left", fill="both", expand=True)
-        right = ttk.Frame(win, padding=8)
-        right.pack(side="right", fill="both", expand=True)
-        ttk.Label(left, text="Brands").pack(anchor="w")
-        brand_list = tk.Listbox(left, height=14, bg=list_bg, fg=list_fg, selectbackground=accent, selectforeground=bg, highlightbackground=bg, relief="flat")
-        brand_list.pack(fill="both", expand=True, pady=4)
-        ttk.Label(right, text="Patterns").pack(anchor="w")
-        pattern_list = tk.Listbox(right, height=14, bg=list_bg, fg=list_fg, selectbackground=accent, selectforeground=bg, highlightbackground=bg, relief="flat")
-        pattern_list.pack(fill="both", expand=True, pady=4)
-        brand_entry = ttk.Entry(left, textvariable=brand_var, style=entry_style)
-        brand_entry.pack(fill="x", pady=2)
-        pattern_entry = ttk.Entry(right, textvariable=pattern_var, style=entry_style)
-        pattern_entry.pack(fill="x", pady=2)
-        def sort_hints():
-            hints.sort(key=lambda h: (h.get("brand") or "").lower())
-        def refresh_brands(sel_index=0):
-            sort_hints()
-            brand_list.delete(0, tk.END)
-            for h in hints:
-                brand_list.insert(tk.END, h.get("brand") or "")
-            if hints:
-                idx = min(sel_index, len(hints) - 1)
-                brand_list.select_set(idx)
-                brand_list.event_generate("<<ListboxSelect>>")
-        def refresh_patterns():
-            pattern_list.delete(0, tk.END)
-            sel = brand_list.curselection()
-            if not sel:
-                return
-            pats = hints[sel[0]].get("patterns") or []
-            for p in pats:
-                pattern_list.insert(tk.END, p)
-        def on_brand_select(event=None):
-            sel = brand_list.curselection()
-            if not sel:
-                return
-            brand_var.set(hints[sel[0]].get("brand") or "")
-            refresh_patterns()
-        brand_list.bind("<<ListboxSelect>>", on_brand_select)
-        def add_brand():
-            name = brand_var.get().strip()
-            if not name:
-                messagebox.showinfo("Brand", "Enter a brand name.")
-                return
-            hints.append({"brand": name, "patterns": []})
-            refresh_brands(len(hints) - 1)
-        def update_brand():
-            sel = brand_list.curselection()
-            if not sel:
-                messagebox.showinfo("Brand", "Select a brand to rename.")
-                return
-            name = brand_var.get().strip()
-            if not name:
-                messagebox.showinfo("Brand", "Enter a brand name.")
-                return
-            hints[sel[0]]["brand"] = name
-            refresh_brands(sel[0])
-        def delete_brand():
-            sel = brand_list.curselection()
-            if not sel:
-                return
-            del hints[sel[0]]
-            refresh_brands(max(sel[0] - 1, 0))
-        def add_pattern():
-            sel = brand_list.curselection()
-            if not sel:
-                messagebox.showinfo("Pattern", "Select a brand first.")
-                return
-            pat = pattern_var.get().strip()
-            if not pat:
-                messagebox.showinfo("Pattern", "Enter a pattern.")
-                return
-            pats = hints[sel[0]].setdefault("patterns", [])
-            if pat not in pats:
-                pats.append(pat)
-                refresh_patterns()
-        def replace_pattern():
-            bsel = brand_list.curselection()
-            psel = pattern_list.curselection()
-            if not bsel or not psel:
-                messagebox.showinfo("Pattern", "Select a pattern to replace.")
-                return
-            pat = pattern_var.get().strip()
-            if not pat:
-                messagebox.showinfo("Pattern", "Enter a pattern.")
-                return
-            pats = hints[bsel[0]].setdefault("patterns", [])
-            pats[psel[0]] = pat
-            refresh_patterns()
-            pattern_list.select_set(psel[0])
-        def delete_pattern():
-            bsel = brand_list.curselection()
-            psel = pattern_list.curselection()
-            if not bsel or not psel:
-                return
-            pats = hints[bsel[0]].get("patterns") or []
-            if 0 <= psel[0] < len(pats):
-                del pats[psel[0]]
-            refresh_patterns()
-        def save_and_close():
-            _save_brand_hints(hints)
-            messagebox.showinfo("Saved", "Parser brand settings saved.")
-            win.destroy()
-        ttk.Button(left, text="Add Brand", command=add_brand).pack(fill="x", pady=2)
-        ttk.Button(left, text="Rename Brand", command=update_brand).pack(fill="x", pady=2)
-        ttk.Button(left, text="Delete Brand", command=delete_brand).pack(fill="x", pady=2)
-        ttk.Button(right, text="Add Pattern", command=add_pattern).pack(fill="x", pady=2)
-        ttk.Button(right, text="Replace Pattern", command=replace_pattern).pack(fill="x", pady=2)
-        ttk.Button(right, text="Delete Pattern", command=delete_pattern).pack(fill="x", pady=2)
-        ttk.Button(win, text="Save & Close", command=save_and_close).pack(fill="x", padx=10, pady=8)
-        # Apply simple dark/light styling to the popup background
-        for widget in (left, right):
-            widget.configure(style="TFrame")
-        for lbl in win.winfo_children():
-            if isinstance(lbl, ttk.Label):
-                lbl.configure(background=bg, foreground=fg)
-        win.configure(bg=bg)
-        self.after(50, lambda: self._set_window_titlebar_dark(win, dark))
-        refresh_brands()
+
     def apply_theme(self):
         dark = self.dark_mode_var.get()
         colors = compute_colors(dark)
         apply_style_theme(self.style, colors)
         self.configure(bg=colors["bg"])
-        self.text.configure(bg=colors["bg"], fg=colors["fg"], insertbackground=colors["fg"])
         self.status.configure(background=colors["bg"], foreground=colors["fg"])
         # Scrollbar theming (tk + ttk)
         self.option_add("*Scrollbar.background", colors["ctrl_bg"])

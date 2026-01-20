@@ -1,29 +1,47 @@
 import unittest
 
-from parser import make_identity_key, parse_clinic_text
+from parser import make_identity_key, parse_api_payloads
 
 
 class TestParser(unittest.TestCase):
-    def test_parse_clinic_text_basic(self):
-        text = """
-IN STOCK
-Producer Co CANNABIS FLOWER (ABC123)
-Example Strain | Hybrid
-10 g
-GBP 8.50
-THC: 20 %
-CBD: 1 %
-"""
-        items = parse_clinic_text(text)
+    def test_parse_api_payloads_basic(self):
+        payloads = [
+            {
+                "url": "https://api.example.com/formulary-products?take=1",
+                "data": [
+                    {
+                        "productId": 123,
+                        "name": "Example Flower",
+                        "product": {
+                            "brand": {"name": "Producer Co"},
+                            "cannabisSpecification": {
+                                "strainName": "Example Strain",
+                                "strainType": "Hybrid",
+                                "format": "Flower",
+                                "size": 10,
+                                "volumeUnit": "GRAMS",
+                                "thcContent": 20,
+                                "cbdContent": 1,
+                            },
+                        },
+                        "pricingOptions": {
+                            "STANDARD": {"price": 8.5, "totalAvailability": 5}
+                        },
+                    }
+                ],
+            }
+        ]
+        items = parse_api_payloads(payloads)
         self.assertEqual(len(items), 1)
         item = items[0]
         self.assertEqual(item.get("product_type"), "flower")
-        self.assertEqual(item.get("product_id"), "ABC123")
+        self.assertEqual(item.get("product_id"), "123")
         self.assertEqual(item.get("strain"), "Example Strain")
         self.assertEqual(item.get("strain_type"), "Hybrid")
-        self.assertEqual(item.get("stock"), "IN STOCK")
+        self.assertEqual(item.get("stock_status"), "LOW STOCK")
+        self.assertEqual(item.get("stock_detail"), "5 remaining")
         self.assertAlmostEqual(item.get("grams") or 0, 10.0)
-        self.assertAlmostEqual(item.get("price") or 0, 8.50)
+        self.assertAlmostEqual(item.get("price") or 0, 8.5)
         self.assertAlmostEqual(item.get("thc") or 0, 20.0)
         self.assertEqual(item.get("thc_unit"), "%")
         self.assertAlmostEqual(item.get("cbd") or 0, 1.0)
@@ -48,30 +66,6 @@ CBD: 1 %
         item_a = dict(base, price=8.5)
         item_b = dict(base, price=9.0)
         self.assertEqual(make_identity_key(item_a), make_identity_key(item_b))
-
-    def test_parse_price_variants(self):
-        text = """
-IN STOCK
-Producer Co CANNABIS FLOWER (ABC123)
-Example Strain | Hybrid
-10 g
-PRICE: 7.25
-"""
-        items = parse_clinic_text(text)
-        self.assertEqual(len(items), 1)
-        self.assertAlmostEqual(items[0].get("price") or 0, 7.25)
-
-        text2 = """
-IN STOCK
-Producer Co CANNABIS FLOWER (ABC123)
-Example Strain | Hybrid
-10 g
-GBP 8.50
-"""
-        items2 = parse_clinic_text(text2)
-        self.assertEqual(len(items2), 1)
-        self.assertAlmostEqual(items2[0].get("price") or 0, 8.50)
-
 
 
 if __name__ == "__main__":

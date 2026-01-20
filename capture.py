@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import urllib.parse
 import os
 import sys
 import threading
@@ -93,6 +95,7 @@ class CaptureWorker:
     ):
         self.cfg: dict = cfg
         self.callbacks: CaptureCallbacks = callbacks
+        self.formulary_headers: dict | None = None
         self.app_dir = app_dir
         self.install_fn = install_fn
         self.thread: Optional[threading.Thread] = None
@@ -144,6 +147,81 @@ class CaptureWorker:
                         self._set_status("faulted", f"Browser launch failed: {exc}")
                         return
                 page = browser.new_page()
+                api_payloads = []
+                xhr_urls = []
+                def _capture_response(resp):
+                    try:
+                        ctype = (resp.headers.get("content-type") or "").lower()
+                        url = resp.url or ""
+                        req = resp.request
+                        rtype = (req.resource_type or "").lower() if req else ""
+                        if rtype in ("xhr", "fetch"):
+                            if url and len(xhr_urls) < 50:
+                                xhr_urls.append(url)
+                        wants_data = any(tok in url for tok in ("formulary", "rpc-api", "entity-api", "api"))
+                        if not wants_data and "json" not in ctype and rtype not in ("xhr", "fetch"):
+                            return
+                        data = None
+                        parse_failed = False
+                        try:
+                            data = resp.json()
+                        except Exception:
+                            parse_failed = True
+                        if parse_failed:
+                            try:
+                                raw = resp.text()
+                                data = json.loads(raw)
+                                parse_failed = False
+                            except Exception:
+                                pass
+                    except Exception:
+                        return
+                    try:
+                        if isinstance(data, list) and data and isinstance(data[0], dict):
+                            if 'formulary-products' in (url or ''):
+                                try:
+                                    req_headers = resp.request.headers
+                                    if isinstance(req_headers, dict):
+                                        self.formulary_headers = {k: v for k, v in req_headers.items() if k.lower() not in ('accept-encoding', 'host', 'content-length')}
+                                except Exception:
+                                    pass
+                    except Exception:
+                        pass
+                    try:
+                        payload = {"url": resp.url, "content_type": ctype, "status": getattr(resp, 'status', None)}
+                        if data is not None:
+                            if isinstance(data, dict):
+                                payload["kind"] = "dict"
+                                payload["keys"] = list(data.keys())[:50]
+                            elif isinstance(data, list):
+                                payload["kind"] = "list"
+                                payload["count"] = len(data)
+                            else:
+                                payload["kind"] = type(data).__name__
+                            try:
+                                import json as _json
+                                raw = _json.dumps(data, ensure_ascii=False)
+                                if len(raw) <= 8_000_000:
+                                    payload["data"] = data
+                                else:
+                                    payload["data_truncated"] = raw[:2000]
+                            except Exception:
+                                pass
+                        else:
+                            try:
+                                body = resp.body()
+                                if body:
+                                    payload["body_truncated"] = body[:2000].decode(errors='replace')
+                            except Exception:
+                                pass
+                        api_payloads.append(payload)
+                    except Exception:
+                        pass
+
+                try:
+                    page.on("response", _capture_response)
+                except Exception:
+                    pass
                 nav_timeout = self.cfg.get("timeout_ms") or self.cfg.get("timeout") or 45000
                 try:
                     page.set_default_timeout(nav_timeout)
@@ -167,6 +245,8 @@ class CaptureWorker:
                 first_cycle = True
                 while not self.callbacks["stop_event"].is_set():
                     self._set_status("running", f"Navigating to {self.cfg['url']}")
+                    api_payloads.clear()
+                    self.formulary_headers = None
                     try:
                         retries_left = self.retry_policy.retry_attempts
                         wait_post = max(self.cfg.get("post_nav_wait_seconds", 0), 0)
@@ -281,32 +361,15 @@ class CaptureWorker:
                             self.callbacks["capture_log"](f"Waiting {wait_post}s after navigation")
                             if self.callbacks["responsive_wait"](wait_post, label="Waiting after navigation"):
                                 break
-                        scroll_times = int(self.cfg.get("scroll_times", 0) or 0)
-                        scroll_pause = float(self.cfg.get("scroll_pause_seconds", 0) or 0)
-                        if scroll_times > 0:
-                            self.callbacks["capture_log"](f"Scrolling {scroll_times}x for lazy-loaded products.")
-                            try:
-                                page.wait_for_timeout(500)
-                            except Exception:
-                                time.sleep(0.5)
-                            for idx in range(scroll_times):
-                                if self.callbacks["stop_event"].is_set():
-                                    break
-                                try:
-                                    page.evaluate("() => window.scrollTo(0, document.body.scrollHeight)")
-                                except Exception:
-                                    try:
-                                        page.keyboard.press("PageDown")
-                                    except Exception:
-                                        pass
-                                try:
-                                    page.wait_for_timeout(int(max(0.1, scroll_pause) * 1000))
-                                except Exception:
-                                    time.sleep(max(0.1, scroll_pause))
-                            try:
-                                page.evaluate("() => window.scrollTo(0, 0)")
-                            except Exception:
-                                pass
+                        try:
+                            page.wait_for_response(lambda r: 'formulary-products' in (r.url or '') or 'formulary' in (r.url or ''), timeout=20000)
+                        except Exception:
+                            self.callbacks["capture_log"]("No formulary-products response observed yet.")
+                        try:
+                            page.wait_for_load_state("networkidle", timeout=20000)
+                        except Exception:
+                            pass
+                        # Scrolling disabled: API responses are sufficient and scrolling adds delay.
                         def collect_once(refresh: bool) -> bool:
                             if refresh:
                                 try:
@@ -316,34 +379,128 @@ class CaptureWorker:
                                     self.callbacks["capture_log"]("Refresh timed out; using current content.")
                                 except Exception as exc:
                                     self.callbacks["capture_log"](f"Refresh error; using current content. ({exc})")
-                            self.callbacks["capture_log"]("Page ready; collecting text.")
-                            body = page.locator("body")
-                            text = None
+                            self.callbacks["capture_log"]("Page ready; collecting data.")
+                            # Expand formulary pagination when only first page captured.
                             try:
-                                text = body.inner_text()
+                                base_payload = next((p for p in api_payloads if 'formulary-products' in (p.get('url') or '') and isinstance(p.get('data'), list)), None)
+                                count_payload = next((p for p in api_payloads if "formulary-products/count" in (p.get("url") or "") and isinstance(p.get("data"), dict)), None)
+                                if base_payload:
+                                    base_url = base_payload.get('url') or ''
+                                    data_list = base_payload.get('data') or []
+                                    take = 50
+                                    try:
+                                        take = int(urllib.parse.parse_qs(urllib.parse.urlparse(base_url).query).get('take', [take])[0])
+                                    except Exception:
+                                        pass
+                                    total = None
+                                    if count_payload:
+                                        try:
+                                            total = count_payload.get("data", {}).get("count")
+                                            if total is None:
+                                                total = count_payload.get("data", {}).get("total")
+                                        except Exception:
+                                            total = None
+                                    if total is None and isinstance(data_list, list):
+                                        total = len(data_list)
+                                    if total is not None:
+                                        try:
+                                            self.callbacks["capture_log"](f"Pagination: base={len(data_list)} total={total} take={take}")
+                                        except Exception:
+                                            pass
+                                    if total and isinstance(data_list, list) and len(data_list) < total:
+
+                                        for skip in range(take, int(total), take):
+                                            if self.callbacks["stop_event"].is_set():
+                                                break
+                                            try:
+                                                parsed = urllib.parse.urlparse(base_url)
+                                                q = urllib.parse.parse_qs(parsed.query)
+                                                q['skip'] = [str(skip)]
+                                                q['take'] = [str(take)]
+                                                new_query = urllib.parse.urlencode(q, doseq=True)
+                                                next_url = urllib.parse.urlunparse(parsed._replace(query=new_query))
+                                                resp = page.request.get(next_url, headers=self.formulary_headers)
+                                                try:
+                                                    self.callbacks["capture_log"](f"Pagination fetch skip={skip} status={resp.status}")
+                                                except Exception:
+                                                    pass
+                                                if resp.ok:
+                                                    try:
+                                                        more = resp.json()
+                                                    except Exception:
+                                                        more = None
+                                                    if isinstance(more, list):
+                                                        api_payloads.append({"url": next_url, "content_type": "application/json", "kind": "list", "count": len(more), "data": more})
+                                            except Exception as exc:
+                                                self.callbacks["capture_log"](f"Pagination fetch failed: {exc}")
+                                                break
                             except Exception:
-                                text = None
-                            if not text or len(text.strip()) < 500:
+                                pass
+                            api_count = 0
+                            for payload in api_payloads:
                                 try:
-                                    alt = page.evaluate("() => document.body.innerText")
+                                    data = payload.get("data")
+                                    if isinstance(data, list) and data:
+                                        if isinstance(data[0], dict) and ("product" in data[0] or "formularyId" in data[0]):
+                                            api_count += len(data)
+                                    elif isinstance(data, dict):
+                                        items = data.get("items") or data.get("data") or data.get("results")
+                                        if isinstance(items, list) and items:
+                                            if isinstance(items[0], dict) and ("product" in items[0] or "formularyId" in items[0]):
+                                                api_count += len(items)
                                 except Exception:
-                                    alt = None
-                                if alt and len(alt.strip()) > len(text or ""):
-                                    text = alt
-                            if not text.strip():
+                                    pass
+                            if api_count <= 0:
+                                if api_payloads:
+                                    try:
+                                        urls = [p.get("url") for p in api_payloads[:5]]
+                                        self.callbacks["capture_log"](f"No API list data found. Sample URLs: {urls}")
+                                    except Exception:
+                                        pass
+                                else:
+                                    if xhr_urls:
+                                        sample = list(dict.fromkeys(xhr_urls))[:5]
+                                        self.callbacks["capture_log"](f"No API JSON decoded. Sample XHR: {sample}")
+                                    else:
+                                        self.callbacks["capture_log"]("No API responses captured yet.")
                                 return False
                             self.empty_failures = 0
-                            if self.cfg.get("dump_capture_text"):
+                            dump_dir = None
+                            stamp = None
+                            try:
+                                dump_dir = Path(self.app_dir) / "data"
+                                dump_dir.mkdir(parents=True, exist_ok=True)
+                            except Exception:
+                                dump_dir = None
+                            if self.cfg.get("dump_capture_html") or self.cfg.get("dump_api_json"):
+                                stamp = time.strftime("%Y%m%d_%H%M%S")
+                            if dump_dir:
+                                if not api_payloads:
+                                    self.callbacks["capture_log"]("No API JSON responses captured.")
+                                else:
+                                    try:
+                                        latest_path = dump_dir / "api_latest.json"
+                                        latest_path.write_text(json.dumps(api_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
+                                    except Exception as exc:
+                                        self.callbacks["capture_log"](f"API latest write failed: {exc}")
+                                    if self.cfg.get("dump_api_json") and stamp:
+                                        try:
+                                            api_path = dump_dir / f"api_dump_{stamp}.json"
+                                            api_path.write_text(json.dumps(api_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
+                                            self.callbacks["capture_log"](f"Saved API dump: {api_path}")
+                                        except Exception as exc:
+                                            self.callbacks["capture_log"](f"API dump failed: {exc}")
+                            if self.cfg.get("dump_capture_html") and dump_dir and stamp:
                                 try:
-                                    dump_dir = Path(self.app_dir) / "data"
-                                    dump_dir.mkdir(parents=True, exist_ok=True)
-                                    stamp = time.strftime("%Y%m%d_%H%M%S")
-                                    dump_path = dump_dir / f"capture_dump_{stamp}.txt"
-                                    dump_path.write_text(text, encoding="utf-8")
-                                    self.callbacks["capture_log"](f"Saved capture dump: {dump_path}")
+                                    html_path = dump_dir / f"page_dump_{stamp}.html"
+                                    html_path.write_text(page.content(), encoding="utf-8")
+                                    self.callbacks["capture_log"](f"Saved page HTML: {html_path}")
                                 except Exception as exc:
-                                    self.callbacks["capture_log"](f"Capture dump failed: {exc}")
-                            self.callbacks["apply_text"](text)
+                                    self.callbacks["capture_log"](f"HTML dump failed: {exc}")
+                            try:
+                                self.callbacks["apply_text"]("")
+                            except Exception:
+                                pass
                             return True
 
                         # First attempt: no refresh, assume page loaded during waits.
@@ -381,7 +538,12 @@ class CaptureWorker:
             self._set_status("faulted", f"Auto-capture error: {exc}")
         finally:
             self.callbacks["stop_event"].set()
-            self.callbacks["on_stop"]()
+            on_stop = self.callbacks.get("on_stop")
+            if on_stop:
+                try:
+                    on_stop()
+                except Exception:
+                    pass
 
 
 def ensure_playwright_installed(app_dir: Path, log: Callable[[str], None]) -> Optional[tuple]:
