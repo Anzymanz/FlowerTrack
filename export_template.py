@@ -76,6 +76,7 @@ button:hover{background:var(--hover)}
 .light .card-removed{background:#ffe6e6;border-color:#e0b3b3}
 .light .card-new{background:#e6ffef;border-color:#b3e0c5}
 .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--pill);margin:4px 6px 0 0;font-size:13px;color:var(--fg)}
+.flag-icon{width:18px;height:12px;object-fit:cover;border-radius:2px;margin-right:6px;vertical-align:-2px}
 .pill-flag{font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif}
 .price-up{background:#3a1a1a;color:#f6c6c6}
 .price-down{background:#15331e;color:#b7f0c8}

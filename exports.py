@@ -96,7 +96,7 @@ def format_brand(value: str | None) -> str:
     return " ".join(parts)
 
 
-def _country_flag(code: str | None) -> str | None:
+def _country_code2(code: str | None) -> str | None:
     if not code:
         return None
     raw = str(code).strip().upper()
@@ -135,17 +135,15 @@ def _country_flag(code: str | None) -> str | None:
     }
     code2 = alpha3_to_alpha2.get(raw, raw)
     if len(code2) != 2 or not code2.isalpha():
-        return raw
-    return "".join(chr(127397 + ord(ch)) for ch in code2)
-
-def _country_label(code: str | None) -> str | None:
-    if not code:
         return None
-    raw = str(code).strip().upper()
-    flag = _country_flag(raw)
-    if flag:
-        return f"{flag} {raw}"
-    return raw
+    return code2.lower()
+
+
+def _flag_cdn_url(code: str | None) -> str | None:
+    code2 = _country_code2(code)
+    if not code2:
+        return None
+    return f"https://flagcdn.com/24x18/{code2}.png"
 
 
 def init_exports(assets_dir: Path, exports_dir: Optional[Path] = None) -> None:
@@ -324,7 +322,7 @@ def export_html(data, path, fetch_images=False):
                 price_class += " price-down"
                 delta_text = f" (-£{abs(price_delta):.2f})"
         price_label = "??" if price is None else f"£{price:.2f}"
-        price_pill = f"<span class='{price_class}' data-pricedelta='{esc_attr(price_delta if price_delta is not None else '')}'>{esc(price_label + delta_text)}</span>"
+        price_pill = f"<span class='{price_class}' data-pricedelta='{esc_attr(price_delta if price_delta is not None else '')}'>💵 {esc(price_label + delta_text)}</span>"
         price_badge = ""
         price_border_class = ""
         if isinstance(price_delta, (int, float)) and price_delta:
@@ -335,7 +333,7 @@ def export_html(data, path, fetch_images=False):
         stock_text = (it.get("stock_detail") or it.get("stock_status") or it.get("stock") or "").strip()
         if it.get("stock_remaining") is not None:
             stock_text = f"{it.get('stock_remaining')} remaining"
-        stock_pill = f"<span class='pill'>{esc(stock_text)}</span>" if stock_text else ""
+        stock_pill = f"<span class='pill'>📊 {esc(stock_text)}</span>" if stock_text else ""
         stock_indicator = (
             f"<span class='stock-indicator "
             f"{('stock-not-prescribable' if ((it.get('stock_status') or it.get('stock')) and 'NOT' in ((it.get('stock_status') or it.get('stock') or '').upper())) else ('stock-in' if ((it.get('stock_status') or it.get('stock')) and 'IN STOCK' in ((it.get('stock_status') or it.get('stock') or '').upper())) else ('stock-low' if ((it.get('stock_status') or it.get('stock')) and 'LOW' in ((it.get('stock_status') or it.get('stock') or '').upper())) else ('stock-out' if ((it.get('stock_status') or it.get('stock')) and 'OUT' in ((it.get('stock_status') or it.get('stock') or '').upper())) else ''))))}"
@@ -380,12 +378,12 @@ def export_html(data, path, fetch_images=False):
   <div class='card-content'>
     <div>
       {price_pill}
-      <span class='pill'>{qty or '?'}</span>
+      <span class='pill'>⚖️ {qty or '?'}</span>
       {stock_pill}
         {f"<span class='pill'>£/g {ppg:.2f}</span>" if ppg is not None else ''}
-        {f"<span class='pill'>{esc(it.get('strain_type'))}</span>" if it.get('strain_type') else ''}
-        {f"<span class='pill pill-flag'>{esc(_country_label(it.get('origin_country')))}</span>" if it.get('origin_country') else ''}
-        {f"<span class='pill'>{esc(it.get('irradiation_type'))}</span>" if (it.get('irradiation_type') and (it.get('product_type') or '').lower() not in ('vape','oil','device')) else ''}
+        {f"<span class='pill'>🍃 {esc(it.get('strain_type'))}</span>" if it.get('strain_type') else ''}
+        {f"<span class='pill pill-flag'><img class='flag-icon' src='{esc_attr(_flag_cdn_url(it.get('origin_country')))}' alt='{esc_attr(it.get('origin_country') or '')}' /> {esc(it.get('origin_country'))}</span>" if _flag_cdn_url(it.get('origin_country')) else ''}
+        {f"<span class='pill'>☢️ {esc(it.get('irradiation_type'))}</span>" if (it.get('irradiation_type') and (it.get('product_type') or '').lower() not in ('vape','oil','device')) else ''}
     </div>
     <div class='small'>🎉 THC: {esc(disp_thc)}</div>
     <div class='small'>🌱 CBD: {esc(disp_cbd)}</div>

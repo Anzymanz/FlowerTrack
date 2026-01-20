@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Switched scraper to API-based capture with pagination and auth header reuse.
+- Removed legacy text parsing and brand hint database tooling.
+- Added stock pills for all items and cleaned product title/type display.
+- Parsed irradiation type and origin country; display irradiation selectively and flags via flagcdn.
+- Added manual export & open button in scraper settings.
 - Fixed strain-type parsing when lines precede product headers.
 - Added capture dump toggle and log output for debugging auto-capture text.
 - Added organization selection in scraper login (with default selector) and settings UI.

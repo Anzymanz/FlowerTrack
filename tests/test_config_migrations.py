@@ -15,7 +15,6 @@ class TestConfigMigrations(unittest.TestCase):
             scraper = data.get("scraper", {})
             self.assertEqual(scraper.get("window_geometry"), DEFAULT_CAPTURE_CONFIG["window_geometry"])
             self.assertEqual(scraper.get("settings_geometry"), DEFAULT_CAPTURE_CONFIG["settings_geometry"])
-            self.assertEqual(scraper.get("manual_parse_geometry"), DEFAULT_CAPTURE_CONFIG["manual_parse_geometry"])
 
 
 if __name__ == "__main__":

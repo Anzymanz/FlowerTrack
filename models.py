@@ -13,6 +13,9 @@ class Item:
     strain_type: Optional[str]
     stock: Optional[str]
     product_type: Optional[str]
+    stock_status: Optional[str] = None
+    stock_detail: Optional[str] = None
+    stock_remaining: Optional[int] = None
     is_smalls: bool = False
     grams: Optional[float] = None
     ml: Optional[float] = None
@@ -33,6 +36,9 @@ class ItemDict(TypedDict, total=False):
     strain: Optional[str]
     strain_type: Optional[str]
     stock: Optional[str]
+    stock_status: Optional[str]
+    stock_detail: Optional[str]
+    stock_remaining: Optional[int]
     product_type: Optional[str]
     is_smalls: bool
     grams: Optional[float]
@@ -79,6 +85,9 @@ def item_from_dict(data: dict) -> Item:
         strain=data.get("strain"),
         strain_type=data.get("strain_type"),
         stock=data.get("stock"),
+        stock_status=data.get("stock_status"),
+        stock_detail=data.get("stock_detail"),
+        stock_remaining=data.get("stock_remaining"),
         product_type=data.get("product_type"),
         is_smalls=bool(data.get("is_smalls", False)),
         grams=data.get("grams"),

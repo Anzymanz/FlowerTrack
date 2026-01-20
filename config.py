@@ -25,7 +25,6 @@ DEFAULT_CAPTURE_CONFIG = {
     "organization_selector": "label:has-text(\"Organization\") + *",
     "window_geometry": "900x720",
     "settings_geometry": "560x960",
-    "manual_parse_geometry": "720x520",
     "interval_seconds": 60.0,
     "login_wait_seconds": 3.0,
     "post_nav_wait_seconds": 30.0,
@@ -34,7 +33,8 @@ DEFAULT_CAPTURE_CONFIG = {
     "retry_backoff_max": 4.0,
     "scroll_times": 0,
     "scroll_pause_seconds": 0.5,
-    "dump_capture_text": False,
+    "dump_capture_html": False,
+    "dump_api_json": False,
     "timeout_ms": 45000,
     "headless": True,
     "auto_notify_ha": False,
@@ -166,6 +166,17 @@ def _coerce_float(val: Any, default: float, min_value: float | None = None) -> f
         return default
 
 
+def _coerce_int(val: Any, default: int, min_value: int | None = None) -> int:
+    try:
+        i = int(float(val))
+        if min_value is not None and i < min_value:
+            return min_value
+        return i
+    except Exception:
+        return default
+
+
+
 def _validate_tracker_config(raw: dict) -> dict:
     cfg = dict(DEFAULT_TRACKER_CONFIG)
     if not isinstance(raw, dict):
@@ -231,10 +242,10 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["organization_selector"] = str(raw.get("organization_selector") or "").strip()
     cfg["scroll_times"] = int(_coerce_float(raw.get("scroll_times"), DEFAULT_CAPTURE_CONFIG["scroll_times"], 0))
     cfg["scroll_pause_seconds"] = _coerce_float(raw.get("scroll_pause_seconds"), DEFAULT_CAPTURE_CONFIG["scroll_pause_seconds"], 0.0)
-    cfg["dump_capture_text"] = _coerce_bool(raw.get("dump_capture_text"), DEFAULT_CAPTURE_CONFIG["dump_capture_text"])
+    cfg["dump_capture_html"] = _coerce_bool(raw.get("dump_capture_html"), DEFAULT_CAPTURE_CONFIG["dump_capture_html"])
+    cfg["dump_api_json"] = _coerce_bool(raw.get("dump_api_json"), DEFAULT_CAPTURE_CONFIG["dump_api_json"])
     cfg["window_geometry"] = str(raw.get("window_geometry") or DEFAULT_CAPTURE_CONFIG["window_geometry"]).strip() or DEFAULT_CAPTURE_CONFIG["window_geometry"]
     cfg["settings_geometry"] = str(raw.get("settings_geometry") or DEFAULT_CAPTURE_CONFIG["settings_geometry"]).strip() or DEFAULT_CAPTURE_CONFIG["settings_geometry"]
-    cfg["manual_parse_geometry"] = str(raw.get("manual_parse_geometry") or DEFAULT_CAPTURE_CONFIG["manual_parse_geometry"]).strip() or DEFAULT_CAPTURE_CONFIG["manual_parse_geometry"]
     cfg["interval_seconds"] = _coerce_float(raw.get("interval_seconds"), DEFAULT_CAPTURE_CONFIG["interval_seconds"], 1.0)
     cfg["login_wait_seconds"] = _coerce_float(raw.get("login_wait_seconds"), DEFAULT_CAPTURE_CONFIG["login_wait_seconds"], 0.0)
     cfg["post_nav_wait_seconds"] = _coerce_float(
