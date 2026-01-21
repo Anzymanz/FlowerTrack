@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import urllib.parse
+import urllib.request
 import os
 import sys
 import threading
@@ -96,6 +97,8 @@ class CaptureWorker:
         self.cfg: dict = cfg
         self.callbacks: CaptureCallbacks = callbacks
         self.formulary_headers: dict | None = None
+        self.formulary_base_url: str | None = None
+        self.formulary_cookie_header: str | None = None
         self.app_dir = app_dir
         self.install_fn = install_fn
         self.thread: Optional[threading.Thread] = None
@@ -180,9 +183,25 @@ class CaptureWorker:
                         if isinstance(data, list) and data and isinstance(data[0], dict):
                             if 'formulary-products' in (url or ''):
                                 try:
+                                    self.formulary_base_url = url
+                                except Exception:
+                                    pass
+                                try:
                                     req_headers = resp.request.headers
                                     if isinstance(req_headers, dict):
                                         self.formulary_headers = {k: v for k, v in req_headers.items() if k.lower() not in ('accept-encoding', 'host', 'content-length')}
+                                except Exception:
+                                    pass
+                                try:
+                                    cookies = page.context.cookies()
+                                    if cookies:
+                                        parts = []
+                                        for c in cookies:
+                                            name = c.get('name')
+                                            if name:
+                                                parts.append(f"{name}={c.get('value')}")
+                                        if parts:
+                                            self.formulary_cookie_header = "; ".join(parts)
                                 except Exception:
                                     pass
                     except Exception:
@@ -247,6 +266,8 @@ class CaptureWorker:
                     self._set_status("running", f"Navigating to {self.cfg['url']}")
                     api_payloads.clear()
                     self.formulary_headers = None
+                    self.formulary_base_url = None
+                    self.formulary_cookie_header = None
                     try:
                         retries_left = self.retry_policy.retry_attempts
                         wait_post = max(self.cfg.get("post_nav_wait_seconds", 0), 0)
@@ -370,6 +391,18 @@ class CaptureWorker:
                         except Exception:
                             pass
                         # Scrolling disabled: API responses are sufficient and scrolling adds delay.
+                        def _http_get_json(url: str):
+                            headers = dict(self.formulary_headers or {})
+                            if self.formulary_cookie_header:
+                                headers['Cookie'] = self.formulary_cookie_header
+                            try:
+                                req = urllib.request.Request(url, headers=headers)
+                                with urllib.request.urlopen(req, timeout=20) as resp:
+                                    body = resp.read()
+                                return json.loads(body.decode('utf-8'))
+                            except Exception as exc:
+                                self.callbacks["capture_log"](f"HTTP fetch failed: {exc}")
+                                return None
                         def collect_once(refresh: bool) -> bool:
                             if refresh:
                                 try:
@@ -419,18 +452,18 @@ class CaptureWorker:
                                                 q['take'] = [str(take)]
                                                 new_query = urllib.parse.urlencode(q, doseq=True)
                                                 next_url = urllib.parse.urlunparse(parsed._replace(query=new_query))
-                                                resp = page.request.get(next_url, headers=self.formulary_headers)
-                                                try:
-                                                    self.callbacks["capture_log"](f"Pagination fetch skip={skip} status={resp.status}")
-                                                except Exception:
-                                                    pass
-                                                if resp.ok:
+                                                more = _http_get_json(next_url)
+                                                if isinstance(more, list):
                                                     try:
-                                                        more = resp.json()
+                                                        self.callbacks["capture_log"](f"Pagination fetch skip={skip} status=200")
                                                     except Exception:
-                                                        more = None
-                                                    if isinstance(more, list):
-                                                        api_payloads.append({"url": next_url, "content_type": "application/json", "kind": "list", "count": len(more), "data": more})
+                                                        pass
+                                                    api_payloads.append({"url": next_url, "content_type": "application/json", "kind": "list", "count": len(more), "data": more})
+                                                else:
+                                                    try:
+                                                        self.callbacks["capture_log"](f"Pagination fetch skip={skip} status=error")
+                                                    except Exception:
+                                                        pass
                                             except Exception as exc:
                                                 self.callbacks["capture_log"](f"Pagination fetch failed: {exc}")
                                                 break
