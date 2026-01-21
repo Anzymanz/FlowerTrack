@@ -148,6 +148,7 @@ class App(tk.Tk):
         self.status.pack(pady=(2, 2))
         # Capture status bookkeeping
         self.capture_status = "idle"
+        self._write_scraper_state("idle")
         self.error_count = 0
         self.error_threshold = 3
         self._empty_retry_pending = False
@@ -289,6 +290,7 @@ class App(tk.Tk):
         self.error_count = 0
         self._empty_retry_pending = False
         self._update_tray_status()
+        self._write_scraper_state("running")
         def install_cb():
             return install_playwright_browsers(Path(APP_DIR), self._capture_log)
         req = ensure_browser_available(Path(APP_DIR), self._capture_log, install_cb=install_cb)
@@ -312,6 +314,7 @@ class App(tk.Tk):
             self.capture_stop.set()
         self._capture_log("Auto-capture stopped.")
         self._update_tray_status()
+        self._write_scraper_state("stopped")
 
     def _set_next_capture_timer(self, seconds: float) -> None:
         try:
@@ -604,6 +607,11 @@ class App(tk.Tk):
         except Exception:
             pass
         self._update_tray_status()
+    def _write_scraper_state(self, status: str) -> None:
+        try:
+            write_scraper_state(SCRAPER_STATE_FILE, status, pid=os.getpid())
+        except Exception:
+            pass
     def load_capture_config(self):
         path = filedialog.askopenfilename(
             title="Select capture config JSON",
