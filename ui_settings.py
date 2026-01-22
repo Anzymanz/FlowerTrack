@@ -22,8 +22,15 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     app.settings_window = win
     if not hasattr(app, "show_advanced_scraper"):
         app.show_advanced_scraper = tk.BooleanVar(value=False)
+    else:
+        app.show_advanced_scraper.set(False)
     win.title("Settings")
-    win.geometry(getattr(app, "scraper_settings_geometry", "560x960"))
+    base_geometry = getattr(app, "scraper_settings_geometry", "560x600")
+    win.geometry(base_geometry)
+    try:
+        base_width, base_height = [int(x) for x in base_geometry.split("x", 1)]
+    except ValueError:
+        base_width, base_height = 560, 600
     try:
         icon_path = assets_dir / "icon.ico"
         if icon_path.exists():
@@ -35,12 +42,9 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         pass
     app.after(50, lambda: app._set_window_titlebar_dark(win, app.dark_mode_var.get()))
 
-    notebook = ttk.Notebook(win, style="Settings.TNotebook")
-    notebook.pack(fill="both", expand=True, padx=8, pady=8)
-
-    # Scraper tab
-    scraper_tab = ttk.Frame(notebook, padding=8)
-    notebook.add(scraper_tab, text="Scraper")
+    # Scraper content (single tab)
+    scraper_tab = ttk.Frame(win, padding=8)
+    scraper_tab.pack(fill="both", expand=True, padx=8, pady=8)
     ttk.Label(
         scraper_tab,
         text="Configure how the scraper logs in, waits, and captures the page. "
@@ -55,50 +59,18 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     form.columnconfigure(1, weight=1)
 
     row_idx = 0
-    ttk.Label(form, text="Target URL").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    url_entry = ttk.Entry(form, textvariable=app.cap_url, width=50)
-    url_entry.grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
+    ttk.Label(form, text="Username").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(form, textvariable=app.cap_user, width=40).grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
     row_idx += 1
 
-    url_hint = ttk.Label(form, text="", style="Hint.TLabel")
-    url_hint.grid(row=row_idx, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 6))
+    ttk.Label(form, text="Password").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(form, textvariable=app.cap_pass, show="*", width=40).grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
     row_idx += 1
 
-    ttk.Label(form, text="Interval (seconds)").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(form, textvariable=app.cap_interval, width=10).grid(row=row_idx, column=1, sticky="w", padx=6, pady=2)
-    row_idx += 1
-
-    ttk.Label(form, text="Headless").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Checkbutton(form, variable=app.cap_headless).grid(row=row_idx, column=1, sticky="w", padx=6, pady=2)
-    row_idx += 1
-
-    ttk.Label(form, text="Wait after login (s)").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(form, textvariable=app.cap_login_wait, width=10).grid(row=row_idx, column=1, sticky="w", padx=6, pady=2)
-    row_idx += 1
-
-    ttk.Label(form, text="Wait after navigation (s, min 5)").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(form, textvariable=app.cap_post_wait, width=10).grid(row=row_idx, column=1, sticky="w", padx=6, pady=2)
-    row_idx += 1
-
-    ttk.Label(form, text="Capture retries on failure").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(form, textvariable=app.cap_retry_attempts, width=10).grid(row=row_idx, column=1, sticky="w", padx=6, pady=2)
-    row_idx += 1
-
-    ttk.Label(form, text="Retry wait (s, 0 = post-nav)").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(form, textvariable=app.cap_retry_wait, width=10).grid(row=row_idx, column=1, sticky="w", padx=6, pady=2)
-    row_idx += 1
-
-    ttk.Label(form, text="Retry backoff max (x)").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(form, textvariable=app.cap_retry_backoff, width=10).grid(row=row_idx, column=1, sticky="w", padx=6, pady=2)
-    row_idx += 1
-
-    ttk.Checkbutton(form, text="Include inactive products", variable=app.cap_include_inactive).grid(row=row_idx, column=0, columnspan=2, sticky="w", padx=6, pady=2)
-    row_idx += 1
-
-    ttk.Checkbutton(form, text="Requestable only", variable=app.cap_requestable_only).grid(row=row_idx, column=0, columnspan=2, sticky="w", padx=6, pady=2)
-    row_idx += 1
-
-    ttk.Checkbutton(form, text="In stock only", variable=app.cap_in_stock_only).grid(row=row_idx, column=0, columnspan=2, sticky="w", padx=6, pady=2)
+    ttk.Label(form, text="Organization").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
+    org_values = ["", "Medicann Isle of Mann", "Medicann Guernsey", "Medicann Jersey", "Medicann UK"]
+    org_combo = ttk.Combobox(form, textvariable=app.cap_org, values=org_values, state="readonly", width=38)
+    org_combo.grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
     row_idx += 1
 
     ttk.Separator(form, orient="horizontal").grid(row=row_idx, column=0, columnspan=2, sticky="ew", pady=6)
@@ -112,19 +84,9 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     advanced_frame.grid(row=row_idx, column=0, columnspan=2, sticky="ew", padx=0, pady=(0, 6))
     advanced_frame.columnconfigure(1, weight=1)
     adv_row = 0
-
-    ttk.Label(advanced_frame, text="Username").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(advanced_frame, textvariable=app.cap_user, width=40).grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
-    adv_row += 1
-
-    ttk.Label(advanced_frame, text="Password").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(advanced_frame, textvariable=app.cap_pass, show="*", width=40).grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
-    adv_row += 1
-
-    ttk.Label(advanced_frame, text="Organization").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
-    org_values = ["", "Medicann Isle of Mann", "Medicann Guernsey", "Medicann Jersey", "Medicann UK"]
-    org_combo = ttk.Combobox(advanced_frame, textvariable=app.cap_org, values=org_values, state="readonly", width=38)
-    org_combo.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    ttk.Label(advanced_frame, text="Target URL").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    url_entry = ttk.Entry(advanced_frame, textvariable=app.cap_url, width=50)
+    url_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Organization selector").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
@@ -147,15 +109,73 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     btn_sel_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
     adv_row += 1
 
+    ttk.Label(advanced_frame, text="Wait after login (s)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(advanced_frame, textvariable=app.cap_login_wait, width=10).grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    adv_row += 1
+
+    ttk.Label(advanced_frame, text="Wait after navigation (s, min 5)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(advanced_frame, textvariable=app.cap_post_wait, width=10).grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    adv_row += 1
+
+    ttk.Label(advanced_frame, text="Interval (seconds)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(advanced_frame, textvariable=app.cap_interval, width=10).grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    adv_row += 1
+
+    ttk.Label(advanced_frame, text="Capture retries on failure").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(advanced_frame, textvariable=app.cap_retry_attempts, width=10).grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    adv_row += 1
+
+    ttk.Label(advanced_frame, text="Retry wait (s, 0 = post-nav)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(advanced_frame, textvariable=app.cap_retry_wait, width=10).grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    adv_row += 1
+
+    ttk.Label(advanced_frame, text="Retry backoff max (x)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(advanced_frame, textvariable=app.cap_retry_backoff, width=10).grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    adv_row += 1
+
+    ttk.Label(advanced_frame, text="Headless").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    ttk.Checkbutton(advanced_frame, variable=app.cap_headless).grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    adv_row += 1
+
+    ttk.Checkbutton(advanced_frame, text="Dump page HTML to file", variable=app.cap_dump_html).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
+    adv_row += 1
+
+    ttk.Checkbutton(advanced_frame, text="Dump API JSON responses", variable=app.cap_dump_api).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
+    adv_row += 1
+
+    ttk.Checkbutton(advanced_frame, text="Include inactive products", variable=app.cap_include_inactive).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
+    adv_row += 1
+
+    ttk.Checkbutton(advanced_frame, text="Requestable only", variable=app.cap_requestable_only).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
+    adv_row += 1
+
+    ttk.Checkbutton(advanced_frame, text="In stock only", variable=app.cap_in_stock_only).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
+    adv_row += 1
+
+    ttk.Label(advanced_frame, text="HA webhook URL").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(advanced_frame, textvariable=app.cap_ha_webhook, width=50).grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    adv_row += 1
+
+    ttk.Label(advanced_frame, text="HA token (optional)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(advanced_frame, textvariable=app.cap_ha_token, show="*", width=50).grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    adv_row += 1
+
     selector_hint = ttk.Label(advanced_frame, text="", style="Hint.TLabel")
     selector_hint.grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 6))
     adv_row += 1
+
+    def _resize_to_content():
+        win.update_idletasks()
+        width = max(win.winfo_width(), base_width)
+        height = max(win.winfo_reqheight(), base_height)
+        win.geometry(f"{width}x{height}")
 
     def toggle_advanced():
         if app.show_advanced_scraper.get():
             advanced_frame.grid()
         else:
             advanced_frame.grid_remove()
+        _resize_to_content()
 
     toggle_advanced()
     advanced_toggle.config(command=toggle_advanced)
@@ -165,13 +185,6 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     row_idx += 1
 
     def update_scraper_hints(event=None):
-        url_val = app.cap_url.get().strip()
-        if not url_val:
-            url_hint.config(text="Hint: Target URL is required for auto-scraper.")
-        elif not (url_val.startswith("http://") or url_val.startswith("https://")):
-            url_hint.config(text="Hint: URL should start with http:// or https://")
-        else:
-            url_hint.config(text="")
         selectors = [app.cap_user_sel.get().strip(), app.cap_pass_sel.get().strip(), app.cap_btn_sel.get().strip()]
         if any(not s for s in selectors):
             selector_hint.config(text="Hint: One or more login selectors are blank; auto-login may fail.")
@@ -185,13 +198,12 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
 
     notify_frame = ttk.Labelframe(scraper_tab, text="Notification Settings", padding=8)
     notify_frame.pack(fill="x", padx=4, pady=(0, 10))
-    ttk.Checkbutton(notify_frame, text="Send notifications for price changes", variable=app.notify_price_changes).pack(anchor="w", pady=2)
-    ttk.Checkbutton(notify_frame, text="Send notifications for stock changes", variable=app.notify_stock_changes).pack(anchor="w", pady=2)
+    ttk.Checkbutton(notify_frame, text="Notify on price changes", variable=app.notify_price_changes).pack(anchor="w", pady=2)
+    ttk.Checkbutton(notify_frame, text="Notify on stock changes", variable=app.notify_stock_changes).pack(anchor="w", pady=2)
+    ttk.Checkbutton(notify_frame, text="Notify on new products", variable=app.notify_new_items).pack(anchor="w", pady=2)
+    ttk.Checkbutton(notify_frame, text="Notify on removed products", variable=app.notify_removed_items).pack(anchor="w", pady=2)
     ttk.Checkbutton(notify_frame, text="Send Windows desktop notifications", variable=app.notify_windows).pack(anchor="w", pady=2)
     ttk.Checkbutton(notify_frame, text="Send Home Assistant notifications", variable=app.cap_auto_notify_ha).pack(anchor="w", pady=2)
-
-    ttk.Checkbutton(notify_frame, text="Dump page HTML to file", variable=app.cap_dump_html).pack(anchor="w", pady=2)
-    ttk.Checkbutton(notify_frame, text="Dump API JSON responses", variable=app.cap_dump_api).pack(anchor="w", pady=2)
 
     quiet_frame = ttk.Frame(notify_frame)
     quiet_frame.pack(fill="x", pady=(6, 2))
@@ -208,14 +220,6 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Label(detail_frame, text="Notification detail").pack(side="left")
     detail_combo = ttk.Combobox(detail_frame, state="readonly", width=14, values=["full", "summary"], textvariable=app.cap_notify_detail)
     detail_combo.pack(side="left", padx=(8, 0))
-
-    ttk.Label(form, text="HA webhook URL").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(form, textvariable=app.cap_ha_webhook, width=50).grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
-    row_idx += 1
-
-    ttk.Label(form, text="HA token (optional)").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(form, textvariable=app.cap_ha_token, show="*", width=50).grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
-    row_idx += 1
 
     def save_and_close():
         try:
@@ -234,7 +238,6 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     scraper_btns.pack(fill="x", pady=10)
     ttk.Button(scraper_btns, text="Load config", command=app.load_capture_config).pack(side="left", padx=4)
     ttk.Button(scraper_btns, text="Export config", command=app.save_capture_config).pack(side="left", padx=4)
-    ttk.Button(scraper_btns, text="Export & Open", command=app.open_fresh_export).pack(side="left", padx=4)
     ttk.Button(scraper_btns, text="Clear cache", command=app.clear_cache).pack(side="right", padx=4)
     ttk.Button(scraper_btns, text="Send test notification", command=app.send_test_notification).pack(side="right", padx=4)
 

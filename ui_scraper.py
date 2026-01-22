@@ -227,6 +227,8 @@ class App(tk.Tk):
         self.cap_ha_token = tk.StringVar(value=decrypt_secret(cfg.get("ha_token", "")))
         self.notify_price_changes = tk.BooleanVar(value=bool(cfg.get("notify_price_changes", True)))
         self.notify_stock_changes = tk.BooleanVar(value=bool(cfg.get("notify_stock_changes", True)))
+        self.notify_new_items = tk.BooleanVar(value=bool(cfg.get("notify_new_items", True)))
+        self.notify_removed_items = tk.BooleanVar(value=bool(cfg.get("notify_removed_items", True)))
         self.notify_windows = tk.BooleanVar(value=bool(cfg.get("notify_windows", True)))
         self.cap_quiet_hours_enabled = tk.BooleanVar(value=bool(cfg.get("quiet_hours_enabled", False)))
         self.cap_quiet_start = tk.StringVar(value=cfg.get("quiet_hours_start", "22:00"))
@@ -265,6 +267,8 @@ class App(tk.Tk):
             "ha_token": self.cap_ha_token.get(),
             "notify_price_changes": bool(self.notify_price_changes.get()),
             "notify_stock_changes": bool(self.notify_stock_changes.get()),
+            "notify_new_items": bool(self.notify_new_items.get()),
+            "notify_removed_items": bool(self.notify_removed_items.get()),
             "notify_windows": bool(self.notify_windows.get()),
             "quiet_hours_enabled": bool(self.cap_quiet_hours_enabled.get()),
             "quiet_hours_start": self.cap_quiet_start.get(),
@@ -381,17 +385,18 @@ class App(tk.Tk):
         self.open_latest_export()
 
     def open_latest_export(self):
-        url = self._latest_export_url()
-        if not url:
-            try:
-                if not self.data and LAST_PARSE_FILE.exists():
-                    self.data = load_last_parse(LAST_PARSE_FILE)
-                if self.data:
-                    self._generate_change_export(self._get_export_items())
-            except Exception as exc:
-                messagebox.showerror("Open Export", f"Could not generate export:\n{exc}")
+        try:
+            if not self.data and LAST_PARSE_FILE.exists():
+                self.data = load_last_parse(LAST_PARSE_FILE)
+            if self.data:
+                self._generate_change_export(self._get_export_items())
+            else:
+                messagebox.showinfo("Open Export", "No data available to export yet.")
                 return
-            url = self._latest_export_url()
+        except Exception as exc:
+            messagebox.showerror("Open Export", f"Could not generate export:\n{exc}")
+            return
+        url = self._latest_export_url()
         if not url:
             messagebox.showinfo("Open Export", "No exports available yet.")
             return
@@ -665,6 +670,8 @@ class App(tk.Tk):
         self.cap_ha_token.set(decrypt_secret(cfg.get("ha_token", "")))
         self.notify_price_changes.set(cfg.get("notify_price_changes", True))
         self.notify_stock_changes.set(cfg.get("notify_stock_changes", True))
+        self.notify_new_items.set(cfg.get("notify_new_items", True))
+        self.notify_removed_items.set(cfg.get("notify_removed_items", True))
         self.notify_windows.set(cfg.get("notify_windows", True))
         self.cap_quiet_hours_enabled.set(bool(cfg.get("quiet_hours_enabled", False)))
         self.cap_quiet_start.set(cfg.get("quiet_hours_start", "22:00"))
@@ -710,6 +717,8 @@ class App(tk.Tk):
             "ha_token": self.cap_ha_token.get(),
             "notify_price_changes": self.notify_price_changes.get(),
             "notify_stock_changes": self.notify_stock_changes.get(),
+            "notify_new_items": self.notify_new_items.get(),
+            "notify_removed_items": self.notify_removed_items.get(),
             "notify_windows": self.notify_windows.get(),
             "quiet_hours_enabled": self.cap_quiet_hours_enabled.get(),
             "quiet_hours_start": self.cap_quiet_start.get(),
@@ -757,6 +766,8 @@ class App(tk.Tk):
             "ha_token": self.cap_ha_token.get(),
             "notify_price_changes": self.notify_price_changes.get(),
             "notify_stock_changes": self.notify_stock_changes.get(),
+            "notify_new_items": self.notify_new_items.get(),
+            "notify_removed_items": self.notify_removed_items.get(),
             "notify_windows": self.notify_windows.get(),
             "quiet_hours_enabled": self.cap_quiet_hours_enabled.get(),
             "quiet_hours_start": self.cap_quiet_start.get(),
@@ -874,6 +885,43 @@ class App(tk.Tk):
                         "stock_after": cur_stock,
                     }
                 )
+        all_new_items = new_items
+        all_removed_items = removed_items
+        all_price_changes = price_changes
+        all_stock_changes = stock_changes
+        if not all_new_items and not all_removed_items and not all_price_changes and not all_stock_changes:
+            self._capture_log("No changes detected; skipping HA notification.")
+            return
+        log_price_change_compact = []
+        for it in all_price_changes:
+            brand = it.get("brand") or it.get("producer") or ""
+            strain = it.get("strain") or ""
+            label = " ".join([p for p in (brand, strain) if p]).strip() or "Unknown"
+            log_price_change_compact.append({
+                "label": label,
+                "price_before": it.get("price_before"),
+                "price_after": it.get("price_after"),
+                "price_delta": it.get("price_delta"),
+                "direction": "up" if it.get("price_delta") and it.get("price_delta") > 0 else "down",
+            })
+        log_stock_change_compact = []
+        for it in all_stock_changes:
+            brand = it.get("brand") or it.get("producer") or ""
+            strain = it.get("strain") or ""
+            label = " ".join([p for p in (brand, strain) if p]).strip() or "Unknown"
+            log_stock_change_compact.append({
+                "label": label,
+                "stock_before": it.get("stock_before"),
+                "stock_after": it.get("stock_after"),
+            })
+        if not self.notify_new_items.get():
+            new_items = []
+        if not self.notify_removed_items.get():
+            removed_items = []
+        if not self.notify_price_changes.get():
+            price_changes = []
+        if not self.notify_stock_changes.get():
+            stock_changes = []
         def _flower_label(entry: dict) -> str:
             brand = entry.get("brand") or entry.get("producer") or ""
             strain = entry.get("strain") or ""
@@ -890,9 +938,10 @@ class App(tk.Tk):
         removed_flowers = [_flower_label(it) for it in removed_items if (it.get("product_type") or "").lower() == "flower"]
         new_item_summaries = [_item_label(it) for it in new_items]
         removed_item_summaries = [_item_label(it) for it in removed_items]
+        notify_allowed = True
         if not new_items and not removed_items and not price_changes and not stock_changes:
-            self._capture_log("No changes detected; skipping HA notification.")
-            return
+            self._capture_log("Changes detected but notifications are disabled; skipping notifications.")
+            notify_allowed = False
         self._log_console(
             f"Notify HA | new={len(new_items)} removed={len(removed_items)} "
             f"price_changes={len(price_changes)} stock_changes={len(stock_changes)}"
@@ -970,7 +1019,7 @@ class App(tk.Tk):
                         "price": it.get("price"),
                         "product_type": it.get("product_type"),
                     }
-                    for it in new_items
+                    for it in all_new_items
                 ],
                 "removed_items": [
                     {
@@ -981,10 +1030,10 @@ class App(tk.Tk):
                         "price": it.get("price"),
                         "product_type": it.get("product_type"),
                     }
-                    for it in removed_items
+                    for it in all_removed_items
                 ],
-                "price_changes": price_change_compact,
-                "stock_changes": stock_change_compact,
+                "price_changes": log_price_change_compact,
+                "stock_changes": log_stock_change_compact,
             }
             append_change_log(CHANGES_LOG_FILE, log_record)
         except Exception:
@@ -1009,13 +1058,13 @@ class App(tk.Tk):
         launch_url = self.cap_url.get().strip() or self._latest_export_url()
         icon_path = ASSETS_DIR / "icon.ico"
         # Windows toast (always allowed when enabled)
-        if (not quiet_hours) and self.notify_windows.get():
+        if notify_allowed and (not quiet_hours) and self.notify_windows.get():
             self._capture_log(f"Sending Windows notification: {windows_body}")
             ok_win = self.notify_service.send_windows("Medicann update", windows_body, icon_path, launch_url=launch_url)
             if not ok_win:
                 self._capture_log("Windows notification failed to send.")
         # If log-only or quiet hours, skip HA network send
-        if not (log_only or quiet_hours):
+        if notify_allowed and not (log_only or quiet_hours):
             ok, status, body = self.notify_service.send_home_assistant(payload)
             if ok and status:
                 self._update_last_change(summary)
@@ -1062,7 +1111,7 @@ class App(tk.Tk):
             self._log_console(f"Test notification error: status={status} body={str(body)[:200] if body else ''}")
             messagebox.showerror("Home Assistant", f"Test notification failed:\nstatus={status}\nbody={body}")
         # Also send a Windows test notification if enabled
-        if (not quiet_hours) and self.notify_windows.get():
+        if notify_allowed and (not quiet_hours) and self.notify_windows.get():
             icon_path = ASSETS_DIR / "icon.ico"
             self._log_console("Sending Windows test notification.")
             test_body = (

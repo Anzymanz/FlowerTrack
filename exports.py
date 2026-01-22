@@ -402,8 +402,8 @@ def export_html(data, path, fetch_images=False):
         {f"<span class='pill pill-flag'><img class='flag-icon' src='{esc_attr(_flag_cdn_url(it.get('origin_country')))}' alt='{esc_attr(it.get('origin_country') or '')}' /> {esc(it.get('origin_country'))}</span>" if _flag_cdn_url(it.get('origin_country')) else ''}
         {f"<span class='pill'>☢️ {esc(it.get('irradiation_type'))}</span>" if (it.get('irradiation_type') and (it.get('product_type') or '').lower() not in ('vape','oil','device')) else ''}
     </div>
-    <div class='small'>🎉 THC: {esc(disp_thc)}</div>
-    <div class='small'>🌱 CBD: {esc(disp_cbd)}</div>
+    <div class='small'>🌞THC: {esc(disp_thc)}</div>
+    <div class='small'>🌙CBD: {esc(disp_cbd)}</div>
     <div class='card-actions'>
       <button class='btn-basket' onclick='addToBasket(this)' onmouseenter='basketHover(this,true)' onmouseleave='basketHover(this,false)'>Add to basket</button>
     </div>

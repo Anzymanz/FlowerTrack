@@ -398,10 +398,6 @@ class CaptureWorker:
                             if self.callbacks["responsive_wait"](wait_post, label="Waiting after navigation"):
                                 break
                         try:
-                            page.wait_for_response(lambda r: 'formulary-products' in (r.url or '') or 'formulary' in (r.url or ''), timeout=20000)
-                        except Exception:
-                            self.callbacks["capture_log"]("No formulary-products response observed yet.")
-                        try:
                             page.wait_for_load_state("networkidle", timeout=20000)
                         except Exception:
                             pass

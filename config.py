@@ -42,6 +42,8 @@ DEFAULT_CAPTURE_CONFIG = {
     "ha_token": "",
     "notify_price_changes": True,
     "notify_stock_changes": True,
+    "notify_new_items": True,
+    "notify_removed_items": True,
     "notify_windows": True,
     "quiet_hours_enabled": False,
     "quiet_hours_start": "22:00",
@@ -266,12 +268,17 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["ha_token"] = str(raw.get("ha_token") or "")
     cfg["notify_price_changes"] = _coerce_bool(raw.get("notify_price_changes"), DEFAULT_CAPTURE_CONFIG["notify_price_changes"])
     cfg["notify_stock_changes"] = _coerce_bool(raw.get("notify_stock_changes"), DEFAULT_CAPTURE_CONFIG["notify_stock_changes"])
+    cfg["notify_new_items"] = _coerce_bool(raw.get("notify_new_items"), DEFAULT_CAPTURE_CONFIG["notify_new_items"])
+    cfg["notify_removed_items"] = _coerce_bool(raw.get("notify_removed_items"), DEFAULT_CAPTURE_CONFIG["notify_removed_items"])
     cfg["notify_windows"] = _coerce_bool(raw.get("notify_windows"), DEFAULT_CAPTURE_CONFIG["notify_windows"])
     cfg["quiet_hours_enabled"] = _coerce_bool(raw.get("quiet_hours_enabled"), DEFAULT_CAPTURE_CONFIG["quiet_hours_enabled"])
     cfg["quiet_hours_start"] = str(raw.get("quiet_hours_start") or DEFAULT_CAPTURE_CONFIG["quiet_hours_start"]).strip()
     cfg["quiet_hours_end"] = str(raw.get("quiet_hours_end") or DEFAULT_CAPTURE_CONFIG["quiet_hours_end"]).strip()
     cfg["quiet_hours_interval_seconds"] = _coerce_float(raw.get("quiet_hours_interval_seconds"), DEFAULT_CAPTURE_CONFIG["quiet_hours_interval_seconds"], 1.0)
     cfg["notification_detail"] = str(raw.get("notification_detail") or DEFAULT_CAPTURE_CONFIG["notification_detail"]).strip() or "full"
+    cfg["include_inactive"] = _coerce_bool(raw.get("include_inactive"), DEFAULT_CAPTURE_CONFIG["include_inactive"])
+    cfg["requestable_only"] = _coerce_bool(raw.get("requestable_only"), DEFAULT_CAPTURE_CONFIG["requestable_only"])
+    cfg["in_stock_only"] = _coerce_bool(raw.get("in_stock_only"), DEFAULT_CAPTURE_CONFIG["in_stock_only"])
     cfg["minimize_to_tray"] = _coerce_bool(raw.get("minimize_to_tray"), DEFAULT_CAPTURE_CONFIG["minimize_to_tray"])
     cfg["close_to_tray"] = _coerce_bool(raw.get("close_to_tray"), DEFAULT_CAPTURE_CONFIG["close_to_tray"])
     return cfg

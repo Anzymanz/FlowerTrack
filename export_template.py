@@ -151,7 +151,7 @@ let activeTypes = new Set(['flower','oil','vape']);
 let activeStrains = new Set(['Indica','Sativa','Hybrid']);
 let favoritesOnly = false;
 let showSmalls = true;
-let showOutOfStock = true;
+let showOutOfStock = false;
 let searchTerm = "";
 const priceMinBound = {price_min_bound};
 const priceMaxBound = {price_max_bound};
@@ -397,7 +397,7 @@ function resetFilters() {
     document.querySelectorAll('.btn-filter').forEach(b => b.classList.add('active'));
     favoritesOnly = false;
     showSmalls = true;
-    showOutOfStock = true;
+    showOutOfStock = false;
     // Reset sliders
     const priceMinEl = document.getElementById('priceMinRange');
     const priceMaxEl = document.getElementById('priceMaxRange');
@@ -523,7 +523,7 @@ applyTheme(saved === 'light');
     <button class='btn-filter active' onclick="toggleStrain('Hybrid', this)">Hybrid</button>
     <button class='btn-filter' onclick="toggleFavorites(this)">Favorites</button>
     <button class='btn-filter active' onclick="toggleSmalls(this)">Smalls</button>
-    <button class='btn-filter active' onclick="toggleOutOfStock(this)">Out of stock</button>
+    <button class='btn-filter' onclick="toggleOutOfStock(this)">Out of stock</button>
     <button onclick="resetFilters()">Reset</button>
     <div class="range-group">
       <div class="range-line">
