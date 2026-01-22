@@ -452,13 +452,34 @@ class CaptureWorker:
                                 if base_payload:
                                     base_url = base_url or (base_payload.get('url') or '')
                                     data_list = base_payload.get('data') or []
+                                    # If we fetched a base list with override flags, prefer it.
+                                    if base_url and base_url != (base_payload.get('url') or ''):
+                                        try:
+                                            data_list = next((p.get('data') for p in api_payloads if p.get('url') == base_url and isinstance(p.get('data'), list)), data_list)
+                                        except Exception:
+                                            pass
                                     take = 50
                                     try:
                                         take = int(urllib.parse.parse_qs(urllib.parse.urlparse(base_url).query).get('take', [take])[0])
                                     except Exception:
                                         pass
                                     total = None
-                                    if count_payload:
+                                    if base_url:
+                                        try:
+                                            parsed = urllib.parse.urlparse(base_url)
+                                            q = urllib.parse.parse_qs(parsed.query)
+                                            q.pop('take', None)
+                                            q.pop('skip', None)
+                                            count_path = parsed.path.replace('formulary-products', 'formulary-products/count')
+                                            count_url = urllib.parse.urlunparse(parsed._replace(path=count_path, query=urllib.parse.urlencode(q, doseq=True)))
+                                            count_resp = _http_get_json(count_url)
+                                            if isinstance(count_resp, dict):
+                                                total = count_resp.get('count') or count_resp.get('total')
+                                                if total is not None:
+                                                    self.callbacks["capture_log"](f"Count fetch status=200 total={total}")
+                                        except Exception as exc:
+                                            self.callbacks["capture_log"](f"Count fetch failed: {exc}")
+                                    if count_payload and total is None:
                                         try:
                                             total = count_payload.get("data", {}).get("count")
                                             if total is None:
