@@ -232,6 +232,9 @@ class App(tk.Tk):
         self.cap_quiet_start = tk.StringVar(value=cfg.get("quiet_hours_start", "22:00"))
         self.cap_quiet_end = tk.StringVar(value=cfg.get("quiet_hours_end", "07:00"))
         self.cap_quiet_interval = tk.StringVar(value=str(cfg.get("quiet_hours_interval_seconds", 3600)))
+        self.cap_include_inactive = tk.BooleanVar(value=bool(cfg.get("include_inactive", False)))
+        self.cap_requestable_only = tk.BooleanVar(value=bool(cfg.get("requestable_only", True)))
+        self.cap_in_stock_only = tk.BooleanVar(value=bool(cfg.get("in_stock_only", False)))
         self.cap_notify_detail = tk.StringVar(value=cfg.get("notification_detail", "full"))
         self.minimize_to_tray = tk.BooleanVar(value=bool(cfg.get("minimize_to_tray", False)))
         self.close_to_tray = tk.BooleanVar(value=bool(cfg.get("close_to_tray", False)))
@@ -267,6 +270,12 @@ class App(tk.Tk):
             "quiet_hours_start": self.cap_quiet_start.get(),
             "quiet_hours_end": self.cap_quiet_end.get(),
             "quiet_hours_interval_seconds": float(self.cap_quiet_interval.get() or 0),
+            "include_inactive": bool(self.cap_include_inactive.get()),
+            "requestable_only": bool(self.cap_requestable_only.get()),
+            "in_stock_only": bool(self.cap_in_stock_only.get()),
+            "include_inactive": bool(self.cap_include_inactive.get()),
+            "requestable_only": bool(self.cap_requestable_only.get()),
+            "in_stock_only": bool(self.cap_in_stock_only.get()),
             "notification_detail": self.cap_notify_detail.get(),
             "minimize_to_tray": bool(self.minimize_to_tray.get()),
             "close_to_tray": bool(self.close_to_tray.get()),
@@ -706,6 +715,9 @@ class App(tk.Tk):
             "quiet_hours_start": self.cap_quiet_start.get(),
             "quiet_hours_end": self.cap_quiet_end.get(),
             "quiet_hours_interval_seconds": float(self.cap_quiet_interval.get() or 0),
+            "include_inactive": bool(self.cap_include_inactive.get()),
+            "requestable_only": bool(self.cap_requestable_only.get()),
+            "in_stock_only": bool(self.cap_in_stock_only.get()),
             "notification_detail": self.cap_notify_detail.get(),
             "minimize_to_tray": bool(self.minimize_to_tray.get()),
             "close_to_tray": bool(self.close_to_tray.get()),
@@ -750,6 +762,9 @@ class App(tk.Tk):
             "quiet_hours_start": self.cap_quiet_start.get(),
             "quiet_hours_end": self.cap_quiet_end.get(),
             "quiet_hours_interval_seconds": float(self.cap_quiet_interval.get() or 0),
+            "include_inactive": bool(self.cap_include_inactive.get()),
+            "requestable_only": bool(self.cap_requestable_only.get()),
+            "in_stock_only": bool(self.cap_in_stock_only.get()),
             "notification_detail": self.cap_notify_detail.get(),
             "minimize_to_tray": bool(self.minimize_to_tray.get()),
             "close_to_tray": bool(self.close_to_tray.get()),
@@ -1311,7 +1326,6 @@ class App(tk.Tk):
                     self.error_count = 0
                     self._empty_retry_pending = False
                     self._update_tray_status()
-                    save_last_parse(LAST_PARSE_FILE, self.data)
                     self._update_last_scrape()
                     self.status.config(
                         text=(
@@ -1325,6 +1339,7 @@ class App(tk.Tk):
                         f"{self.price_up_count} price increases | {self.price_down_count} price decreases"
                     )
                     self._post_process_actions()
+                    save_last_parse(LAST_PARSE_FILE, self.data)
                     try:
                         self._set_next_capture_timer(float(self.cap_interval.get() or 0))
                     except Exception:
@@ -1367,12 +1382,23 @@ class App(tk.Tk):
                 LAST_PARSE_FILE.unlink()
         except Exception:
             pass
+        for path in (LAST_CHANGE_FILE, LAST_SCRAPE_FILE, CHANGES_LOG_FILE):
+            try:
+                if path.exists():
+                    path.unlink()
+            except Exception:
+                pass
         try:
             self.progress['value'] = 0
         except Exception:
             pass
+        try:
+            self.last_change_label.config(text="Last change detected: none")
+            self.last_scrape_label.config(text="Last successful scrape: none")
+        except Exception:
+            pass
         self.status.config(text="Cache cleared")
-        messagebox.showinfo("Cleared", "Cache cleared (including previous parse).")
+        messagebox.showinfo("Cleared", "Cache cleared (including previous parse and logs).")
     def _set_busy_ui(self, busy, message=None):
         try:
             if busy:

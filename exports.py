@@ -343,6 +343,8 @@ def export_html(data, path, fetch_images=False):
             price_badge = f"<span class='{badge_cls}'>{esc(badge_text)}</span>"
             price_border_class = " card-price-up" if price_delta > 0 else " card-price-down"
         stock_text = (it.get("stock_detail") or it.get("stock_status") or it.get("stock") or "").strip()
+        stock_upper = (it.get("stock_status") or it.get("stock") or "").upper()
+        is_out = ("OUT" in stock_upper) or (it.get("stock_remaining") == 0)
         if it.get("stock_remaining") is not None:
             stock_text = f"{it.get('stock_remaining')} remaining"
         stock_pill = f"<span class='pill'>📊 {esc(stock_text)}</span>" if stock_text else ""
@@ -353,6 +355,8 @@ def export_html(data, path, fetch_images=False):
         )
         heading_html = f"{stock_indicator}{esc(heading)}"
         card_classes = "card card-removed" if it.get("is_removed") else ("card card-new" if it.get("is_new") else "card")
+        if is_out:
+            card_classes += " card-out"
         if has_type_icon:
             card_classes += " has-type-icon"
         cards.append(
@@ -371,7 +375,8 @@ def export_html(data, path, fetch_images=False):
       data-key='{esc_attr(card_key)}'
       data-favkey='{esc_attr(fav_key)}'
       data-smalls='{1 if it.get("is_smalls") else 0}'
-      data-removed='{1 if it.get("is_removed") else 0}'>
+      data-removed='{1 if it.get("is_removed") else 0}'
+      data-out='{1 if is_out else 0}'>
     <button class='fav-btn' onclick='toggleFavorite(this)' title='Favorite this item'>★</button>
     {("<img class='type-badge' data-theme-icon='dark' src='" + esc_attr(type_icon_dark) + "' alt='" + esc_attr(it.get('product_type') or '') + "' />") if type_icon_dark else ""}
     {("<img class='type-badge' data-theme-icon='light' src='" + esc_attr(type_icon_light) + "' alt='" + esc_attr(it.get('product_type') or '') + "' style='display:none;' />") if type_icon_light else ""}

@@ -48,6 +48,9 @@ DEFAULT_CAPTURE_CONFIG = {
     "quiet_hours_end": "07:00",
     "quiet_hours_interval_seconds": 3600.0,
     "notification_detail": "full",
+    "include_inactive": False,
+    "requestable_only": True,
+    "in_stock_only": False,
     "minimize_to_tray": False,
     "close_to_tray": False,
 }

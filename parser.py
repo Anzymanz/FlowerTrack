@@ -118,6 +118,8 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
     product_id = external_ref or (str(entry.get("productId")) if entry.get("productId") is not None else None)
     brand = (product.get("brand") or {}).get("name") or metadata.get("brandName") or None
     strain = cannabis.get("strainName") or metadata.get("strain")
+    if not strain or str(strain).strip().upper() in {"N/A", "NA", "NONE", "UNKNOWN"}:
+        strain = name
     strain_type = _normalize_strain_type(cannabis.get("strainType") or metadata.get("classification"))
     irradiation = cannabis.get("irradiationType") or specs.get("irradiationType") or metadata.get("irradiationType")
     origin_country = (
@@ -147,6 +149,7 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
     pricing = entry.get("pricingOptions")
     price = None
     availability = None
+    on_order = bool(entry.get("onOrder"))
     if isinstance(pricing, dict) and pricing:
         opt = pricing.get("STANDARD") or next(iter(pricing.values()))
         price = _coerce_float(opt.get("price") if isinstance(opt, dict) else None)
@@ -167,6 +170,21 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
         else:
             stock_status = "IN STOCK"
     stock = stock_detail or stock_status
+    unknown_name = False
+    if name is None:
+        unknown_name = True
+    else:
+        upper_name = str(name).strip().upper()
+        if not upper_name or upper_name in {"UNKNOWN", "N/A", "NA"}:
+            unknown_name = True
+    if unknown_name:
+        if (availability is not None and availability >= 1000) or (price is not None and price <= 0):
+            return None
+    if name and (
+        'NOT PRESCRIBABLE' in str(name).upper()
+        or 'FORMULATION ONLY' in str(name).upper()
+    ):
+        return None
     item: ItemDict = {
         "product_id": product_id,
         "title": name,

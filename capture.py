@@ -152,6 +152,7 @@ class CaptureWorker:
                 page = browser.new_page()
                 api_payloads = []
                 xhr_urls = []
+                endpoint_summaries = []
                 def _capture_response(resp):
                     try:
                         ctype = (resp.headers.get("content-type") or "").lower()
@@ -234,6 +235,20 @@ class CaptureWorker:
                             except Exception:
                                 pass
                         api_payloads.append(payload)
+                        try:
+                            summary = {"url": resp.url, "status": getattr(resp, 'status', None), "content_type": ctype}
+                            if data is not None:
+                                if isinstance(data, dict):
+                                    summary["kind"] = "dict"
+                                    summary["keys"] = list(data.keys())[:50]
+                                elif isinstance(data, list):
+                                    summary["kind"] = "list"
+                                    summary["count"] = len(data)
+                                else:
+                                    summary["kind"] = type(data).__name__
+                            endpoint_summaries.append(summary)
+                        except Exception:
+                            pass
                     except Exception:
                         pass
 
@@ -416,9 +431,26 @@ class CaptureWorker:
                             # Expand formulary pagination when only first page captured.
                             try:
                                 base_payload = next((p for p in api_payloads if 'formulary-products' in (p.get('url') or '') and isinstance(p.get('data'), list)), None)
+                                base_url = None
+                                if base_payload:
+                                    base_url = base_url or (base_payload.get('url') or '')
+                                if base_url and self.cfg.get('requestable_only') is not None:
+                                    try:
+                                        parsed = urllib.parse.urlparse(base_url)
+                                        q = urllib.parse.parse_qs(parsed.query)
+                                        q['includeInactive'] = [str(bool(self.cfg.get('include_inactive', False))).lower()]
+                                        q['requestableOnly'] = [str(bool(self.cfg.get('requestable_only', True))).lower()]
+                                        new_query = urllib.parse.urlencode(q, doseq=True)
+                                        base_url = urllib.parse.urlunparse(parsed._replace(query=new_query))
+                                        if base_url != (base_payload.get('url') or ''):
+                                            more = _http_get_json(base_url)
+                                            if isinstance(more, list):
+                                                api_payloads.append({"url": base_url, "content_type": "application/json", "kind": "list", "count": len(more), "data": more})
+                                    except Exception as exc:
+                                        self.callbacks["capture_log"](f"Base formulary fetch failed: {exc}")
                                 count_payload = next((p for p in api_payloads if "formulary-products/count" in (p.get("url") or "") and isinstance(p.get("data"), dict)), None)
                                 if base_payload:
-                                    base_url = base_payload.get('url') or ''
+                                    base_url = base_url or (base_payload.get('url') or '')
                                     data_list = base_payload.get('data') or []
                                     take = 50
                                     try:
@@ -516,7 +548,20 @@ class CaptureWorker:
                                         latest_path.write_text(json.dumps(api_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
                                     except Exception as exc:
                                         self.callbacks["capture_log"](f"API latest write failed: {exc}")
+                                    if endpoint_summaries and stamp:
+                                        try:
+                                            summary_path = dump_dir / f"api_endpoints_{stamp}.json"
+                                            summary_path.write_text(json.dumps(endpoint_summaries, ensure_ascii=False, indent=2), encoding="utf-8")
+                                            self.callbacks["capture_log"](f"Saved API endpoint summary: {summary_path}")
+                                        except Exception as exc:
+                                            self.callbacks["capture_log"](f"API endpoint summary failed: {exc}")
                                     if self.cfg.get("dump_api_json") and stamp:
+                                        try:
+                                            summary_path = dump_dir / f"api_endpoints_{stamp}.json"
+                                            summary_path.write_text(json.dumps(endpoint_summaries, ensure_ascii=False, indent=2), encoding="utf-8")
+                                            self.callbacks["capture_log"](f"Saved API endpoint summary: {summary_path}")
+                                        except Exception as exc:
+                                            self.callbacks["capture_log"](f"API endpoint summary failed: {exc}")
                                         try:
                                             api_path = dump_dir / f"api_dump_{stamp}.json"
                                             api_path.write_text(json.dumps(api_payloads, ensure_ascii=False, indent=2), encoding="utf-8")

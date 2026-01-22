@@ -72,6 +72,8 @@ button:hover{background:var(--hover)}
 .card{background:var(--panel);padding:12px;border-radius:12px;border:1px solid var(--border);position:relative;display:flex;flex-direction:column;min-height:320px}
 .card-new{background:#0f2616;border-color:#1f5d35}
 .card-removed{background:#2b1313;border-color:#6a1f1f}
+.card-out{background:#2a0f10;border-color:#7a2626}
+.light .card-out{background:#ffe2e2;border-color:#e6b0b0}
 .card-fav{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
 .light .card-removed{background:#ffe6e6;border-color:#e0b3b3}
 .light .card-new{background:#e6ffef;border-color:#b3e0c5}
@@ -116,10 +118,10 @@ function updateSortButtons() {
         const k = btn.dataset.sort;
         if (k === state.key) {
             const arrow = state.asc ? "↑" : "↓";
-            btn.textContent = `Sort by ${k.toUpperCase()} ${arrow}`;
+            btn.textContent = `${k.toUpperCase()} ${arrow}`;
             btn.classList.add('active');
         } else {
-            btn.textContent = `Sort by ${k.toUpperCase()}`;
+            btn.textContent = `${k.toUpperCase()}`;
             btn.classList.remove('active');
         }
     });
@@ -149,6 +151,7 @@ let activeTypes = new Set(['flower','oil','vape']);
 let activeStrains = new Set(['Indica','Sativa','Hybrid']);
 let favoritesOnly = false;
 let showSmalls = true;
+let showOutOfStock = true;
 let searchTerm = "";
 const priceMinBound = {price_min_bound};
 const priceMaxBound = {price_max_bound};
@@ -177,8 +180,10 @@ function applyFilters() {
         const text = (c.dataset.strain || '') + ' ' + (c.dataset.brand || '') + ' ' + (c.dataset.producer || '') + ' ' + (c.dataset.productId || '');
         const matchesSearch = term ? text.toLowerCase().includes(term) : true;
         const favOk = favoritesOnly ? favorites.has(favKey) : true;
+        const isOut = c.dataset.out === '1';
+        const outOk = showOutOfStock || !isOut;
         const smallsOk = showSmalls || !isSmalls;
-        c.style.display = (showType && showStrain && matchesSearch && priceOk && thcOk && favOk && smallsOk) ? '' : 'none';
+        c.style.display = (showType && showStrain && matchesSearch && priceOk && thcOk && favOk && smallsOk && outOk) ? '' : 'none';
     });
 }
 function handleSearch(el) {
@@ -213,6 +218,11 @@ function toggleFavorites(btn) {
 function toggleSmalls(btn) {
     showSmalls = !showSmalls;
     btn.classList.toggle('active', showSmalls);
+    applyFilters();
+}
+function toggleOutOfStock(btn) {
+    showOutOfStock = !showOutOfStock;
+    btn.classList.toggle('active', showOutOfStock);
     applyFilters();
 }
 let favorites = new Set();
@@ -387,6 +397,7 @@ function resetFilters() {
     document.querySelectorAll('.btn-filter').forEach(b => b.classList.add('active'));
     favoritesOnly = false;
     showSmalls = true;
+    showOutOfStock = true;
     // Reset sliders
     const priceMinEl = document.getElementById('priceMinRange');
     const priceMaxEl = document.getElementById('priceMaxRange');
@@ -500,9 +511,9 @@ applyTheme(saved === 'light');
 <h1>Available Medical Cannabis</h1>
 <div class='controls'>
   <div class='controls-inner'>
-    <button class='sort-btn' data-sort="price" onclick="sortCards('price', this)">Sort by PRICE</button>
-    <button class='sort-btn' data-sort="thc" onclick="sortCards('thc', this)">Sort by THC</button>
-    <button class='sort-btn' data-sort="cbd" onclick="sortCards('cbd', this)">Sort by CBD</button>
+    <button class='sort-btn' data-sort="price" onclick="sortCards('price', this)">Price</button>
+    <button class='sort-btn' data-sort="thc" onclick="sortCards('thc', this)">THC</button>
+    <button class='sort-btn' data-sort="cbd" onclick="sortCards('cbd', this)">CBD</button>
     <input class="search-box" type="text" placeholder="Search strain or producer" oninput="handleSearch(this)" />
     <button class='btn-filter active' onclick="toggleType('flower', this)">Flower</button>
     <button class='btn-filter active' onclick="toggleType('oil', this)">Oil</button>
@@ -512,6 +523,7 @@ applyTheme(saved === 'light');
     <button class='btn-filter active' onclick="toggleStrain('Hybrid', this)">Hybrid</button>
     <button class='btn-filter' onclick="toggleFavorites(this)">Favorites</button>
     <button class='btn-filter active' onclick="toggleSmalls(this)">Smalls</button>
+    <button class='btn-filter active' onclick="toggleOutOfStock(this)">Out of stock</button>
     <button onclick="resetFilters()">Reset</button>
     <div class="range-group">
       <div class="range-line">

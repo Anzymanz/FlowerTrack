@@ -80,14 +80,6 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Entry(form, textvariable=app.cap_post_wait, width=10).grid(row=row_idx, column=1, sticky="w", padx=6, pady=2)
     row_idx += 1
 
-    ttk.Label(form, text="Scroll passes after navigation").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(form, textvariable=app.cap_scroll_times, width=10).grid(row=row_idx, column=1, sticky="w", padx=6, pady=2)
-    row_idx += 1
-
-    ttk.Label(form, text="Scroll pause (s)").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(form, textvariable=app.cap_scroll_pause, width=10).grid(row=row_idx, column=1, sticky="w", padx=6, pady=2)
-    row_idx += 1
-
     ttk.Label(form, text="Capture retries on failure").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
     ttk.Entry(form, textvariable=app.cap_retry_attempts, width=10).grid(row=row_idx, column=1, sticky="w", padx=6, pady=2)
     row_idx += 1
@@ -98,6 +90,15 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
 
     ttk.Label(form, text="Retry backoff max (x)").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
     ttk.Entry(form, textvariable=app.cap_retry_backoff, width=10).grid(row=row_idx, column=1, sticky="w", padx=6, pady=2)
+    row_idx += 1
+
+    ttk.Checkbutton(form, text="Include inactive products", variable=app.cap_include_inactive).grid(row=row_idx, column=0, columnspan=2, sticky="w", padx=6, pady=2)
+    row_idx += 1
+
+    ttk.Checkbutton(form, text="Requestable only", variable=app.cap_requestable_only).grid(row=row_idx, column=0, columnspan=2, sticky="w", padx=6, pady=2)
+    row_idx += 1
+
+    ttk.Checkbutton(form, text="In stock only", variable=app.cap_in_stock_only).grid(row=row_idx, column=0, columnspan=2, sticky="w", padx=6, pady=2)
     row_idx += 1
 
     ttk.Separator(form, orient="horizontal").grid(row=row_idx, column=0, columnspan=2, sticky="ew", pady=6)
