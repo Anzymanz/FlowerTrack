@@ -19,7 +19,7 @@ try:
 except Exception:
 
     def get_google_medicann_link(producer, strain):
-        q = " ".join([p for p in (producer or "", strain or "") if p]).strip()
+        q = " ".join([p for p in (producer or '', strain or '') if p]).strip()
         return "https://www.google.com/search?q=" + urllib.parse.quote(q + " medbud.wiki")
 
 _ASSET_CACHE: dict[str, str] | None = None
@@ -159,7 +159,7 @@ def set_exports_dir(exports_dir: Path) -> None:
 
 def build_launch_url(producer: str | None, strain: str | None) -> str:
     """Reusable launcher URL for search links."""
-    return get_google_medicann_link(producer or "", strain)
+    return get_google_medicann_link(producer or '', strain)
 
 
 # ---------------- EXPORT HTML ----------------
@@ -224,7 +224,7 @@ def export_html(data, path, fetch_images=False):
     for it in data:
         val = normalize_pct(it.get("thc"), it.get("thc_unit"))
         if isinstance(val, (int, float)):
-            if (it.get("product_type") or "").lower() == "flower":
+            if (it.get('product_type') or '').lower() == "flower":
                 thc_values.append(float(val))
     if not thc_values:
         for it in data:
@@ -241,8 +241,8 @@ def export_html(data, path, fetch_images=False):
         thc_min_bound = thc_max_bound
 
     def fav_key_for(item: dict) -> str:
-        brand_norm = norm(format_brand(item.get("brand") or item.get("producer") or ""))
-        strain_norm = norm(item.get("strain") or "")
+        brand_norm = norm(format_brand(item.get("brand") or item.get("producer") or ''))
+        strain_norm = norm(item.get("strain") or '')
         if brand_norm or strain_norm:
             combo = f"{brand_norm}-{strain_norm}".strip("-")
         else:
@@ -265,10 +265,23 @@ def export_html(data, path, fetch_images=False):
         elif it.get("ml") is not None:
             qty = f"{it['ml']}ml"
 
-        type_icon_dark = get_type_icon(it.get("product_type"), "dark")
-        type_icon_light = get_type_icon(it.get("product_type"), "light")
-        strain_badge_src = get_badge_src(it.get("strain_type"), it.get("product_type"))
-        has_type_icon = bool(type_icon_dark or type_icon_light)
+        type_icon_dark = get_type_icon(it.get('product_type'), "dark")
+        image_url = (it.get("brand_logo_url") or it.get("image_url") or '').strip()
+        image_html = ""
+        if image_url:
+            alt_text = it.get("brand") or it.get("producer") or it.get("title") or ""
+            image_html = (
+                "<img class='type-badge' src='"
+                + esc_attr(image_url)
+                + "' alt='"
+                + esc_attr(alt_text)
+                + "' data-fullsrc='"
+                + esc_attr(image_url)
+                + "' onclick='openImageModal(this.dataset.fullsrc, this.alt)' />"
+            )
+        type_icon_light = get_type_icon(it.get('product_type'), "light")
+        strain_badge_src = get_badge_src(it.get('strain_type'), it.get('product_type'))
+        has_type_icon = bool(image_html or type_icon_dark or type_icon_light)
 
         thc_raw = it.get("thc")
         thc_unit = it.get("thc_unit")
@@ -294,19 +307,19 @@ def export_html(data, path, fetch_images=False):
             out = re.sub(r"[\s\-_/]+", " ", out).strip()
             return out
 
-        strain_name = clean_name(it.get("strain") or "")
-        if it.get("brand"):
-            b = format_brand(it.get("brand"))
+        strain_name = clean_name(it.get("strain") or '')
+        if it.get('brand'):
+            b = format_brand(it.get('brand'))
             if b and strain_name:
                 pat = re.compile(re.escape(str(b)), re.I)
                 strain_name = pat.sub("", strain_name).strip()
                 first_tok = b.split()[0]
                 strain_name = re.sub(rf"\b{re.escape(first_tok)}\b", "", strain_name, flags=re.I).strip()
                 strain_name = re.sub(r"\s{2,}", " ", strain_name).strip()
-        heading = strain_name or clean_name(it.get("title") or it.get("producer") or it.get("product_type") or "-")
+        heading = strain_name or clean_name(it.get('title') or it.get('producer') or it.get('product_type') or "-")
         if it.get("is_smalls") and heading:
             heading = f"{heading} (Smalls)"
-        brand = format_brand(it.get("brand") or it.get("producer") or "")
+        brand = format_brand(it.get('brand') or it.get('producer') or '')
 
         def display_strength(raw, unit, pct):
             if raw is None:
@@ -342,8 +355,8 @@ def export_html(data, path, fetch_images=False):
             badge_text = f"New price {'+' if price_delta>0 else '-'}£{abs(price_delta):.2f}"
             price_badge = f"<span class='{badge_cls}'>{esc(badge_text)}</span>"
             price_border_class = " card-price-up" if price_delta > 0 else " card-price-down"
-        stock_text = (it.get("stock_detail") or it.get("stock_status") or it.get("stock") or "").strip()
-        stock_upper = (it.get("stock_status") or it.get("stock") or "").upper()
+        stock_text = (it.get("stock_detail") or it.get("stock_status") or it.get("stock") or '').strip()
+        stock_upper = (it.get("stock_status") or it.get("stock") or '').upper()
         is_out = ("OUT" in stock_upper) or (it.get("stock_remaining") == 0)
         if it.get("stock_remaining") is not None:
             stock_text = f"{it.get('stock_remaining')} remaining"
@@ -365,12 +378,12 @@ def export_html(data, path, fetch_images=False):
           data-price='{esc_attr(data_price_attr)}'
       data-thc='{esc_attr(data_thc_attr)}'
       data-cbd='{esc_attr(data_cbd_attr)}'
-      data-pt='{esc_attr((it.get("product_type") or "").lower())}'
-      data-strain-type='{esc_attr(it.get("strain_type") or "")}'
-      data-strain='{esc_attr(it.get("strain") or "")}'
-      data-brand='{esc_attr(brand or "")}'
-      data-producer='{esc_attr(it.get("producer") or "")}'
-      data-product-id='{esc_attr(it.get("product_id") or "")}'
+      data-pt='{esc_attr((it.get('product_type') or '').lower())}'
+      data-strain-type='{esc_attr(it.get('strain_type') or '')}'
+      data-strain='{esc_attr(it.get("strain") or '')}'
+      data-brand='{esc_attr(brand or '')}'
+      data-producer='{esc_attr(it.get('producer') or '')}'
+      data-product-id='{esc_attr(it.get("product_id") or '')}'
       data-stock='{esc_attr(stock_text)}'
       data-key='{esc_attr(card_key)}'
       data-favkey='{esc_attr(fav_key)}'
@@ -378,9 +391,9 @@ def export_html(data, path, fetch_images=False):
       data-removed='{1 if it.get("is_removed") else 0}'
       data-out='{1 if is_out else 0}'>
     <button class='fav-btn' onclick='toggleFavorite(this)' title='Favorite this item'>★</button>
-    {("<img class='type-badge' data-theme-icon='dark' src='" + esc_attr(type_icon_dark) + "' alt='" + esc_attr(it.get('product_type') or '') + "' />") if type_icon_dark else ""}
-    {("<img class='type-badge' data-theme-icon='light' src='" + esc_attr(type_icon_light) + "' alt='" + esc_attr(it.get('product_type') or '') + "' style='display:none;' />") if type_icon_light else ""}
-    {("<img class='strain-badge' src='" + esc_attr(strain_badge_src) + "' alt='" + esc_attr(it.get('strain_type') or '') + "' />") if strain_badge_src else ""}
+    {image_html if image_html else ("<img class='type-badge' data-theme-icon='dark' src='" + esc_attr(type_icon_dark) + "' alt='" + esc_attr(it.get('product_type') or '') + "' />") if type_icon_dark else ""}
+    {"" if image_html else ("<img class='type-badge' data-theme-icon='light' src='" + esc_attr(type_icon_light) + "' alt='" + esc_attr(it.get('product_type') or '') + "' style='display:none;' />") if type_icon_light else ""}
+    {"" if image_html else (("<img class='strain-badge' src='" + esc_attr(strain_badge_src) + "' alt='" + esc_attr(it.get('strain_type') or '') + "' />") if strain_badge_src else "")}
     {("<span class='badge-new'>New</span>") if it.get("is_new") else ("<span class='badge-removed'>Removed</span>" if it.get("is_removed") else "")}
     <div style='display:flex;flex-direction:column;align-items:flex-start;gap:4px;'>
       {price_badge}

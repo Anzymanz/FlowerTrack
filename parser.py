@@ -117,6 +117,11 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
     external_ref = entry.get("externalReference") or specs.get("externalId") or metadata.get("externalId")
     product_id = external_ref or (str(entry.get("productId")) if entry.get("productId") is not None else None)
     brand = (product.get("brand") or {}).get("name") or metadata.get("brandName") or None
+    brand_logo_url = None
+    brand_obj = product.get("brand") or {}
+    if isinstance(brand_obj, dict):
+        brand_logo_url = brand_obj.get("logoUrl") or brand_obj.get("logo_url")
+    image_url = entry.get("mainImageUrl") or product.get("mainImageUrl")
     strain = cannabis.get("strainName") or metadata.get("strain")
     if not strain or str(strain).strip().upper() in {"N/A", "NA", "NONE", "UNKNOWN"}:
         strain = name
@@ -207,6 +212,8 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
         "thc_unit": thc_unit,
         "cbd": cbd,
         "cbd_unit": cbd_unit,
+        "image_url": image_url,
+        "brand_logo_url": brand_logo_url,
     }
     return item
 

@@ -114,7 +114,7 @@ py .\flowertracker.py
 ```
 
 ## Quick start (Windows exe)
-1. [Download](https://github.com/Anzymanz/FlowerTrack/releases/latest) the latest `FlowerTrack.exe`.
+1. [Download](https://github.com/Anzymanz/FlowerTrack/releases/latest) the latest `FlowerTrack.exe` from Releases.
 2. Run `FlowerTrack.exe` (first run may take a little longer).
 
 ## Build (single exe)

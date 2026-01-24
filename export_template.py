@@ -38,13 +38,16 @@ body{background:var(--bg);color:var(--fg);font-family:Arial;padding:16px;margin:
 .basket-button:hover{background:var(--hover)}
 .basket-button.active{background:var(--accent);color:var(--bg);border-color:var(--accent)}
 .basket-modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:9999}
+.image-modal{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:10000}
+.image-modal img{max-width:90vw;max-height:85vh;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,0.5)}
+.type-badge{cursor:pointer}
 .basket-panel{background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:12px;min-width:320px;max-width:520px;max-height:70vh;overflow:auto;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,0.3)}
 .basket-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
 .basket-row:last-child{border-bottom:none}
 .basket-title{font-weight:700;font-size:16px;margin-bottom:8px}
 .basket-empty{padding:8px 0;color:var(--muted)}
 .basket-qty{width:64px}
-.type-badge{position:absolute;top:40px;right:8px;width:40px;height:40px;object-fit:contain;opacity:0.9}
+.type-badge{position:absolute;top:32px;right:8px;width:60px;height:60px;object-fit:contain;opacity:0.95}
 .badge-new{position:absolute;top:6px;right:6px;left:auto;display:inline-block;padding:2px 8px;border-radius:999px;background:var(--accent);color:var(--bg);font-size:11px;font-weight:700;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis}
 .badge-removed{position:absolute;top:6px;right:6px;left:auto;display:inline-block;padding:2px 8px;border-radius:999px;background:#c0392b;color:#fff;font-size:11px;font-weight:700;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis}
 .range-group{display:flex;flex-direction:column;gap:4px;margin:4px 0}
@@ -102,8 +105,8 @@ button:hover{background:var(--hover)}
 .stock-low{background:#f5a623}
 .stock-out{background:#e74c3c}
 .stock-not-prescribable{background:#999}
-.strain-badge{position:absolute;top:40px;right:8px;width:40px;height:40px;object-fit:contain;opacity:0.9}
-.card.has-type-icon .strain-badge{right:52px}
+.strain-badge{position:absolute;top:32px;right:8px;width:60px;height:60px;object-fit:contain;opacity:0.95}
+.card.has-type-icon .strain-badge{right:72px}
 .fav-btn{position:absolute;bottom:10px;right:10px;border:none;background:transparent;color:var(--muted);font-size:30px;cursor:pointer;line-height:1}
 .fav-btn.fav-on{color:var(--accent)}
 .fav-btn:hover{background:transparent;color:inherit}
@@ -325,6 +328,22 @@ function closeBasket() {
     if (modal) modal.style.display = 'none';
     const btn = document.getElementById('basketButton');
     if (btn) btn.classList.remove('active');
+}
+function openImageModal(src, altText) {
+    if (!src) return;
+    let modal = document.getElementById('imageModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'imageModal';
+        modal.className = 'image-modal';
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        });
+        document.body.appendChild(modal);
+    }
+    const safeAlt = altText || '';
+    modal.innerHTML = `<img src="${src}" alt="${safeAlt}" />`;
+    modal.style.display = 'flex';
 }
 function updateBasketQty(key, val) {
     const qty = parseInt(val, 10);
