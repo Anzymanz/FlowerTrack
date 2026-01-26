@@ -19,26 +19,6 @@ Shows usage, stock, and daily targets in a single view.
 
 <img src="docs/TrackerSS.png?v=20260124b" width="960" />
 
-### Tracker settings
-Configure thresholds, routes, and display options.
-
-<img src="docs/TrackerSettingSS.png?v=20260124b" width="500" />
-
-### Usage stats
-Shows usage history and trends over time.
-
-<img src="docs/StatsSS.png?v=20260124b" width="360" />
-
-### Flower library
-Stores strains, notes, and metadata.
-
-<img src="docs/LibrarySS.png?v=20260124b" width="960" />
-
-### Scraper window
-Shows auto-scraper controls, progress, and log output.
-
-<img src="docs/ScraperSS.png?v=20260124b" width="750" />
-
 ### Flower Browser
 Local webpage with filters, badges, and change highlights.
 
@@ -54,10 +34,30 @@ Basket view for comparing items.
 
 <img src="docs/WebpageBasketSS.png?v=20260124b" width="960" />
 
+### Flower library
+Stores strains, notes, and metadata.
+
+<img src="docs/LibrarySS.png?v=20260124b" width="960" />
+
+### Usage stats
+Shows usage history and trends over time.
+
+<img src="docs/StatsSS.png?v=20260124b" width="360" />
+
+### Scraper window
+Shows auto-scraper controls, progress, and log output.
+
+<img src="docs/ScraperSS.png?v=20260124b" width="750" />
+
 ### Mix calculator
 Calculator for blend ratios.
 
 <img src="docs/MixcalcSS.png?v=20260124b" width="500" />
+
+### Tracker settings
+Configure thresholds, routes, and display options.
+
+<img src="docs/TrackerSettingSS.png?v=20260124b" width="500" />
 
 ## The Flower Browser (local webpage)
 The scraper generates a local HTML page that you can open from the app. It’s designed for fast scanning and filtering of the live product list.
