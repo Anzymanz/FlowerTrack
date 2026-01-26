@@ -72,7 +72,7 @@ button.btn-filter{background:var(--panel);color:var(--accent)}
 button.btn-filter.active{background:var(--accent);color:var(--bg);background-image:none}
 button:hover{background:var(--hover)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
-.card{background:var(--panel);padding:12px;border-radius:12px;border:1px solid var(--border);position:relative;display:flex;flex-direction:column;min-height:320px}
+.card{background:var(--panel);padding:12px;border-radius:12px;border:1px solid var(--border);position:relative;display:flex;flex-direction:column;min-height:300px}
 .card-new{background:#0f2616;border-color:#1f5d35}
 .card-removed{background:#2b1313;border-color:#6a1f1f}
 .card-out{background:#2a0f10;border-color:#7a2626}
