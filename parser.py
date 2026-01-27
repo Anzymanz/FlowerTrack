@@ -255,9 +255,9 @@ def parse_api_payloads(payloads: Iterable[dict]) -> list[ItemDict]:
             elif new_price is not None and old_price is not None and new_price == old_price:
                 new_stock = parsed.get("stock_remaining")
                 old_stock = existing.get("stock_remaining")
-                if isinstance(new_stock, (int, float)) and (
-                    not isinstance(old_stock, (int, float)) or new_stock > old_stock
-                ):
+                if isinstance(new_stock, (int, float)) and not isinstance(old_stock, (int, float)):
+                    replace = True
+                elif isinstance(new_stock, (int, float)) and isinstance(old_stock, (int, float)) and new_stock < old_stock:
                     replace = True
             if replace:
                 items_by_key[key] = parsed
