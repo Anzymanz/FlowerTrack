@@ -218,8 +218,7 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
     return item
 
 def parse_api_payloads(payloads: Iterable[dict]) -> list[ItemDict]:
-    items: list[ItemDict] = []
-    seen: set[str] = set()
+    items_by_key: dict[str, ItemDict] = {}
     for payload in payloads or []:
         if not isinstance(payload, dict):
             continue
@@ -238,9 +237,29 @@ def parse_api_payloads(payloads: Iterable[dict]) -> list[ItemDict]:
                 key = f"id:{pid}"
             else:
                 key = f"name:{parsed.get('title') or ''}|brand:{parsed.get('brand') or ''}|g:{parsed.get('grams') or ''}|ml:{parsed.get('ml') or ''}"
-            if key in seen:
+            existing = items_by_key.get(key)
+            if not existing:
+                items_by_key[key] = parsed
                 continue
-            seen.add(key)
-            items.append(parsed)
-    return items
+            try:
+                new_price = float(parsed.get("price")) if parsed.get("price") is not None else None
+            except Exception:
+                new_price = None
+            try:
+                old_price = float(existing.get("price")) if existing.get("price") is not None else None
+            except Exception:
+                old_price = None
+            replace = False
+            if new_price is not None and (old_price is None or new_price < old_price):
+                replace = True
+            elif new_price is not None and old_price is not None and new_price == old_price:
+                new_stock = parsed.get("stock_remaining")
+                old_stock = existing.get("stock_remaining")
+                if isinstance(new_stock, (int, float)) and (
+                    not isinstance(old_stock, (int, float)) or new_stock > old_stock
+                ):
+                    replace = True
+            if replace:
+                items_by_key[key] = parsed
+    return list(items_by_key.values())
 
