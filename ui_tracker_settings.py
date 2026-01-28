@@ -170,19 +170,24 @@ def open_tracker_settings(app) -> None:
     ttk.Label(frame, text="Window settings", font=app.font_bold_small).grid(row=sep_row + 7, column=0, sticky="w", pady=(0, 6))
     app.minimize_var = tk.BooleanVar(value=app.minimize_to_tray)
     app.close_var = tk.BooleanVar(value=app.close_to_tray)
+    app.scraper_controls_var = tk.BooleanVar(value=getattr(app, 'show_scraper_buttons', True))
     app.scraper_status_icon_var = tk.BooleanVar(value=getattr(app, 'show_scraper_status_icon', True))
+    app.scraper_controls_check = ttk.Checkbutton(frame, text="Show scraper controls", variable=app.scraper_controls_var)
+    app.scraper_controls_check.grid(
+        row=sep_row + 8, column=0, columnspan=2, sticky="w"
+    )
     app.scraper_status_icon_check = ttk.Checkbutton(frame, text="Show scraper status icon", variable=app.scraper_status_icon_var)
     app.scraper_status_icon_check.grid(
-        row=sep_row + 8, column=0, columnspan=2, sticky="w"
+        row=sep_row + 9, column=0, columnspan=2, sticky="w"
     )
 
     app.minimize_var_check = ttk.Checkbutton(frame, text="Minimize to tray when minimizing", variable=app.minimize_var)
     app.minimize_var_check.grid(
-        row=sep_row + 9, column=0, columnspan=2, sticky="w"
+        row=sep_row + 10, column=0, columnspan=2, sticky="w"
     )
     app.close_var_check = ttk.Checkbutton(frame, text="Minimize to tray when closing", variable=app.close_var)
     app.close_var_check.grid(
-        row=sep_row + 10, column=0, columnspan=2, sticky="w"
+        row=sep_row + 12, column=0, columnspan=2, sticky="w"
     )
 
     app.total_green_entry.insert(0, f"{app.total_green_threshold}")
@@ -226,6 +231,7 @@ def open_tracker_settings(app) -> None:
     app._bind_tooltip(lbl_data_file, "Location of your tracker data file.")
     app._bind_tooltip(lbl_library_file, "Location of your flower library data file.")
     app._bind_tooltip(app.open_data_folder_btn, "Open the data folder in File Explorer.")
+    app._bind_tooltip(app.scraper_controls_check, "Show the scraper button, browser button, and status dot in the main window.")
     app._bind_tooltip(app.scraper_status_icon_check, "Show the scraper status dot in the main window.")
     app._bind_tooltip(app.minimize_var_check, "Hide to system tray when minimizing if enabled.")
     app._bind_tooltip(app.close_var_check, "Hide to system tray when closing if enabled.")
@@ -236,7 +242,7 @@ def open_tracker_settings(app) -> None:
             pass
 
     ttk.Button(frame, text="Save", command=app._save_settings).grid(
-        row=sep_row + 11, column=2, columnspan=2, sticky="e", pady=(4, 0)
+        row=sep_row + 12, column=2, columnspan=2, sticky="e", pady=(4, 0)
     )
     # Place after layout to avoid resize flash
     app._prepare_toplevel(win)

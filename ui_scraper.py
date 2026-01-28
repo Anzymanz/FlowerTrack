@@ -904,6 +904,17 @@ class App(tk.Tk):
                 "price_delta": it.get("price_delta"),
                 "direction": "up" if it.get("price_delta") and it.get("price_delta") > 0 else "down",
             })
+        def _notify_flag(name: str, default: bool = True) -> bool:
+            var = getattr(self, name, None)
+            if hasattr(var, 'get'):
+                try:
+                    return bool(var.get())
+                except Exception:
+                    return default
+            if isinstance(var, bool):
+                return var
+            return default
+
         log_stock_change_compact = []
         for it in all_stock_changes:
             brand = it.get("brand") or it.get("producer") or ""
@@ -914,13 +925,13 @@ class App(tk.Tk):
                 "stock_before": it.get("stock_before"),
                 "stock_after": it.get("stock_after"),
             })
-        if not self.notify_new_items.get():
+        if not _notify_flag('notify_new_items', True):
             new_items = []
-        if not self.notify_removed_items.get():
+        if not _notify_flag('notify_removed_items', True):
             removed_items = []
-        if not self.notify_price_changes.get():
+        if not _notify_flag('notify_price_changes', True):
             price_changes = []
-        if not self.notify_stock_changes.get():
+        if not _notify_flag('notify_stock_changes', True):
             stock_changes = []
         def _flower_label(entry: dict) -> str:
             brand = entry.get("brand") or entry.get("producer") or ""
@@ -1049,13 +1060,22 @@ class App(tk.Tk):
             f"+{len(new_items)} new, -{len(removed_items)} removed, "
             f"{len(price_changes)} price changes, {len(stock_changes)} stock changes"
         )
-        quiet_hours = self._quiet_hours_active()
+        quiet_hours = self._quiet_hours_active() if hasattr(self, '_quiet_hours_active') else False
         if quiet_hours:
             self._capture_log("Quiet hours active; skipping notifications.")
             self._update_last_change(summary)
         # Build detailed desktop notification text and launch target
-        windows_body = self.notify_service.format_windows_body(payload, summary, detail=self.cap_notify_detail.get())
-        launch_url = self.cap_url.get().strip() or self._latest_export_url()
+        detail = self.cap_notify_detail.get() if hasattr(self, 'cap_notify_detail') else 'summary'
+        try:
+            windows_body = self.notify_service.format_windows_body(payload, summary, detail=detail)
+        except TypeError:
+            windows_body = self.notify_service.format_windows_body(payload, summary)
+        launch_url = self.cap_url.get().strip() if hasattr(self, 'cap_url') else ''
+        if not launch_url:
+            try:
+                launch_url = self._latest_export_url()
+            except Exception:
+                launch_url = None
         icon_path = ASSETS_DIR / "icon.ico"
         # Windows toast (always allowed when enabled)
         if notify_allowed and (not quiet_hours) and self.notify_windows.get():
@@ -1102,7 +1122,7 @@ class App(tk.Tk):
             "message": "Medicann Scraper test notification",
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
-        quiet_hours = self._quiet_hours_active()
+        quiet_hours = self._quiet_hours_active() if hasattr(self, '_quiet_hours_active') else False
         ok, status, body = self.notify_service.send_home_assistant_test(payload)
         if ok:
             self._log_console(f"Test notification sent (status {status}).")
@@ -1119,7 +1139,12 @@ class App(tk.Tk):
                 "New: Alpha Kush, Beta OG | Removed: None | Price: Gamma Glue GBP 2.50; Delta Dream GBP 1.00 | "
                 "Stock: Zeta Zen: 10 -> 8"
             )
-            launch_url = self.cap_url.get().strip() or self._latest_export_url()
+            launch_url = self.cap_url.get().strip() if hasattr(self, 'cap_url') else ''
+        if not launch_url:
+            try:
+                launch_url = self._latest_export_url()
+            except Exception:
+                launch_url = None
             if launch_url is None:
                 try:
                     data = self._get_export_items()

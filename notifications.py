@@ -109,8 +109,8 @@ class NotificationService:
         return (
             f"HA test status: {status_text} | "
             "New: Alpha Kush, Beta OG | Removed: None | "
-            "Price: Gamma Glue £2.50; Delta Dream £1.00 | "
-            "Stock: Zeta Zen: 10 → 8"
+            "Price: Gamma Glue GBP 2.50; Delta Dream GBP 1.00 | "
+            "Stock: Zeta Zen: 10 -> 8"
         )
 
     def send_windows(self, title: str, body: str, icon: Optional[Path], launch_url: Optional[str] = None) -> bool:

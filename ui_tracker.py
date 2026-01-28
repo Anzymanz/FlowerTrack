@@ -96,6 +96,7 @@ class CannabisTracker:
         self.minimize_to_tray = False
         self.close_to_tray = False
         self.show_scraper_status_icon = True
+        self.show_scraper_buttons = True
         self.scraper_notify_windows = True
         self.enable_stock_coloring = True
         self.enable_stock_coloring_thc = True
@@ -248,9 +249,11 @@ class CannabisTracker:
             row=0, column=0, sticky="w"
         )
         ttk.Button(top_bar, text="Settings", command=self.open_settings).grid(row=0, column=1, padx=(8, 0))
-        ttk.Button(top_bar, text="Medicann Scraper", command=self.open_parser).grid(row=0, column=2, padx=(8, 0))
+        self.scraper_button = ttk.Button(top_bar, text="Medicann Scraper", command=self.open_parser)
+        self.scraper_button.grid(row=0, column=2, padx=(8, 0))
         ttk.Button(top_bar, text="Flower Library", command=self.launch_flower_library).grid(row=0, column=3, padx=(8, 0))
-        ttk.Button(top_bar, text="Flower Browser", command=self.open_flower_browser).grid(row=0, column=4, padx=(8, 0))
+        self.flower_browser_button = ttk.Button(top_bar, text="Flower Browser", command=self.open_flower_browser)
+        self.flower_browser_button.grid(row=0, column=4, padx=(8, 0))
         time_font = ("", 14, "bold")
         self.clock_label = ttk.Label(top_bar, text="", font=time_font)
         self.clock_label.grid(row=0, column=5, sticky="e", padx=(12, 0))
@@ -259,7 +262,7 @@ class CannabisTracker:
         self.scraper_status_img = None
         self.scraper_status_label = ttk.Label(top_bar, text="")
         self.scraper_status_label.grid(row=0, column=7, sticky="e", padx=(6, 0))
-        self._apply_scraper_status_visibility()
+        self._apply_scraper_controls_visibility()
         top_bar.columnconfigure(5, weight=1)
         # Stock list
         stock_frame = ttk.LabelFrame(main, text="Flower Stock", padding=10)
@@ -1044,7 +1047,9 @@ class CannabisTracker:
         self.close_to_tray = self.close_var.get()
         if hasattr(self, 'scraper_status_icon_var'):
             self.show_scraper_status_icon = bool(self.scraper_status_icon_var.get())
-        self._apply_scraper_status_visibility()
+        if hasattr(self, 'scraper_controls_var'):
+            self.show_scraper_buttons = bool(self.scraper_controls_var.get())
+        self._apply_scraper_controls_visibility()
         if hasattr(self, 'scraper_notify_windows_var'):
             self.scraper_notify_windows = bool(self.scraper_notify_windows_var.get())
             try:
@@ -1653,6 +1658,7 @@ class CannabisTracker:
         self.minimize_to_tray = bool(cfg.get("minimize_to_tray", self.minimize_to_tray))
         self.close_to_tray = bool(cfg.get("close_to_tray", self.close_to_tray))
         self.show_scraper_status_icon = bool(cfg.get("show_scraper_status_icon", self.show_scraper_status_icon))
+        self.show_scraper_buttons = bool(cfg.get("show_scraper_buttons", self.show_scraper_buttons))
         try:
             cap_cfg = _load_capture_config()
             self.scraper_notify_windows = bool(cap_cfg.get("notify_windows", self.scraper_notify_windows))
@@ -1697,7 +1703,7 @@ class CannabisTracker:
             for col, width in self.log_column_widths.items():
                 if col in self.log_tree["columns"]:
                     self.log_tree.column(col, width=width)
-        self._apply_scraper_status_visibility()
+        self._apply_scraper_controls_visibility()
     def _save_config(self) -> None:
         cfg = {
             "data_path": self.data_path or str(TRACKER_DATA_FILE),
@@ -1724,6 +1730,7 @@ class CannabisTracker:
             "minimize_to_tray": self.minimize_to_tray,
             "close_to_tray": self.close_to_tray,
             "show_scraper_status_icon": self.show_scraper_status_icon,
+            "show_scraper_buttons": self.show_scraper_buttons,
         }
         save_tracker_config(Path(TRACKER_CONFIG_FILE), cfg)
     def _settings_choose_data(self) -> None:
@@ -2190,11 +2197,26 @@ class CannabisTracker:
         draw = ImageDraw.Draw(img)
         draw.ellipse((8, 8, size - 8, size - 8), fill=(0, 200, 0, 255))
         return img
+    def _apply_scraper_controls_visibility(self) -> None:
+        self._apply_scraper_status_visibility()
+        btn = getattr(self, 'scraper_button', None)
+        if btn:
+            try:
+                (btn.grid if self.show_scraper_buttons else btn.grid_remove)()
+            except Exception:
+                pass
+        btn = getattr(self, 'flower_browser_button', None)
+        if btn:
+            try:
+                (btn.grid if self.show_scraper_buttons else btn.grid_remove)()
+            except Exception:
+                pass
+
     def _apply_scraper_status_visibility(self) -> None:
         label = getattr(self, 'scraper_status_label', None)
         if not label:
             return
-        if self.show_scraper_status_icon:
+        if self.show_scraper_status_icon and self.show_scraper_buttons:
             try:
                 label.grid()
             except Exception:
@@ -2241,7 +2263,7 @@ class CannabisTracker:
             if getattr(self, "tray_icon", None):
                 update_tray_icon(self.tray_icon, running, warn)
             if not self.show_scraper_status_icon:
-                self._apply_scraper_status_visibility()
+                self._apply_scraper_controls_visibility()
                 return
             img = _build_scraper_status_image(getattr(self, "child_procs", []))
             if img and ImageTk is not None:
