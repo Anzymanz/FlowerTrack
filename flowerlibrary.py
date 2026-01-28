@@ -37,7 +37,7 @@ def load_settings() -> dict:
                 return data
         except (json.JSONDecodeError, OSError):
             pass
-    return {"dark_mode": True, "column_widths": {}}
+    return {"dark_mode": True, "column_widths": {}, "window_geometry": ""}
 
 
 def save_settings(settings: dict) -> None:
@@ -94,10 +94,12 @@ class FlowerLibraryApp:
 
         self.entries: list[dict] = load_entries()
         self.settings = load_settings()
+        self.window_geometry = self.settings.get("window_geometry", "")
         shared_dark = _load_tracker_dark_mode(self.settings.get("dark_mode", True))
         self.is_dark = BooleanVar(value=shared_dark)
         self.windows: list = [self.root]
         self.sort_state: dict[str, bool] = {}
+        self._geometry_save_job = None
 
         self.text_fields = ["brand", "cultivator", "packager", "strain"]
         self.float_fields = ["thc", "cbd", "price"]
@@ -112,6 +114,12 @@ class FlowerLibraryApp:
         self._build_table()
         self._build_buttons()
         self.refresh_table()
+        if self.window_geometry:
+            try:
+                self.root.geometry(self.window_geometry)
+            except Exception:
+                pass
+        self.root.bind("<Configure>", self._schedule_geometry_save)
 
     def apply_theme(self) -> None:
         colors = compute_colors(self.is_dark.get())
@@ -444,6 +452,21 @@ class FlowerLibraryApp:
 
     def _persist_settings(self) -> None:
         save_settings(self.settings)
+
+    def _schedule_geometry_save(self, _event=None) -> None:
+        if self._geometry_save_job is not None:
+            try:
+                self.root.after_cancel(self._geometry_save_job)
+            except Exception:
+                pass
+        self._geometry_save_job = self.root.after(300, self._persist_geometry)
+
+    def _persist_geometry(self) -> None:
+        try:
+            self.settings["window_geometry"] = self.root.geometry()
+            self._persist_settings()
+        finally:
+            self._geometry_save_job = None
 
     def sort_by(self, column: str) -> None:
         ascending = self.sort_state.get(column, True)
