@@ -119,11 +119,19 @@ def open_tracker_settings(app) -> None:
     ttk.Label(dtc_frame, text="g/day").pack(side="left")
     dtc_frame.grid(row=13, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
 
+    lbl_avg_days = ttk.Label(frame, text="Average usage window")
+    lbl_avg_days.grid(row=14, column=0, sticky="w", pady=(2, 0))
+    avg_frame = ttk.Frame(frame)
+    app.avg_usage_days_entry = ttk.Entry(avg_frame, width=4)
+    app.avg_usage_days_entry.pack(side="left", padx=(0, 2))
+    ttk.Label(avg_frame, text="days").pack(side="left")
+    avg_frame.grid(row=14, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+
     ttk.Label(frame, text="Route efficiency (%)", font=app.font_bold_small).grid(
-        row=14, column=0, sticky="w", pady=(10, 6)
+        row=15, column=0, sticky="w", pady=(10, 6)
     )
     app.roa_vars: dict[str, tk.StringVar] = {}
-    roa_row = 15
+    roa_row = 16
     for idx, (name, eff) in enumerate(app.roa_options.items()):
         ttk.Label(frame, text=name).grid(row=roa_row + idx, column=0, sticky="w", pady=(2, 0))
         var = tk.StringVar(value=f"{eff*100:.0f}")
@@ -187,6 +195,7 @@ def open_tracker_settings(app) -> None:
     app.cbd_single_red_entry.insert(0, f"{app.cbd_single_red_threshold}")
     app.daily_target_entry.insert(0, f"{app.target_daily_grams}")
     app.daily_target_cbd_entry.insert(0, f"{getattr(app, 'target_daily_cbd_grams', 0.0)}")
+    app.avg_usage_days_entry.insert(0, f"{getattr(app, 'avg_usage_days', 30)}")
 
     # Tooltips for settings
     app._bind_tooltip(lbl_total_green, "Above this total THC stock, label shows green.")
@@ -212,6 +221,8 @@ def open_tracker_settings(app) -> None:
     app._bind_tooltip(app.daily_target_entry, "Daily THC target in grams used to compute remaining today and target days left.")
     app._bind_tooltip(lbl_daily_target_cbd, "Daily CBD target in grams used to compute CBD remaining/used today.")
     app._bind_tooltip(app.daily_target_cbd_entry, "Daily CBD target in grams used to compute CBD remaining/used today.")
+    app._bind_tooltip(lbl_avg_days, "Number of days to average for days-left calculations (0 = all time).")
+    app._bind_tooltip(app.avg_usage_days_entry, "Number of days to average for days-left calculations (0 = all time).")
     app._bind_tooltip(lbl_data_file, "Location of your tracker data file.")
     app._bind_tooltip(lbl_library_file, "Location of your flower library data file.")
     app._bind_tooltip(app.open_data_folder_btn, "Open the data folder in File Explorer.")

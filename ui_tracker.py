@@ -75,6 +75,7 @@ class CannabisTracker:
         self.track_cbd_usage = False
         self.target_daily_cbd_grams = 0.0
         self.target_daily_grams = 1.0
+        self.avg_usage_days = 30
         self.settings_window: tk.Toplevel | None = None
         self.combo_style = "App.TCombobox"
         self.vscroll_style = "App.Vertical.TScrollbar"
@@ -984,6 +985,7 @@ class CannabisTracker:
             cbd_single_red = float(self.cbd_single_red_entry.get().strip())
             target_daily = float(self.daily_target_entry.get().strip())
             target_daily_cbd = float(self.daily_target_cbd_entry.get().strip() or 0)
+            avg_usage_days = int(self.avg_usage_days_entry.get().strip() or 0)
             track_cbd_usage = bool(self.track_cbd_usage_var.get())
             enable_stock_coloring = bool(self.enable_stock_color_var.get())
             enable_usage_coloring = bool(self.enable_usage_color_var.get())
@@ -1013,6 +1015,7 @@ class CannabisTracker:
             or cbd_single_red >= cbd_single_green
             or target_daily < 0
             or target_daily_cbd < 0
+            or avg_usage_days < 0
             or (track_cbd_usage and target_daily_cbd <= 0)
         ):
             messagebox.showerror(
@@ -1032,6 +1035,7 @@ class CannabisTracker:
         self.cbd_single_red_threshold = cbd_single_red
         self.target_daily_grams = target_daily
         self.target_daily_cbd_grams = target_daily_cbd
+        self.avg_usage_days = avg_usage_days
         self.track_cbd_usage = track_cbd_usage
         self.enable_stock_coloring = enable_stock_coloring
         self.enable_usage_coloring = enable_usage_coloring
@@ -1317,11 +1321,25 @@ class CannabisTracker:
     def _average_daily_usage(self) -> float | None:
         if not self.logs:
             return None
+        cutoff = None
+        try:
+            days = int(self.avg_usage_days)
+        except Exception:
+            days = 0
+        if days > 0:
+            cutoff = date.today() - timedelta(days=days - 1)
         usage_by_day: dict[str, float] = {}
         for log in self.logs:
             if not self._log_counts_for_totals(log):
                 continue
             day = log.get("date")
+            if cutoff is not None:
+                try:
+                    log_date = datetime.fromisoformat(day).date()
+                except Exception:
+                    continue
+                if log_date < cutoff:
+                    continue
             usage_by_day[day] = usage_by_day.get(day, 0.0) + float(log.get("grams_used", 0.0))
         if not usage_by_day:
             return None
@@ -1329,11 +1347,25 @@ class CannabisTracker:
     def _average_daily_usage_cbd(self) -> float | None:
         if not self.logs:
             return None
+        cutoff = None
+        try:
+            days = int(self.avg_usage_days)
+        except Exception:
+            days = 0
+        if days > 0:
+            cutoff = date.today() - timedelta(days=days - 1)
         usage_by_day: dict[str, float] = {}
         for log in self.logs:
             if not self._log_counts_for_cbd(log):
                 continue
             day = log.get("date")
+            if cutoff is not None:
+                try:
+                    log_date = datetime.fromisoformat(day).date()
+                except Exception:
+                    continue
+                if log_date < cutoff:
+                    continue
             usage_by_day[day] = usage_by_day.get(day, 0.0) + float(log.get("grams_used", 0.0))
         if not usage_by_day:
             return None
@@ -1500,6 +1532,7 @@ class CannabisTracker:
             "cbd_single_green_threshold": getattr(self, "cbd_single_green_threshold", self.single_green_threshold),
             "cbd_single_red_threshold": getattr(self, "cbd_single_red_threshold", self.single_red_threshold),
             "target_daily_grams": self.target_daily_grams,
+            "avg_usage_days": self.avg_usage_days,
             "target_daily_cbd_grams": getattr(self, "target_daily_cbd_grams", 0.0),
             "track_cbd_usage": getattr(self, "track_cbd_usage", False),
             "enable_stock_coloring": self.enable_stock_coloring,
@@ -1541,6 +1574,7 @@ class CannabisTracker:
             data.get("cbd_single_red_threshold", getattr(self, "cbd_single_red_threshold", self.single_red_threshold))
         )
         self.target_daily_grams = float(data.get("target_daily_grams", self.target_daily_grams))
+        self.avg_usage_days = int(data.get("avg_usage_days", getattr(self, "avg_usage_days", 30)))
         self.target_daily_cbd_grams = float(data.get("target_daily_cbd_grams", getattr(self, "target_daily_cbd_grams", 0.0)))
         self.track_cbd_usage = bool(data.get("track_cbd_usage", getattr(self, "track_cbd_usage", False)))
         self.enable_stock_coloring = bool(data.get("enable_stock_coloring", self.enable_stock_coloring))
@@ -1633,6 +1667,7 @@ class CannabisTracker:
         self.cbd_single_green_threshold = float(cfg.get("cbd_single_green_threshold", self.single_green_threshold))
         self.cbd_single_red_threshold = float(cfg.get("cbd_single_red_threshold", self.single_red_threshold))
         self.target_daily_grams = float(cfg.get("target_daily_grams", self.target_daily_grams))
+        self.avg_usage_days = int(cfg.get("avg_usage_days", getattr(self, "avg_usage_days", 30)))
         self.target_daily_cbd_grams = float(cfg.get("target_daily_cbd_grams", 0.0))
         if isinstance(cfg.get("roa_options"), dict):
             try:
@@ -1679,6 +1714,7 @@ class CannabisTracker:
             "cbd_single_green_threshold": self.cbd_single_green_threshold,
             "cbd_single_red_threshold": self.cbd_single_red_threshold,
             "target_daily_grams": self.target_daily_grams,
+            "avg_usage_days": self.avg_usage_days,
             "target_daily_cbd_grams": self.target_daily_cbd_grams,
             "dark_mode": self.dark_var.get(),
             "roa_options": self.roa_options,
