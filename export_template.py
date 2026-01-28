@@ -201,6 +201,7 @@ function toggleType(type, btn) {
         activeTypes.add(type);
         btn.classList.add('active');
     }
+    saveFilterPrefs();
     applyFilters();
 }
 function toggleStrain(kind, btn) {
@@ -211,6 +212,7 @@ function toggleStrain(kind, btn) {
         activeStrains.add(kind);
         btn.classList.add('active');
     }
+    saveFilterPrefs();
     applyFilters();
 }
 function toggleFavorites(btn) {
@@ -221,6 +223,7 @@ function toggleFavorites(btn) {
 function toggleSmalls(btn) {
     showSmalls = !showSmalls;
     btn.classList.toggle('active', showSmalls);
+    saveFilterPrefs();
     applyFilters();
 }
 function toggleOutOfStock(btn) {
@@ -378,6 +381,32 @@ function loadFavorites() {
         favorites = new Set(merged);
     } catch (e) {}
 }
+function loadFilterPrefs() {
+    try {
+        const raw = localStorage.getItem('ft_filters');
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (Array.isArray(data.types)) {
+            activeTypes = new Set(data.types);
+        }
+        if (Array.isArray(data.strains)) {
+            activeStrains = new Set(data.strains);
+        }
+        if (typeof data.smalls === 'boolean') {
+            showSmalls = data.smalls;
+        }
+    } catch (e) {}
+}
+function saveFilterPrefs() {
+    try {
+        const payload = {
+            types: Array.from(activeTypes),
+            strains: Array.from(activeStrains),
+            smalls: showSmalls,
+        };
+        localStorage.setItem('ft_filters', JSON.stringify(payload));
+    } catch (e) {}
+}
 function saveFavorites() {
     try {
         localStorage.setItem('ft_favs_global', JSON.stringify(Array.from(favorites)));
@@ -417,6 +446,7 @@ function resetFilters() {
     favoritesOnly = false;
     showSmalls = true;
     showOutOfStock = false;
+    saveFilterPrefs();
     // Reset sliders
     const priceMinEl = document.getElementById('priceMinRange');
     const priceMaxEl = document.getElementById('priceMaxRange');
@@ -460,6 +490,7 @@ function toggleTheme() {
 document.addEventListener('DOMContentLoaded', () => {
     const saved = localStorage.getItem('ft_theme');
 applyTheme(saved === 'light');
+    loadFilterPrefs();
     loadFavorites();
     document.querySelectorAll('.card').forEach(applyFavState);
     updateBasketUI();
@@ -523,6 +554,16 @@ applyTheme(saved === 'light');
         thcMaxEl.addEventListener('input', syncThc);
         updateThcLabel();
     }
+    document.querySelectorAll('[data-filter-type]').forEach(btn => {
+        const t = btn.getAttribute('data-filter-type');
+        btn.classList.toggle('active', activeTypes.has(t));
+    });
+    document.querySelectorAll('[data-filter-strain]').forEach(btn => {
+        const s = btn.getAttribute('data-filter-strain');
+        btn.classList.toggle('active', activeStrains.has(s));
+    });
+    const smallsBtn = document.querySelector('[data-filter-smalls]');
+    if (smallsBtn) smallsBtn.classList.toggle('active', showSmalls);
     applyFilters();
 });
 </script>
@@ -534,14 +575,14 @@ applyTheme(saved === 'light');
     <button class='sort-btn' data-sort="thc" onclick="sortCards('thc', this)">THC</button>
     <button class='sort-btn' data-sort="cbd" onclick="sortCards('cbd', this)">CBD</button>
     <input class="search-box" type="text" placeholder="Search strain or producer" oninput="handleSearch(this)" />
-    <button class='btn-filter active' onclick="toggleType('flower', this)">Flower</button>
-    <button class='btn-filter active' onclick="toggleType('oil', this)">Oil</button>
-    <button class='btn-filter active' onclick="toggleType('vape', this)">Vape</button>
-    <button class='btn-filter active' onclick="toggleStrain('Indica', this)">Indica</button>
-    <button class='btn-filter active' onclick="toggleStrain('Sativa', this)">Sativa</button>
-    <button class='btn-filter active' onclick="toggleStrain('Hybrid', this)">Hybrid</button>
+    <button class='btn-filter active' data-filter-type="flower" onclick="toggleType('flower', this)">Flower</button>
+    <button class='btn-filter active' data-filter-type="oil" onclick="toggleType('oil', this)">Oil</button>
+    <button class='btn-filter active' data-filter-type="vape" onclick="toggleType('vape', this)">Vape</button>
+    <button class='btn-filter active' data-filter-strain="Indica" onclick="toggleStrain('Indica', this)">Indica</button>
+    <button class='btn-filter active' data-filter-strain="Sativa" onclick="toggleStrain('Sativa', this)">Sativa</button>
+    <button class='btn-filter active' data-filter-strain="Hybrid" onclick="toggleStrain('Hybrid', this)">Hybrid</button>
     <button class='btn-filter' onclick="toggleFavorites(this)">Favorites</button>
-    <button class='btn-filter active' onclick="toggleSmalls(this)">Smalls</button>
+    <button class='btn-filter active' data-filter-smalls="1" onclick="toggleSmalls(this)">Smalls</button>
     <button class='btn-filter' onclick="toggleOutOfStock(this)">Out of stock</button>
     <button onclick="resetFilters()">Reset</button>
     <div class="range-group">
