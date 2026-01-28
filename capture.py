@@ -136,24 +136,25 @@ class CaptureWorker:
         try:
             self._set_status("running", "Auto-capture started.")
             with sync_playwright() as p:
-                browser = None
                 attempted_install = False
-                while browser is None:
-                    try:
-                        browser = p.chromium.launch(headless=self.cfg.get("headless", True))
-                    except Exception as exc:
-                        if self.install_fn and not attempted_install:
-                            attempted_install = True
-                            self.callbacks["capture_log"]("Playwright browser missing; attempting download...")
-                            if self.install_fn():
-                                continue
-                        self._set_status("faulted", f"Browser launch failed: {exc}")
-                        return
-                page = browser.new_page()
-                api_payloads = []
-                xhr_urls = []
-                endpoint_summaries = []
-                def _capture_response(resp):
+                while not self.callbacks["stop_event"].is_set():
+                    browser = None
+                    while browser is None:
+                        try:
+                            browser = p.chromium.launch(headless=self.cfg.get("headless", True))
+                        except Exception as exc:
+                            if self.install_fn and not attempted_install:
+                                attempted_install = True
+                                self.callbacks["capture_log"]("Playwright browser missing; attempting download...")
+                                if self.install_fn():
+                                    continue
+                            self._set_status("faulted", f"Browser launch failed: {exc}")
+                            return
+                    page = browser.new_page()
+                    api_payloads = []
+                    xhr_urls = []
+                    endpoint_summaries = []
+                    def _capture_response(resp):
                     try:
                         ctype = (resp.headers.get("content-type") or "").lower()
                         url = resp.url or ""
@@ -276,6 +277,7 @@ class CaptureWorker:
                         self.callbacks["capture_log"](f"{label}: navigation error; continuing. ({exc})")
                     return True
 
+                restart_browser = False
                 first_cycle = True
                 while not self.callbacks["stop_event"].is_set():
                     self._set_status("running", f"Navigating to {self.cfg['url']}")
@@ -615,7 +617,9 @@ class CaptureWorker:
                             success = collect_once(refresh=refresh_flag)
                         if not success:
                             self.empty_failures += 1
-                            self._set_status("retrying", "Empty page content; backing off before retry.")
+                            self._set_status("retrying", "Empty page content; restarting browser.")
+                            restart_browser = True
+                            break
                         first_cycle = False
                     except PlaywrightTimeoutError:
                         self._set_status("retrying", "Navigation timed out; will retry.")
@@ -627,8 +631,13 @@ class CaptureWorker:
                         interval = self.retry_policy.interval_with_backoff(interval, self.empty_failures)
                     if self.scheduler.wait(interval, label="Waiting for next capture"):
                         break
-                browser.close()
-                self._set_status("stopped")
+                try:
+                    browser.close()
+                except Exception:
+                    pass
+                if not restart_browser:
+                    self._set_status("stopped")
+                    break
         except Exception as exc:
             self._set_status("faulted", f"Auto-capture error: {exc}")
         finally:
