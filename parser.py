@@ -113,7 +113,7 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
     if not name or str(name).strip().upper() in {"UNKNOWN", "N/A", "NA"}:
         fallback = _clean_title(long_name) or long_name
         name = fallback or name
-    is_smalls = bool(re.search(r"\b(SMALLS?|SMALL BUDS?)\b", raw_name, re.I))
+    is_smalls = bool(re.search(r"\b(SMALLS?|SMALL BUDS?|MINI(S)?)\b", raw_name, re.I))
     external_ref = entry.get("externalReference") or specs.get("externalId") or metadata.get("externalId")
     product_id = external_ref or (str(entry.get("productId")) if entry.get("productId") is not None else None)
     brand = (product.get("brand") or {}).get("name") or metadata.get("brandName") or None
