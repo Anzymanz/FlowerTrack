@@ -94,6 +94,7 @@ class NotificationService:
         removed_items = payload.get("removed_item_summaries") or []
         price_changes = payload.get("price_change_summaries") or []
         stock_changes = payload.get("stock_change_summaries") or []
+        out_of_stock_changes = payload.get("out_of_stock_change_summaries") or []
         restock_changes = payload.get("restock_change_summaries") or []
         if new_items:
             body_parts.append("New: " + self._join(list(new_items)))
@@ -103,6 +104,8 @@ class NotificationService:
             body_parts.append("Price: " + self._join(list(price_changes)))
         if stock_changes:
             body_parts.append("Stock: " + self._join(list(stock_changes)))
+        if out_of_stock_changes:
+            body_parts.append("Out: " + self._join(list(out_of_stock_changes)))
         if restock_changes:
             body_parts.append("Restock: " + self._join(list(restock_changes)))
         return " | ".join(body_parts) or summary

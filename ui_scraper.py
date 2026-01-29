@@ -221,6 +221,7 @@ class App(tk.Tk):
         self.cap_ha_token = tk.StringVar(value=decrypt_secret(cfg.get("ha_token", "")))
         self.notify_price_changes = tk.BooleanVar(value=bool(cfg.get("notify_price_changes", True)))
         self.notify_stock_changes = tk.BooleanVar(value=bool(cfg.get("notify_stock_changes", True)))
+        self.notify_out_of_stock = tk.BooleanVar(value=bool(cfg.get("notify_out_of_stock", True)))
         self.notify_restock = tk.BooleanVar(value=bool(cfg.get("notify_restock", True)))
         self.notify_new_items = tk.BooleanVar(value=bool(cfg.get("notify_new_items", True)))
         self.notify_removed_items = tk.BooleanVar(value=bool(cfg.get("notify_removed_items", True)))
@@ -262,6 +263,7 @@ class App(tk.Tk):
             "ha_token": self.cap_ha_token.get(),
             "notify_price_changes": bool(self.notify_price_changes.get()),
             "notify_stock_changes": bool(self.notify_stock_changes.get()),
+            "notify_out_of_stock": bool(self.notify_out_of_stock.get()),
             "notify_restock": bool(self.notify_restock.get()),
             "notify_new_items": bool(self.notify_new_items.get()),
             "notify_removed_items": bool(self.notify_removed_items.get()),
@@ -666,6 +668,7 @@ class App(tk.Tk):
         self.cap_ha_token.set(decrypt_secret(cfg.get("ha_token", "")))
         self.notify_price_changes.set(cfg.get("notify_price_changes", True))
         self.notify_stock_changes.set(cfg.get("notify_stock_changes", True))
+        self.notify_out_of_stock.set(cfg.get("notify_out_of_stock", True))
         self.notify_restock.set(cfg.get("notify_restock", True))
         self.notify_new_items.set(cfg.get("notify_new_items", True))
         self.notify_removed_items.set(cfg.get("notify_removed_items", True))
@@ -714,6 +717,7 @@ class App(tk.Tk):
             "ha_token": self.cap_ha_token.get(),
             "notify_price_changes": self.notify_price_changes.get(),
             "notify_stock_changes": self.notify_stock_changes.get(),
+            "notify_out_of_stock": self.notify_out_of_stock.get(),
             "notify_restock": self.notify_restock.get(),
             "notify_new_items": self.notify_new_items.get(),
             "notify_removed_items": self.notify_removed_items.get(),
@@ -764,6 +768,7 @@ class App(tk.Tk):
             "ha_token": self.cap_ha_token.get(),
             "notify_price_changes": self.notify_price_changes.get(),
             "notify_stock_changes": self.notify_stock_changes.get(),
+            "notify_out_of_stock": self.notify_out_of_stock.get(),
             "notify_restock": self.notify_restock.get(),
             "notify_new_items": self.notify_new_items.get(),
             "notify_removed_items": self.notify_removed_items.get(),
@@ -851,6 +856,7 @@ class App(tk.Tk):
         price_changes = []
         stock_changes = []
         restock_changes = []
+        out_of_stock_changes = []
         prev_price_map = {}
         prev_stock_map = {}
         prev_remaining_map = {}
@@ -897,25 +903,24 @@ class App(tk.Tk):
             cur_stock = it.get("stock")
             prev_rem = prev_remaining_map.get(ident)
             cur_rem = it.get("stock_remaining")
-            stock_changed = False
+            stock_change_entry = None
             if prev_stock is not None and cur_stock is not None and str(prev_stock) != str(cur_stock):
-                stock_changes.append(
-                    {
-                        **it,
-                        "stock_before": prev_stock,
-                        "stock_after": cur_stock,
-                    }
-                )
-                stock_changed = True
-            if not stock_changed and (prev_rem is not None or cur_rem is not None) and prev_rem != cur_rem:
-                stock_changes.append(
-                    {
-                        **it,
-                        "stock_before": prev_rem,
-                        "stock_after": cur_rem,
-                    }
-                )
-            if _stock_is_out(prev_stock, prev_rem) and _stock_is_in(cur_stock, cur_rem):
+                stock_change_entry = {
+                    **it,
+                    "stock_before": prev_stock,
+                    "stock_after": cur_stock,
+                }
+            if stock_change_entry is None and (prev_rem is not None or cur_rem is not None) and prev_rem != cur_rem:
+                stock_change_entry = {
+                    **it,
+                    "stock_before": prev_rem,
+                    "stock_after": cur_rem,
+                }
+            prev_out = _stock_is_out(prev_stock, prev_rem)
+            cur_out = _stock_is_out(cur_stock, cur_rem)
+            prev_in = _stock_is_in(prev_stock, prev_rem)
+            cur_in = _stock_is_in(cur_stock, cur_rem)
+            if prev_out and cur_in:
                 restock_changes.append(
                     {
                         **it,
@@ -923,12 +928,23 @@ class App(tk.Tk):
                         "stock_after": cur_stock,
                     }
                 )
+            elif prev_in and cur_out:
+                out_of_stock_changes.append(
+                    {
+                        **it,
+                        "stock_before": prev_stock,
+                        "stock_after": cur_stock,
+                    }
+                )
+            elif stock_change_entry is not None:
+                stock_changes.append(stock_change_entry)
         all_new_items = new_items
         all_removed_items = removed_items
         all_price_changes = price_changes
         all_stock_changes = stock_changes
         all_restock_changes = restock_changes
-        if not all_new_items and not all_removed_items and not all_price_changes and not all_stock_changes and not all_restock_changes:
+        all_out_of_stock_changes = out_of_stock_changes
+        if not all_new_items and not all_removed_items and not all_price_changes and not all_stock_changes and not all_restock_changes and not all_out_of_stock_changes:
             return
         log_price_change_compact = []
         for it in all_price_changes:
@@ -963,6 +979,26 @@ class App(tk.Tk):
                 "stock_before": it.get("stock_before"),
                 "stock_after": it.get("stock_after"),
             })
+        log_out_of_stock_change_compact = []
+        for it in all_out_of_stock_changes:
+            brand = it.get("brand") or it.get("producer") or ""
+            strain = it.get("strain") or ""
+            label = " ".join([p for p in (brand, strain) if p]).strip() or "Unknown"
+            log_out_of_stock_change_compact.append({
+                "label": label,
+                "stock_before": it.get("stock_before"),
+                "stock_after": it.get("stock_after"),
+            })
+        log_restock_change_compact = []
+        for it in all_restock_changes:
+            brand = it.get("brand") or it.get("producer") or ""
+            strain = it.get("strain") or ""
+            label = " ".join([p for p in (brand, strain) if p]).strip() or "Unknown"
+            log_restock_change_compact.append({
+                "label": label,
+                "stock_before": it.get("stock_before"),
+                "stock_after": it.get("stock_after"),
+            })
         if not _notify_flag('notify_new_items', True):
             new_items = []
         if not _notify_flag('notify_removed_items', True):
@@ -971,6 +1007,8 @@ class App(tk.Tk):
             price_changes = []
         if not _notify_flag('notify_stock_changes', True):
             stock_changes = []
+        if not _notify_flag('notify_out_of_stock', True):
+            out_of_stock_changes = []
         if not _notify_flag('notify_restock', True):
             restock_changes = []
         def _flower_label(entry: dict) -> str:
@@ -990,12 +1028,12 @@ class App(tk.Tk):
         new_item_summaries = [_item_label(it) for it in new_items]
         removed_item_summaries = [_item_label(it) for it in removed_items]
         notify_allowed = True
-        if not new_items and not removed_items and not price_changes and not stock_changes and not restock_changes:
+        if not new_items and not removed_items and not price_changes and not stock_changes and not out_of_stock_changes and not restock_changes:
             self._capture_log("Changes detected but notifications are disabled; skipping notifications.")
             notify_allowed = False
         self._log_console(
             f"Notify HA | new={len(new_items)} removed={len(removed_items)} "
-            f"price_changes={len(price_changes)} stock_changes={len(stock_changes)} restocks={len(restock_changes)}"
+            f"price_changes={len(price_changes)} stock_changes={len(stock_changes)} out_of_stock={len(out_of_stock_changes)} restocks={len(restock_changes)}"
         )
         # Build compact human text for price changes
         price_change_summaries = []
@@ -1038,6 +1076,22 @@ class App(tk.Tk):
                     "stock_after": after,
                 }
             )
+        out_of_stock_change_summaries = []
+        out_of_stock_change_compact = []
+        for it in out_of_stock_changes:
+            brand = it.get("brand") or it.get("producer") or ""
+            strain = it.get("strain") or ""
+            label = " ".join([p for p in (brand, strain) if p]).strip() or "Unknown"
+            before = it.get("stock_before")
+            after = it.get("stock_after")
+            out_of_stock_change_summaries.append(f"{label}: {before} -> {after}")
+            out_of_stock_change_compact.append(
+                {
+                    "label": label,
+                    "stock_before": before,
+                    "stock_after": after,
+                }
+            )
         restock_change_summaries = []
         restock_change_compact = []
         for it in restock_changes:
@@ -1067,6 +1121,8 @@ class App(tk.Tk):
             "price_change_summaries": price_change_summaries,
             "stock_changes": stock_changes,
             "stock_change_summaries": stock_change_summaries,
+            "out_of_stock_changes": out_of_stock_changes,
+            "out_of_stock_change_summaries": out_of_stock_change_summaries,
             "restock_changes": restock_changes,
             "restock_change_summaries": restock_change_summaries,
             "new_items": new_items,
@@ -1103,6 +1159,7 @@ class App(tk.Tk):
                 ],
                 "price_changes": log_price_change_compact,
                 "stock_changes": log_stock_change_compact,
+                "out_of_stock_changes": log_out_of_stock_change_compact,
                 "restock_changes": log_restock_change_compact,
             }
             append_change_log(CHANGES_LOG_FILE, log_record)
@@ -1117,7 +1174,7 @@ class App(tk.Tk):
         data = json.dumps(payload).encode("utf-8")
         summary = (
             f"+{len(new_items)} new, -{len(removed_items)} removed, "
-            f"{len(price_changes)} price changes, {len(stock_changes)} stock changes, {len(restock_changes)} restocks"
+            f"{len(price_changes)} price changes, {len(stock_changes)} stock changes, {len(out_of_stock_changes)} out of stock, {len(restock_changes)} restocks"
         )
         quiet_hours = self._quiet_hours_active() if hasattr(self, '_quiet_hours_active') else False
         try:
