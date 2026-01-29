@@ -11,6 +11,53 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+
+def ensure_dir(path: Path) -> None:
+    try:
+        Path(path).mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+
+
+def encrypt_secret(value: str) -> str:
+    try:
+        if value is None:
+            return ""
+        raw = str(value).encode("utf-8")
+        blob = ctypes.windll.crypt32.CryptProtectData
+        data_in = wintypes.DATA_BLOB(len(raw), ctypes.cast(ctypes.create_string_buffer(raw), ctypes.c_void_p))
+        data_out = wintypes.DATA_BLOB()
+        if blob(ctypes.byref(data_in), None, None, None, None, 0, ctypes.byref(data_out)):
+            try:
+                enc = ctypes.string_at(data_out.pbData, data_out.cbData)
+                ctypes.windll.kernel32.LocalFree(data_out.pbData)
+                return base64.b64encode(enc).decode("utf-8")
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return str(value)
+
+
+def decrypt_secret(value: str) -> str:
+    try:
+        if not value:
+            return ""
+        raw = base64.b64decode(str(value).encode("utf-8"), validate=True)
+        blob = ctypes.windll.crypt32.CryptUnprotectData
+        data_in = wintypes.DATA_BLOB(len(raw), ctypes.cast(ctypes.create_string_buffer(raw), ctypes.c_void_p))
+        data_out = wintypes.DATA_BLOB()
+        if blob(ctypes.byref(data_in), None, None, None, None, 0, ctypes.byref(data_out)):
+            try:
+                dec = ctypes.string_at(data_out.pbData, data_out.cbData)
+                ctypes.windll.kernel32.LocalFree(data_out.pbData)
+                return dec.decode("utf-8", errors="ignore")
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return str(value)
+
 # Default schema for capture config (centralized)
 SCHEMA_VERSION = 2
 DEFAULT_CAPTURE_CONFIG = {
@@ -102,6 +149,12 @@ DEFAULT_UI_CONFIG = {
     "close_to_tray": False,
 }
 
+DEFAULT_LIBRARY_CONFIG = {
+    "dark_mode": True,
+    "column_widths": {},
+    "window_geometry": "",
+}
+
 
 def _default_unified_config() -> dict:
     return {
@@ -109,6 +162,7 @@ def _default_unified_config() -> dict:
         "tracker": copy.deepcopy(DEFAULT_TRACKER_CONFIG),
         "scraper": copy.deepcopy(DEFAULT_CAPTURE_CONFIG),
         "ui": copy.deepcopy(DEFAULT_UI_CONFIG),
+        "library": copy.deepcopy(DEFAULT_LIBRARY_CONFIG),
     }
 
 
@@ -283,20 +337,35 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["close_to_tray"] = _coerce_bool(raw.get("close_to_tray"), DEFAULT_CAPTURE_CONFIG["close_to_tray"])
     return cfg
 
+def _validate_library_config(raw: dict) -> dict:
+    cfg = dict(DEFAULT_LIBRARY_CONFIG)
+    if not isinstance(raw, dict):
+        return cfg
+    if "dark_mode" in raw:
+        cfg["dark_mode"] = _coerce_bool(raw.get("dark_mode"), cfg["dark_mode"])
+    if isinstance(raw.get("column_widths"), dict):
+        cfg["column_widths"] = raw.get("column_widths")
+    if raw.get("window_geometry"):
+        cfg["window_geometry"] = str(raw.get("window_geometry")).strip()
+    return cfg
+
 
 def _normalize_unified_config(raw: dict) -> dict:
     tracker_raw = raw.get("tracker", {}) if isinstance(raw, dict) else {}
     scraper_raw = raw.get("scraper", {}) if isinstance(raw, dict) else {}
     ui_raw = raw.get("ui", {}) if isinstance(raw, dict) else {}
+    library_raw = raw.get("library", {}) if isinstance(raw, dict) else {}
     tracker_cfg = _validate_tracker_config(tracker_raw)
     scraper_cfg = _validate_capture_config(scraper_raw)
     ui_cfg = _validate_ui_config(ui_raw, tracker_cfg)
+    library_cfg = _validate_library_config(library_raw)
     tracker_cfg["dark_mode"] = ui_cfg["dark_mode"]
     return {
         "version": SCHEMA_VERSION,
         "tracker": tracker_cfg,
         "scraper": scraper_cfg,
         "ui": ui_cfg,
+        "library": library_cfg,
     }
 
 
@@ -309,7 +378,41 @@ def load_unified_config(
     decrypt_scraper_keys = decrypt_scraper_keys or []
 
     raw = _read_json(path)
-    is_unified = any(k in raw for k in ("tracker", "scraper", "ui"))
+    legacy_tracker = {}
+    legacy_scraper = {}
+    legacy_library = {}
+    legacy_sources = []
+    legacy_map = {
+        "tracker": [path.with_name("tracker_config.json"), path.parent / "data" / "tracker_config.json"],
+        "scraper": [path.with_name("scraper_config.json"), path.parent / "data" / "scraper_config.json"],
+        "library": [path.with_name("library_config.json"), path.parent / "data" / "library_config.json"],
+        "tracker_settings": [path.with_name("tracker_settings.json"), path.parent / "data" / "tracker_settings.json"],
+    }
+    for legacy_path in legacy_map["tracker"]:
+        if legacy_path.exists():
+            legacy_raw = _read_json(legacy_path)
+            if _looks_like_tracker(legacy_raw):
+                legacy_tracker.update(legacy_raw)
+                legacy_sources.append(legacy_path)
+    for legacy_path in legacy_map["scraper"]:
+        if legacy_path.exists():
+            legacy_raw = _read_json(legacy_path)
+            if _looks_like_scraper(legacy_raw):
+                legacy_scraper.update(legacy_raw)
+                legacy_sources.append(legacy_path)
+    for legacy_path in legacy_map["library"]:
+        if legacy_path.exists():
+            legacy_raw = _read_json(legacy_path)
+            if isinstance(legacy_raw, dict):
+                legacy_library.update(legacy_raw)
+                legacy_sources.append(legacy_path)
+    for legacy_path in legacy_map["tracker_settings"]:
+        if legacy_path.exists():
+            legacy_raw = _read_json(legacy_path)
+            if _looks_like_tracker(legacy_raw):
+                legacy_tracker.update(legacy_raw)
+                legacy_sources.append(legacy_path)
+    is_unified = any(k in raw for k in ("tracker", "scraper", "ui", "library"))
     unified_raw: dict = {}
     if is_unified:
         unified_raw = raw
@@ -320,6 +423,21 @@ def load_unified_config(
             elif _looks_like_tracker(raw):
                 unified_raw["tracker"] = raw
 
+    if legacy_scraper:
+        unified_raw.setdefault("scraper", {})
+        for key, value in legacy_scraper.items():
+            unified_raw["scraper"].setdefault(key, value)
+
+    if legacy_library:
+        unified_raw.setdefault("library", {})
+        for key, value in legacy_library.items():
+            unified_raw["library"].setdefault(key, value)
+
+    if legacy_tracker:
+        unified_raw.setdefault("tracker", {})
+        for key, value in legacy_tracker.items():
+            unified_raw["tracker"].setdefault(key, value)
+
     if "scraper" in unified_raw:
         for key in decrypt_scraper_keys:
             if key in unified_raw["scraper"]:
@@ -328,9 +446,17 @@ def load_unified_config(
     prev_version = raw.get("version") if is_unified else None
     unified = _normalize_unified_config(unified_raw)
     needs_migration = (not is_unified) or (prev_version != SCHEMA_VERSION)
+    if legacy_tracker or legacy_scraper or legacy_library:
+        needs_migration = True
     if write_back and (not path.exists() or needs_migration):
         try:
             save_unified_config(path, unified, encrypt_scraper_keys=decrypt_scraper_keys)
+            if legacy_sources:
+                for legacy_path in legacy_sources:
+                    try:
+                        legacy_path.rename(legacy_path.with_suffix(legacy_path.suffix + ".migrated"))
+                    except Exception:
+                        pass
             if needs_migration:
                 _log_migration(
                     f"Config migrated v{prev_version or 'none'} -> v{SCHEMA_VERSION}",
@@ -374,23 +500,22 @@ def save_unified_config(path: Path, data: dict, encrypt_scraper_keys: list[str] 
 
 
 def load_tracker_config(path: Path) -> dict:
-    raw = _read_json(path)
-    if not raw or not any(k in raw for k in ("tracker", "scraper", "ui")):
+    try:
         unified = load_unified_config(
             path,
             decrypt_scraper_keys=["username", "password", "ha_token"],
+            write_back=True,
         )
         return _validate_tracker_config(unified.get("tracker", {}))
-    if any(k in raw for k in ("tracker", "scraper", "ui")):
-        raw = raw.get("tracker", {})
-    merged = _validate_tracker_config(raw)
-    return merged
+    except Exception:
+        raw = _read_json(path)
+        return _validate_tracker_config(raw if isinstance(raw, dict) else {})
 
 
 def save_tracker_config(path: Path, cfg: dict) -> None:
     try:
-        raw = _read_json(path)
         tracker_cfg = _validate_tracker_config(cfg or {})
+        raw = _read_json(path)
         if any(k in raw for k in ("tracker", "scraper", "ui")):
             raw["tracker"] = tracker_cfg
             raw.setdefault("ui", {})["dark_mode"] = tracker_cfg["dark_mode"]
@@ -404,84 +529,61 @@ def save_tracker_config(path: Path, cfg: dict) -> None:
         pass
 
 
-
-def ensure_dir(path: Path) -> None:
-    path.mkdir(parents=True, exist_ok=True)
-
-
-class DATA_BLOB(ctypes.Structure):
-    _fields_ = [("cbData", wintypes.DWORD), ("pbData", ctypes.POINTER(ctypes.c_byte))]
+def _migrate_capture_config(raw: dict) -> dict:
+    return _validate_capture_config(raw or {})
 
 
-def _dpapi_protect(data: bytes) -> bytes | None:
-    if os.name != "nt":
-        return None
+def load_capture_config(path: Path, decrypt_keys: list[str], logger=None) -> dict:
     try:
-        blob_in = DATA_BLOB(len(data), ctypes.cast(ctypes.create_string_buffer(data), ctypes.POINTER(ctypes.c_byte)))
-        blob_out = DATA_BLOB()
-        if ctypes.windll.crypt32.CryptProtectData(
-            ctypes.byref(blob_in), None, None, None, None, 0, ctypes.byref(blob_out)
-        ):
-            buf = ctypes.string_at(blob_out.pbData, blob_out.cbData)
-            ctypes.windll.kernel32.LocalFree(blob_out.pbData)
-            return buf
-    except Exception:
-        pass
-    return None
-
-
-def _dpapi_unprotect(data: bytes) -> bytes | None:
-    if os.name != "nt":
-        return None
-    try:
-        blob_in = DATA_BLOB(len(data), ctypes.cast(ctypes.create_string_buffer(data), ctypes.POINTER(ctypes.c_byte)))
-        blob_out = DATA_BLOB()
-        if ctypes.windll.crypt32.CryptUnprotectData(
-            ctypes.byref(blob_in), None, None, None, None, 0, ctypes.byref(blob_out)
-        ):
-            buf = ctypes.string_at(blob_out.pbData, blob_out.cbData)
-            ctypes.windll.kernel32.LocalFree(blob_out.pbData)
-            return buf
-    except Exception:
-        pass
-    return None
-
-
-def encrypt_secret(value: str) -> str:
-    if not value:
-        return value
-    data = value.encode("utf-8")
-    protected = _dpapi_protect(data)
-    if protected:
-        return "enc:" + base64.b64encode(protected).decode("ascii")
-    return "enc:" + base64.b64encode(data).decode("ascii")
-
-
-def decrypt_secret(value: str) -> str:
-    if not value:
-        return value
-    if not isinstance(value, str):
-        return str(value)
-    if value.startswith("enc:"):
-        b = base64.b64decode(value[4:].encode("ascii"))
-        unprotected = _dpapi_unprotect(b)
-        if unprotected is None:
+        unified = load_unified_config(
+            path,
+            decrypt_scraper_keys=decrypt_keys,
+            logger=logger,
+            write_back=True,
+        )
+        cfg = _validate_capture_config(unified.get("scraper", {}))
+        return cfg
+    except Exception as exc:
+        if logger:
             try:
-                return b.decode("utf-8")
+                logger(f"Config load failed: {exc}")
             except Exception:
-                return value
-        try:
-            return unprotected.decode("utf-8")
-        except Exception:
-            return value
-    return value
+                pass
+        return _validate_capture_config({})
 
 
+def save_capture_config(path: Path, data: dict, encrypt_keys: list[str]):
+    try:
+        unified = load_unified_config(
+            path,
+            decrypt_scraper_keys=encrypt_keys,
+            write_back=False,
+        )
+        unified["scraper"] = _migrate_capture_config(data or {})
+        save_unified_config(path, unified, encrypt_scraper_keys=encrypt_keys)
+    except Exception:
+        pass
+
+def load_library_config(path: Path) -> dict:
+    try:
+        unified = load_unified_config(path, decrypt_scraper_keys=["username", "password", "ha_token"], write_back=True)
+        return _validate_library_config(unified.get("library", {}))
+    except Exception:
+        return _validate_library_config({})
+
+
+def save_library_config(path: Path, cfg: dict) -> None:
+    try:
+        unified = load_unified_config(path, decrypt_scraper_keys=["username", "password", "ha_token"], write_back=False)
+        unified["library"] = _validate_library_config(cfg or {})
+        save_unified_config(path, unified, encrypt_scraper_keys=["username", "password", "ha_token"])
+    except Exception:
+        pass
 
 
 def _migration_log_path() -> Path:
     appdata = Path(os.getenv("APPDATA", os.path.expanduser("~")))
-    return appdata / "FlowerTrack" / "data" / "config_migrations.log"
+    return appdata / "FlowerTrack" / "logs" / "config_migrations.log"
 
 
 def _log_migration(message: str, logger=None) -> None:
@@ -494,50 +596,14 @@ def _log_migration(message: str, logger=None) -> None:
             pass
     try:
         path = _migration_log_path()
+        old_path = Path(os.getenv("APPDATA", os.path.expanduser("~"))) / "FlowerTrack" / "data" / "config_migrations.log"
+        if old_path.exists() and old_path != path and not path.exists():
+            try:
+                old_path.replace(path)
+            except Exception:
+                pass
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as fh:
             fh.write(line + "\n")
-    except Exception:
-        pass
-
-def _migrate_capture_config(raw: dict) -> dict:
-    """
-    Apply schema migrations. Currently bumps missing version to current schema.
-    """
-    if not isinstance(raw, dict):
-        return {}
-    ver = int(raw.get("version") or 0)
-    if ver < SCHEMA_VERSION:
-        raw["version"] = SCHEMA_VERSION
-    return raw
-
-
-def load_capture_config(path: Path, decrypt_keys: list[str], logger=None) -> dict:
-    cfg = dict(DEFAULT_CAPTURE_CONFIG)
-    try:
-        unified = load_unified_config(
-            path,
-            decrypt_scraper_keys=decrypt_keys,
-            logger=logger,
-        )
-        cfg = _validate_capture_config(unified.get("scraper", {}))
-    except Exception as exc:
-        if logger:
-            try:
-                logger(f"Config load failed: {exc}")
-            except Exception:
-                pass
-    return cfg
-
-
-def save_capture_config(path: Path, data: dict, encrypt_keys: list[str]):
-    try:
-        unified = load_unified_config(
-            path,
-            decrypt_scraper_keys=encrypt_keys,
-            write_back=False,
-        )
-        unified["scraper"] = _validate_capture_config(_migrate_capture_config(data or {}))
-        save_unified_config(path, unified, encrypt_scraper_keys=encrypt_keys)
     except Exception:
         pass

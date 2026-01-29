@@ -2176,6 +2176,15 @@ class CannabisTracker:
         self._on_main_close()
     def _build_tray_image(self) -> "Image.Image":
         """Use colored status dot based on scraper running state; fallback to icon."""
+        icon_path = self._resource_path('icon.png')
+        if not getattr(self, "show_scraper_buttons", True):
+            if Image is not None and os.path.exists(icon_path):
+                try:
+                    img = Image.open(icon_path).convert("RGBA")
+                    img.thumbnail((64, 64), Image.LANCZOS)
+                    return img
+                except Exception:
+                    pass
         try:
             img = _build_scraper_status_image(getattr(self, "child_procs", []))
             if img is not None:
@@ -2261,8 +2270,18 @@ class CannabisTracker:
         try:
             running, warn = resolve_scraper_status(getattr(self, "child_procs", []))
             if getattr(self, "tray_icon", None):
-                update_tray_icon(self.tray_icon, running, warn)
-            if not self.show_scraper_status_icon:
+                if not getattr(self, "show_scraper_buttons", True):
+                    icon_path = self._resource_path('icon.png')
+                    if Image is not None and os.path.exists(icon_path):
+                        try:
+                            img_icon = Image.open(icon_path).convert("RGBA")
+                            img_icon.thumbnail((64, 64), Image.LANCZOS)
+                            self.tray_icon.icon = img_icon
+                        except Exception:
+                            pass
+                else:
+                    update_tray_icon(self.tray_icon, running, warn)
+            if not self.show_scraper_status_icon or not self.show_scraper_buttons:
                 self._apply_scraper_controls_visibility()
                 return
             img = _build_scraper_status_image(getattr(self, "child_procs", []))

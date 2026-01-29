@@ -5,12 +5,14 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import Tk, Toplevel, StringVar, BooleanVar, ttk, messagebox, filedialog
 from theme import apply_style_theme, compute_colors, set_titlebar_dark
+from config import load_library_config, save_library_config
 
 
-APP_DIR = Path(os.getenv("APPDATA", Path.home())) / "FlowerTrack" / "data"
-APP_DIR.mkdir(parents=True, exist_ok=True)
-DATA_FILE = APP_DIR / "library_data.json"
-SETTINGS_FILE = APP_DIR / "library_config.json"
+APP_ROOT = Path(os.getenv("APPDATA", Path.home())) / "FlowerTrack"
+DATA_DIR = APP_ROOT / "data"
+APP_ROOT.mkdir(parents=True, exist_ok=True)
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+DATA_FILE = DATA_DIR / "library_data.json"
 TRACKER_CONFIG_FILE = Path(os.getenv("APPDATA", Path.home())) / "FlowerTrack" / "flowertrack_config.json"
 
 
@@ -30,18 +32,11 @@ def save_entries(entries: list[dict]) -> None:
 
 
 def load_settings() -> dict:
-    if SETTINGS_FILE.exists():
-        try:
-            data = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
-            if isinstance(data, dict):
-                return data
-        except (json.JSONDecodeError, OSError):
-            pass
-    return {"dark_mode": True, "column_widths": {}, "window_geometry": ""}
+    return load_library_config(TRACKER_CONFIG_FILE)
 
 
 def save_settings(settings: dict) -> None:
-    SETTINGS_FILE.write_text(json.dumps(settings, indent=2), encoding="utf-8")
+    save_library_config(TRACKER_CONFIG_FILE, settings)
 
 
 def _load_tracker_dark_mode(default: bool = True) -> bool:

@@ -31,23 +31,17 @@ from app_core import (  # shared globals/imports
     CONFIG_FILE,
     LAST_PARSE_FILE,
     CHANGES_LOG_FILE,
-    LAST_CHANGE_FILE,
-    LAST_SCRAPE_FILE,
     DEFAULT_CAPTURE_CONFIG,
     load_last_parse,
     save_last_parse,
     append_change_log,
-    load_last_change,
-    save_last_change,
-    load_last_scrape,
-    save_last_scrape,
     APP_DIR,
     DATA_DIR,
     _port_ready,
     SCRAPER_STATE_FILE,
 )
 from config import decrypt_secret, encrypt_secret, load_capture_config, save_capture_config
-from scraper_state import write_scraper_state
+from scraper_state import write_scraper_state, get_last_change, get_last_scrape, update_scraper_state
 from parser import (
     parse_api_payloads,
     make_item_key,
@@ -170,7 +164,7 @@ class App(tk.Tk):
         self.last_scrape_label = ttk.Label(self, text="Last successful scrape: none")
         self.last_scrape_label.pack(pady=(0, 8))
         try:
-            ts = load_last_scrape(LAST_SCRAPE_FILE)
+            ts = get_last_scrape(SCRAPER_STATE_FILE)
             if ts:
                 self.last_scrape_label.config(text=f"Last successful scrape: {ts}")
         except Exception:
@@ -518,14 +512,14 @@ class App(tk.Tk):
             pass
     def _update_last_change(self, summary: str):
         ts_line = f"{datetime.now().astimezone().strftime('%Y-%m-%d %H:%M:%S%z')} | {summary}"
-        save_last_change(LAST_CHANGE_FILE, ts_line)
+        write_scraper_state(SCRAPER_STATE_FILE, last_change=ts_line)
         try:
             self.last_change_label.config(text=f"Last change detected: {ts_line}")
         except Exception:
             pass
     def _update_last_scrape(self):
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        save_last_scrape(LAST_SCRAPE_FILE, ts)
+        write_scraper_state(SCRAPER_STATE_FILE, last_scrape=ts)
         try:
             self.last_scrape_label.config(text=f"Last successful scrape: {ts}")
         except Exception:
@@ -1429,13 +1423,13 @@ class App(tk.Tk):
             self.after(50, self.poll)
         # Update last change label periodically
         try:
-            ts = load_last_change(LAST_CHANGE_FILE)
+            ts = get_last_change(SCRAPER_STATE_FILE)
             if ts:
                 self.last_change_label.config(text=f"Last change detected: {ts}")
         except Exception:
             pass
         try:
-            ts = load_last_scrape(LAST_SCRAPE_FILE)
+            ts = get_last_scrape(SCRAPER_STATE_FILE)
             if ts:
                 self.last_scrape_label.config(text=f"Last successful scrape: {ts}")
         except Exception:
@@ -1456,7 +1450,7 @@ class App(tk.Tk):
                 LAST_PARSE_FILE.unlink()
         except Exception:
             pass
-        for path in (LAST_CHANGE_FILE, LAST_SCRAPE_FILE, CHANGES_LOG_FILE):
+        for path in (CHANGES_LOG_FILE,):
             try:
                 if path.exists():
                     path.unlink()
@@ -1471,6 +1465,7 @@ class App(tk.Tk):
             self.last_scrape_label.config(text="Last successful scrape: none")
         except Exception:
             pass
+        update_scraper_state(SCRAPER_STATE_FILE, last_change=None, last_scrape=None)
         self.status.config(text="Cache cleared")
         messagebox.showinfo("Cleared", "Cache cleared (including previous parse and logs).")
     def _set_busy_ui(self, busy, message=None):
@@ -1562,13 +1557,13 @@ class App(tk.Tk):
             except Exception:
                 pass
         try:
-            ts = load_last_change(LAST_CHANGE_FILE)
+            ts = get_last_change(SCRAPER_STATE_FILE)
             if ts:
                 self.last_change_label.config(text=f"Last change detected: {ts}")
         except Exception:
             pass
         try:
-            ts = load_last_scrape(LAST_SCRAPE_FILE)
+            ts = get_last_scrape(SCRAPER_STATE_FILE)
             if ts:
                 self.last_scrape_label.config(text=f"Last successful scrape: {ts}")
         except Exception:

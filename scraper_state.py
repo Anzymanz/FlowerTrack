@@ -42,14 +42,41 @@ def read_scraper_state(path) -> dict:
         pass
     return {}
 
-
-def write_scraper_state(path, status: str, pid: int | None = None, ts: float | None = None) -> None:
+def update_scraper_state(path, **updates) -> None:
     try:
-        payload = {
-            "status": str(status or "").lower(),
-            "ts": float(ts or time.time()),
-            "pid": int(pid) if pid is not None else None,
-        }
+        payload = read_scraper_state(path)
+        for key, value in updates.items():
+            if value is None:
+                payload.pop(key, None)
+            else:
+                payload[key] = value
+        path.write_text(json.dumps(payload), encoding="utf-8")
+    except Exception:
+        pass
+
+def get_last_change(path) -> str | None:
+    value = read_scraper_state(path).get("last_change")
+    return str(value) if value else None
+
+def get_last_scrape(path) -> str | None:
+    value = read_scraper_state(path).get("last_scrape")
+    return str(value) if value else None
+
+
+def write_scraper_state(path, status: str | None = None, pid: int | None = None, ts: float | None = None, last_change: str | None = None, last_scrape: str | None = None) -> None:
+    try:
+        payload = read_scraper_state(path)
+        if status is not None:
+            payload["status"] = str(status or "").lower()
+            payload["ts"] = float(ts or time.time())
+        elif ts is not None:
+            payload["ts"] = float(ts)
+        if pid is not None:
+            payload["pid"] = int(pid)
+        if last_change is not None:
+            payload["last_change"] = str(last_change)
+        if last_scrape is not None:
+            payload["last_scrape"] = str(last_scrape)
         path.write_text(json.dumps(payload), encoding="utf-8")
     except Exception:
         pass

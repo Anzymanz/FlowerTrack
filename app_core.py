@@ -43,7 +43,7 @@ from parser import (
     make_identity_key,
     make_item_key,
 )
-from storage import append_change_log, load_last_change, load_last_parse, save_last_change, save_last_parse, load_last_scrape, save_last_scrape
+from storage import append_change_log, load_last_parse, save_last_parse
 from tray import create_tray_icon, make_tray_image, stop_tray_icon, tray_supported
 from ui_settings import open_settings_window
 from export_server import start_export_server as srv_start_export_server, stop_export_server as srv_stop_export_server
@@ -60,18 +60,37 @@ BASE_DIR = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 ASSETS_DIR = BASE_DIR / "assets"
 APP_DIR = os.path.join(os.getenv("APPDATA", os.path.expanduser("~")), "FlowerTrack")
 DATA_DIR = Path(APP_DIR) / "data"
+LOG_DIR = Path(APP_DIR) / "logs"
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(APP_DIR, exist_ok=True)
+os.makedirs(LOG_DIR, exist_ok=True)
+
+# Move legacy configs out of data/ into the app root.
+LEGACY_CONFIG_NAMES = ("library_config.json", "scraper_config.json", "tracker_config.json", "tracker_settings.json", "flowertrack_config.json")
+for _name in LEGACY_CONFIG_NAMES:
+    _old = DATA_DIR / _name
+    _new = Path(APP_DIR) / _name
+    if _old.exists() and not _new.exists():
+        try:
+            _old.replace(_new)
+        except Exception:
+            pass
 # Unified config path
 UNIFIED_CONFIG_FILE = os.path.join(APP_DIR, "flowertrack_config.json")
 CONFIG_FILE = UNIFIED_CONFIG_FILE
 EXPORTS_DIR_DEFAULT = Path(os.path.join(os.getenv("APPDATA", os.path.expanduser("~")), "FlowerTrack", "Exports"))
+CHANGES_LOG_FILE = LOG_DIR / "changes.ndjson"
 LAST_PARSE_FILE = DATA_DIR / "last_parse.json"
-SERVER_LOG = DATA_DIR / "parser_server.log"
-CHANGES_LOG_FILE = DATA_DIR / "changes.ndjson"
-LAST_CHANGE_FILE = DATA_DIR / "last_change.txt"
-LAST_SCRAPE_FILE = DATA_DIR / "last_scrape.txt"
-SCRAPER_STATE_FILE = Path(APP_DIR) / "scraper_state.json"
+# Move legacy log files out of data/ into logs/ on first run.
+for _name in ("parser_server.log", "changes.ndjson"):
+    _old = DATA_DIR / _name
+    _new = LOG_DIR / _name
+    if _old.exists() and not _new.exists():
+        try:
+            _old.replace(_new)
+        except Exception:
+            pass
+SCRAPER_STATE_FILE = DATA_DIR / "scraper_state.json"
 
 def _log_debug(msg: str) -> None:
 

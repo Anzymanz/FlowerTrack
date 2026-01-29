@@ -179,6 +179,8 @@ class CaptureWorker:
                                     parse_failed = False
                                 except Exception:
                                     pass
+                            if parse_failed:
+                                return
                         except Exception:
                             return
                         try:
@@ -427,6 +429,9 @@ class CaptureWorker:
                                         self.callbacks["capture_log"](f"Refresh error; using current content. ({exc})")
                                 self.callbacks["capture_log"]("Page ready; collecting data.")
                                 # Expand formulary pagination when only first page captured.
+                                pagination_failed = False
+                                total = None
+                                data_list = []
                                 try:
                                     base_payload = next((p for p in api_payloads if 'formulary-products' in (p.get('url') or '') and isinstance(p.get('data'), list)), None)
                                     base_url = None
@@ -442,6 +447,8 @@ class CaptureWorker:
                                             base_url = urllib.parse.urlunparse(parsed._replace(query=new_query))
                                             if base_url != (base_payload.get('url') or ''):
                                                 more = _http_get_json(base_url)
+                                                if more is None:
+                                                    pagination_failed = True
                                                 if isinstance(more, list):
                                                     api_payloads.append({"url": base_url, "content_type": "application/json", "kind": "list", "count": len(more), "data": more})
                                         except Exception as exc:
@@ -504,6 +511,8 @@ class CaptureWorker:
                                                     new_query = urllib.parse.urlencode(q, doseq=True)
                                                     next_url = urllib.parse.urlunparse(parsed._replace(query=new_query))
                                                     more = _http_get_json(next_url)
+                                                    if more is None:
+                                                        pagination_failed = True
                                                     if isinstance(more, list):
                                                         try:
                                                             self.callbacks["capture_log"](f"Pagination fetch skip={skip} status=200")
