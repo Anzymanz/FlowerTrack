@@ -25,12 +25,17 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     else:
         app.show_advanced_scraper.set(False)
     win.title("Settings")
-    base_geometry = getattr(app, "scraper_settings_geometry", "560x600")
+    base_geometry = getattr(app, "scraper_settings_geometry", "560x820")
     win.geometry(base_geometry)
     try:
         base_width, base_height = [int(x) for x in base_geometry.split("x", 1)]
     except ValueError:
         base_width, base_height = 560, 600
+    min_height = 720
+    if base_height < min_height:
+        base_height = min_height
+        base_geometry = f"{base_width}x{base_height}"
+        win.geometry(base_geometry)
     try:
         icon_path = assets_dir / "icon.ico"
         if icon_path.exists():
