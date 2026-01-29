@@ -3,3 +3,5 @@
 ## 0.21
 - Fixed scraper pagination retry handling to avoid applying partial captures when page fetches fail.
 - Added optional restock notifications when items return from out of stock.
+- Fixed stock change detection to consider changes in remaining counts.
+- Removed duplicate "no changes detected" log entry.

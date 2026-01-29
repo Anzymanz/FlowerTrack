@@ -895,6 +895,9 @@ class App(tk.Tk):
                 )
             prev_stock = prev_stock_map.get(ident)
             cur_stock = it.get("stock")
+            prev_rem = prev_remaining_map.get(ident)
+            cur_rem = it.get("stock_remaining")
+            stock_changed = False
             if prev_stock is not None and cur_stock is not None and str(prev_stock) != str(cur_stock):
                 stock_changes.append(
                     {
@@ -903,23 +906,29 @@ class App(tk.Tk):
                         "stock_after": cur_stock,
                     }
                 )
-                prev_rem = prev_remaining_map.get(ident)
-                cur_rem = it.get("stock_remaining")
-                if _stock_is_out(prev_stock, prev_rem) and _stock_is_in(cur_stock, cur_rem):
-                    restock_changes.append(
-                        {
-                            **it,
-                            "stock_before": prev_stock,
-                            "stock_after": cur_stock,
-                        }
-                    )
+                stock_changed = True
+            if not stock_changed and (prev_rem is not None or cur_rem is not None) and prev_rem != cur_rem:
+                stock_changes.append(
+                    {
+                        **it,
+                        "stock_before": prev_rem,
+                        "stock_after": cur_rem,
+                    }
+                )
+            if _stock_is_out(prev_stock, prev_rem) and _stock_is_in(cur_stock, cur_rem):
+                restock_changes.append(
+                    {
+                        **it,
+                        "stock_before": prev_stock,
+                        "stock_after": cur_stock,
+                    }
+                )
         all_new_items = new_items
         all_removed_items = removed_items
         all_price_changes = price_changes
         all_stock_changes = stock_changes
         all_restock_changes = restock_changes
         if not all_new_items and not all_removed_items and not all_price_changes and not all_stock_changes and not all_restock_changes:
-            self._capture_log("No changes detected; skipping HA notification.")
             return
         log_price_change_compact = []
         for it in all_price_changes:
@@ -1021,8 +1030,24 @@ class App(tk.Tk):
             label = " ".join([p for p in (brand, strain) if p]).strip() or "Unknown"
             before = it.get("stock_before")
             after = it.get("stock_after")
-            stock_change_summaries.append(f"{label}: {before} → {after}")
+            stock_change_summaries.append(f"{label}: {before} -> {after}")
             stock_change_compact.append(
+                {
+                    "label": label,
+                    "stock_before": before,
+                    "stock_after": after,
+                }
+            )
+        restock_change_summaries = []
+        restock_change_compact = []
+        for it in restock_changes:
+            brand = it.get("brand") or it.get("producer") or ""
+            strain = it.get("strain") or ""
+            label = " ".join([p for p in (brand, strain) if p]).strip() or "Unknown"
+            before = it.get("stock_before")
+            after = it.get("stock_after")
+            restock_change_summaries.append(f"{label}: {before} -> {after}")
+            restock_change_compact.append(
                 {
                     "label": label,
                     "stock_before": before,
@@ -1095,6 +1120,15 @@ class App(tk.Tk):
             f"{len(price_changes)} price changes, {len(stock_changes)} stock changes, {len(restock_changes)} restocks"
         )
         quiet_hours = self._quiet_hours_active() if hasattr(self, '_quiet_hours_active') else False
+        try:
+            self._capture_log("Notify flags | ha={} win={} quiet={} log_only={}".format(
+                bool(self.cap_auto_notify_ha.get()),
+                bool(self.notify_windows.get()),
+                quiet_hours,
+                log_only,
+            ))
+        except Exception:
+            pass
         if quiet_hours:
             self._capture_log("Quiet hours active; skipping notifications.")
             self._update_last_change(summary)
@@ -1117,6 +1151,8 @@ class App(tk.Tk):
             ok_win = self.notify_service.send_windows("Medicann update", windows_body, icon_path, launch_url=launch_url)
             if not ok_win:
                 self._capture_log("Windows notification failed to send.")
+        elif notify_allowed and not quiet_hours:
+            self._capture_log("Windows notifications disabled; skipping.")
         # If log-only or quiet hours, skip HA network send
         if notify_allowed and not (log_only or quiet_hours):
             ok, status, body = self.notify_service.send_home_assistant(payload)
@@ -1124,6 +1160,8 @@ class App(tk.Tk):
                 self._update_last_change(summary)
             else:
                 self._capture_log(f"HA response status: {status} body: {str(body)[:200] if body else ''}")
+        elif notify_allowed and not quiet_hours:
+            self._capture_log("HA notifications disabled; skipping.")
         try:
             if items:
                 self._generate_change_export(self._get_export_items())
@@ -1373,7 +1411,7 @@ class App(tk.Tk):
         threading.Thread(target=worker, daemon=True).start()
         if not self._polling:
             self._polling = True
-            self.after(50, self.poll)
+        self.after(50, self.poll)
     def poll(self):
         try:
             while True:
@@ -1446,8 +1484,41 @@ class App(tk.Tk):
                         f"Done | {len(self.data)} items | +{new_count} new | -{removed_count} removed | "
                         f"{self.price_up_count} price increases | {self.price_down_count} price decreases"
                     )
+                    stock_change_count = 0
+                    try:
+                        prev_stock_map = {}
+                        prev_rem_map = {}
+                        for pit in prev_items:
+                            key = _identity_key_cached(pit, identity_cache)
+                            prev_stock_map[key] = pit.get("stock")
+                            prev_rem_map[key] = pit.get("stock_remaining")
+                        for it in self.data:
+                            key = _identity_key_cached(it, identity_cache)
+                            prev_stock = prev_stock_map.get(key)
+                            prev_rem = prev_rem_map.get(key)
+                            cur_stock = it.get("stock")
+                            cur_rem = it.get("stock_remaining")
+                            if prev_stock is not None and cur_stock is not None and str(prev_stock) != str(cur_stock):
+                                stock_change_count += 1
+                                continue
+                            if (prev_rem is not None or cur_rem is not None) and prev_rem != cur_rem:
+                                stock_change_count += 1
+                    except Exception:
+                        pass
+                    if (
+                        new_count == 0
+                        and removed_count == 0
+                        and self.price_up_count == 0
+                        and self.price_down_count == 0
+                        and stock_change_count == 0
+                    ):
+                        self._capture_log("No changes detected; skipping notifications.")
                     self._post_process_actions()
-                    save_last_parse(LAST_PARSE_FILE, self.data)
+                    try:
+                        save_last_parse(LAST_PARSE_FILE, self.data)
+                        self._capture_log(f"Saved last parse to {LAST_PARSE_FILE}")
+                    except Exception as exc:
+                        self._capture_log(f"Failed to save last parse: {exc}")
                     try:
                         self._set_next_capture_timer(float(self.cap_interval.get() or 0))
                     except Exception:
