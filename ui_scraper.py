@@ -221,6 +221,7 @@ class App(tk.Tk):
         self.cap_ha_token = tk.StringVar(value=decrypt_secret(cfg.get("ha_token", "")))
         self.notify_price_changes = tk.BooleanVar(value=bool(cfg.get("notify_price_changes", True)))
         self.notify_stock_changes = tk.BooleanVar(value=bool(cfg.get("notify_stock_changes", True)))
+        self.notify_restock = tk.BooleanVar(value=bool(cfg.get("notify_restock", True)))
         self.notify_new_items = tk.BooleanVar(value=bool(cfg.get("notify_new_items", True)))
         self.notify_removed_items = tk.BooleanVar(value=bool(cfg.get("notify_removed_items", True)))
         self.notify_windows = tk.BooleanVar(value=bool(cfg.get("notify_windows", True)))
@@ -261,6 +262,7 @@ class App(tk.Tk):
             "ha_token": self.cap_ha_token.get(),
             "notify_price_changes": bool(self.notify_price_changes.get()),
             "notify_stock_changes": bool(self.notify_stock_changes.get()),
+            "notify_restock": bool(self.notify_restock.get()),
             "notify_new_items": bool(self.notify_new_items.get()),
             "notify_removed_items": bool(self.notify_removed_items.get()),
             "notify_windows": bool(self.notify_windows.get()),
@@ -664,6 +666,7 @@ class App(tk.Tk):
         self.cap_ha_token.set(decrypt_secret(cfg.get("ha_token", "")))
         self.notify_price_changes.set(cfg.get("notify_price_changes", True))
         self.notify_stock_changes.set(cfg.get("notify_stock_changes", True))
+        self.notify_restock.set(cfg.get("notify_restock", True))
         self.notify_new_items.set(cfg.get("notify_new_items", True))
         self.notify_removed_items.set(cfg.get("notify_removed_items", True))
         self.notify_windows.set(cfg.get("notify_windows", True))
@@ -711,6 +714,7 @@ class App(tk.Tk):
             "ha_token": self.cap_ha_token.get(),
             "notify_price_changes": self.notify_price_changes.get(),
             "notify_stock_changes": self.notify_stock_changes.get(),
+            "notify_restock": self.notify_restock.get(),
             "notify_new_items": self.notify_new_items.get(),
             "notify_removed_items": self.notify_removed_items.get(),
             "notify_windows": self.notify_windows.get(),
@@ -760,6 +764,7 @@ class App(tk.Tk):
             "ha_token": self.cap_ha_token.get(),
             "notify_price_changes": self.notify_price_changes.get(),
             "notify_stock_changes": self.notify_stock_changes.get(),
+            "notify_restock": self.notify_restock.get(),
             "notify_new_items": self.notify_new_items.get(),
             "notify_removed_items": self.notify_removed_items.get(),
             "notify_windows": self.notify_windows.get(),
@@ -845,14 +850,33 @@ class App(tk.Tk):
         removed_items = [it for it in prev_items if _identity_key_cached(it, identity_cache) in removed_keys]
         price_changes = []
         stock_changes = []
+        restock_changes = []
         prev_price_map = {}
         prev_stock_map = {}
+        prev_remaining_map = {}
+        def _stock_is_out(stock, remaining):
+            if remaining is not None:
+                try:
+                    return float(remaining) <= 0
+                except Exception:
+                    pass
+            text = str(stock or '').upper()
+            return 'OUT' in text
+        def _stock_is_in(stock, remaining):
+            if remaining is not None:
+                try:
+                    return float(remaining) > 0
+                except Exception:
+                    pass
+            text = str(stock or '').upper()
+            return ('IN STOCK' in text) or ('LOW STOCK' in text) or ('REMAINING' in text)
         for pit in prev_items:
             try:
                 prev_price_map[_identity_key_cached(pit, identity_cache)] = float(pit.get("price")) if pit.get("price") is not None else None
             except Exception:
                 prev_price_map[_identity_key_cached(pit, identity_cache)] = None
             prev_stock_map[_identity_key_cached(pit, identity_cache)] = pit.get("stock")
+            prev_remaining_map[_identity_key_cached(pit, identity_cache)] = pit.get("stock_remaining")
         for it in items:
             ident = _identity_key_cached(it, identity_cache)
             try:
@@ -879,11 +903,22 @@ class App(tk.Tk):
                         "stock_after": cur_stock,
                     }
                 )
+                prev_rem = prev_remaining_map.get(ident)
+                cur_rem = it.get("stock_remaining")
+                if _stock_is_out(prev_stock, prev_rem) and _stock_is_in(cur_stock, cur_rem):
+                    restock_changes.append(
+                        {
+                            **it,
+                            "stock_before": prev_stock,
+                            "stock_after": cur_stock,
+                        }
+                    )
         all_new_items = new_items
         all_removed_items = removed_items
         all_price_changes = price_changes
         all_stock_changes = stock_changes
-        if not all_new_items and not all_removed_items and not all_price_changes and not all_stock_changes:
+        all_restock_changes = restock_changes
+        if not all_new_items and not all_removed_items and not all_price_changes and not all_stock_changes and not all_restock_changes:
             self._capture_log("No changes detected; skipping HA notification.")
             return
         log_price_change_compact = []
@@ -927,6 +962,8 @@ class App(tk.Tk):
             price_changes = []
         if not _notify_flag('notify_stock_changes', True):
             stock_changes = []
+        if not _notify_flag('notify_restock', True):
+            restock_changes = []
         def _flower_label(entry: dict) -> str:
             brand = entry.get("brand") or entry.get("producer") or ""
             strain = entry.get("strain") or ""
@@ -944,12 +981,12 @@ class App(tk.Tk):
         new_item_summaries = [_item_label(it) for it in new_items]
         removed_item_summaries = [_item_label(it) for it in removed_items]
         notify_allowed = True
-        if not new_items and not removed_items and not price_changes and not stock_changes:
+        if not new_items and not removed_items and not price_changes and not stock_changes and not restock_changes:
             self._capture_log("Changes detected but notifications are disabled; skipping notifications.")
             notify_allowed = False
         self._log_console(
             f"Notify HA | new={len(new_items)} removed={len(removed_items)} "
-            f"price_changes={len(price_changes)} stock_changes={len(stock_changes)}"
+            f"price_changes={len(price_changes)} stock_changes={len(stock_changes)} restocks={len(restock_changes)}"
         )
         # Build compact human text for price changes
         price_change_summaries = []
@@ -1005,6 +1042,8 @@ class App(tk.Tk):
             "price_change_summaries": price_change_summaries,
             "stock_changes": stock_changes,
             "stock_change_summaries": stock_change_summaries,
+            "restock_changes": restock_changes,
+            "restock_change_summaries": restock_change_summaries,
             "new_items": new_items,
             "removed_items": removed_items,
             "price_up": getattr(self, "price_up_count", 0),
@@ -1039,6 +1078,7 @@ class App(tk.Tk):
                 ],
                 "price_changes": log_price_change_compact,
                 "stock_changes": log_stock_change_compact,
+                "restock_changes": log_restock_change_compact,
             }
             append_change_log(CHANGES_LOG_FILE, log_record)
         except Exception:
@@ -1052,7 +1092,7 @@ class App(tk.Tk):
         data = json.dumps(payload).encode("utf-8")
         summary = (
             f"+{len(new_items)} new, -{len(removed_items)} removed, "
-            f"{len(price_changes)} price changes, {len(stock_changes)} stock changes"
+            f"{len(price_changes)} price changes, {len(stock_changes)} stock changes, {len(restock_changes)} restocks"
         )
         quiet_hours = self._quiet_hours_active() if hasattr(self, '_quiet_hours_active') else False
         if quiet_hours:

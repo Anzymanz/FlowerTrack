@@ -89,6 +89,7 @@ DEFAULT_CAPTURE_CONFIG = {
     "ha_token": "",
     "notify_price_changes": True,
     "notify_stock_changes": True,
+    "notify_restock": True,
     "notify_new_items": True,
     "notify_removed_items": True,
     "notify_windows": True,
@@ -322,6 +323,7 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["ha_token"] = str(raw.get("ha_token") or "")
     cfg["notify_price_changes"] = _coerce_bool(raw.get("notify_price_changes"), DEFAULT_CAPTURE_CONFIG["notify_price_changes"])
     cfg["notify_stock_changes"] = _coerce_bool(raw.get("notify_stock_changes"), DEFAULT_CAPTURE_CONFIG["notify_stock_changes"])
+    cfg["notify_restock"] = _coerce_bool(raw.get("notify_restock"), DEFAULT_CAPTURE_CONFIG["notify_restock"])
     cfg["notify_new_items"] = _coerce_bool(raw.get("notify_new_items"), DEFAULT_CAPTURE_CONFIG["notify_new_items"])
     cfg["notify_removed_items"] = _coerce_bool(raw.get("notify_removed_items"), DEFAULT_CAPTURE_CONFIG["notify_removed_items"])
     cfg["notify_windows"] = _coerce_bool(raw.get("notify_windows"), DEFAULT_CAPTURE_CONFIG["notify_windows"])

@@ -200,6 +200,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     notify_frame.pack(fill="x", padx=4, pady=(0, 10))
     ttk.Checkbutton(notify_frame, text="Notify on price changes", variable=app.notify_price_changes).pack(anchor="w", pady=2)
     ttk.Checkbutton(notify_frame, text="Notify on stock changes", variable=app.notify_stock_changes).pack(anchor="w", pady=2)
+    ttk.Checkbutton(notify_frame, text="Notify on restock", variable=app.notify_restock).pack(anchor="w", pady=2)
     ttk.Checkbutton(notify_frame, text="Notify on new products", variable=app.notify_new_items).pack(anchor="w", pady=2)
     ttk.Checkbutton(notify_frame, text="Notify on removed products", variable=app.notify_removed_items).pack(anchor="w", pady=2)
     ttk.Checkbutton(notify_frame, text="Send Windows desktop notifications", variable=app.notify_windows).pack(anchor="w", pady=2)
