@@ -191,6 +191,7 @@ class App(tk.Tk):
         self.bind("<Unmap>", self._on_unmap)
         self.bind("<Map>", self._on_map)
         self.apply_theme()
+        self.after(2000, self._refresh_theme_from_config)
         # Ensure dark titlebar sticks (especially in frozen builds)
         try:
             self.after(120, lambda: self._set_window_titlebar_dark(self, self.dark_mode_var.get()))
@@ -1640,6 +1641,18 @@ class App(tk.Tk):
         # Ensure main titlebar follows theme
         try:
             self._set_window_titlebar_dark(self, dark)
+        except Exception:
+            pass
+    def _refresh_theme_from_config(self):
+        try:
+            desired = bool(self._load_dark_mode())
+            if desired != bool(self.dark_mode_var.get()):
+                self.dark_mode_var.set(desired)
+                self.apply_theme()
+        except Exception:
+            pass
+        try:
+            self.after(2000, self._refresh_theme_from_config)
         except Exception:
             pass
     def toggle_theme(self):
