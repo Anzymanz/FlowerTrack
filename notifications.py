@@ -5,6 +5,9 @@ import json
 import urllib.request
 from pathlib import Path
 from typing import Callable, Optional
+import threading
+
+_WIN_TOAST_FAILED = False
 
 def _log_debug(msg: str) -> None:
     """Lightweight stdout logger with timestamp."""
@@ -39,23 +42,33 @@ def _maybe_send_windows_notification(
             except Exception:
                 pass
         return
+    global _WIN_TOAST_FAILED
+    if _WIN_TOAST_FAILED:
+        return
+    def _send():
+        nonlocal icon_path
+        try:
+            notifier = Win10ToastNotifier()
+            # Use threaded=False to avoid win10toast internal thread errors.
+            notifier.show_toast(title, body, icon_path=icon_path, duration=8, threaded=False)
+            _log_debug(f"[toast] sent via win10toast: {title} | {body} (icon={icon_path})")
+            if ui_logger:
+                try:
+                    ui_logger(f"[toast] sent via win10toast: {title}")
+                except Exception:
+                    pass
+        except Exception as exc:
+            _WIN_TOAST_FAILED = True
+            _log_debug(f"[toast] win10toast failed: {exc}")
+            if ui_logger:
+                try:
+                    ui_logger(f"[toast] win10toast failed: {exc}")
+                except Exception:
+                    pass
     try:
-        notifier = Win10ToastNotifier()
-        # Use threaded=True to keep Tk event loop responsive; avoid callbacks to reduce WNDPROC issues.
-        notifier.show_toast(title, body, icon_path=icon_path, duration=8, threaded=True)
-        _log_debug(f"[toast] sent via win10toast: {title} | {body} (icon={icon_path})")
-        if ui_logger:
-            try:
-                ui_logger(f"[toast] sent via win10toast: {title}")
-            except Exception:
-                pass
-    except Exception as exc:
-        _log_debug(f"[toast] win10toast failed: {exc}")
-        if ui_logger:
-            try:
-                ui_logger(f"[toast] win10toast failed: {exc}")
-            except Exception:
-                pass
+        threading.Thread(target=_send, daemon=True).start()
+    except Exception:
+        _send()
 
 
 
