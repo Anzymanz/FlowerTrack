@@ -426,14 +426,23 @@ class CaptureWorker:
                                 headers = dict(self.formulary_headers or {})
                                 if self.formulary_cookie_header:
                                     headers['Cookie'] = self.formulary_cookie_header
-                                try:
-                                    req = urllib.request.Request(url, headers=headers)
-                                    with urllib.request.urlopen(req, timeout=20) as resp:
-                                        body = resp.read()
-                                    return json.loads(body.decode('utf-8'))
-                                except Exception as exc:
-                                    self.callbacks["capture_log"](f"HTTP fetch failed: {exc}")
-                                    return None
+                                attempts = 3
+                                for attempt in range(1, attempts + 1):
+                                    try:
+                                        req = urllib.request.Request(url, headers=headers)
+                                        with urllib.request.urlopen(req, timeout=20) as resp:
+                                            body = resp.read()
+                                        return json.loads(body.decode('utf-8'))
+                                    except Exception as exc:
+                                        self.callbacks["capture_log"](
+                                            f"HTTP fetch failed (attempt {attempt}/{attempts}): {exc}"
+                                        )
+                                        if attempt < attempts:
+                                            try:
+                                                self.callbacks["responsive_wait"](1.0 * attempt, label="HTTP retry")
+                                            except Exception:
+                                                time.sleep(1.0 * attempt)
+                                return None
                             def collect_once(refresh: bool) -> bool:
                                 if refresh:
                                     try:
