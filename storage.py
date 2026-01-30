@@ -1,5 +1,16 @@
 from __future__ import annotations
 
+
+
+def _atomic_write_text(path: Path, text: str, encoding: str = "utf-8") -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(text, encoding=encoding)
+    tmp.replace(path)
+
+
+def _atomic_write_json(path: Path, data) -> None:
+    _atomic_write_text(path, json.dumps(data, ensure_ascii=False, indent=2))
 import json
 from pathlib import Path
 
@@ -17,7 +28,7 @@ def load_last_parse(path: Path) -> list[dict]:
 def save_last_parse(path: Path, items: list[dict]) -> None:
     """Persist the latest parsed items to disk."""
     try:
-        path.write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
+        _atomic_write_json(path, items)
     except Exception:
         pass
 
@@ -46,8 +57,7 @@ def load_last_change(path: Path) -> str | None:
 def save_last_change(path: Path, summary: str) -> None:
     """Persist the last change summary line."""
     try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(summary, encoding="utf-8")
+        _atomic_write_text(path, summary)
     except Exception:
         pass
 
@@ -65,8 +75,7 @@ def load_last_scrape(path: Path) -> str | None:
 def save_last_scrape(path: Path, summary: str) -> None:
     """Persist the last successful scrape timestamp."""
     try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(summary, encoding="utf-8")
+        _atomic_write_text(path, summary)
     except Exception:
         pass
 

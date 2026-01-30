@@ -5,7 +5,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import Tk, Toplevel, StringVar, BooleanVar, ttk, messagebox, filedialog
 from theme import apply_style_theme, compute_colors, set_titlebar_dark
-from config import load_library_config, save_library_config
+from config import load_library_config, save_library_config, load_tracker_config, save_tracker_config
 
 
 APP_ROOT = Path(os.getenv("APPDATA", Path.home())) / "FlowerTrack"
@@ -41,18 +41,9 @@ def save_settings(settings: dict) -> None:
 
 def _load_tracker_dark_mode(default: bool = True) -> bool:
     try:
-        if TRACKER_CONFIG_FILE.exists():
-            data = json.loads(TRACKER_CONFIG_FILE.read_text(encoding="utf-8"))
-            if "ui" in data and isinstance(data.get("ui"), dict):
-                ui = data.get("ui", {})
-                if "dark_mode" in ui:
-                    return bool(ui["dark_mode"])
-            if "tracker" in data and isinstance(data.get("tracker"), dict):
-                tracker = data.get("tracker", {})
-                if "dark_mode" in tracker:
-                    return bool(tracker["dark_mode"])
-            if "dark_mode" in data:
-                return bool(data["dark_mode"])
+        cfg = load_tracker_config(TRACKER_CONFIG_FILE)
+        if isinstance(cfg, dict) and "dark_mode" in cfg:
+            return bool(cfg.get("dark_mode", default))
     except Exception:
         pass
     return default
@@ -60,12 +51,11 @@ def _load_tracker_dark_mode(default: bool = True) -> bool:
 
 def _save_tracker_dark_mode(enabled: bool) -> None:
     try:
-        cfg = {}
-        if TRACKER_CONFIG_FILE.exists():
-            cfg = json.loads(TRACKER_CONFIG_FILE.read_text(encoding="utf-8")) or {}
+        cfg = load_tracker_config(TRACKER_CONFIG_FILE)
+        if not isinstance(cfg, dict):
+            cfg = {}
         cfg["dark_mode"] = bool(enabled)
-        TRACKER_CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
-        TRACKER_CONFIG_FILE.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+        save_tracker_config(TRACKER_CONFIG_FILE, cfg)
     except Exception:
         pass
 

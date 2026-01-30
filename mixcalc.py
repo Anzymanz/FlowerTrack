@@ -7,6 +7,7 @@ from datetime import datetime
 import tkinter as tk
 from tkinter import ttk, messagebox
 import ctypes
+from config import load_tracker_config
 
 
 APP_DIR = os.path.join(os.getenv("APPDATA", os.path.expanduser("~")), "FlowerTrack")
@@ -15,11 +16,9 @@ CONFIG_FILE = Path(APP_DIR) / "flowertrack_config.json"
 
 def resolve_tracker_file() -> Path:
     try:
-        if CONFIG_FILE.exists():
-            cfg = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
-            if isinstance(cfg.get("tracker"), dict):
-                cfg = cfg.get("tracker", {})
-            data_path = cfg.get("data_path") if isinstance(cfg, dict) else None
+        cfg = load_tracker_config(CONFIG_FILE)
+        if isinstance(cfg, dict):
+            data_path = cfg.get("data_path")
             if data_path:
                 return Path(data_path)
     except Exception:
@@ -38,12 +37,9 @@ IS_STOCK_MODE = MIX_MODE in {"stock", "blend", "stockblend"}
 def load_roa_options():
     global roa_options
     try:
-        if CONFIG_FILE.exists():
-            cfg = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
-            if isinstance(cfg.get("tracker"), dict):
-                cfg = cfg.get("tracker", {})
-            if isinstance(cfg.get("roa_options"), dict):
-                roa_options = {k: float(v) for k, v in cfg["roa_options"].items()}
+        cfg = load_tracker_config(CONFIG_FILE)
+        if isinstance(cfg, dict) and isinstance(cfg.get("roa_options"), dict):
+            roa_options = {k: float(v) for k, v in cfg["roa_options"].items()}
     except Exception:
         pass
 
@@ -73,12 +69,8 @@ def load_last_parse() -> list[dict]:
 
 def load_dark_mode_default() -> bool:
     try:
-        if CONFIG_FILE.exists():
-            cfg = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
-            if isinstance(cfg.get("ui"), dict) and "dark_mode" in cfg.get("ui", {}):
-                return bool(cfg["ui"].get("dark_mode", True))
-            if isinstance(cfg.get("tracker"), dict) and "dark_mode" in cfg.get("tracker", {}):
-                return bool(cfg["tracker"].get("dark_mode", True))
+        cfg = load_tracker_config(CONFIG_FILE)
+        if isinstance(cfg, dict) and "dark_mode" in cfg:
             return bool(cfg.get("dark_mode", True))
     except Exception:
         pass

@@ -529,8 +529,8 @@ def save_tracker_config(path: Path, cfg: dict) -> None:
             unified["tracker"] = tracker_cfg
             unified["ui"]["dark_mode"] = tracker_cfg["dark_mode"]
             save_unified_config(path, unified)
-    except Exception:
-        pass
+    except Exception as exc:
+        _log_config_error(f"save_tracker_config failed: {exc}")
 
 
 def _migrate_capture_config(raw: dict) -> dict:
@@ -565,8 +565,8 @@ def save_capture_config(path: Path, data: dict, encrypt_keys: list[str]):
         )
         unified["scraper"] = _migrate_capture_config(data or {})
         save_unified_config(path, unified, encrypt_scraper_keys=encrypt_keys)
-    except Exception:
-        pass
+    except Exception as exc:
+        _log_config_error(f"save_capture_config failed: {exc}")
 
 def load_library_config(path: Path) -> dict:
     try:
@@ -581,8 +581,8 @@ def save_library_config(path: Path, cfg: dict) -> None:
         unified = load_unified_config(path, decrypt_scraper_keys=["username", "password", "ha_token"], write_back=False)
         unified["library"] = _validate_library_config(cfg or {})
         save_unified_config(path, unified, encrypt_scraper_keys=["username", "password", "ha_token"])
-    except Exception:
-        pass
+    except Exception as exc:
+        _log_config_error(f"save_library_config failed: {exc}")
 
 
 def _migration_log_path() -> Path:
@@ -606,6 +606,28 @@ def _log_migration(message: str, logger=None) -> None:
                 old_path.replace(path)
             except Exception:
                 pass
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as fh:
+            fh.write(line + "\n")
+    except Exception:
+        pass
+
+
+def _config_error_log_path() -> Path:
+    appdata = Path(os.getenv("APPDATA", os.path.expanduser("~")))
+    return appdata / "FlowerTrack" / "logs" / "config_errors.log"
+
+
+def _log_config_error(message: str, logger=None) -> None:
+    stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    line = f"[{stamp}] {message}"
+    if logger:
+        try:
+            logger(line)
+        except Exception:
+            pass
+    try:
+        path = _config_error_log_path()
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as fh:
             fh.write(line + "\n")

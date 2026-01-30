@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+
+
+
+def _atomic_write_json(path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload), encoding="utf-8")
+    tmp.replace(path)
 import json
 import os
 import time
@@ -50,7 +58,7 @@ def update_scraper_state(path, **updates) -> None:
                 payload.pop(key, None)
             else:
                 payload[key] = value
-        path.write_text(json.dumps(payload), encoding="utf-8")
+        _atomic_write_json(path, payload)
     except Exception:
         pass
 
@@ -77,7 +85,7 @@ def write_scraper_state(path, status: str | None = None, pid: int | None = None,
             payload["last_change"] = str(last_change)
         if last_scrape is not None:
             payload["last_scrape"] = str(last_scrape)
-        path.write_text(json.dumps(payload), encoding="utf-8")
+        _atomic_write_json(path, payload)
     except Exception:
         pass
 

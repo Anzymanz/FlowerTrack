@@ -47,6 +47,7 @@ from parser import (
     make_item_key,
     make_identity_key,
 )
+from diff_engine import compute_diffs
 from models import Item
 import threading as _threading
 from notifications import _maybe_send_windows_notification
@@ -79,6 +80,7 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         App._instance = self
+        self._ui_thread = threading.current_thread()
         self.title(SCRAPER_TITLE)
         cfg = _load_capture_config()
         self.scraper_window_geometry = cfg.get("window_geometry", "900x720") or "900x720"
@@ -360,14 +362,28 @@ class App(tk.Tk):
             self.status.config(text=msg)
         except Exception:
             pass
-    def _generate_change_export(self, items: list[dict] | None = None):
+    def _generate_change_export(self, items: list[dict] | None = None, silent: bool = False):
         """Generate an HTML snapshot for the latest items and keep only recent ones."""
         data = items if items is not None else self._get_export_items()
         if not data:
+            if not silent:
+                try:
+                    messagebox.showinfo("Open Export", "No data available to export yet.")
+                except Exception:
+                    pass
             return
-        path = export_html_auto(data, exports_dir=EXPORTS_DIR_DEFAULT, open_file=False, fetch_images=False)
-        _cleanup_and_record_export(path, max_files=20)
-        self._capture_log(f"Exported snapshot: {path.name}")
+        try:
+            path = export_html_auto(data, exports_dir=EXPORTS_DIR_DEFAULT, open_file=False, fetch_images=False)
+            _cleanup_and_record_export(path, max_files=20)
+            self._capture_log(f"Exported snapshot: {path.name}")
+        except Exception as exc:
+            if silent:
+                self._capture_log(f"Export generation failed: {exc}")
+            else:
+                messagebox.showerror("Open Export", f"Could not generate export:\n{exc}")
+            return
+
+
     def open_fresh_export(self):
         try:
             if not self.data and LAST_PARSE_FILE.exists():
@@ -497,6 +513,14 @@ class App(tk.Tk):
         except Exception:
             pass
     def _log_console(self, msg: str):
+        if threading.current_thread() is not getattr(self, "_ui_thread", None):
+            try:
+                self.after(0, lambda m=msg: self._log_console_ui(m))
+            except Exception:
+                pass
+            return
+        self._log_console_ui(msg)
+    def _log_console_ui(self, msg: str):
         # If already timestamped, don't double-stamp.
         if msg.startswith("[") and "]" in msg[:12]:
             line = f"{msg}\n"
@@ -514,6 +538,7 @@ class App(tk.Tk):
             self.status.config(text=msg)
         except Exception:
             pass
+
     def _update_last_change(self, summary: str):
         ts_line = f"{datetime.now().astimezone().strftime('%Y-%m-%d %H:%M:%S%z')} | {summary}"
         write_scraper_state(SCRAPER_STATE_FILE, last_change=ts_line)
@@ -793,23 +818,28 @@ class App(tk.Tk):
             self._log_console(f"Failed to save config: {exc}")
     def _post_process_actions(self):
         # Called after poll completes processing
-        items = getattr(self, "data", [])
+        items = list(getattr(self, "data", []))
         if not items:
             return
-        # Ensure we have at least one HTML snapshot after the first successful scrape
-        try:
-            exports_dir = Path(EXPORTS_DIR_DEFAULT)
-            exports_dir.mkdir(parents=True, exist_ok=True)
-            has_html = any(exports_dir.glob("export-*.html"))
-            if not has_html:
-                self._generate_change_export(self._get_export_items())
-        except Exception:
-            pass
-        if self.cap_auto_notify_ha.get():
-            self.send_home_assistant(log_only=False)
-        else:
-            # Still log changes even if HA notifications are disabled
-            self.send_home_assistant(log_only=True)
+        auto_notify = bool(self.cap_auto_notify_ha.get())
+        def worker():
+            try:
+                exports_dir = Path(EXPORTS_DIR_DEFAULT)
+                exports_dir.mkdir(parents=True, exist_ok=True)
+                has_html = any(exports_dir.glob("export-*.html"))
+                if not has_html:
+                    self._generate_change_export(self._get_export_items(), silent=True)
+            except Exception as exc:
+                self._capture_log(f"Export preflight failed: {exc}")
+            try:
+                if auto_notify:
+                    self.send_home_assistant(log_only=False, ui_errors=False)
+                else:
+                    self.send_home_assistant(log_only=True, ui_errors=False)
+            except Exception as exc:
+                self._capture_log(f"Notification processing failed: {exc}")
+        threading.Thread(target=worker, daemon=True).start()
+
     def _quiet_hours_active(self) -> bool:
         if not self.cap_quiet_hours_enabled.get():
             return False
@@ -833,10 +863,13 @@ class App(tk.Tk):
         if start_t <= end_t:
             return start_t <= now < end_t
         return now >= start_t or now < end_t
-    def send_home_assistant(self, log_only: bool = False):
+    def send_home_assistant(self, log_only: bool = False, ui_errors: bool = True):
         url = self.cap_ha_webhook.get().strip()
         if not url and not log_only:
-            messagebox.showerror("Home Assistant", "Webhook URL is required.")
+            if ui_errors:
+                messagebox.showerror("Home Assistant", "Webhook URL is required.")
+            else:
+                self._capture_log("Home Assistant webhook URL missing; skipping notification.")
             return
         items = getattr(self, "data", [])
         prev_items = getattr(self, "prev_items", [])
@@ -849,95 +882,13 @@ class App(tk.Tk):
                 prev_keys = { _identity_key_cached(it, identity_cache) for it in prev_items }
             except Exception:
                 pass
-        current_keys = { _identity_key_cached(it, identity_cache) for it in items }
-        new_items = [it for it in items if _identity_key_cached(it, identity_cache) not in prev_keys]
-        removed_keys = prev_keys - current_keys
-        removed_items = [it for it in prev_items if _identity_key_cached(it, identity_cache) in removed_keys]
-        price_changes = []
-        stock_changes = []
-        restock_changes = []
-        out_of_stock_changes = []
-        prev_price_map = {}
-        prev_stock_map = {}
-        prev_remaining_map = {}
-        def _stock_is_out(stock, remaining):
-            if remaining is not None:
-                try:
-                    return float(remaining) <= 0
-                except Exception:
-                    pass
-            text = str(stock or '').upper()
-            return 'OUT' in text
-        def _stock_is_in(stock, remaining):
-            if remaining is not None:
-                try:
-                    return float(remaining) > 0
-                except Exception:
-                    pass
-            text = str(stock or '').upper()
-            return ('IN STOCK' in text) or ('LOW STOCK' in text) or ('REMAINING' in text)
-        for pit in prev_items:
-            try:
-                prev_price_map[_identity_key_cached(pit, identity_cache)] = float(pit.get("price")) if pit.get("price") is not None else None
-            except Exception:
-                prev_price_map[_identity_key_cached(pit, identity_cache)] = None
-            prev_stock_map[_identity_key_cached(pit, identity_cache)] = pit.get("stock")
-            prev_remaining_map[_identity_key_cached(pit, identity_cache)] = pit.get("stock_remaining")
-        for it in items:
-            ident = _identity_key_cached(it, identity_cache)
-            try:
-                cur_price = float(it.get("price")) if it.get("price") is not None else None
-            except Exception:
-                cur_price = None
-            prev_price = prev_price_map.get(ident)
-            if cur_price is not None and isinstance(prev_price, (int, float)) and cur_price != prev_price:
-                price_changes.append(
-                    {
-                        **it,
-                        "price_delta": cur_price - prev_price,
-                        "price_before": prev_price,
-                        "price_after": cur_price,
-                    }
-                )
-            prev_stock = prev_stock_map.get(ident)
-            cur_stock = it.get("stock")
-            prev_rem = prev_remaining_map.get(ident)
-            cur_rem = it.get("stock_remaining")
-            stock_change_entry = None
-            if prev_stock is not None and cur_stock is not None and str(prev_stock) != str(cur_stock):
-                stock_change_entry = {
-                    **it,
-                    "stock_before": prev_stock,
-                    "stock_after": cur_stock,
-                }
-            if stock_change_entry is None and (prev_rem is not None or cur_rem is not None) and prev_rem != cur_rem:
-                stock_change_entry = {
-                    **it,
-                    "stock_before": prev_rem,
-                    "stock_after": cur_rem,
-                }
-            prev_out = _stock_is_out(prev_stock, prev_rem)
-            cur_out = _stock_is_out(cur_stock, cur_rem)
-            prev_in = _stock_is_in(prev_stock, prev_rem)
-            cur_in = _stock_is_in(cur_stock, cur_rem)
-            if prev_out and cur_in:
-                restock_changes.append(
-                    {
-                        **it,
-                        "stock_before": prev_stock,
-                        "stock_after": cur_stock,
-                    }
-                )
-            elif prev_in and cur_out:
-                out_of_stock_changes.append(
-                    {
-                        **it,
-                        "stock_before": prev_stock,
-                        "stock_after": cur_stock,
-                    }
-                )
-            elif stock_change_entry is not None:
-                stock_changes.append(stock_change_entry)
+        diff = compute_diffs(items, prev_items)
+        new_items = diff["new_items"]
+        removed_items = diff["removed_items"]
+        price_changes = diff["price_changes"]
+        stock_changes = diff["stock_changes"]
+        restock_changes = diff["restock_changes"]
+        out_of_stock_changes = diff["out_of_stock_changes"]
         all_new_items = new_items
         all_removed_items = removed_items
         all_price_changes = price_changes
@@ -1524,12 +1475,13 @@ class App(tk.Tk):
                     current_keys = {make_item_key(it) for it in self.data}
                     prev_items = getattr(self, "prev_items", [])
                     prev_keys = getattr(self, "prev_keys", set())
-                    identity_cache = _build_identity_cache(self.data + prev_items)
-                    new_count = len({ _identity_key_cached(it, identity_cache) for it in self.data} - prev_keys)
-                    removed_keys = prev_keys - { _identity_key_cached(it, identity_cache) for it in self.data}
-                    removed_items = [dict(it, is_removed=True, is_new=False) for it in prev_items if _identity_key_cached(it, identity_cache) in removed_keys]
+                    diff = compute_diffs(self.data, prev_items)
+                    new_count = len(diff["new_items"])
+                    removed_items = diff["removed_items"]
                     removed_count = len(removed_items)
                     self.removed_data = removed_items
+                    self.price_up_count = diff["price_up"]
+                    self.price_down_count = diff["price_down"]
                     if not self.data:
                         self.error_count += 1
                         self._empty_retry_pending = True
@@ -1549,43 +1501,7 @@ class App(tk.Tk):
                     self._empty_retry_pending = False
                     self._update_tray_status()
                     self._update_last_scrape()
-                    stock_change_count = 0
-                    def _stock_is_out(stock, remaining):
-                        if remaining is not None:
-                            try:
-                                return float(remaining) <= 0
-                            except Exception:
-                                pass
-                        text = str(stock or '').upper()
-                        return 'OUT' in text
-                    def _stock_is_in(stock, remaining):
-                        if remaining is not None:
-                            try:
-                                return float(remaining) > 0
-                            except Exception:
-                                pass
-                        text = str(stock or '').upper()
-                        return ('IN STOCK' in text) or ('LOW STOCK' in text) or ('REMAINING' in text)
-                    prev_stock_map = {}
-                    prev_rem_map = {}
-                    for pit in prev_items:
-                        key = _identity_key_cached(pit, identity_cache)
-                        prev_stock_map[key] = pit.get("stock")
-                        prev_rem_map[key] = pit.get("stock_remaining")
-                    for it in self.data:
-                        key = _identity_key_cached(it, identity_cache)
-                        prev_stock = prev_stock_map.get(key)
-                        prev_rem = prev_rem_map.get(key)
-                        cur_stock = it.get("stock")
-                        cur_rem = it.get("stock_remaining")
-                        # mark restocks on items for export highlighting
-                        if _stock_is_out(prev_stock, prev_rem) and _stock_is_in(cur_stock, cur_rem):
-                            it["is_restock"] = True
-                        if prev_stock is not None and cur_stock is not None and str(prev_stock) != str(cur_stock):
-                            stock_change_count += 1
-                            continue
-                        if (prev_rem is not None or cur_rem is not None) and prev_rem != cur_rem:
-                            stock_change_count += 1
+                    stock_change_count = diff["stock_change_count"]
 
                     self.status.config(
                         text=(
@@ -1620,7 +1536,7 @@ class App(tk.Tk):
                         pass
                     # Update prev cache for next run after notifications are sent
                     self.prev_items = list(self.data)
-                    self.prev_keys = { _identity_key_cached(it, identity_cache) for it in self.data}
+                    self.prev_keys = diff.get("current_keys", set())
                     self._polling = False
                     return
         except Empty:
