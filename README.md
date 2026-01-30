@@ -87,6 +87,58 @@ Key features:
 - Payload includes new/removed items, price changes, and stock changes.
 - Quiet hours and summary/full detail are configurable.
 
+
+### Example Home Assistant automation
+```yaml
+- id: flowertrack_webhook
+  alias: FlowerTrack Webhook
+  mode: parallel
+  trigger:
+    - platform: webhook
+      webhook_id: flowertrack
+
+  variables:
+    new_msg: >
+      {% if trigger.json.new_item_summaries %}
+        New: {{ trigger.json.new_item_summaries | join(', ') }}
+      {% elif trigger.json.new_items %}
+        New: {{ trigger.json.new_items | join(', ') }}
+      {% else %}{{ '' }}{% endif %}
+    removed_msg: >
+      {% if trigger.json.removed_item_summaries %}
+        Removed: {{ trigger.json.removed_item_summaries | join(', ') }}
+      {% else %}{{ '' }}{% endif %}
+    price_msg: >
+      {% if trigger.json.price_change_summaries %}
+        Price: {{ trigger.json.price_change_summaries | join('; ') }}
+      {% else %}{{ '' }}{% endif %}
+    stock_msg: >
+      {% if trigger.json.stock_change_summaries %}
+        Stock: {{ trigger.json.stock_change_summaries | join('; ') }}
+      {% else %}{{ '' }}{% endif %}
+    restock_msg: >
+      {% if trigger.json.restock_change_summaries %}
+        Restock: {{ trigger.json.restock_change_summaries | join('; ') }}
+      {% else %}{{ '' }}{% endif %}
+    parts: >
+      {{ [new_msg, removed_msg, price_msg, stock_msg, restock_msg]
+         | reject('equalto','')
+         | reject('equalto', None)
+         | list }}
+    combined: >
+      {% if parts|length > 0 %}
+        {{ parts | join(' | ') }}
+      {% else %}
+        Payload: {{ trigger.json | tojson }}
+      {% endif %}
+
+  action:
+    - service: notify.mobile_app_pixel_9_pro_xl
+      data:
+        title: "FlowerTrack Update"
+        message: "{{ combined }}"
+```
+
 ## Desktop notifications
 - Enable "Send Windows desktop notifications" in scraper settings.
 - Uses win10toast for toasts.
