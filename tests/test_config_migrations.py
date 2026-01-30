@@ -48,6 +48,22 @@ class TestConfigMigrations(unittest.TestCase):
             self.assertFalse(library.get("dark_mode"))
             self.assertEqual(library.get("column_widths", {}).get("brand"), 140)
 
+    def test_legacy_files_are_renamed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            unified = root / "flowertrack_config.json"
+            unified.write_text("{}", encoding="utf-8")
+            legacy_tracker = root / "tracker_config.json"
+            legacy_scraper = root / "scraper_config.json"
+            legacy_library = root / "library_config.json"
+            legacy_tracker.write_text(json.dumps({"dark_mode": False}), encoding="utf-8")
+            legacy_scraper.write_text(json.dumps({"url": "https://example.test"}), encoding="utf-8")
+            legacy_library.write_text(json.dumps({"dark_mode": True}), encoding="utf-8")
+            load_unified_config(unified, decrypt_scraper_keys=[], write_back=True)
+            self.assertTrue(root.joinpath("tracker_config.json.migrated").exists())
+            self.assertTrue(root.joinpath("scraper_config.json.migrated").exists())
+            self.assertTrue(root.joinpath("library_config.json.migrated").exists())
+
 
 if __name__ == "__main__":
     unittest.main()
