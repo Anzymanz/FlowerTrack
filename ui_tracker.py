@@ -980,28 +980,64 @@ class CannabisTracker:
         self._prepare_toplevel(win)
     def _save_settings(self) -> None:
         try:
-            green = float(self.total_green_entry.get().strip())
-            red = float(self.total_red_entry.get().strip())
-            single_green = float(self.single_green_entry.get().strip())
-            single_red = float(self.single_red_entry.get().strip())
-            cbd_single_green = float(self.cbd_single_green_entry.get().strip())
-            cbd_single_red = float(self.cbd_single_red_entry.get().strip())
-            target_daily = float(self.daily_target_entry.get().strip())
-            target_daily_cbd = float(self.daily_target_cbd_entry.get().strip() or 0)
-            avg_usage_days = int(self.avg_usage_days_entry.get().strip() or 0)
+            def _parse_float(label: str, raw: str, allow_empty: bool = False, default: float = 0.0) -> float:
+                text = (raw or "").strip()
+                if not text:
+                    if allow_empty:
+                        return float(default)
+                    raise ValueError(f"{label} is required.")
+                try:
+                    value = float(text)
+                except Exception:
+                    raise ValueError(f"{label} must be a number.")
+                if value != value or value in (float("inf"), float("-inf")):
+                    raise ValueError(f"{label} must be a finite number.")
+                return value
+
+            def _parse_int(label: str, raw: str, allow_empty: bool = False, default: int = 0) -> int:
+                text = (raw or "").strip()
+                if not text:
+                    if allow_empty:
+                        return int(default)
+                    raise ValueError(f"{label} is required.")
+                try:
+                    value = int(float(text))
+                except Exception:
+                    raise ValueError(f"{label} must be an integer.")
+                return value
+
+            green = _parse_float("Total THC green threshold", self.total_green_entry.get())
+            red = _parse_float("Total THC red threshold", self.total_red_entry.get())
+            single_green = _parse_float("Single THC green threshold", self.single_green_entry.get())
+            single_red = _parse_float("Single THC red threshold", self.single_red_entry.get())
+            cbd_total_green = _parse_float("Total CBD green threshold", self.cbd_total_green_entry.get())
+            cbd_total_red = _parse_float("Total CBD red threshold", self.cbd_total_red_entry.get())
+            cbd_single_green = _parse_float("Single CBD green threshold", self.cbd_single_green_entry.get())
+            cbd_single_red = _parse_float("Single CBD red threshold", self.cbd_single_red_entry.get())
+            target_daily = _parse_float("Daily THC target", self.daily_target_entry.get())
+            target_daily_cbd = _parse_float(
+                "Daily CBD target",
+                self.daily_target_cbd_entry.get(),
+                allow_empty=True,
+                default=0.0,
+            )
+            avg_usage_days = _parse_int(
+                "Average usage days",
+                self.avg_usage_days_entry.get(),
+                allow_empty=True,
+                default=0,
+            )
             track_cbd_usage = bool(self.track_cbd_usage_var.get())
             enable_stock_coloring = bool(self.enable_stock_color_var.get())
             enable_usage_coloring = bool(self.enable_usage_color_var.get())
-            cbd_total_green = float(self.cbd_total_green_entry.get().strip())
-            cbd_total_red = float(self.cbd_total_red_entry.get().strip())
             roa_opts = {}
             for name, var in self.roa_vars.items():
-                val = float(var.get().strip())
+                val = _parse_float(f"{name} efficiency (%)", var.get())
                 if val < 0 or val > 100:
-                    raise ValueError
+                    raise ValueError(f"{name} efficiency must be 0-100%.")
                 roa_opts[name] = val / 100.0
-        except ValueError:
-            messagebox.showerror("Invalid input", "Thresholds must be numbers; efficiencies must be 0-100%.")
+        except ValueError as exc:
+            messagebox.showerror("Invalid input", str(exc))
             return
         if (
             green <= 0
