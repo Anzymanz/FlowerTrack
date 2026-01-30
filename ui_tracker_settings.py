@@ -171,26 +171,30 @@ def open_tracker_settings(app) -> None:
 
     ttk.Separator(frame, orient="horizontal").grid(row=sep_row + 6, column=0, columnspan=4, sticky="ew", pady=(10, 6))
     ttk.Label(frame, text="Window settings", font=app.font_bold_small).grid(row=sep_row + 7, column=0, sticky="w", pady=(0, 6))
+    app.dark_mode_check = ttk.Checkbutton(frame, text="Dark mode", variable=app.dark_var, command=app._toggle_theme)
+    app.dark_mode_check.grid(
+        row=sep_row + 8, column=0, columnspan=2, sticky="w"
+    )
     app.minimize_var = tk.BooleanVar(value=app.minimize_to_tray)
     app.close_var = tk.BooleanVar(value=app.close_to_tray)
     app.scraper_controls_var = tk.BooleanVar(value=getattr(app, 'show_scraper_buttons', True))
     app.scraper_status_icon_var = tk.BooleanVar(value=getattr(app, 'show_scraper_status_icon', True))
     app.scraper_controls_check = ttk.Checkbutton(frame, text="Show scraper controls", variable=app.scraper_controls_var)
     app.scraper_controls_check.grid(
-        row=sep_row + 8, column=0, columnspan=2, sticky="w"
+        row=sep_row + 9, column=0, columnspan=2, sticky="w"
     )
     app.scraper_status_icon_check = ttk.Checkbutton(frame, text="Show scraper status icon", variable=app.scraper_status_icon_var)
     app.scraper_status_icon_check.grid(
-        row=sep_row + 9, column=0, columnspan=2, sticky="w"
+        row=sep_row + 10, column=0, columnspan=2, sticky="w"
     )
 
     app.minimize_var_check = ttk.Checkbutton(frame, text="Minimize to tray when minimizing", variable=app.minimize_var)
     app.minimize_var_check.grid(
-        row=sep_row + 10, column=0, columnspan=2, sticky="w"
+        row=sep_row + 11, column=0, columnspan=2, sticky="w"
     )
     app.close_var_check = ttk.Checkbutton(frame, text="Minimize to tray when closing", variable=app.close_var)
     app.close_var_check.grid(
-        row=sep_row + 12, column=0, columnspan=2, sticky="w"
+        row=sep_row + 13, column=0, columnspan=2, sticky="w"
     )
 
     app.total_green_entry.insert(0, f"{app.total_green_threshold}")
@@ -238,6 +242,7 @@ def open_tracker_settings(app) -> None:
     app._bind_tooltip(app.scraper_status_icon_check, "Show the scraper status dot in the main window.")
     app._bind_tooltip(app.minimize_var_check, "Hide to system tray when minimizing if enabled.")
     app._bind_tooltip(app.close_var_check, "Hide to system tray when closing if enabled.")
+    app._bind_tooltip(app.dark_mode_check, "Toggle the tracker theme between dark and light.")
     for name, var in app.roa_vars.items():
         try:
             app._bind_tooltip(var, f"Efficiency percent used for {name.lower()} dosing.")
@@ -291,7 +296,7 @@ def open_tracker_settings(app) -> None:
         _bind_numeric_entry(entry, f"{name} efficiency (%)", min_value=0.0, max_value=100.0)
 
     ttk.Button(frame, text="Save", command=app._save_settings).grid(
-        row=sep_row + 12, column=2, columnspan=2, sticky="e", pady=(4, 0)
+        row=sep_row + 13, column=2, columnspan=2, sticky="e", pady=(4, 0)
     )
     # Place after layout to avoid resize flash
     app._prepare_toplevel(win)
