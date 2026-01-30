@@ -1542,48 +1542,6 @@ class App(tk.Tk):
                     self._stage_notify(diff, len(parsed_items))
                     self._stage_persist(diff, parsed_items)
                     return
-                    self.error_count = 0
-                    self._empty_retry_pending = False
-                    self._update_tray_status()
-                    self._update_last_scrape()
-                    stock_change_count = diff["stock_change_count"]
-
-                    self.status.config(
-                        text=(
-                            f"Done | {len(self.data)} items | "
-                            f"+{new_count} new | -{removed_count} removed | "
-                            f"{self.price_up_count} price increases | {self.price_down_count} price decreases | "
-                            f"{stock_change_count} stock changes"
-                        )
-                    )
-                    self._log_console(
-                        f"Done | {len(self.data)} items | +{new_count} new | -{removed_count} removed | "
-                        f"{self.price_up_count} price increases | {self.price_down_count} price decreases | "
-                        f"{stock_change_count} stock changes"
-                    )
-                    if (
-                        new_count == 0
-                        and removed_count == 0
-                        and self.price_up_count == 0
-                        and self.price_down_count == 0
-                        and stock_change_count == 0
-                    ):
-                        self._capture_log("No changes detected; skipping notifications.")
-                    self._post_process_actions()
-                    try:
-                        save_last_parse(LAST_PARSE_FILE, self.data)
-                        self._capture_log(f"Saved last parse to {LAST_PARSE_FILE}")
-                    except Exception as exc:
-                        self._capture_log(f"Failed to save last parse: {exc}")
-                    try:
-                        self._set_next_capture_timer(float(self.cap_interval.get() or 0))
-                    except Exception:
-                        pass
-                    # Update prev cache for next run after notifications are sent
-                    self.prev_items = list(self.data)
-                    self.prev_keys = diff.get("current_keys", set())
-                    self._polling = False
-                    return
         except Empty:
             pass
         if self._polling:
