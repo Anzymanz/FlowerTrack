@@ -1210,7 +1210,7 @@ class App(tk.Tk):
             self._log_console(f"Test notification error: status={status} body={str(body)[:200] if body else ''}")
             messagebox.showerror("Home Assistant", f"Test notification failed:\nstatus={status}\nbody={body}")
         # Also send a Windows test notification if enabled
-        if notify_allowed and (not quiet_hours) and self.notify_windows.get():
+        if (not quiet_hours) and self.notify_windows.get():
             icon_path = ASSETS_DIR / "icon.ico"
             self._log_console("Sending Windows test notification.")
             test_body = (
@@ -1218,20 +1218,20 @@ class App(tk.Tk):
                 "New: Alpha Kush, Beta OG | Removed: None | Price: Gamma Glue GBP 2.50; Delta Dream GBP 1.00 | "
                 "Stock: Zeta Zen: 10 -> 8"
             )
-            launch_url = self.cap_url.get().strip() if hasattr(self, 'cap_url') else ''
-        if not launch_url:
-            try:
-                launch_url = self._latest_export_url()
-            except Exception:
-                launch_url = None
-            if launch_url is None:
+            launch_url = self.cap_url.get().strip() if hasattr(self, "cap_url") else ""
+            if not launch_url:
                 try:
-                    data = self._get_export_items()
-                    if data:
-                        self._generate_change_export(data)
-                        launch_url = self._latest_export_url()
+                    launch_url = self._latest_export_url()
                 except Exception:
                     launch_url = None
+                if launch_url is None:
+                    try:
+                        data = self._get_export_items()
+                        if data:
+                            self._generate_change_export(data)
+                            launch_url = self._latest_export_url()
+                    except Exception:
+                        launch_url = None
             _maybe_send_windows_notification("Medicann test", test_body, icon_path, launch_url=launch_url)
     def open_exports_folder(self):
         messagebox.showinfo("Exports", "Exports disabled; only HA notifications and local cache remain.")
