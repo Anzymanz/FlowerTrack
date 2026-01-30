@@ -533,5 +533,9 @@ def cleanup_html_exports(exports_dir: Optional[Path] = None, max_files: int = 20
                 old.unlink()
             except Exception:
                 pass
-    except Exception:
-        pass
+    except Exception as exc:
+        try:
+            stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print(f"[{stamp}] cleanup_html_exports failed: {exc}")
+        except Exception:
+            pass
