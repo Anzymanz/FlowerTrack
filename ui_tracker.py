@@ -355,18 +355,7 @@ class CannabisTracker:
         log_btn = ttk.Button(dose_frame, text="Log Dose", command=self.log_dose)
         log_btn.grid(row=1, column=3)
         ttk.Button(dose_frame, text="Mixed dose", command=self.launch_mix_calculator).grid(row=1, column=4, padx=(8, 0))
-        note_text = (
-            f"THC/CBD estimates based on flower THC/CBD and RoA "
-            f"(vaped {self.roa_options.get('Vaped',0)*100:.0f}%, "
-            f"smoked {self.roa_options.get('Smoked',0)*100:.0f}%, "
-            f"eaten {self.roa_options.get('Eaten',0)*100:.0f}%)."
-        )
-        self.note_label = ttk.Label(
-            dose_frame,
-            text=note_text,
-            foreground="#444",
-        )
-        self.note_label.grid(row=2, column=0, columnspan=3, sticky="w", pady=(6, 0))
+        self.note_label = None
         self.remaining_today_label = ttk.Label(
             dose_frame, text="Remaining today (THC): 0.00 g", font=self.font_bold_mid
         )
@@ -410,6 +399,7 @@ class CannabisTracker:
         self.log_tree.column("cbd_mg", width=70, anchor="center")
         self.log_tree.column("remaining", width=110, anchor="center")
         self.log_tree.grid(row=2, column=0, sticky="nsew")
+        self._bind_log_thc_cbd_tooltip()
         self._bind_tree_resize(self.log_tree, "log_column_widths")
         log_scroll = ttk.Scrollbar(
             log_frame, orient="vertical", command=self.log_tree.yview, style=self.vscroll_style
@@ -1086,11 +1076,6 @@ class CannabisTracker:
                 _save_capture_config(cap_cfg)
             except Exception:
                 pass
-        # Update note to reflect efficiencies
-        self.note_label.config(
-            text=f"THC/CBD estimates based on flower and RoA (vaped {self.roa_options.get('Vaped',0)*100:.0f}%, "
-            f"smoked {self.roa_options.get('Smoked',0)*100:.0f}%, eaten {self.roa_options.get('Eaten',0)*100:.0f}%)."
-        )
         # Refresh ROA dropdowns
         values = list(self.roa_options.keys())
         self.roa_choice["values"] = values
@@ -1708,11 +1693,7 @@ class CannabisTracker:
                 self.roa_options = {k: float(v) for k, v in cfg["roa_options"].items()}
             except Exception:
                 pass
-        if hasattr(self, "note_label"):
-            self.note_label.config(
-                text=f"THC/CBD estimates based on flower and RoA (vaped {self.roa_options.get('Vaped',0)*100:.0f}%, "
-                f"smoked {self.roa_options.get('Smoked',0)*100:.0f}%, eaten {self.roa_options.get('Eaten',0)*100:.0f}%)."
-            )
+        # note_label removed; tooltip now handles THC/CBD estimate messaging
         self.window_geometry = cfg.get("window_geometry", "") or self.window_geometry
         if isinstance(cfg.get("stock_column_widths"), dict):
             self.stock_column_widths = {k: int(v) for k, v in cfg["stock_column_widths"].items()}
@@ -2040,6 +2021,27 @@ class CannabisTracker:
     def _bind_tooltip(self, widget: tk.Widget, text: str) -> None:
         widget.bind("<Enter>", lambda e: self._show_tooltip(text, e))
         widget.bind("<Leave>", lambda e: self._hide_tooltip())
+    def _bind_log_thc_cbd_tooltip(self) -> None:
+        if not hasattr(self, "log_tree"):
+            return
+        message = (
+            "THC/CBD values are estimates based on flower potency and selected RoA efficiency."
+        )
+        def on_motion(event):
+            try:
+                region = self.log_tree.identify_region(event.x, event.y)
+                if region != "heading":
+                    self._hide_tooltip()
+                    return
+                col = self.log_tree.identify_column(event.x)
+                if col in ("#5", "#6"):
+                    self._show_tooltip(message, event)
+                else:
+                    self._hide_tooltip()
+            except Exception:
+                pass
+        self.log_tree.bind("<Motion>", on_motion)
+        self.log_tree.bind("<Leave>", lambda e: self._hide_tooltip())
     # --- Tray helpers ---
     def _stop_tray_icon(self) -> None:
         try:
