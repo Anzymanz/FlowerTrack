@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.21
+- Added stock change count to the summary log line.
 - Highlighted restocked items in the web view and color-coded stock pills by increase/decrease.
 - Fixed scraper pagination retry handling to avoid applying partial captures when page fetches fail.
 - Added optional restock notifications when items return from out of stock.
