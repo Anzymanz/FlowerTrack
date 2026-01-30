@@ -6,6 +6,7 @@ import urllib.request
 from pathlib import Path
 from typing import Callable, Optional
 import threading
+import webbrowser
 
 _WIN_TOAST_FAILED = False
 
@@ -30,11 +31,15 @@ def _maybe_send_windows_notification(
     launch_url is accepted for API compatibility but ignored (win10toast limitation).
     """
     try:
+        from win10toast_click import ToastNotifier as Win10ToastClickNotifier  # type: ignore
+    except Exception:
+        Win10ToastClickNotifier = None
+    try:
         from win10toast import ToastNotifier as Win10ToastNotifier  # type: ignore
     except Exception:
         Win10ToastNotifier = None
     icon_path = str(icon.resolve()) if icon and icon.exists() else None
-    if Win10ToastNotifier is None:
+    if Win10ToastClickNotifier is None and Win10ToastNotifier is None:
         _log_debug("[toast] win10toast not installed.")
         if ui_logger:
             try:
@@ -48,10 +53,25 @@ def _maybe_send_windows_notification(
     def _send():
         nonlocal icon_path
         try:
-            notifier = Win10ToastNotifier()
-            # Use threaded=False to avoid win10toast internal thread errors.
-            notifier.show_toast(title, body, icon_path=icon_path, duration=8, threaded=False)
-            _log_debug(f"[toast] sent via win10toast: {title} | {body} (icon={icon_path})")
+            callback = None
+            if launch_url:
+                callback = lambda: webbrowser.open(launch_url)
+            if Win10ToastClickNotifier is not None:
+                notifier = Win10ToastClickNotifier()
+                notifier.show_toast(
+                    title,
+                    body,
+                    icon_path=icon_path,
+                    duration=8,
+                    threaded=False,
+                    callback_on_click=callback,
+                )
+                _log_debug(f"[toast] sent via win10toast-click: {title} | {body} (icon={icon_path})")
+            else:
+                notifier = Win10ToastNotifier()
+                # Use threaded=False to avoid win10toast internal thread errors.
+                notifier.show_toast(title, body, icon_path=icon_path, duration=8, threaded=False)
+                _log_debug(f"[toast] sent via win10toast: {title} | {body} (icon={icon_path})")
             if ui_logger:
                 try:
                     ui_logger(f"[toast] sent via win10toast: {title}")
