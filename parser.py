@@ -226,6 +226,8 @@ def parse_api_payloads(payloads: Iterable[dict]) -> list[ItemDict]:
         data = payload.get("data")
         if "formulary-products" not in url:
             continue
+        if isinstance(data, dict):
+            data = data.get("items") or data.get("data") or data.get("results")
         if not isinstance(data, list):
             continue
         for entry in data:
