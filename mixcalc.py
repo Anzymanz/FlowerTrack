@@ -25,7 +25,6 @@ def resolve_tracker_file() -> Path:
         pass
     return DATA_DIR / "tracker_data.json"
 
-TRACKER_FILE = resolve_tracker_file()
 LAST_PARSE_FILE = DATA_DIR / "last_parse.json"
 
 
@@ -46,8 +45,9 @@ def load_roa_options():
 def load_tracker_flowers() -> list[dict]:
     """Return flowers from tracker data with grams_remaining > 0."""
     try:
-        if TRACKER_FILE.exists():
-            data = json.loads(TRACKER_FILE.read_text(encoding="utf-8"))
+        tracker_file = resolve_tracker_file()
+        if tracker_file.exists():
+            data = json.loads(tracker_file.read_text(encoding="utf-8"))
             flowers = data.get("flowers")
             if isinstance(flowers, list):
                 return [f for f in flowers if float(f.get("grams_remaining", 0) or 0) > 0]
