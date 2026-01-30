@@ -16,6 +16,18 @@ class StorageStateTests(unittest.TestCase):
             loaded = load_last_parse(path)
             self.assertEqual(loaded, items)
 
+    def test_last_parse_backup_restore(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "last_parse.json"
+            items = [{"id": 3}]
+            save_last_parse(path, items)
+            save_last_parse(path, items)
+            backup = path.with_suffix(path.suffix + ".bak")
+            self.assertTrue(backup.exists())
+            path.write_text("{bad json", encoding="utf-8")
+            loaded = load_last_parse(path)
+            self.assertEqual(loaded, items)
+
     def test_last_change_roundtrip(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "last_change.txt"
@@ -39,6 +51,17 @@ class StorageStateTests(unittest.TestCase):
             data = read_scraper_state(path)
             self.assertEqual(data.get("status"), "stopped")
             self.assertNotIn("last_change", data)
+
+    def test_scraper_state_backup_restore(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "scraper_state.json"
+            write_scraper_state(path, status="running", pid=123)
+            write_scraper_state(path, status="running", pid=123)
+            backup = path.with_suffix(path.suffix + ".bak")
+            self.assertTrue(backup.exists())
+            path.write_text("{bad json", encoding="utf-8")
+            data = read_scraper_state(path)
+            self.assertEqual(data.get("status"), "running")
 
 
 if __name__ == "__main__":

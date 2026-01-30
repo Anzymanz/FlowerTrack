@@ -3,6 +3,7 @@ from __future__ import annotations
 import ctypes
 import json
 import os
+import shutil
 import time
 from datetime import datetime
 from pathlib import Path
@@ -29,8 +30,49 @@ def _log_state_error(message: str) -> None:
 def _atomic_write_json(path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
+    if path.exists():
+        try:
+            shutil.copy2(path, path.with_suffix(path.suffix + ".bak"))
+        except Exception as exc:
+            _log_state_error(f"backup failed for {path}: {exc}")
     tmp.write_text(json.dumps(payload), encoding="utf-8")
     tmp.replace(path)
+
+
+def _read_text_with_backup(path) -> str | None:
+    try:
+        if path.exists():
+            return path.read_text(encoding="utf-8")
+    except Exception as exc:
+        _log_state_error(f"read failed for {path}: {exc}")
+    backup = path.with_suffix(path.suffix + ".bak")
+    if backup.exists():
+        try:
+            text = backup.read_text(encoding="utf-8")
+            _log_state_error(f"restored from backup for {path}")
+            return text
+        except Exception as exc:
+            _log_state_error(f"backup read failed for {backup}: {exc}")
+    return None
+
+
+def _read_json_with_backup(path) -> dict | None:
+    raw = _read_text_with_backup(path)
+    if raw is None:
+        return None
+    try:
+        return json.loads(raw)
+    except Exception as exc:
+        _log_state_error(f"json decode failed for {path}: {exc}")
+    backup = path.with_suffix(path.suffix + ".bak")
+    if backup.exists():
+        try:
+            data = json.loads(backup.read_text(encoding="utf-8"))
+            _log_state_error(f"restored json from backup for {path}")
+            return data
+        except Exception as exc:
+            _log_state_error(f"backup json decode failed for {backup}: {exc}")
+    return None
 
 
 STATUS_RUNNING = {"running", "retrying"}
@@ -60,10 +102,9 @@ def _pid_running(pid: int | None) -> bool:
 
 def read_scraper_state(path) -> dict:
     try:
-        if path.exists():
-            data = json.loads(path.read_text(encoding="utf-8"))
-            if isinstance(data, dict):
-                return data
+        data = _read_json_with_backup(path)
+        if isinstance(data, dict):
+            return data
     except Exception as exc:
         _log_state_error(f"read_scraper_state failed: {exc}")
     return {}
