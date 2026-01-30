@@ -1,6 +1,29 @@
 from __future__ import annotations
 
+import ctypes
+import json
+import os
+import time
+from datetime import datetime
+from pathlib import Path
+from typing import Tuple
 
+
+def _log_state_error(message: str) -> None:
+    stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    line = f"[{stamp}] {message}"
+    try:
+        print(line)
+    except Exception:
+        pass
+    try:
+        appdata = Path(os.getenv("APPDATA", os.path.expanduser("~")))
+        path = appdata / "FlowerTrack" / "logs" / "scraper_state_errors.log"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as fh:
+            fh.write(line + "\n")
+    except Exception:
+        pass
 
 
 def _atomic_write_json(path, payload: dict) -> None:
@@ -8,11 +31,6 @@ def _atomic_write_json(path, payload: dict) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(payload), encoding="utf-8")
     tmp.replace(path)
-import json
-import os
-import time
-import ctypes
-from typing import Tuple
 
 
 STATUS_RUNNING = {"running", "retrying"}
@@ -46,8 +64,8 @@ def read_scraper_state(path) -> dict:
             data = json.loads(path.read_text(encoding="utf-8"))
             if isinstance(data, dict):
                 return data
-    except Exception:
-        pass
+    except Exception as exc:
+        _log_state_error(f"read_scraper_state failed: {exc}")
     return {}
 
 def update_scraper_state(path, **updates) -> None:
@@ -59,8 +77,8 @@ def update_scraper_state(path, **updates) -> None:
             else:
                 payload[key] = value
         _atomic_write_json(path, payload)
-    except Exception:
-        pass
+    except Exception as exc:
+        _log_state_error(f"update_scraper_state failed: {exc}")
 
 def get_last_change(path) -> str | None:
     value = read_scraper_state(path).get("last_change")
@@ -86,8 +104,8 @@ def write_scraper_state(path, status: str | None = None, pid: int | None = None,
         if last_scrape is not None:
             payload["last_scrape"] = str(last_scrape)
         _atomic_write_json(path, payload)
-    except Exception:
-        pass
+    except Exception as exc:
+        _log_state_error(f"write_scraper_state failed: {exc}")
 
 
 def resolve_scraper_status(child_procs, path) -> Tuple[bool, bool]:

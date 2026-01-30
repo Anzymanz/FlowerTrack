@@ -15,8 +15,8 @@ from typing import Any
 def ensure_dir(path: Path) -> None:
     try:
         Path(path).mkdir(parents=True, exist_ok=True)
-    except Exception:
-        pass
+    except Exception as exc:
+        _log_config_error(f"ensure_dir failed: {exc}")
 
 
 def encrypt_secret(value: str) -> str:
@@ -174,8 +174,8 @@ def _read_json(path: Path) -> dict:
             data = json.loads(path.read_text(encoding="utf-8"))
             if isinstance(data, dict):
                 return data
-    except Exception:
-        pass
+    except Exception as exc:
+        _log_config_error(f"read_json failed for {path}: {exc}")
     return {}
 
 

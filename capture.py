@@ -132,7 +132,12 @@ class CaptureWorker:
                 try:
                     cb(self.status, msg)
                 except Exception:
-                    pass
+                    try:
+                        self.callbacks.get("capture_log", lambda m: None)(
+                            f"Status callback failed for {self.status}"
+                        )
+                    except Exception:
+                        pass
 
     def start(self) -> threading.Thread:
         self.thread = threading.Thread(target=self._run, daemon=True)
@@ -670,7 +675,12 @@ class CaptureWorker:
                 try:
                     on_stop()
                 except Exception:
-                    pass
+                    try:
+                        self.callbacks.get("capture_log", lambda m: None)(
+                            "Capture on_stop callback failed."
+                        )
+                    except Exception:
+                        pass
 
 
 def ensure_playwright_installed(app_dir: Path, log: Callable[[str], None]) -> Optional[tuple]:
