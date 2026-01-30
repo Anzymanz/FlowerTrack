@@ -28,6 +28,19 @@ class StorageStateTests(unittest.TestCase):
             loaded = load_last_parse(path)
             self.assertEqual(loaded, items)
 
+    def test_last_change_uses_backup_when_tmp_present(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "last_change.txt"
+            save_last_change(path, "change")
+            save_last_change(path, "change")
+            backup = path.with_suffix(path.suffix + ".bak")
+            self.assertTrue(backup.exists())
+            tmp_path = path.with_suffix(path.suffix + ".tmp")
+            tmp_path.write_text("tmp-only", encoding="utf-8")
+            path.write_bytes(b"\xff")
+            loaded = load_last_change(path)
+            self.assertEqual(loaded, "change")
+
     def test_last_change_roundtrip(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "last_change.txt"
@@ -59,6 +72,17 @@ class StorageStateTests(unittest.TestCase):
             write_scraper_state(path, status="running", pid=123)
             backup = path.with_suffix(path.suffix + ".bak")
             self.assertTrue(backup.exists())
+            path.write_text("{bad json", encoding="utf-8")
+            data = read_scraper_state(path)
+            self.assertEqual(data.get("status"), "running")
+
+    def test_scraper_state_backup_with_tmp(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "scraper_state.json"
+            write_scraper_state(path, status="running", pid=123)
+            write_scraper_state(path, status="running", pid=123)
+            tmp_path = path.with_suffix(path.suffix + ".tmp")
+            tmp_path.write_text("{\"status\": \"tmp\"}", encoding="utf-8")
             path.write_text("{bad json", encoding="utf-8")
             data = read_scraper_state(path)
             self.assertEqual(data.get("status"), "running")
