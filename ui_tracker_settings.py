@@ -131,13 +131,16 @@ def open_tracker_settings(app) -> None:
         row=15, column=0, sticky="w", pady=(10, 6)
     )
     app.roa_vars: dict[str, tk.StringVar] = {}
+    app.roa_entries: dict[str, ttk.Entry] = {}
     roa_row = 16
     for idx, (name, eff) in enumerate(app.roa_options.items()):
         ttk.Label(frame, text=name).grid(row=roa_row + idx, column=0, sticky="w", pady=(2, 0))
         var = tk.StringVar(value=f"{eff*100:.0f}")
         app.roa_vars[name] = var
         rf = ttk.Frame(frame)
-        ttk.Entry(rf, textvariable=var, width=4).pack(side="left", padx=(0, 2))
+        entry = ttk.Entry(rf, textvariable=var, width=4)
+        entry.pack(side="left", padx=(0, 2))
+        app.roa_entries[name] = entry
         ttk.Label(rf, text="%").pack(side="left")
         rf.grid(row=roa_row + idx, column=1, sticky="w", padx=(12, 0))
 
@@ -240,6 +243,52 @@ def open_tracker_settings(app) -> None:
             app._bind_tooltip(var, f"Efficiency percent used for {name.lower()} dosing.")
         except Exception:
             pass
+
+    def _bind_numeric_entry(entry: ttk.Entry, label: str, min_value: float | None = None, max_value: float | None = None, integer: bool = False) -> None:
+        fallback = entry.get().strip()
+
+        def on_focus_out(_event=None):
+            raw = entry.get().strip()
+            if not raw:
+                messagebox.showerror("Invalid input", f"{label} cannot be empty.")
+                entry.delete(0, tk.END)
+                entry.insert(0, fallback)
+                return
+            try:
+                value = float(raw)
+                if integer and int(value) != value:
+                    raise ValueError
+            except Exception:
+                messagebox.showerror("Invalid input", f"{label} must be a {'whole number' if integer else 'number'}.")
+                entry.delete(0, tk.END)
+                entry.insert(0, fallback)
+                return
+            if min_value is not None and value < min_value:
+                messagebox.showerror("Invalid input", f"{label} must be at least {min_value}.")
+                entry.delete(0, tk.END)
+                entry.insert(0, fallback)
+                return
+            if max_value is not None and value > max_value:
+                messagebox.showerror("Invalid input", f"{label} must be at most {max_value}.")
+                entry.delete(0, tk.END)
+                entry.insert(0, fallback)
+                return
+
+        entry.bind("<FocusOut>", on_focus_out)
+
+    _bind_numeric_entry(app.total_green_entry, "THC total stock high threshold", min_value=0.0)
+    _bind_numeric_entry(app.total_red_entry, "THC total stock low threshold", min_value=0.0)
+    _bind_numeric_entry(app.cbd_total_green_entry, "CBD total stock high threshold", min_value=0.0)
+    _bind_numeric_entry(app.cbd_total_red_entry, "CBD total stock low threshold", min_value=0.0)
+    _bind_numeric_entry(app.single_green_entry, "THC individual stock high threshold", min_value=0.0)
+    _bind_numeric_entry(app.single_red_entry, "THC individual stock low threshold", min_value=0.0)
+    _bind_numeric_entry(app.cbd_single_green_entry, "CBD individual stock high threshold", min_value=0.0)
+    _bind_numeric_entry(app.cbd_single_red_entry, "CBD individual stock low threshold", min_value=0.0)
+    _bind_numeric_entry(app.daily_target_entry, "Daily THC target", min_value=0.0)
+    _bind_numeric_entry(app.daily_target_cbd_entry, "Daily CBD target", min_value=0.0)
+    _bind_numeric_entry(app.avg_usage_days_entry, "Average usage window (days)", min_value=0.0, integer=True)
+    for name, entry in app.roa_entries.items():
+        _bind_numeric_entry(entry, f"{name} efficiency (%)", min_value=0.0, max_value=100.0)
 
     ttk.Button(frame, text="Save", command=app._save_settings).grid(
         row=sep_row + 12, column=2, columnspan=2, sticky="e", pady=(4, 0)
