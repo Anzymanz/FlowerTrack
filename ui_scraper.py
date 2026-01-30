@@ -1500,19 +1500,6 @@ class App(tk.Tk):
                         self.progress['value'] = idx
                     except Exception:
                         pass
-                    self.status.config(
-                        text=(
-                            f"Done | {len(self.data)} items | "
-                            f"+{new_count} new | -{removed_count} removed | "
-                            f"{self.price_up_count} price increases | {self.price_down_count} price decreases | "
-                            f"{stock_change_count} stock changes"
-                        )
-                    )
-                    self._log_console(
-                        f"Done | {len(self.data)} items | +{new_count} new | -{removed_count} removed | "
-                        f"{self.price_up_count} price increases | {self.price_down_count} price decreases | "
-                        f"{stock_change_count} stock changes"
-                    )
                 elif msg[0] == "error":
                     _, err = msg
                     self.progress.stop()
@@ -1523,19 +1510,6 @@ class App(tk.Tk):
                         self.progress['value'] = self.progress['maximum']
                     except Exception:
                         pass
-                    self.status.config(
-                        text=(
-                            f"Done | {len(self.data)} items | "
-                            f"+{new_count} new | -{removed_count} removed | "
-                            f"{self.price_up_count} price increases | {self.price_down_count} price decreases | "
-                            f"{stock_change_count} stock changes"
-                        )
-                    )
-                    self._log_console(
-                        f"Done | {len(self.data)} items | +{new_count} new | -{removed_count} removed | "
-                        f"{self.price_up_count} price increases | {self.price_down_count} price decreases | "
-                        f"{stock_change_count} stock changes"
-                    )
                     # Recompute price change counts from current data to ensure status reflects deltas
                     up = down = 0
                     for it in self.data:
@@ -1576,45 +1550,43 @@ class App(tk.Tk):
                     self._update_tray_status()
                     self._update_last_scrape()
                     stock_change_count = 0
-                    try:
-                        prev_stock_map = {}
-                        prev_rem_map = {}
-                        for pit in prev_items:
-                            key = _identity_key_cached(pit, identity_cache)
-                            prev_stock_map[key] = pit.get("stock")
-                            prev_rem_map[key] = pit.get("stock_remaining")
-                        def _stock_is_out(stock, remaining):
-                            if remaining is not None:
-                                try:
-                                    return float(remaining) <= 0
-                                except Exception:
-                                    pass
-                            text = str(stock or '').upper()
-                            return 'OUT' in text
-                        def _stock_is_in(stock, remaining):
-                            if remaining is not None:
-                                try:
-                                    return float(remaining) > 0
-                                except Exception:
-                                    pass
-                            text = str(stock or '').upper()
-                            return ('IN STOCK' in text) or ('LOW STOCK' in text) or ('REMAINING' in text)
-                        for it in self.data:
-                            key = _identity_key_cached(it, identity_cache)
-                            prev_stock = prev_stock_map.get(key)
-                            prev_rem = prev_rem_map.get(key)
-                            cur_stock = it.get("stock")
-                            cur_rem = it.get("stock_remaining")
-                            # mark restocks on items for export highlighting
-                            if _stock_is_out(prev_stock, prev_rem) and _stock_is_in(cur_stock, cur_rem):
-                                it["is_restock"] = True
-                            if prev_stock is not None and cur_stock is not None and str(prev_stock) != str(cur_stock):
-                                stock_change_count += 1
-                                continue
-                            if (prev_rem is not None or cur_rem is not None) and prev_rem != cur_rem:
-                                stock_change_count += 1
-                    except Exception:
-                        pass
+                    def _stock_is_out(stock, remaining):
+                        if remaining is not None:
+                            try:
+                                return float(remaining) <= 0
+                            except Exception:
+                                pass
+                        text = str(stock or '').upper()
+                        return 'OUT' in text
+                    def _stock_is_in(stock, remaining):
+                        if remaining is not None:
+                            try:
+                                return float(remaining) > 0
+                            except Exception:
+                                pass
+                        text = str(stock or '').upper()
+                        return ('IN STOCK' in text) or ('LOW STOCK' in text) or ('REMAINING' in text)
+                    prev_stock_map = {}
+                    prev_rem_map = {}
+                    for pit in prev_items:
+                        key = _identity_key_cached(pit, identity_cache)
+                        prev_stock_map[key] = pit.get("stock")
+                        prev_rem_map[key] = pit.get("stock_remaining")
+                    for it in self.data:
+                        key = _identity_key_cached(it, identity_cache)
+                        prev_stock = prev_stock_map.get(key)
+                        prev_rem = prev_rem_map.get(key)
+                        cur_stock = it.get("stock")
+                        cur_rem = it.get("stock_remaining")
+                        # mark restocks on items for export highlighting
+                        if _stock_is_out(prev_stock, prev_rem) and _stock_is_in(cur_stock, cur_rem):
+                            it["is_restock"] = True
+                        if prev_stock is not None and cur_stock is not None and str(prev_stock) != str(cur_stock):
+                            stock_change_count += 1
+                            continue
+                        if (prev_rem is not None or cur_rem is not None) and prev_rem != cur_rem:
+                            stock_change_count += 1
+
                     self.status.config(
                         text=(
                             f"Done | {len(self.data)} items | "
@@ -1646,19 +1618,6 @@ class App(tk.Tk):
                         self._set_next_capture_timer(float(self.cap_interval.get() or 0))
                     except Exception:
                         pass
-                    self.status.config(
-                        text=(
-                            f"Done | {len(self.data)} items | "
-                            f"+{new_count} new | -{removed_count} removed | "
-                            f"{self.price_up_count} price increases | {self.price_down_count} price decreases | "
-                            f"{stock_change_count} stock changes"
-                        )
-                    )
-                    self._log_console(
-                        f"Done | {len(self.data)} items | +{new_count} new | -{removed_count} removed | "
-                        f"{self.price_up_count} price increases | {self.price_down_count} price decreases | "
-                        f"{stock_change_count} stock changes"
-                    )
                     # Update prev cache for next run after notifications are sent
                     self.prev_items = list(self.data)
                     self.prev_keys = { _identity_key_cached(it, identity_cache) for it in self.data}
@@ -1933,19 +1892,6 @@ class App(tk.Tk):
                         widget.configure(**{opt: val})
                     except Exception:
                         pass
-                    self.status.config(
-                        text=(
-                            f"Done | {len(self.data)} items | "
-                            f"+{new_count} new | -{removed_count} removed | "
-                            f"{self.price_up_count} price increases | {self.price_down_count} price decreases | "
-                            f"{stock_change_count} stock changes"
-                        )
-                    )
-                    self._log_console(
-                        f"Done | {len(self.data)} items | +{new_count} new | -{removed_count} removed | "
-                        f"{self.price_up_count} price increases | {self.price_down_count} price decreases | "
-                        f"{stock_change_count} stock changes"
-                    )
             for child in widget.winfo_children():
                 self._apply_theme_recursive(child, bg, fg, ctrl_bg, accent, dark)
         except Exception:
