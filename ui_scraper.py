@@ -352,7 +352,6 @@ class App(tk.Tk):
             messagebox.showerror("Settings", f"Could not open settings:\n{exc}")
 
     def _capture_log(self, msg: str):
-        _log_debug(f"[capture] {msg}")
         if hasattr(self, "logger") and self.logger:
             self.logger.info(msg)
         else:

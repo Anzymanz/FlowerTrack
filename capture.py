@@ -72,6 +72,14 @@ class RetryPolicy:
         return base_interval * factor
 
 
+
+
+# Pagination helper for testability
+def pagination_is_complete(data_list, total, pagination_failed) -> bool:
+    if pagination_failed and total and isinstance(data_list, list) and len(data_list) < total:
+        return False
+    return True
+
 class CaptureCallbacks(TypedDict, total=False):
     capture_log: Callable[[str], None]
     apply_text: Callable[[str], None]
@@ -529,7 +537,7 @@ class CaptureWorker:
                                                     break
                                 except Exception:
                                     pass
-                                if pagination_failed and total and isinstance(data_list, list) and len(data_list) < total:
+                                if not pagination_is_complete(data_list, total, pagination_failed):
                                     try:
                                         self.callbacks["capture_log"]("Pagination incomplete; skipping apply to avoid partial capture.")
                                     except Exception:

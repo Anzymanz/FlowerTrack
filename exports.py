@@ -161,6 +161,83 @@ def build_launch_url(producer: str | None, strain: str | None) -> str:
     """Reusable launcher URL for search links."""
     return get_google_medicann_link(producer or '', strain)
 
+def _render_card_html(
+    *,
+    it: dict,
+    card_classes: str,
+    price_border_class: str,
+    data_price_attr: str,
+    data_thc_attr: str,
+    data_cbd_attr: str,
+    brand: str,
+    stock_text: str,
+    card_key: str,
+    fav_key: str,
+    is_out: bool,
+    image_html: str,
+    type_icon_dark: str | None,
+    type_icon_light: str | None,
+    strain_badge_src: str | None,
+    price_badge: str,
+    heading_html: str,
+    qty: str,
+    price_pill: str,
+    stock_pill: str,
+    ppg: float | None,
+    disp_thc: str,
+    disp_cbd: str,
+) -> str:
+    return f"""
+    <div class='{card_classes}{price_border_class}' style='position:relative;'
+          data-price='{esc_attr(data_price_attr)}'
+      data-thc='{esc_attr(data_thc_attr)}'
+      data-cbd='{esc_attr(data_cbd_attr)}'
+      data-pt='{esc_attr((it.get('product_type') or '').lower())}'
+      data-strain-type='{esc_attr(it.get('strain_type') or '')}'
+      data-strain='{esc_attr(it.get("strain") or '')}'
+      data-brand='{esc_attr(brand or '')}'
+      data-producer='{esc_attr(it.get('producer') or '')}'
+      data-product-id='{esc_attr(it.get("product_id") or '')}'
+      data-stock='{esc_attr(stock_text)}'
+      data-key='{esc_attr(card_key)}'
+      data-favkey='{esc_attr(fav_key)}'
+      data-smalls='{1 if it.get("is_smalls") else 0}'
+      data-removed='{1 if it.get("is_removed") else 0}'
+      data-out='{1 if is_out else 0}'>
+    <button class='fav-btn' onclick='toggleFavorite(this)' title='Favorite this item'>★</button>
+    {image_html if image_html else ("<img class='type-badge' data-theme-icon='dark' src='" + esc_attr(type_icon_dark) + "' alt='" + esc_attr(it.get('product_type') or '') + "' />") if type_icon_dark else ""}
+    {"" if image_html else ("<img class='type-badge' data-theme-icon='light' src='" + esc_attr(type_icon_light) + "' alt='" + esc_attr(it.get('product_type') or '') + "' style='display:none;' />") if type_icon_light else ""}
+    {"" if image_html else (("<img class='strain-badge' src='" + esc_attr(strain_badge_src) + "' alt='" + esc_attr(it.get('strain_type') or '') + "' />") if strain_badge_src else "")}
+    {("<span class='badge-new'>New</span>") if it.get('is_new') else ("<span class='badge-removed'>Removed</span>" if it.get('is_removed') else "")}
+    <div style='display:flex;flex-direction:column;align-items:flex-start;gap:4px;'>
+      {price_badge}
+      <h3 class='card-title'>{heading_html}</h3>
+    </div>
+<a class='search' style='position:absolute;bottom:12px;right:44px;font-size:18px;padding:6px 8px;border-radius:6px;min-width:auto;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none' href='{esc_attr(build_launch_url(it.get('producer'), it.get('strain')))}' target='_blank' title='Search Medbud.wiki'>🔎</a>
+      <p class="brand-line"><strong>{esc(brand)}</strong></p>
+      {("<p class='small'>Removed since last parse</p>") if it.get('is_removed') else ""}
+        <p class='small'>
+        {(esc((it.get('product_type') or '').title())) if it.get('product_type') else ''}
+        </p>
+  <div class='card-content'>
+    <div>
+      {price_pill}
+      <span class='pill'>⚖️ {qty or '?'}</span>
+      {stock_pill}
+        {f"<span class='pill'>£/g {ppg:.2f}</span>" if ppg is not None else ''}
+        {f"<span class='pill'>🍃 {esc(it.get('strain_type'))}</span>" if it.get('strain_type') else ''}
+        {f"<span class='pill pill-flag'><img class='flag-icon' src='{esc_attr(_flag_cdn_url(it.get('origin_country')))}' alt='{esc_attr(it.get('origin_country') or '')}' /> {esc(it.get('origin_country'))}</span>" if _flag_cdn_url(it.get('origin_country')) else ''}
+        {f"<span class='pill'>☢️ {esc(it.get('irradiation_type'))}</span>" if (it.get('irradiation_type') and (it.get('product_type') or '').lower() not in ('vape','oil','device')) else ''}
+    </div>
+    <div class='small'>🌞THC: {esc(disp_thc)}</div>
+    <div class='small'>🌙CBD: {esc(disp_cbd)}</div>
+    <div class='card-actions'>
+      <button class='btn-basket' onclick='addToBasket(this)' onmouseenter='basketHover(this,true)' onmouseleave='basketHover(this,false)'>Add to basket</button>
+    </div>
+  </div>
+ </div>
+"""
+
 
 # ---------------- EXPORT HTML ----------------
 
@@ -379,56 +456,31 @@ def export_html(data, path, fetch_images=False):
         if has_type_icon:
             card_classes += " has-type-icon"
         cards.append(
-            f"""
-    <div class='{card_classes}{price_border_class}' style='position:relative;'
-          data-price='{esc_attr(data_price_attr)}'
-      data-thc='{esc_attr(data_thc_attr)}'
-      data-cbd='{esc_attr(data_cbd_attr)}'
-      data-pt='{esc_attr((it.get('product_type') or '').lower())}'
-      data-strain-type='{esc_attr(it.get('strain_type') or '')}'
-      data-strain='{esc_attr(it.get("strain") or '')}'
-      data-brand='{esc_attr(brand or '')}'
-      data-producer='{esc_attr(it.get('producer') or '')}'
-      data-product-id='{esc_attr(it.get("product_id") or '')}'
-      data-stock='{esc_attr(stock_text)}'
-      data-key='{esc_attr(card_key)}'
-      data-favkey='{esc_attr(fav_key)}'
-      data-smalls='{1 if it.get("is_smalls") else 0}'
-      data-removed='{1 if it.get("is_removed") else 0}'
-      data-out='{1 if is_out else 0}'>
-    <button class='fav-btn' onclick='toggleFavorite(this)' title='Favorite this item'>★</button>
-    {image_html if image_html else ("<img class='type-badge' data-theme-icon='dark' src='" + esc_attr(type_icon_dark) + "' alt='" + esc_attr(it.get('product_type') or '') + "' />") if type_icon_dark else ""}
-    {"" if image_html else ("<img class='type-badge' data-theme-icon='light' src='" + esc_attr(type_icon_light) + "' alt='" + esc_attr(it.get('product_type') or '') + "' style='display:none;' />") if type_icon_light else ""}
-    {"" if image_html else (("<img class='strain-badge' src='" + esc_attr(strain_badge_src) + "' alt='" + esc_attr(it.get('strain_type') or '') + "' />") if strain_badge_src else "")}
-    {("<span class='badge-new'>New</span>") if it.get("is_new") else ("<span class='badge-removed'>Removed</span>" if it.get("is_removed") else "")}
-    <div style='display:flex;flex-direction:column;align-items:flex-start;gap:4px;'>
-      {price_badge}
-      <h3 class='card-title'>{heading_html}</h3>
-    </div>
-<a class='search' style='position:absolute;bottom:12px;right:44px;font-size:18px;padding:6px 8px;border-radius:6px;min-width:auto;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none' href='{esc_attr(build_launch_url(it.get('producer'), it.get('strain')))}' target='_blank' title='Search Medbud.wiki'>🔎</a>
-      <p class="brand-line"><strong>{esc(brand)}</strong></p>
-      {("<p class='small'>Removed since last parse</p>") if it.get("is_removed") else ""}
-        <p class='small'>
-        {(esc((it.get('product_type') or '').title())) if it.get('product_type') else ''}
-        </p>
-  <div class='card-content'>
-    <div>
-      {price_pill}
-      <span class='pill'>⚖️ {qty or '?'}</span>
-      {stock_pill}
-        {f"<span class='pill'>£/g {ppg:.2f}</span>" if ppg is not None else ''}
-        {f"<span class='pill'>🍃 {esc(it.get('strain_type'))}</span>" if it.get('strain_type') else ''}
-        {f"<span class='pill pill-flag'><img class='flag-icon' src='{esc_attr(_flag_cdn_url(it.get('origin_country')))}' alt='{esc_attr(it.get('origin_country') or '')}' /> {esc(it.get('origin_country'))}</span>" if _flag_cdn_url(it.get('origin_country')) else ''}
-        {f"<span class='pill'>☢️ {esc(it.get('irradiation_type'))}</span>" if (it.get('irradiation_type') and (it.get('product_type') or '').lower() not in ('vape','oil','device')) else ''}
-    </div>
-    <div class='small'>🌞THC: {esc(disp_thc)}</div>
-    <div class='small'>🌙CBD: {esc(disp_cbd)}</div>
-    <div class='card-actions'>
-      <button class='btn-basket' onclick='addToBasket(this)' onmouseenter='basketHover(this,true)' onmouseleave='basketHover(this,false)'>Add to basket</button>
-    </div>
-  </div>
-</div>
-"""
+            _render_card_html(
+                it=it,
+                card_classes=card_classes,
+                price_border_class=price_border_class,
+                data_price_attr=data_price_attr,
+                data_thc_attr=data_thc_attr,
+                data_cbd_attr=data_cbd_attr,
+                brand=brand,
+                stock_text=stock_text,
+                card_key=card_key,
+                fav_key=fav_key,
+                is_out=is_out,
+                image_html=image_html,
+                type_icon_dark=type_icon_dark,
+                type_icon_light=type_icon_light,
+                strain_badge_src=strain_badge_src,
+                price_badge=price_badge,
+                heading_html=heading_html,
+                qty=qty,
+                price_pill=price_pill,
+                stock_pill=stock_pill,
+                ppg=ppg,
+                disp_thc=disp_thc,
+                disp_cbd=disp_cbd,
+            )
         )
     cards_html = "".join(cards)
     html_text = HTML_TEMPLATE.replace("__CARDS__", cards_html)
