@@ -15,12 +15,15 @@ from typing import Optional
 from export_template import HTML_TEMPLATE
 
 try:
-    from parser import get_google_medicann_link  # type: ignore
+    from parser import get_google_medicann_link, make_identity_key as _parser_identity_key  # type: ignore
 except Exception:
 
     def get_google_medicann_link(producer, strain):
         q = " ".join([p for p in (producer or '', strain or '') if p]).strip()
         return "https://www.google.com/search?q=" + urllib.parse.quote(q + " medbud.wiki")
+
+    def _parser_identity_key(item: dict) -> str:
+        return ""
 
 _ASSET_CACHE: dict[str, str] | None = None
 _ASSETS_DIR: Optional[Path] = None
@@ -68,6 +71,13 @@ def _normalize_val(val):
 
 
 def make_identity_key(item: dict) -> str:
+    if _parser_identity_key is not None:
+        try:
+            key = _parser_identity_key(item)
+            if key:
+                return key
+        except Exception:
+            pass
     parts = [
         _normalize_val(item.get("product_id")),
         _normalize_val(item.get("producer")),
