@@ -1,6 +1,6 @@
 # FlowerTrack
 
-FlowerTrack is a Windows desktop app for tracking medical cannabis usage and stock, with an integrated scraper that monitors a Medicann page for changes. It combines a dosage tracker, flower library, and automated price/stock change detection with optional Home Assistant notifications and local HTML snapshots.
+FlowerTrack is a Windows desktop app for tracking medical cannabis usage and stock, with an integrated scraper for Medicann products. It combines a dosage tracker, flower library, and automated price/stock change detection with optional Home Assistant notifications and local HTML snapshots.
 
 ## Download (Windows)
 [Download](https://github.com/Anzymanz/FlowerTrack/releases/latest) the latest `FlowerTrack.exe` from Releases.
@@ -9,9 +9,9 @@ FlowerTrack is a Windows desktop app for tracking medical cannabis usage and sto
 - Track flower stock, THC/CBD potency, remaining grams, and daily targets.
 - Log doses by route of administration with per-day totals.
 - Flower Library and Mix Calculator tools.
-- Scraper for Medicann page data with change detection (new/removed items, price/stock changes).
+- Medicann scraper with API-based pagination and change detection (new/removed items, price/stock changes, restocks).
 - Home Assistant webhook notifications and optional Windows desktop notifications.
-- HTML snapshots served locally (favorites and filters preserved).
+- Local HTML browser with filters, badges, favorites, basket, and image previews.
 
 ## Screenshots
 ### Tracker dashboard
@@ -63,19 +63,19 @@ Calculator for blend ratios.
 The scraper generates a local HTML page that you can open from the app. It’s designed for fast scanning and filtering of the live product list.
 
 Key features:
-- Search, filter, and sort by brand, strain, type, or stock.
-- Visual badges for new/removed items and price movements.
-- THC/CBD normalization and clear per-gram price display.
-- Favorites are saved locally in your browser session.
-- Basket mode lets you stage products for quick comparisons.
+- Search, filter, and sort by brand, strain, type, stock, THC, and CBD.
+- Visual badges for new/removed items, price movement, out‑of‑stock, and restock highlights.
+- Per‑gram pricing and THC/CBD normalization.
+- Flags for origin country and irradiation type (where available).
+- Brand images with click‑to‑enlarge previews.
+- Favorites and basket lists stored locally in the page.
 
 ## Scraper behavior
-- Logs in (if configured), waits after login, then revisits the target page.
-- Waits after navigation, then collects page text.
-- Retries on empty parses using the retry settings.
-- Sends notifications only when there are real changes.
+- Logs in (if configured), then navigates to the products page.
+- Captures API responses and paginates through the full product list.
+- Retries on empty/partial captures using the retry settings.
+- Sends notifications only when changes are detected (per notification toggles).
 
-## Home Assistant notifications
 ## Home Assistant setup
 1. In Home Assistant, create a webhook automation (Settings → Automations → Create → Webhook).
 2. Set the webhook ID (e.g., `flowertrack`) and save the automation.
@@ -106,7 +106,7 @@ Credentials and tokens are stored encrypted (DPAPI on Windows).
 ## Requirements
 - Windows 10/11
 - Python 3.12 (dev only)
-- Playwright browsers (auto-installed on first run or via `playwright install`)
+- Playwright browsers (used for authenticated scraping; auto-installed on first run or via `playwright install`)
 
 ## Quick start (development)
 ```powershell
@@ -125,7 +125,7 @@ pyinstaller --noconfirm --clean --onefile --windowed --icon assets/icon.ico --ad
 
 ## Tests
 ```powershell
-py -m unittest
+py -m pytest
 ```
 
 ## Troubleshooting
