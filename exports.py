@@ -24,6 +24,7 @@ except Exception:
         return "https://www.google.com/search?q=" + urllib.parse.quote(q + " medbud.wiki")
 
     def _parser_identity_key(item: dict) -> str:
+        # Fallback for environments where parser import fails (standalone export usage).
         return ""
 
 _ASSET_CACHE: dict[str, str] | None = None
