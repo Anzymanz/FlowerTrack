@@ -2099,6 +2099,17 @@ class CannabisTracker:
                 continue
         self.child_procs = alive
         self._update_scraper_status_icon()
+    def _prune_child_procs(self) -> None:
+        """Remove exited child processes to avoid stale scraper status."""
+        procs = getattr(self, "child_procs", [])
+        alive = []
+        for proc in procs:
+            try:
+                if proc.poll() is None:
+                    alive.append(proc)
+            except Exception:
+                continue
+        self.child_procs = alive
     def _destroy_child_windows(self) -> None:
         for win_name in ('tools_window', 'settings_window', 'library_window'):
             win = getattr(self, win_name, None)
@@ -2304,6 +2315,7 @@ class CannabisTracker:
     def _update_scraper_status_icon(self) -> None:
         """Update small status dot near the clock to reflect scraper running state."""
         try:
+            self._prune_child_procs()
             running, warn = resolve_scraper_status(getattr(self, "child_procs", []))
             if getattr(self, "tray_icon", None):
                 if not getattr(self, "show_scraper_buttons", True):
