@@ -8,9 +8,41 @@ import tkinter as tk
 from tkinter import messagebox
 
 from ui_tracker import CannabisTracker, _resource_path
+from app_core import APP_DIR, CONFIG_FILE, LAST_PARSE_FILE, SCRAPER_STATE_FILE
+from config import load_unified_config
+from scraper_state import read_scraper_state
+from storage import load_last_parse
+import json
+from pathlib import Path
 
 
 def main() -> None:
+    if "--diagnostics" in sys.argv:
+        try:
+            cfg = load_unified_config(Path(CONFIG_FILE), decrypt_scraper_keys=[], write_back=False)
+        except Exception as exc:
+            cfg = {"error": f"Failed to load config: {exc}"}
+        try:
+            last_parse = load_last_parse(LAST_PARSE_FILE)
+        except Exception as exc:
+            last_parse = f"Failed to load last parse: {exc}"
+        try:
+            scraper_state = read_scraper_state(SCRAPER_STATE_FILE)
+        except Exception as exc:
+            scraper_state = {"error": f"Failed to read scraper state: {exc}"}
+        summary = {
+            "app_dir": APP_DIR,
+            "config_file": str(CONFIG_FILE),
+            "config_loaded": isinstance(cfg, dict),
+            "scraper_state_file": str(SCRAPER_STATE_FILE),
+            "scraper_state": scraper_state,
+            "last_parse_file": str(LAST_PARSE_FILE),
+            "last_parse_count": len(last_parse) if isinstance(last_parse, list) else None,
+            "last_parse_error": None if isinstance(last_parse, list) else last_parse,
+            "config_version": cfg.get("version") if isinstance(cfg, dict) else None,
+        }
+        print(json.dumps(summary, indent=2, ensure_ascii=False))
+        return
     if "--run-mixcalc" in sys.argv:
         mix_path = _resource_path("mixcalc.py")
         if not os.path.exists(mix_path):
