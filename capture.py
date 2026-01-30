@@ -95,6 +95,8 @@ class CaptureCallbacks(TypedDict, total=False):
 class CaptureWorker:
     """Encapsulated Playwright worker with simple state management."""
 
+    _BACKOFF_LOG_EVERY = 3
+
     def __init__(
         self,
         cfg: dict,
@@ -116,6 +118,7 @@ class CaptureWorker:
         self.retry_policy = RetryPolicy.from_config(cfg)
         self.retry_attempts = self.retry_policy.retry_attempts
         self.scheduler = IntervalScheduler(self.callbacks["stop_event"], self.callbacks["responsive_wait"])
+        self._backoff_logged_for: int = 0
 
     def _set_status(self, status: Status, msg: Optional[str] = None):
         if msg:
@@ -645,6 +648,8 @@ class CaptureWorker:
                                 success = collect_once(refresh=refresh_flag)
                             if not success:
                                 self.empty_failures += 1
+                                if self.empty_failures == 1:
+                                    self._backoff_logged_for = 0
                                 self._set_status("retrying", "Empty page content; restarting browser.")
                                 restart_browser = True
                                 break
@@ -657,6 +662,15 @@ class CaptureWorker:
                         interval = self.scheduler.next_interval(self.cfg["interval_seconds"], self.cfg)
                         if self.empty_failures:
                             interval = self.retry_policy.interval_with_backoff(interval, self.empty_failures)
+                            if self.empty_failures > self._backoff_logged_for:
+                                self._backoff_logged_for = self.empty_failures
+                                if (self.empty_failures % self._BACKOFF_LOG_EVERY) == 0:
+                                    try:
+                                        self.callbacks["capture_log"](
+                                            f"Capture backoff active: failures={self.empty_failures} next_interval={interval:.1f}s"
+                                        )
+                                    except Exception:
+                                        pass
                         if self.scheduler.wait(interval, label="Waiting for next capture"):
                             break
                     try:
