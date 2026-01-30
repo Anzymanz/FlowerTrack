@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.21
+- Refactored capture processing into explicit parse/diff/notify/persist stages for clarity and testability.
 - Restock/out-of-stock transitions now set a stock delta so stock pills can show green/red changes consistently.
 - Skipped applying partial API captures when pagination fails (prevents false removals).
 - Centralized price/stock/restock/out-of-stock diff logic for reuse across UI and HA payloads.

@@ -1439,6 +1439,63 @@ class App(tk.Tk):
         if not self._polling:
             self._polling = True
         self.after(50, self.poll)
+    def _stage_parse(self) -> list[dict]:
+        """Parse stage (data already collected); returns a stable list snapshot."""
+        return list(self.data)
+
+    def _stage_diff(self, items: list[dict]) -> dict:
+        """Diff stage: compute changes vs previous parse and update counters."""
+        prev_items = getattr(self, "prev_items", [])
+        diff = compute_diffs(items, prev_items)
+        self.removed_data = diff["removed_items"]
+        self.price_up_count = diff["price_up"]
+        self.price_down_count = diff["price_down"]
+        return diff
+
+    def _stage_notify(self, diff: dict, item_count: int) -> None:
+        """Notify stage: update UI status/logs and trigger post-process actions."""
+        new_count = len(diff["new_items"])
+        removed_count = len(diff["removed_items"])
+        stock_change_count = diff["stock_change_count"]
+        self.status.config(
+            text=(
+                f"Done | {item_count} items | "
+                f"+{new_count} new | -{removed_count} removed | "
+                f"{self.price_up_count} price increases | {self.price_down_count} price decreases | "
+                f"{stock_change_count} stock changes"
+            )
+        )
+        self._log_console(
+            f"Done | {item_count} items | +{new_count} new | -{removed_count} removed | "
+            f"{self.price_up_count} price increases | {self.price_down_count} price decreases | "
+            f"{stock_change_count} stock changes"
+        )
+        if (
+            new_count == 0
+            and removed_count == 0
+            and self.price_up_count == 0
+            and self.price_down_count == 0
+            and stock_change_count == 0
+        ):
+            self._capture_log("No changes detected; skipping notifications.")
+        self._post_process_actions()
+
+    def _stage_persist(self, diff: dict, items: list[dict]) -> None:
+        """Persist stage: save last parse and update prev cache/timers."""
+        try:
+            save_last_parse(LAST_PARSE_FILE, items)
+            self._capture_log(f"Saved last parse to {LAST_PARSE_FILE}")
+        except Exception as exc:
+            self._capture_log(f"Failed to save last parse: {exc}")
+        try:
+            self._set_next_capture_timer(float(self.cap_interval.get() or 0))
+        except Exception:
+            pass
+        # Update prev cache for next run after notifications are sent
+        self.prev_items = list(items)
+        self.prev_keys = diff.get("current_keys", set())
+        self._polling = False
+
     def poll(self):
         try:
             while True:
@@ -1461,28 +1518,9 @@ class App(tk.Tk):
                         self.progress['value'] = self.progress['maximum']
                     except Exception:
                         pass
-                    # Recompute price change counts from current data to ensure status reflects deltas
-                    up = down = 0
-                    for it in self.data:
-                        delta = it.get("price_delta")
-                        if isinstance(delta, (int, float)) and delta:
-                            if delta > 0:
-                                up += 1
-                            elif delta < 0:
-                                down += 1
-                    self.price_up_count = up
-                    self.price_down_count = down
-                    current_keys = {make_item_key(it) for it in self.data}
-                    prev_items = getattr(self, "prev_items", [])
-                    prev_keys = getattr(self, "prev_keys", set())
-                    diff = compute_diffs(self.data, prev_items)
-                    new_count = len(diff["new_items"])
-                    removed_items = diff["removed_items"]
-                    removed_count = len(removed_items)
-                    self.removed_data = removed_items
-                    self.price_up_count = diff["price_up"]
-                    self.price_down_count = diff["price_down"]
-                    if not self.data:
+                    # Parse stage (already collected in worker)
+                    parsed_items = self._stage_parse()
+                    if not parsed_items:
                         self.error_count += 1
                         self._empty_retry_pending = True
                         self._update_tray_status()
@@ -1497,6 +1535,14 @@ class App(tk.Tk):
                             self.stop_auto_capture()
                         self._polling = False
                         return
+                    self.error_count = 0
+                    self._empty_retry_pending = False
+                    self._update_tray_status()
+                    self._update_last_scrape()
+                    diff = self._stage_diff(parsed_items)
+                    self._stage_notify(diff, len(parsed_items))
+                    self._stage_persist(diff, parsed_items)
+                    return
                     self.error_count = 0
                     self._empty_retry_pending = False
                     self._update_tray_status()
