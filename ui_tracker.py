@@ -1246,7 +1246,8 @@ class CannabisTracker:
         self.muted_color = "#777777" if dark else "#666666"
         self.accent_green = "#2ecc71"
         self.accent_red = "#e74c3c"
-        self.note_label.configure(foreground=colors["fg"], background=base)
+        if self.note_label:
+            self.note_label.configure(foreground=colors["fg"], background=base)
         self.date_label.configure(background=base, foreground=text_color)
         self.total_label.configure(background=base)
         self.days_label.configure(background=base, foreground=text_color)

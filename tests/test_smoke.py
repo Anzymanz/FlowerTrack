@@ -3,7 +3,10 @@ import unittest
 import subprocess
 import sys
 import json
+import tkinter as tk
+from tkinter import TclError
 from app_core import APP_DIR, DATA_DIR
+from ui_tracker import CannabisTracker
 
 
 class TestSmoke(unittest.TestCase):
@@ -22,6 +25,17 @@ class TestSmoke(unittest.TestCase):
         data = json.loads(proc.stdout)
         for key in ("app_dir", "config_file", "scraper_state_file", "last_parse_file", "config_loaded"):
             self.assertIn(key, data)
+
+    def test_apply_theme_without_note_label(self):
+        try:
+            root = tk.Tk()
+        except TclError:
+            self.skipTest("Tk not available")
+        root.withdraw()
+        app = CannabisTracker(root)
+        app.note_label = None
+        app.apply_theme(app.dark_var.get())
+        root.destroy()
 
 
 if __name__ == "__main__":
