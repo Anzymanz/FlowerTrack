@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 import json
+import shutil
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
@@ -121,7 +122,14 @@ def save_tracker_data(data: dict, path: Path | None = None, logger: Optional[Cal
             payload.setdefault("schema_version", SCHEMA_VERSION)
         target.parent.mkdir(parents=True, exist_ok=True)
         _backup_tracker_data(target)
-        target.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        tmp = target.with_suffix(target.suffix + ".tmp")
+        if target.exists():
+            try:
+                shutil.copy2(target, target.with_suffix(target.suffix + ".bak"))
+            except Exception:
+                pass
+        tmp.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        tmp.replace(target)
     except Exception as exc:
         if logger:
             logger(f"Failed to save tracker data: {exc}")

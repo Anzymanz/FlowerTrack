@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import sys
 import tkinter as tk
 from pathlib import Path
@@ -28,7 +29,15 @@ def load_entries() -> list[dict]:
 
 def save_entries(entries: list[dict]) -> None:
     """Persist entries to disk."""
-    DATA_FILE.write_text(json.dumps(entries, indent=2), encoding="utf-8")
+    DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
+    tmp = DATA_FILE.with_suffix(DATA_FILE.suffix + ".tmp")
+    if DATA_FILE.exists():
+        try:
+            shutil.copy2(DATA_FILE, DATA_FILE.with_suffix(DATA_FILE.suffix + ".bak"))
+        except Exception:
+            pass
+    tmp.write_text(json.dumps(entries, indent=2), encoding="utf-8")
+    tmp.replace(DATA_FILE)
 
 
 def load_settings() -> dict:
