@@ -6,12 +6,6 @@ import urllib.request
 from pathlib import Path
 from typing import Callable, Optional
 
-try:
-    from win10toast import ToastNotifier as Win10ToastNotifier  # type: ignore
-except Exception:
-    Win10ToastNotifier = None
-
-
 def _log_debug(msg: str) -> None:
     """Lightweight stdout logger with timestamp."""
     try:
@@ -32,6 +26,10 @@ def _maybe_send_windows_notification(
     Send a Windows toast using win10toast.
     launch_url is accepted for API compatibility but ignored (win10toast limitation).
     """
+    try:
+        from win10toast import ToastNotifier as Win10ToastNotifier  # type: ignore
+    except Exception:
+        Win10ToastNotifier = None
     icon_path = str(icon.resolve()) if icon and icon.exists() else None
     if Win10ToastNotifier is None:
         _log_debug("[toast] win10toast not installed.")

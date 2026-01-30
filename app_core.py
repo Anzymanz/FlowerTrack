@@ -64,6 +64,7 @@ LOG_DIR = Path(APP_DIR) / "logs"
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(APP_DIR, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)
+SERVER_LOG = LOG_DIR / "server.log"
 
 # Move legacy configs out of data/ into the app root.
 LEGACY_CONFIG_NAMES = ("library_config.json", "scraper_config.json", "tracker_config.json", "tracker_settings.json", "flowertrack_config.json")
