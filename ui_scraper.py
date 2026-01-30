@@ -1075,6 +1075,12 @@ class App(tk.Tk):
         except TypeError:
             windows_body = self.notify_service.format_windows_body(payload, summary)
         launch_url = self.cap_url.get().strip() if hasattr(self, 'cap_url') else ''
+        if items:
+            try:
+                self._generate_change_export(self._get_export_items(), silent=True)
+                launch_url = self._latest_export_url() or launch_url
+            except Exception:
+                pass
         if not launch_url:
             try:
                 launch_url = self._latest_export_url()
