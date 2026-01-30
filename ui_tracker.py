@@ -2189,6 +2189,32 @@ class CannabisTracker:
     def launch_flower_library(self, close_tools: bool = False) -> None:
         # Launch a new process of the same executable in library mode, so no external Python is needed.
         try:
+            # Prefer focusing an existing library window to avoid duplicates.
+            try:
+                import ctypes
+                from ctypes import wintypes
+                user32 = ctypes.WinDLL("user32", use_last_error=True)
+                HWND = wintypes.HWND
+                LPARAM = wintypes.LPARAM
+                WNDENUMPROC = ctypes.WINFUNCTYPE(wintypes.BOOL, HWND, LPARAM)
+                found = []
+                def enum_proc(hwnd, lParam):
+                    buf = ctypes.create_unicode_buffer(512)
+                    user32.GetWindowTextW(hwnd, buf, 512)
+                    title = buf.value
+                    if "Medical Cannabis Flower Library" in title or "Flower Library" in title:
+                        found.append(hwnd)
+                    return True
+                user32.EnumWindows(WNDENUMPROC(enum_proc), 0)
+                if found:
+                    hwnd = found[0]
+                    user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+                    user32.SetForegroundWindow(hwnd)
+                    if close_tools and self.tools_window and tk.Toplevel.winfo_exists(self.tools_window):
+                        self.tools_window.destroy()
+                    return
+            except Exception:
+                pass
             if getattr(sys, "frozen", False):
                 args = [sys.executable, "--run-library"]
                 cwd = os.path.dirname(sys.executable) or os.getcwd()
