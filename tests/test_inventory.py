@@ -1,6 +1,8 @@
 import unittest
+import tempfile
+from pathlib import Path
 
-from inventory import Flower, add_stock_entry, log_dose_entry, is_cbd_dominant, _normalize_log_entry
+from inventory import Flower, add_stock_entry, log_dose_entry, is_cbd_dominant, _normalize_log_entry, save_tracker_data
 
 
 class InventoryTests(unittest.TestCase):
@@ -42,6 +44,15 @@ class InventoryTests(unittest.TestCase):
         self.assertAlmostEqual(remaining, 1.0)
         self.assertIn("thc_mg", entry)
         self.assertTrue(is_cbd_dominant(flowers["A"]) is False)
+
+    def test_tracker_backup_retention(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data_path = Path(tmp) / "tracker_data.json"
+            for idx in range(7):
+                save_tracker_data({"logs": [idx]}, path=data_path)
+            backup_dir = data_path.parent / "backups"
+            backups = list(backup_dir.glob("tracker_data-*.json"))
+            self.assertLessEqual(len(backups), 5)
 
 
 if __name__ == "__main__":
