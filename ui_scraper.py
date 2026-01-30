@@ -459,7 +459,7 @@ class App(tk.Tk):
         if not html_files:
             return None
         latest = html_files[0]
-        if getattr(self, "server_port", None):
+        if getattr(self, "server_port", None) and _port_ready("127.0.0.1", self.server_port):
             return f"http://127.0.0.1:{self.server_port}/{latest.name}"
         return latest.as_uri()
     # ------------- Tray helpers -------------
@@ -1196,8 +1196,14 @@ class App(tk.Tk):
         return True
     def _ensure_export_server(self):
         if self.httpd:
-            _log_debug("[server] ensure_export_server: already running")
-            return True
+            if _port_ready("127.0.0.1", self.server_port):
+                _log_debug("[server] ensure_export_server: already running")
+                return True
+            _log_debug("[server] ensure_export_server: port not ready; restarting server")
+            try:
+                self.stop_export_server()
+            except Exception:
+                pass
         ok = self.start_export_server()
         if not ok and not self._server_failed:
             self._server_failed = True
