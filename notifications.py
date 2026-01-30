@@ -87,7 +87,20 @@ class NotificationService:
     def format_windows_body(self, payload: dict, summary: str, detail: str = "full") -> str:
         body_parts: list[str] = []
         if detail.lower() == "summary":
-            return summary
+            summary_parts: list[str] = []
+            if payload.get("new_item_summaries"):
+                summary_parts.append("New items detected")
+            if payload.get("removed_item_summaries"):
+                summary_parts.append("Removed items detected")
+            if payload.get("price_change_summaries"):
+                summary_parts.append("Price changes detected")
+            if payload.get("stock_change_summaries"):
+                summary_parts.append("Stock changes detected")
+            if payload.get("out_of_stock_change_summaries"):
+                summary_parts.append("Out of stock detected")
+            if payload.get("restock_change_summaries"):
+                summary_parts.append("Restocks detected")
+            return " | ".join(summary_parts) or summary
         new_items = payload.get("new_item_summaries") or []
         removed_items = payload.get("removed_item_summaries") or []
         price_changes = payload.get("price_change_summaries") or []

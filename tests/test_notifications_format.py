@@ -19,7 +19,7 @@ class NotificationFormatTests(unittest.TestCase):
             "removed_item_summaries": [],
         }
         body = self.svc.format_windows_body(payload, summary="Summary", detail="summary")
-        self.assertEqual(body, "Summary")
+        self.assertEqual(body, "New items detected")
 
     def test_format_windows_full(self):
         payload = {

@@ -15,7 +15,7 @@ class NotificationTests(unittest.TestCase):
         svc = NotificationService(lambda: "", lambda: "", lambda: False, lambda: False, lambda m: None)
         payload = {"new_item_summaries": ["A"], "removed_item_summaries": []}
         body = svc.format_windows_body(payload, summary="summary", detail="summary")
-        self.assertEqual(body, "summary")
+        self.assertEqual(body, "New items detected")
 
 
 if __name__ == "__main__":
