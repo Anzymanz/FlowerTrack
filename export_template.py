@@ -76,11 +76,17 @@ button:hover{background:var(--hover)}
 .card-new{background:#0f2616;border-color:#1f5d35}
 .card-removed{background:#2b1313;border-color:#6a1f1f}
 .card-out{background:#2a0f10;border-color:#7a2626}
+.card-restock{background:#0f2b19;border-color:#1f6a3a}
 .light .card-out{background:#ffe2e2;border-color:#e6b0b0}
+.light .card-restock{background:#e6ffef;border-color:#b3e0c5}
 .card-fav{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
 .light .card-removed{background:#ffe6e6;border-color:#e0b3b3}
 .light .card-new{background:#e6ffef;border-color:#b3e0c5}
 .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--pill);margin:4px 6px 0 0;font-size:13px;color:var(--fg)}
+.pill.stock-up{background:#15331e;color:#b7f0c8}
+.pill.stock-down{background:#3a1a1a;color:#f6c6c6}
+.light .pill.stock-up{background:#dff5e6;color:#116a2b}
+.light .pill.stock-down{background:#ffdede;color:#b20000}
 .flag-icon{width:18px;height:12px;object-fit:cover;border-radius:2px;margin-right:6px;vertical-align:-2px}
 .pill-flag{font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif}
 .price-up{background:#3a1a1a;color:#f6c6c6}

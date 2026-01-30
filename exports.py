@@ -360,7 +360,11 @@ def export_html(data, path, fetch_images=False):
         is_out = ("OUT" in stock_upper) or (it.get("stock_remaining") == 0)
         if it.get("stock_remaining") is not None:
             stock_text = f"{it.get('stock_remaining')} remaining"
-        stock_pill = f"<span class='pill'>📊 {esc(stock_text)}</span>" if stock_text else ""
+        stock_delta = it.get('stock_delta')
+        stock_pill_class = 'pill'
+        if isinstance(stock_delta, (int, float)) and stock_delta:
+            stock_pill_class += ' stock-up' if stock_delta > 0 else ' stock-down'
+        stock_pill = f"<span class='{stock_pill_class}'>📊 {esc(stock_text)}</span>" if stock_text else ""
         stock_indicator = (
             f"<span class='stock-indicator "
             f"{('stock-not-prescribable' if ((it.get('stock_status') or it.get('stock')) and 'NOT' in ((it.get('stock_status') or it.get('stock') or '').upper())) else ('stock-in' if ((it.get('stock_status') or it.get('stock')) and 'IN STOCK' in ((it.get('stock_status') or it.get('stock') or '').upper())) else ('stock-low' if ((it.get('stock_status') or it.get('stock')) and 'LOW' in ((it.get('stock_status') or it.get('stock') or '').upper())) else ('stock-out' if ((it.get('stock_status') or it.get('stock')) and 'OUT' in ((it.get('stock_status') or it.get('stock') or '').upper())) else ''))))}"
@@ -368,6 +372,8 @@ def export_html(data, path, fetch_images=False):
         )
         heading_html = f"{stock_indicator}{esc(heading)}"
         card_classes = "card card-removed" if it.get("is_removed") else ("card card-new" if it.get("is_new") else "card")
+        if it.get("is_restock"):
+            card_classes += " card-restock"
         if is_out:
             card_classes += " card-out"
         if has_type_icon:

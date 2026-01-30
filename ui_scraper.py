@@ -1414,11 +1414,15 @@ class App(tk.Tk):
         identity_cache = _build_identity_cache(prev_items)
         prev_keys = { _identity_key_cached(it, identity_cache) for it in prev_items }
         prev_price_map = {}
+        prev_stock_map = {}
+        prev_rem_map = {}
         for pit in prev_items:
             try:
                 prev_price_map[_identity_key_cached(pit, identity_cache)] = float(pit.get("price")) if pit.get("price") is not None else None
             except Exception:
                 prev_price_map[_identity_key_cached(pit, identity_cache)] = None
+            prev_stock_map[_identity_key_cached(pit, identity_cache)] = pit.get("stock")
+            prev_rem_map[_identity_key_cached(pit, identity_cache)] = pit.get("stock_remaining")
         self.prev_items = prev_items
         self.prev_keys = prev_keys
         self.removed_data = []
@@ -1447,6 +1451,21 @@ class App(tk.Tk):
                 elif delta < 0:
                     price_down += 1
             it["price_delta"] = delta
+            # Stock delta / restock flag for export highlighting
+            stock_delta = None
+            prev_rem = prev_rem_map.get(ident_key)
+            cur_rem = it.get("stock_remaining")
+            try:
+                if prev_rem is not None and cur_rem is not None:
+                    stock_delta = float(cur_rem) - float(prev_rem)
+            except Exception:
+                stock_delta = None
+            if isinstance(stock_delta, (int, float)) and abs(stock_delta) < 1e-6:
+                stock_delta = 0.0
+            if stock_delta is not None:
+                it["stock_delta"] = stock_delta
+                if stock_delta > 0:
+                    it["is_restock"] = True
             deduped.append(it)
         self.data = []
         try:
@@ -1549,12 +1568,31 @@ class App(tk.Tk):
                             key = _identity_key_cached(pit, identity_cache)
                             prev_stock_map[key] = pit.get("stock")
                             prev_rem_map[key] = pit.get("stock_remaining")
+                        def _stock_is_out(stock, remaining):
+                            if remaining is not None:
+                                try:
+                                    return float(remaining) <= 0
+                                except Exception:
+                                    pass
+                            text = str(stock or '').upper()
+                            return 'OUT' in text
+                        def _stock_is_in(stock, remaining):
+                            if remaining is not None:
+                                try:
+                                    return float(remaining) > 0
+                                except Exception:
+                                    pass
+                            text = str(stock or '').upper()
+                            return ('IN STOCK' in text) or ('LOW STOCK' in text) or ('REMAINING' in text)
                         for it in self.data:
                             key = _identity_key_cached(it, identity_cache)
                             prev_stock = prev_stock_map.get(key)
                             prev_rem = prev_rem_map.get(key)
                             cur_stock = it.get("stock")
                             cur_rem = it.get("stock_remaining")
+                            # mark restocks on items for export highlighting
+                            if _stock_is_out(prev_stock, prev_rem) and _stock_is_in(cur_stock, cur_rem):
+                                it["is_restock"] = True
                             if prev_stock is not None and cur_stock is not None and str(prev_stock) != str(cur_stock):
                                 stock_change_count += 1
                                 continue
