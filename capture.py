@@ -529,6 +529,12 @@ class CaptureWorker:
                                                     break
                                 except Exception:
                                     pass
+                                if pagination_failed and total and isinstance(data_list, list) and len(data_list) < total:
+                                    try:
+                                        self.callbacks["capture_log"]("Pagination incomplete; skipping apply to avoid partial capture.")
+                                    except Exception:
+                                        pass
+                                    return False
                                 api_count = 0
                                 for payload in api_payloads:
                                     try:
