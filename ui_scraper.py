@@ -913,6 +913,94 @@ class App(tk.Tk):
                 if val:
                     parts.append(str(val))
             return " ".join(parts).strip() or "Unknown"
+        def _build_notification_payload(items: list[dict], diff: dict) -> tuple[dict, str]:
+            new_items_local = diff["new_items"]
+            removed_items_local = diff["removed_items"]
+            price_changes_local = diff["price_changes"]
+            stock_changes_local = diff["stock_changes"]
+            restock_changes_local = diff["restock_changes"]
+            out_of_stock_changes_local = diff["out_of_stock_changes"]
+            new_flowers_local = [_flower_label(it) for it in new_items_local if (it.get("product_type") or "").lower() == "flower"]
+            removed_flowers_local = [_flower_label(it) for it in removed_items_local if (it.get("product_type") or "").lower() == "flower"]
+            new_item_summaries_local = [_item_label(it) for it in new_items_local]
+            removed_item_summaries_local = [_item_label(it) for it in removed_items_local]
+            price_change_summaries_local = []
+            price_change_compact_local = []
+            for it in price_changes_local:
+                brand = it.get("brand") or it.get("producer") or ""
+                strain = it.get("strain") or ""
+                label = " ".join([p for p in (brand, strain) if p]).strip() or "Unknown"
+                delta = it.get("price_delta")
+                before = it.get("price_before")
+                after = it.get("price_after")
+                direction = "↑" if delta and delta > 0 else "↓"
+                try:
+                    delta_str = f"{delta:+.2f}" if isinstance(delta, (int, float)) else str(delta)
+                except Exception:
+                    delta_str = str(delta)
+                price_change_summaries_local.append(f"{label} {direction}{delta_str}")
+                price_change_compact_local.append(
+                    {
+                        "label": label,
+                        "price_before": before,
+                        "price_after": after,
+                        "price_delta": delta,
+                        "direction": "up" if delta and delta > 0 else "down",
+                    }
+                )
+            stock_change_summaries_local = []
+            for it in stock_changes_local:
+                brand = it.get("brand") or it.get("producer") or ""
+                strain = it.get("strain") or ""
+                label = " ".join([p for p in (brand, strain) if p]).strip() or "Unknown"
+                before = it.get("stock_before")
+                after = it.get("stock_after")
+                stock_change_summaries_local.append(f"{label}: {before} -> {after}")
+            out_of_stock_change_summaries_local = []
+            for it in out_of_stock_changes_local:
+                brand = it.get("brand") or it.get("producer") or ""
+                strain = it.get("strain") or ""
+                label = " ".join([p for p in (brand, strain) if p]).strip() or "Unknown"
+                before = it.get("stock_before")
+                after = it.get("stock_after")
+                out_of_stock_change_summaries_local.append(f"{label}: {before} -> {after}")
+            restock_change_summaries_local = []
+            for it in restock_changes_local:
+                brand = it.get("brand") or it.get("producer") or ""
+                strain = it.get("strain") or ""
+                label = " ".join([p for p in (brand, strain) if p]).strip() or "Unknown"
+                before = it.get("stock_before")
+                after = it.get("stock_after")
+                restock_change_summaries_local.append(f"{label}: {before} -> {after}")
+            payload_local = {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "count": len(items),
+                "new_count": len(new_items_local),
+                "removed_count": len(removed_items_local),
+                "price_changes": price_changes_local,
+                "new_flowers": new_flowers_local,
+                "removed_flowers": removed_flowers_local,
+                "new_item_summaries": new_item_summaries_local,
+                "removed_item_summaries": removed_item_summaries_local,
+                "price_change_summaries": price_change_summaries_local,
+                "stock_changes": stock_changes_local,
+                "stock_change_summaries": stock_change_summaries_local,
+                "out_of_stock_changes": out_of_stock_changes_local,
+                "out_of_stock_change_summaries": out_of_stock_change_summaries_local,
+                "restock_changes": restock_changes_local,
+                "restock_change_summaries": restock_change_summaries_local,
+                "new_items": new_items_local,
+                "removed_items": removed_items_local,
+                "price_up": getattr(self, "price_up_count", 0),
+                "price_down": getattr(self, "price_down_count", 0),
+                "items": items,
+            }
+            summary_local = (
+                f"+{len(new_items_local)} new, -{len(removed_items_local)} removed, "
+                f"{len(price_changes_local)} price changes, {len(stock_changes_local)} stock changes, "
+                f"{len(out_of_stock_changes_local)} out of stock, {len(restock_changes_local)} restocks"
+            )
+            return payload_local, summary_local, price_change_compact_local, stock_change_summaries_local, out_of_stock_change_summaries_local, restock_change_summaries_local
         new_flowers = [_flower_label(it) for it in new_items if (it.get("product_type") or "").lower() == "flower"]
         removed_flowers = [_flower_label(it) for it in removed_items if (it.get("product_type") or "").lower() == "flower"]
         new_item_summaries = [_item_label(it) for it in new_items]
@@ -925,102 +1013,7 @@ class App(tk.Tk):
             f"Notify HA | new={len(new_items)} removed={len(removed_items)} "
             f"price_changes={len(price_changes)} stock_changes={len(stock_changes)} out_of_stock={len(out_of_stock_changes)} restocks={len(restock_changes)}"
         )
-        # Build compact human text for price changes
-        price_change_summaries = []
-        price_change_compact = []
-        for it in price_changes:
-            brand = it.get("brand") or it.get("producer") or ""
-            strain = it.get("strain") or ""
-            label = " ".join([p for p in (brand, strain) if p]).strip() or "Unknown"
-            delta = it.get("price_delta")
-            before = it.get("price_before")
-            after = it.get("price_after")
-            direction = "↑" if delta and delta > 0 else "↓"
-            try:
-                delta_str = f"{delta:+.2f}" if isinstance(delta, (int, float)) else str(delta)
-            except Exception:
-                delta_str = str(delta)
-            price_change_summaries.append(f"{label} {direction}{delta_str}")
-            price_change_compact.append(
-                {
-                    "label": label,
-                    "price_before": before,
-                    "price_after": after,
-                    "price_delta": delta,
-                    "direction": "up" if delta and delta > 0 else "down",
-                }
-            )
-        stock_change_summaries = []
-        stock_change_compact = []
-        for it in stock_changes:
-            brand = it.get("brand") or it.get("producer") or ""
-            strain = it.get("strain") or ""
-            label = " ".join([p for p in (brand, strain) if p]).strip() or "Unknown"
-            before = it.get("stock_before")
-            after = it.get("stock_after")
-            stock_change_summaries.append(f"{label}: {before} -> {after}")
-            stock_change_compact.append(
-                {
-                    "label": label,
-                    "stock_before": before,
-                    "stock_after": after,
-                }
-            )
-        out_of_stock_change_summaries = []
-        out_of_stock_change_compact = []
-        for it in out_of_stock_changes:
-            brand = it.get("brand") or it.get("producer") or ""
-            strain = it.get("strain") or ""
-            label = " ".join([p for p in (brand, strain) if p]).strip() or "Unknown"
-            before = it.get("stock_before")
-            after = it.get("stock_after")
-            out_of_stock_change_summaries.append(f"{label}: {before} -> {after}")
-            out_of_stock_change_compact.append(
-                {
-                    "label": label,
-                    "stock_before": before,
-                    "stock_after": after,
-                }
-            )
-        restock_change_summaries = []
-        restock_change_compact = []
-        for it in restock_changes:
-            brand = it.get("brand") or it.get("producer") or ""
-            strain = it.get("strain") or ""
-            label = " ".join([p for p in (brand, strain) if p]).strip() or "Unknown"
-            before = it.get("stock_before")
-            after = it.get("stock_after")
-            restock_change_summaries.append(f"{label}: {before} -> {after}")
-            restock_change_compact.append(
-                {
-                    "label": label,
-                    "stock_before": before,
-                    "stock_after": after,
-                }
-            )
-        payload = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "count": len(items),
-            "new_count": len(new_items),
-            "removed_count": len(removed_items),
-            "price_changes": price_changes,
-            "new_flowers": new_flowers,
-            "removed_flowers": removed_flowers,
-            "new_item_summaries": new_item_summaries,
-            "removed_item_summaries": removed_item_summaries,
-            "price_change_summaries": price_change_summaries,
-            "stock_changes": stock_changes,
-            "stock_change_summaries": stock_change_summaries,
-            "out_of_stock_changes": out_of_stock_changes,
-            "out_of_stock_change_summaries": out_of_stock_change_summaries,
-            "restock_changes": restock_changes,
-            "restock_change_summaries": restock_change_summaries,
-            "new_items": new_items,
-            "removed_items": removed_items,
-            "price_up": getattr(self, "price_up_count", 0),
-            "price_down": getattr(self, "price_down_count", 0),
-            "items": items,
-        }
+        payload, summary, price_change_compact, stock_change_summaries, out_of_stock_change_summaries, restock_change_summaries = _build_notification_payload(items, diff)
         # Append structured change log for later analysis
         try:
             log_record = {
@@ -1062,10 +1055,6 @@ class App(tk.Tk):
         if token:
             headers["Authorization"] = f"Bearer {token}"
         data = json.dumps(payload).encode("utf-8")
-        summary = (
-            f"+{len(new_items)} new, -{len(removed_items)} removed, "
-            f"{len(price_changes)} price changes, {len(stock_changes)} stock changes, {len(out_of_stock_changes)} out of stock, {len(restock_changes)} restocks"
-        )
         quiet_hours = self._quiet_hours_active() if hasattr(self, '_quiet_hours_active') else False
         try:
             self._capture_log("Notify flags | ha={} win={} quiet={} log_only={}".format(
