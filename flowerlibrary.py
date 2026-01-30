@@ -7,6 +7,7 @@ from pathlib import Path
 from tkinter import Tk, Toplevel, StringVar, BooleanVar, ttk, messagebox, filedialog
 from theme import apply_style_theme, compute_colors, set_titlebar_dark
 from config import load_library_config, save_library_config, load_tracker_config, save_tracker_config
+from resources import resource_path
 
 
 APP_ROOT = Path(os.getenv("APPDATA", Path.home())) / "FlowerTrack"
@@ -70,11 +71,7 @@ def _save_tracker_dark_mode(enabled: bool) -> None:
 
 
 def _resource_path(filename: str) -> str:
-    base_path = getattr(sys, "_MEIPASS", None) or os.getcwd()
-    asset_path = os.path.join(base_path, 'assets', filename)
-    if os.path.exists(asset_path):
-        return asset_path
-    return os.path.join(base_path, filename)
+    return resource_path(filename)
 
 
 class FlowerLibraryApp:

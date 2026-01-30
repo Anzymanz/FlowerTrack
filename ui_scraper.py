@@ -55,6 +55,7 @@ from tray import create_tray_icon, stop_tray_icon, tray_supported, update_tray_i
 from logger import UILogger
 from notifications import NotificationService
 from theme import apply_style_theme, set_titlebar_dark, compute_colors
+from resources import resource_path
 
 # Scraper UI constants
 SCRAPER_TITLE = "Medicann Scraper"
@@ -1652,13 +1653,7 @@ class App(tk.Tk):
     def _load_dark_mode(self) -> bool:
         return _load_tracker_dark_mode(True)
     def _resource_path(self, relative: str) -> str:
-        """Return absolute path to resource, works for dev and PyInstaller."""
-        path = Path(BASE_DIR) / relative
-        if not path.exists():
-            alt = ASSETS_DIR / relative
-            if alt.exists():
-                path = alt
-        return str(path)
+        return resource_path(relative)
     def _set_win_titlebar_dark(self, enable: bool):
         """On Windows 10/11, ask DWM for a dark title bar to match the theme."""
         if os.name != 'nt':

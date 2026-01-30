@@ -21,6 +21,7 @@ from tray import tray_supported, update_tray_icon, stop_tray_icon, make_tray_ima
 from scraper_state import resolve_scraper_status as resolve_scraper_status_core
 from theme import apply_style_theme, compute_colors, set_titlebar_dark
 from ui_tracker_settings import open_tracker_settings
+from resources import resource_path as _resource_path
 from inventory import (
     TRACKER_DATA_FILE,
     TRACKER_LIBRARY_FILE,
@@ -48,13 +49,7 @@ def _build_scraper_status_image(child_procs):
         return make_tray_image(running=running, warn=warn)
     except Exception:
         return None
-def _resource_path(filename: str) -> str:
-    """Return absolute path to resource, works for dev and PyInstaller."""
-    base_path = getattr(sys, "_MEIPASS", None) or os.getcwd()
-    asset_path = os.path.join(base_path, 'assets', filename)
-    if os.path.exists(asset_path):
-        return asset_path
-    return os.path.join(base_path, filename)
+ 
 class CannabisTracker:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root

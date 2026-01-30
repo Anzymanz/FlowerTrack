@@ -8,6 +8,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import ctypes
 from config import load_tracker_config
+from resources import resource_path
 
 
 APP_DIR = os.path.join(os.getenv("APPDATA", os.path.expanduser("~")), "FlowerTrack")
@@ -582,6 +583,12 @@ labels = [format_item(it) for it in items]
 
 root = tk.Tk()
 root.title("Mix Calculator" if not IS_STOCK_MODE else "Blend Calculator (stock)")
+try:
+    icon_path = resource_path("icon.ico")
+    if os.path.exists(icon_path):
+        root.iconbitmap(icon_path)
+except Exception:
+    pass
 # Best-effort place near mouse if requested by parent
 if os.environ.get("FT_MOUSE_LAUNCH") == "1":
     try:

@@ -7,7 +7,8 @@ import sys
 import tkinter as tk
 from tkinter import messagebox
 
-from ui_tracker import CannabisTracker, _resource_path
+from ui_tracker import CannabisTracker
+from resources import resource_path as _resource_path
 from app_core import APP_DIR, CONFIG_FILE, LAST_PARSE_FILE, SCRAPER_STATE_FILE
 from config import load_unified_config
 from scraper_state import read_scraper_state
