@@ -240,16 +240,38 @@ class App(tk.Tk):
         self.close_to_tray = tk.BooleanVar(value=bool(cfg.get("close_to_tray", False)))
 
     def _collect_capture_cfg(self) -> dict:
+        def _parse_float(raw: str | None, default: float, label: str) -> float:
+            if raw is None:
+                return float(default)
+            text = str(raw).strip()
+            if not text:
+                return float(default)
+            try:
+                return float(text)
+            except Exception:
+                self._log_console(f"Invalid {label} value '{raw}'; using {default}.")
+                return float(default)
+        def _parse_int(raw: str | None, default: int, label: str) -> int:
+            if raw is None:
+                return int(default)
+            text = str(raw).strip()
+            if not text:
+                return int(default)
+            try:
+                return int(float(text))
+            except Exception:
+                self._log_console(f"Invalid {label} value '{raw}'; using {default}.")
+                return int(default)
         return {
             "url": self.cap_url.get(),
-            "interval_seconds": float(self.cap_interval.get() or 0),
-            "login_wait_seconds": float(self.cap_login_wait.get() or 0),
-            "post_nav_wait_seconds": float(self.cap_post_wait.get() or 0),
-            "retry_attempts": int(float(self.cap_retry_attempts.get() or 0)),
-            "retry_wait_seconds": float(self.cap_retry_wait.get() or 0),
-            "retry_backoff_max": float(self.cap_retry_backoff.get() or 0),
-            "scroll_times": int(float(self.cap_scroll_times.get() or 0)),
-            "scroll_pause_seconds": float(self.cap_scroll_pause.get() or 0),
+            "interval_seconds": _parse_float(self.cap_interval.get(), DEFAULT_CAPTURE_CONFIG["interval_seconds"], "interval_seconds"),
+            "login_wait_seconds": _parse_float(self.cap_login_wait.get(), DEFAULT_CAPTURE_CONFIG["login_wait_seconds"], "login_wait_seconds"),
+            "post_nav_wait_seconds": _parse_float(self.cap_post_wait.get(), DEFAULT_CAPTURE_CONFIG["post_nav_wait_seconds"], "post_nav_wait_seconds"),
+            "retry_attempts": _parse_int(self.cap_retry_attempts.get(), DEFAULT_CAPTURE_CONFIG["retry_attempts"], "retry_attempts"),
+            "retry_wait_seconds": _parse_float(self.cap_retry_wait.get(), DEFAULT_CAPTURE_CONFIG["retry_wait_seconds"], "retry_wait_seconds"),
+            "retry_backoff_max": _parse_float(self.cap_retry_backoff.get(), DEFAULT_CAPTURE_CONFIG["retry_backoff_max"], "retry_backoff_max"),
+            "scroll_times": _parse_int(self.cap_scroll_times.get(), DEFAULT_CAPTURE_CONFIG["scroll_times"], "scroll_times"),
+            "scroll_pause_seconds": _parse_float(self.cap_scroll_pause.get(), DEFAULT_CAPTURE_CONFIG["scroll_pause_seconds"], "scroll_pause_seconds"),
             "dump_capture_html": bool(self.cap_dump_html.get()),
             "dump_api_json": bool(self.cap_dump_api.get()),
             "username": self.cap_user.get(),
@@ -273,7 +295,11 @@ class App(tk.Tk):
             "quiet_hours_enabled": bool(self.cap_quiet_hours_enabled.get()),
             "quiet_hours_start": self.cap_quiet_start.get(),
             "quiet_hours_end": self.cap_quiet_end.get(),
-            "quiet_hours_interval_seconds": float(self.cap_quiet_interval.get() or 0),
+            "quiet_hours_interval_seconds": _parse_float(
+                self.cap_quiet_interval.get(),
+                DEFAULT_CAPTURE_CONFIG["quiet_hours_interval_seconds"],
+                "quiet_hours_interval_seconds",
+            ),
             "include_inactive": bool(self.cap_include_inactive.get()),
             "requestable_only": bool(self.cap_requestable_only.get()),
             "in_stock_only": bool(self.cap_in_stock_only.get()),
@@ -713,49 +739,7 @@ class App(tk.Tk):
         if not path:
             return
         self.capture_config_path = Path(path)
-        cfg = {
-            "url": self.cap_url.get(),
-            "interval_seconds": float(self.cap_interval.get() or 0),
-            "login_wait_seconds": float(self.cap_login_wait.get() or 0),
-            "post_nav_wait_seconds": float(self.cap_post_wait.get() or 0),
-            "retry_attempts": int(self.cap_retry_attempts.get() or 0),
-            "retry_wait_seconds": float(self.cap_retry_wait.get() or 0),
-            "retry_backoff_max": float(self.cap_retry_backoff.get() or 0),
-            "scroll_times": int(float(self.cap_scroll_times.get() or 0)),
-            "scroll_pause_seconds": float(self.cap_scroll_pause.get() or 0),
-            "dump_capture_html": bool(self.cap_dump_html.get()),
-            "dump_api_json": bool(self.cap_dump_api.get()),
-            "username": self.cap_user.get(),
-            "password": self.cap_pass.get(),
-            "username_selector": self.cap_user_sel.get(),
-            "password_selector": self.cap_pass_sel.get(),
-            "login_button_selector": self.cap_btn_sel.get(),
-            "organization": self.cap_org.get(),
-            "organization_selector": self.cap_org_sel.get(),
-            "headless": self.cap_headless.get(),
-            "auto_notify_ha": self.cap_auto_notify_ha.get(),
-            "ha_webhook_url": self.cap_ha_webhook.get(),
-            "ha_token": self.cap_ha_token.get(),
-            "notify_price_changes": self.notify_price_changes.get(),
-            "notify_stock_changes": self.notify_stock_changes.get(),
-            "notify_out_of_stock": self.notify_out_of_stock.get(),
-            "notify_restock": self.notify_restock.get(),
-            "notify_new_items": self.notify_new_items.get(),
-            "notify_removed_items": self.notify_removed_items.get(),
-            "notify_windows": self.notify_windows.get(),
-            "quiet_hours_enabled": self.cap_quiet_hours_enabled.get(),
-            "quiet_hours_start": self.cap_quiet_start.get(),
-            "quiet_hours_end": self.cap_quiet_end.get(),
-            "quiet_hours_interval_seconds": float(self.cap_quiet_interval.get() or 0),
-            "include_inactive": bool(self.cap_include_inactive.get()),
-            "requestable_only": bool(self.cap_requestable_only.get()),
-            "in_stock_only": bool(self.cap_in_stock_only.get()),
-            "notification_detail": self.cap_notify_detail.get(),
-            "minimize_to_tray": bool(self.minimize_to_tray.get()),
-            "close_to_tray": bool(self.close_to_tray.get()),
-            "window_geometry": self.geometry(),
-            "settings_geometry": (self.settings_window.geometry() if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window) else self.scraper_settings_geometry),
-        }
+        cfg = self._collect_capture_cfg()
         try:
             save_capture_config(self.capture_config_path, cfg, ["username", "password", "ha_token"])
         except Exception as exc:
@@ -764,49 +748,7 @@ class App(tk.Tk):
         messagebox.showinfo("Capture Config", f"Saved capture config to {path}")
     def _save_capture_window(self):
         target = Path(self.capture_config_path) if getattr(self, "capture_config_path", None) else Path(CONFIG_FILE)
-        cfg = {
-            "url": self.cap_url.get(),
-            "interval_seconds": float(self.cap_interval.get() or 0),
-            "login_wait_seconds": float(self.cap_login_wait.get() or 0),
-            "post_nav_wait_seconds": float(self.cap_post_wait.get() or 0),
-            "retry_attempts": int(self.cap_retry_attempts.get() or 0),
-            "retry_wait_seconds": float(self.cap_retry_wait.get() or 0),
-            "retry_backoff_max": float(self.cap_retry_backoff.get() or 0),
-            "scroll_times": int(float(self.cap_scroll_times.get() or 0)),
-            "scroll_pause_seconds": float(self.cap_scroll_pause.get() or 0),
-            "dump_capture_html": bool(self.cap_dump_html.get()),
-            "dump_api_json": bool(self.cap_dump_api.get()),
-            "username": self.cap_user.get(),
-            "password": self.cap_pass.get(),
-            "username_selector": self.cap_user_sel.get(),
-            "password_selector": self.cap_pass_sel.get(),
-            "login_button_selector": self.cap_btn_sel.get(),
-            "organization": self.cap_org.get(),
-            "organization_selector": self.cap_org_sel.get(),
-            "headless": self.cap_headless.get(),
-            "auto_notify_ha": self.cap_auto_notify_ha.get(),
-            "ha_webhook_url": self.cap_ha_webhook.get(),
-            "ha_token": self.cap_ha_token.get(),
-            "notify_price_changes": self.notify_price_changes.get(),
-            "notify_stock_changes": self.notify_stock_changes.get(),
-            "notify_out_of_stock": self.notify_out_of_stock.get(),
-            "notify_restock": self.notify_restock.get(),
-            "notify_new_items": self.notify_new_items.get(),
-            "notify_removed_items": self.notify_removed_items.get(),
-            "notify_windows": self.notify_windows.get(),
-            "quiet_hours_enabled": self.cap_quiet_hours_enabled.get(),
-            "quiet_hours_start": self.cap_quiet_start.get(),
-            "quiet_hours_end": self.cap_quiet_end.get(),
-            "quiet_hours_interval_seconds": float(self.cap_quiet_interval.get() or 0),
-            "include_inactive": bool(self.cap_include_inactive.get()),
-            "requestable_only": bool(self.cap_requestable_only.get()),
-            "in_stock_only": bool(self.cap_in_stock_only.get()),
-            "notification_detail": self.cap_notify_detail.get(),
-            "minimize_to_tray": bool(self.minimize_to_tray.get()),
-            "close_to_tray": bool(self.close_to_tray.get()),
-            "window_geometry": self.geometry(),
-            "settings_geometry": (self.settings_window.geometry() if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window) else self.scraper_settings_geometry),
-        }
+        cfg = self._collect_capture_cfg()
         try:
             save_capture_config(target, cfg, ["username", "password", "ha_token"])
             self._log_console(f"Saved config to {target}")
