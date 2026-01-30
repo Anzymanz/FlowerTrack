@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Optional
+import json
+import os
 
 
 class UILogger:
@@ -57,3 +59,24 @@ class UILogger:
 
     def error(self, msg: str) -> None:
         self._emit("ERROR", msg)
+
+
+def log_event(event: str, detail: dict | None = None, file_name: str = "app.log") -> None:
+    """Write a structured log line to a shared app log file."""
+    stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    payload = {
+        "ts": stamp,
+        "event": event,
+        "detail": detail or {},
+    }
+    try:
+        appdata = Path(os.getenv("APPDATA", os.path.expanduser("~")))
+        path = appdata / "FlowerTrack" / "logs" / file_name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    except Exception:
+        try:
+            print(f"[{stamp}] {event} {detail}")
+        except Exception:
+            pass

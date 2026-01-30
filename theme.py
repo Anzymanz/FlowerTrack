@@ -3,6 +3,7 @@ from __future__ import annotations
 import ctypes
 from pathlib import Path
 from tkinter import ttk
+from logger import log_event
 
 
 def compute_colors(dark: bool) -> dict:
@@ -106,5 +107,5 @@ def set_titlebar_dark(window, enable: bool) -> None:
         DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19
         if ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)) != 0:
             ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value))
-    except Exception:
-        pass
+    except Exception as exc:
+        log_event("theme.titlebar_failed", {"error": str(exc)})

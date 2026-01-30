@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Optional
 
 from export_template import HTML_TEMPLATE
+from logger import log_event
 
 try:
     from parser import get_google_medicann_link, make_identity_key as _parser_identity_key  # type: ignore
@@ -534,8 +535,4 @@ def cleanup_html_exports(exports_dir: Optional[Path] = None, max_files: int = 20
             except Exception:
                 pass
     except Exception as exc:
-        try:
-            stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            print(f"[{stamp}] cleanup_html_exports failed: {exc}")
-        except Exception:
-            pass
+        log_event("exports.cleanup_failed", {"error": str(exc)})
