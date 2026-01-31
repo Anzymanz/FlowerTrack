@@ -756,12 +756,13 @@ class App(tk.Tk):
             self._log_console(f"Saved config to {target}")
         except Exception as exc:
             self._log_console(f"Failed to save config: {exc}")
-    def _post_process_actions(self):
+    def _post_process_actions(self, diff: dict | None = None, items: list[dict] | None = None):
         # Called after poll completes processing
-        items = list(getattr(self, "data", []))
+        items = list(items if items is not None else getattr(self, "data", []))
         if not items:
             return
         auto_notify = bool(self.cap_auto_notify_ha.get())
+        diff_snapshot = dict(diff) if isinstance(diff, dict) else None
         def worker():
             try:
                 exports_dir = Path(EXPORTS_DIR_DEFAULT)
@@ -773,9 +774,19 @@ class App(tk.Tk):
                 self._capture_log(f"Export preflight failed: {exc}")
             try:
                 if auto_notify:
-                    self.send_home_assistant(log_only=False, ui_errors=False)
+                    self.send_home_assistant(
+                        log_only=False,
+                        ui_errors=False,
+                        diff_override=diff_snapshot,
+                        items_override=items,
+                    )
                 else:
-                    self.send_home_assistant(log_only=True, ui_errors=False)
+                    self.send_home_assistant(
+                        log_only=True,
+                        ui_errors=False,
+                        diff_override=diff_snapshot,
+                        items_override=items,
+                    )
             except Exception as exc:
                 self._capture_log(f"Notification processing failed: {exc}")
         threading.Thread(target=worker, daemon=True).start()
@@ -803,7 +814,13 @@ class App(tk.Tk):
         if start_t <= end_t:
             return start_t <= now < end_t
         return now >= start_t or now < end_t
-    def send_home_assistant(self, log_only: bool = False, ui_errors: bool = True):
+    def send_home_assistant(
+        self,
+        log_only: bool = False,
+        ui_errors: bool = True,
+        diff_override: dict | None = None,
+        items_override: list[dict] | None = None,
+    ):
         url = self.cap_ha_webhook.get().strip()
         if not url and not log_only:
             if ui_errors:
@@ -811,18 +828,20 @@ class App(tk.Tk):
             else:
                 self._capture_log("Home Assistant webhook URL missing; skipping notification.")
             return
-        items = getattr(self, "data", [])
-        prev_items = getattr(self, "prev_items", [])
-        prev_keys = getattr(self, "prev_keys", set())
-        identity_cache = _build_identity_cache(items + prev_items)
-        # Fallback to persisted last parse if in-memory cache is empty
-        if (not prev_items or not prev_keys) and LAST_PARSE_FILE.exists():
-            try:
-                prev_items = load_last_parse(LAST_PARSE_FILE)
-                prev_keys = { _identity_key_cached(it, identity_cache) for it in prev_items }
-            except Exception:
-                pass
-        diff = compute_diffs(items, prev_items)
+        items = list(items_override if items_override is not None else getattr(self, "data", []))
+        diff = diff_override
+        if diff is None:
+            prev_items = getattr(self, "prev_items", [])
+            prev_keys = getattr(self, "prev_keys", set())
+            identity_cache = _build_identity_cache(items + prev_items)
+            # Fallback to persisted last parse if in-memory cache is empty
+            if (not prev_items or not prev_keys) and LAST_PARSE_FILE.exists():
+                try:
+                    prev_items = load_last_parse(LAST_PARSE_FILE)
+                    prev_keys = { _identity_key_cached(it, identity_cache) for it in prev_items }
+                except Exception:
+                    pass
+            diff = compute_diffs(items, prev_items)
         new_items = diff["new_items"]
         removed_items = diff["removed_items"]
         price_changes = diff["price_changes"]
@@ -1419,7 +1438,7 @@ class App(tk.Tk):
             and stock_change_count == 0
         ):
             self._capture_log("No changes detected; skipping notifications.")
-        self._post_process_actions()
+        self._post_process_actions(diff, items)
 
     def _stage_persist(self, diff: dict, items: list[dict]) -> None:
         """Persist stage: save last parse and update prev cache/timers."""

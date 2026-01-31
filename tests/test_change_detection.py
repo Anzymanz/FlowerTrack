@@ -99,6 +99,19 @@ class ChangeDetectionTests(unittest.TestCase):
         self.assertEqual(len(payload["new_items"]), 1)
         self.assertEqual(len(payload["removed_items"]), 1)
 
+    def test_diff_override_keeps_stock_notifications(self):
+        prev = [self._make_item(stock="IN STOCK")]
+        cur = [self._make_item(stock="LOW STOCK")]
+        diff = ui_scraper.compute_diffs(cur, prev)
+        app = self._make_app([], [])
+
+        ui_scraper.App.send_home_assistant(app, log_only=False, diff_override=diff, items_override=cur)
+        payload = app.notify_service.payload
+        self.assertIsNotNone(payload)
+        self.assertEqual(len(payload["stock_changes"]), 1)
+        self.assertEqual(payload["stock_changes"][0]["stock_before"], "IN STOCK")
+        self.assertEqual(payload["stock_changes"][0]["stock_after"], "LOW STOCK")
+
 
 if __name__ == "__main__":
     unittest.main()
