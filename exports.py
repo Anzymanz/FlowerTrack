@@ -453,6 +453,8 @@ def export_html(data, path, fetch_images=False):
         stock_pill_class = 'pill'
         if isinstance(stock_delta, (int, float)) and stock_delta:
             stock_pill_class += ' stock-up' if stock_delta > 0 else ' stock-down'
+        elif it.get("stock_changed"):
+            stock_pill_class += ' stock-change'
         stock_pill = f"<span class='{stock_pill_class}'>📊 {esc(stock_text)}</span>" if stock_text else ""
         stock_indicator = (
             f"<span class='stock-indicator "

@@ -52,6 +52,14 @@ class DiffEngineTests(unittest.TestCase):
         self.assertEqual(diff["stock_change_count"], 1)
         self.assertLess(cur[0].get("stock_delta"), 0)
 
+    def test_stock_status_change_sets_flag(self):
+        prev = [self._item(stock="IN STOCK", stock_status="IN STOCK", stock_remaining=None)]
+        cur = [self._item(stock="LOW STOCK", stock_status="LOW STOCK", stock_remaining=None)]
+        diff = compute_diffs(cur, prev)
+        self.assertEqual(diff["stock_change_count"], 1)
+        self.assertTrue(cur[0].get("stock_changed"))
+        self.assertIsNotNone(cur[0].get("stock_delta"))
+
 
 if __name__ == "__main__":
     unittest.main()

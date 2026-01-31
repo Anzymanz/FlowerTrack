@@ -48,6 +48,22 @@ def _stock_is_in(stock, remaining) -> bool:
     return ('IN STOCK' in text) or ('LOW STOCK' in text) or ('REMAINING' in text)
 
 
+def _stock_score(stock, remaining) -> int:
+    if remaining is not None:
+        try:
+            return 1 if float(remaining) > 0 else -2
+        except Exception:
+            pass
+    text = str(stock or '').upper()
+    if 'OUT' in text or 'NOT' in text:
+        return -2
+    if 'LOW' in text:
+        return -1
+    if 'IN STOCK' in text or 'REMAINING' in text:
+        return 1
+    return 0
+
+
 def compute_diffs(current_items: list[dict], prev_items: list[dict]) -> dict:
     identity_cache = _build_identity_cache(current_items + prev_items)
     current_keys = {_identity_key_cached(it, identity_cache) for it in current_items}
@@ -137,6 +153,7 @@ def compute_diffs(current_items: list[dict], prev_items: list[dict]) -> dict:
         it["is_restock"] = bool(is_restock)
 
         if is_restock:
+            it["stock_changed"] = True
             if stock_delta is None:
                 it["stock_delta"] = 1.0
             restock_changes.append({
@@ -147,6 +164,7 @@ def compute_diffs(current_items: list[dict], prev_items: list[dict]) -> dict:
             stock_change_count += 1
             continue
         if prev_in and cur_out:
+            it["stock_changed"] = True
             if stock_delta is None:
                 it["stock_delta"] = -1.0
             out_of_stock_changes.append({
@@ -171,6 +189,12 @@ def compute_diffs(current_items: list[dict], prev_items: list[dict]) -> dict:
                 "stock_after": cur_rem,
             }
         if stock_change_entry is not None:
+            it["stock_changed"] = True
+            if stock_delta is None:
+                prev_score = _stock_score(prev_stock, prev_rem)
+                cur_score = _stock_score(cur_stock, cur_rem)
+                delta_score = cur_score - prev_score
+                it["stock_delta"] = float(delta_score if delta_score != 0 else 1.0)
             stock_changes.append(stock_change_entry)
             stock_change_count += 1
 

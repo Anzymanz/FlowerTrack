@@ -85,8 +85,10 @@ button:hover{background:var(--hover)}
 .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--pill);margin:4px 6px 0 0;font-size:13px;color:var(--fg)}
 .pill.stock-up{background:#15331e;color:#b7f0c8}
 .pill.stock-down{background:#3a1a1a;color:#f6c6c6}
+.pill.stock-change{background:#2c2a12;color:#f7e4a1}
 .light .pill.stock-up{background:#dff5e6;color:#116a2b}
 .light .pill.stock-down{background:#ffdede;color:#b20000}
+.light .pill.stock-change{background:#fff2cc;color:#7a5a00}
 .flag-icon{width:18px;height:12px;object-fit:cover;border-radius:2px;margin-right:6px;vertical-align:-2px}
 .pill-flag{font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif}
 .price-up{background:#3a1a1a;color:#f6c6c6}
