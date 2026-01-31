@@ -1412,7 +1412,7 @@ class App(tk.Tk):
         self.price_down_count = diff["price_down"]
         return diff
 
-    def _stage_notify(self, diff: dict, item_count: int) -> None:
+    def _stage_notify(self, diff: dict, item_count: int, items: list[dict] | None = None) -> None:
         """Notify stage: update UI status/logs and trigger post-process actions."""
         new_count = len(diff["new_items"])
         removed_count = len(diff["removed_items"])
@@ -1438,7 +1438,7 @@ class App(tk.Tk):
             and stock_change_count == 0
         ):
             self._capture_log("No changes detected; skipping notifications.")
-        self._post_process_actions(diff, items)
+        self._post_process_actions(diff, items or getattr(self, "data", []))
 
     def _stage_persist(self, diff: dict, items: list[dict]) -> None:
         """Persist stage: save last parse and update prev cache/timers."""
@@ -1500,7 +1500,7 @@ class App(tk.Tk):
                     self._update_tray_status()
                     self._update_last_scrape()
                     diff = self._stage_diff(parsed_items)
-                    self._stage_notify(diff, len(parsed_items))
+                    self._stage_notify(diff, len(parsed_items), parsed_items)
                     self._stage_persist(diff, parsed_items)
                     return
         except Empty:
