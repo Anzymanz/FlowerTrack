@@ -416,7 +416,14 @@ class HistoryViewer(tk.Toplevel):
 
 def open_history_window(parent, log_path: Path) -> HistoryViewer:
     win = HistoryViewer(parent, log_path)
-    win.transient(parent)
-    win.lift()
-    win.focus_force()
+    try:
+        win.lift()
+        win.focus_force()
+    except Exception:
+        pass
+    try:
+        if hasattr(parent, "_set_window_titlebar_dark"):
+            parent.after(80, lambda: parent._set_window_titlebar_dark(win, bool(parent.dark_mode_var.get())))
+    except Exception:
+        pass
     return win
