@@ -385,6 +385,7 @@ class App(tk.Tk):
                 self.history_window.deiconify()
                 self.history_window.lift()
                 self.history_window.focus_force()
+                self._apply_theme_to_window(self.history_window)
             except Exception:
                 pass
             return

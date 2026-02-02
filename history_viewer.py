@@ -23,9 +23,11 @@ class HistoryViewer(tk.Toplevel):
             pass
         self.records: list[dict] = []
         self.filtered: list[dict] = []
+        self._colors = None
         self._build_ui()
         self._load_records()
         self._apply_filter()
+        self._apply_theme()
 
     def _build_ui(self) -> None:
         top = ttk.Frame(self, padding=10)
@@ -75,6 +77,63 @@ class HistoryViewer(tk.Toplevel):
         ttk.Button(actions, text="Copy JSON", command=self._copy_json).pack(side="left")
         ttk.Button(actions, text="Open Log File", command=self._open_log_file).pack(side="left", padx=(6, 0))
         ttk.Button(actions, text="Open Log Folder", command=self._open_log_folder).pack(side="left", padx=(6, 0))
+
+    def _apply_theme(self) -> None:
+        dark = True
+        if hasattr(self.parent, "dark_mode_var"):
+            try:
+                dark = bool(self.parent.dark_mode_var.get())
+            except Exception:
+                dark = True
+        colors = None
+        try:
+            from theme import compute_colors
+            colors = compute_colors(dark)
+        except Exception:
+            colors = None
+        if colors is None:
+            return
+        self._colors = colors
+        bg = colors["bg"]
+        fg = colors["fg"]
+        ctrl_bg = colors["ctrl_bg"]
+        accent = colors["accent"]
+        try:
+            self.configure(bg=bg)
+        except Exception:
+            pass
+        def _apply_widget(widget):
+            try:
+                if isinstance(widget, ttk.Treeview):
+                    widget.configure(style="History.Treeview")
+                elif isinstance(widget, tk.Text):
+                    widget.configure(bg=bg, fg=fg, insertbackground=fg, highlightbackground=bg)
+                elif isinstance(widget, tk.Listbox):
+                    widget.configure(bg=bg if dark else "#ffffff", fg=fg, selectbackground=accent, selectforeground="#000" if dark else "#fff", highlightbackground=bg)
+                else:
+                    for opt, val in (("background", bg), ("foreground", fg)):
+                        try:
+                            widget.configure(**{opt: val})
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+            for child in widget.winfo_children():
+                _apply_widget(child)
+        _apply_widget(self)
+        try:
+            style = ttk.Style(self)
+            style.configure("History.Treeview", background=ctrl_bg, fieldbackground=ctrl_bg, foreground=fg)
+            style.map("History.Treeview", background=[("selected", accent)], foreground=[("selected", "#000" if dark else "#fff")])
+        except Exception:
+            pass
+        try:
+            if hasattr(self.parent, "_set_window_titlebar_dark"):
+                self.parent._set_window_titlebar_dark(self, dark)
+            if hasattr(self.parent, "_set_win_titlebar_dark"):
+                self.parent._set_win_titlebar_dark(dark)
+        except Exception:
+            pass
 
     def _load_records(self) -> None:
         self.records = []
