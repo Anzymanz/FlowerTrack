@@ -29,8 +29,9 @@ class HistoryViewer(tk.Toplevel):
         self._load_records()
         self._apply_filter()
         self._apply_theme()
-        self.after(80, self._apply_titlebar)
-        self.bind("<Map>", lambda _e: self.after(80, self._apply_titlebar))
+        self._schedule_titlebar_updates()
+        self.bind("<Map>", lambda _e: self._schedule_titlebar_updates())
+        self.bind("<Visibility>", lambda _e: self._schedule_titlebar_updates())
 
     def _build_ui(self) -> None:
         top = ttk.Frame(self, padding=10)
@@ -151,7 +152,7 @@ class HistoryViewer(tk.Toplevel):
             self.option_add("*Scrollbar.arrowColor", fg)
         except Exception:
             pass
-        self._apply_titlebar()
+        self._schedule_titlebar_updates()
 
     def _apply_titlebar(self) -> None:
         dark = True
@@ -164,6 +165,14 @@ class HistoryViewer(tk.Toplevel):
             self.update_idletasks()
         except Exception:
             pass
+
+    def _schedule_titlebar_updates(self) -> None:
+        # Titlebar theming on Toplevels can be timing-sensitive; retry a few times.
+        for delay in (60, 200, 500, 900):
+            try:
+                self.after(delay, self._apply_titlebar)
+            except Exception:
+                pass
         try:
             set_titlebar_dark(self, dark)
         except Exception:
