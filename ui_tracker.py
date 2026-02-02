@@ -378,7 +378,7 @@ class CannabisTracker:
         next_btn = ttk.Button(nav, text="Next >", width=8, command=lambda: self._change_day(1))
         next_btn.grid(row=0, column=2, padx=(6, 0))
         nav.columnconfigure(1, weight=1)
-        log_cols = ("time", "flower", "roa", "grams", "thc_mg", "cbd_mg", "remaining")
+        log_cols = ("time", "flower", "roa", "grams", "thc_mg", "cbd_mg")
         self.log_tree = ttk.Treeview(log_frame, columns=log_cols, show="headings", height=12, style=self.tree_style)
         headings = {
             "time": "Time",
@@ -387,7 +387,6 @@ class CannabisTracker:
             "grams": "Dose (g)",
             "thc_mg": "THC (mg)",
             "cbd_mg": "CBD (mg)",
-            "remaining": "Remaining (g)",
         }
         for col, text in headings.items():
             self.log_tree.heading(col, text=text)
@@ -397,7 +396,6 @@ class CannabisTracker:
         self.log_tree.column("grams", width=90, anchor="center")
         self.log_tree.column("thc_mg", width=70, anchor="center")
         self.log_tree.column("cbd_mg", width=70, anchor="center")
-        self.log_tree.column("remaining", width=110, anchor="center")
         self.log_tree.grid(row=2, column=0, sticky="nsew")
         self._bind_log_thc_cbd_tooltip()
         self._bind_tree_resize(self.log_tree, "log_column_widths")
@@ -891,7 +889,6 @@ class CannabisTracker:
                     f"{log['grams_used']:.3f}",
                     f"{log['thc_mg']:.1f}",
                     f"{log['cbd_mg']:.1f}",
-                    f"{log['remaining']:.3f}",
                 ),
             )
         # If there are logs for this day, scroll to the bottom to show the latest
@@ -1864,7 +1861,7 @@ class CannabisTracker:
         try:
             with open(path, "w", newline="", encoding="utf-8") as fh:
                 writer = csv.writer(fh)
-                writer.writerow(["date", "time", "flower", "roa", "grams_used", "thc_mg", "cbd_mg", "remaining", "is_cbd_dominant"])
+                writer.writerow(["date", "time", "flower", "roa", "grams_used", "thc_mg", "cbd_mg", "is_cbd_dominant"])
                 for log in logs_subset:
                     writer.writerow([
                         log.get("date", ""),
@@ -1874,7 +1871,6 @@ class CannabisTracker:
                         log.get("grams_used", log.get("grams", "")),
                         log.get("thc_mg", ""),
                         log.get("cbd_mg", ""),
-                        log.get("remaining", ""),
                         log.get("is_cbd_dominant", ""),
                     ])
             messagebox.showinfo("Export CSV", f"Exported {len(logs_subset)} rows.")
