@@ -127,6 +127,72 @@ class HistoryViewer(tk.Toplevel):
         except Exception:
             return str(raw)
 
+    def _format_list(self, title: str, items: list[str]) -> list[str]:
+        if not items:
+            return []
+        out = [f"{title} ({len(items)}):"]
+        out.extend([f"  - {item}" for item in items])
+        return out
+
+    def _format_details(self, record: dict) -> str:
+        if "_raw" in record:
+            return record.get("_raw", "")
+        lines: list[str] = []
+        ts = self._timestamp_for(record)
+        if ts:
+            lines.append(f"Timestamp: {ts}")
+        summary = self._summary_for(record)
+        if summary:
+            lines.append(f"Summary: {summary}")
+        lines.append("")
+        new_items = [self._item_label(it) for it in (record.get("new_items") or [])]
+        removed_items = [self._item_label(it) for it in (record.get("removed_items") or [])]
+        price_changes = [self._price_label(it) for it in (record.get("price_changes") or [])]
+        stock_changes = [self._stock_label(it) for it in (record.get("stock_changes") or [])]
+        out_of_stock = [self._stock_label(it) for it in (record.get("out_of_stock_changes") or [])]
+        restocks = [self._stock_label(it) for it in (record.get("restock_changes") or [])]
+        lines.extend(self._format_list("New items", new_items))
+        lines.extend(self._format_list("Removed items", removed_items))
+        lines.extend(self._format_list("Price changes", price_changes))
+        lines.extend(self._format_list("Stock changes", stock_changes))
+        lines.extend(self._format_list("Out of stock", out_of_stock))
+        lines.extend(self._format_list("Restocks", restocks))
+        if lines and lines[-1] != "":
+            lines.append("")
+        lines.append("Raw JSON:")
+        lines.append(json.dumps(record, ensure_ascii=False, indent=2))
+        return "\n".join(lines)
+
+    def _item_label(self, entry: dict) -> str:
+        parts = []
+        for key in ("brand", "producer", "strain", "product_id"):
+            val = entry.get(key)
+            if val:
+                parts.append(str(val))
+        label = " ".join(parts).strip()
+        return label or "Unknown"
+
+    def _price_label(self, entry: dict) -> str:
+        label = self._item_label(entry)
+        before = entry.get("price_before")
+        after = entry.get("price_after")
+        delta = entry.get("price_delta")
+        if before is None or after is None:
+            return f"{label}: price changed"
+        try:
+            delta_txt = f"{float(delta):+.2f}" if delta is not None else ""
+        except Exception:
+            delta_txt = str(delta) if delta is not None else ""
+        return f"{label}: {before} -> {after} ({delta_txt})".rstrip()
+
+    def _stock_label(self, entry: dict) -> str:
+        label = self._item_label(entry)
+        before = entry.get("stock_before")
+        after = entry.get("stock_after")
+        if before is None and after is None:
+            return f"{label}: stock changed"
+        return f"{label}: {before} -> {after}"
+
     def _apply_filter(self) -> None:
         text = self.filter_var.get().strip().lower()
         self.filtered = []
@@ -171,7 +237,7 @@ class HistoryViewer(tk.Toplevel):
         rec = self._selected_record()
         if rec is None:
             return
-        text = json.dumps(rec, ensure_ascii=False, indent=2)
+        text = self._format_details(rec)
         self.detail_text.configure(state="normal")
         self.detail_text.delete("1.0", "end")
         self.detail_text.insert("1.0", text)
