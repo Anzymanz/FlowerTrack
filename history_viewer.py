@@ -7,6 +7,7 @@ from tkinter import messagebox, ttk
 from pathlib import Path
 from datetime import datetime
 from theme import set_titlebar_dark
+import ctypes
 
 
 class HistoryViewer(tk.Toplevel):
@@ -32,6 +33,7 @@ class HistoryViewer(tk.Toplevel):
         self._schedule_titlebar_updates()
         self.bind("<Map>", lambda _e: self._schedule_titlebar_updates())
         self.bind("<Visibility>", lambda _e: self._schedule_titlebar_updates())
+        self.bind("<FocusIn>", lambda _e: self._schedule_titlebar_updates())
 
     def _build_ui(self) -> None:
         top = ttk.Frame(self, padding=10)
@@ -165,6 +167,21 @@ class HistoryViewer(tk.Toplevel):
             self.update_idletasks()
         except Exception:
             pass
+        try:
+            set_titlebar_dark(self, dark)
+        except Exception:
+            pass
+        try:
+            self._set_titlebar_dark_native(dark)
+        except Exception:
+            pass
+        try:
+            if hasattr(self.parent, "_set_window_titlebar_dark"):
+                self.parent._set_window_titlebar_dark(self, dark)
+            if hasattr(self.parent, "_set_win_titlebar_dark"):
+                self.parent._set_win_titlebar_dark(dark)
+        except Exception:
+            pass
 
     def _schedule_titlebar_updates(self) -> None:
         # Titlebar theming on Toplevels can be timing-sensitive; retry a few times.
@@ -173,15 +190,26 @@ class HistoryViewer(tk.Toplevel):
                 self.after(delay, self._apply_titlebar)
             except Exception:
                 pass
+
+    def _set_titlebar_dark_native(self, enable: bool) -> None:
+        if os.name != "nt":
+            return
         try:
-            set_titlebar_dark(self, dark)
-        except Exception:
-            pass
-        try:
-            if hasattr(self.parent, "_set_window_titlebar_dark"):
-                self.parent._set_window_titlebar_dark(self, dark)
-            if hasattr(self.parent, "_set_win_titlebar_dark"):
-                self.parent._set_win_titlebar_dark(dark)
+            hwnd = self.winfo_id()
+            GetParent = ctypes.windll.user32.GetParent
+            parent = GetParent(hwnd)
+            while parent:
+                hwnd = parent
+                parent = GetParent(hwnd)
+            DWMWA_USE_IMMERSIVE_DARK_MODE = 20
+            DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19
+            value = ctypes.c_int(1 if enable else 0)
+            if ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)
+            ) != 0:
+                ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                    hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value)
+                )
         except Exception:
             pass
 
