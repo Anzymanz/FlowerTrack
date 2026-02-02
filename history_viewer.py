@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 from pathlib import Path
 from datetime import datetime
+from theme import set_titlebar_dark
 
 
 class HistoryViewer(tk.Toplevel):
@@ -28,6 +29,8 @@ class HistoryViewer(tk.Toplevel):
         self._load_records()
         self._apply_filter()
         self._apply_theme()
+        self.after(80, self._apply_titlebar)
+        self.bind("<Map>", lambda _e: self.after(80, self._apply_titlebar))
 
     def _build_ui(self) -> None:
         top = ttk.Frame(self, padding=10)
@@ -148,11 +151,28 @@ class HistoryViewer(tk.Toplevel):
             self.option_add("*Scrollbar.arrowColor", fg)
         except Exception:
             pass
+        self._apply_titlebar()
+
+    def _apply_titlebar(self) -> None:
+        dark = True
+        if hasattr(self.parent, "dark_mode_var"):
+            try:
+                dark = bool(self.parent.dark_mode_var.get())
+            except Exception:
+                dark = True
+        try:
+            self.update_idletasks()
+        except Exception:
+            pass
+        try:
+            set_titlebar_dark(self, dark)
+        except Exception:
+            pass
         try:
             if hasattr(self.parent, "_set_window_titlebar_dark"):
-                self.after(80, lambda: self.parent._set_window_titlebar_dark(self, dark))
+                self.parent._set_window_titlebar_dark(self, dark)
             if hasattr(self.parent, "_set_win_titlebar_dark"):
-                self.after(120, lambda: self.parent._set_win_titlebar_dark(dark))
+                self.parent._set_win_titlebar_dark(dark)
         except Exception:
             pass
 
