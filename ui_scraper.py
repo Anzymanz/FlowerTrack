@@ -59,7 +59,6 @@ from resources import resource_path
 
 # Scraper UI constants
 SCRAPER_TITLE = "Medicann Scraper"
-HA_NOTIFY_LOG_FILE = Path(APP_DIR) / "logs" / "ha_notify.ndjson"
 def _should_stop_on_empty(error_count: int, error_threshold: int) -> bool:
     return error_count >= error_threshold
 def _identity_key_cached(item: dict, cache: dict) -> str:
@@ -167,8 +166,6 @@ class App(tk.Tk):
         self.last_change_label.pack(pady=(0, 8))
         self.last_scrape_label = ttk.Label(self, text="Last successful scrape: none")
         self.last_scrape_label.pack(pady=(0, 8))
-        self.last_ha_label = ttk.Label(self, text="Last HA notification: none")
-        self.last_ha_label.pack(pady=(0, 8))
         try:
             ts = get_last_scrape(SCRAPER_STATE_FILE)
             if ts:
@@ -390,41 +387,6 @@ class App(tk.Tk):
         except Exception:
             pass
 
-    def _update_last_ha(self, message: str) -> None:
-        try:
-            self.last_ha_label.config(text=f"Last HA notification: {message}")
-        except Exception:
-            pass
-
-    def _append_ha_audit(
-        self,
-        payload: dict,
-        ok: bool,
-        status: int | None,
-        error: str | None,
-        summary: str,
-        outcome: str,
-    ) -> None:
-        try:
-            record = {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "outcome": outcome,
-                "ok": bool(ok),
-                "status": status,
-                "error": error,
-                "summary": summary,
-                "counts": {
-                    "new": int(payload.get("new_count", 0) or 0),
-                    "removed": int(payload.get("removed_count", 0) or 0),
-                    "price_changes": len(payload.get("price_changes") or []),
-                    "stock_changes": len(payload.get("stock_changes") or []),
-                    "out_of_stock": len(payload.get("out_of_stock_changes") or []),
-                    "restocks": len(payload.get("restock_changes") or []),
-                },
-            }
-            append_change_log(HA_NOTIFY_LOG_FILE, record)
-        except Exception:
-            pass
     def _generate_change_export(self, items: list[dict] | None = None, silent: bool = False):
         """Generate an HTML snapshot for the latest items and keep only recent ones."""
         data = items if items is not None else self._get_export_items()
@@ -1127,16 +1089,6 @@ class App(tk.Tk):
         if quiet_hours:
             self._capture_log("Quiet hours active; skipping notifications.")
             self._update_last_change(summary)
-            try:
-                if hasattr(self, "_update_last_ha"):
-                    self._update_last_ha("skipped (quiet hours)")
-            except Exception:
-                pass
-            try:
-                if hasattr(self, "_append_ha_audit"):
-                    self._append_ha_audit(payload, False, None, "quiet_hours", summary, "skipped_quiet_hours")
-            except Exception:
-                pass
         # Build detailed desktop notification text and launch target
         detail = self.cap_notify_detail.get() if hasattr(self, 'cap_notify_detail') else 'summary'
         try:
@@ -1166,63 +1118,16 @@ class App(tk.Tk):
             self._capture_log("Windows notifications disabled; skipping.")
         # If log-only or quiet hours, skip HA network send
         if notify_allowed and not (log_only or quiet_hours):
-            self._capture_log("Sending Home Assistant notification...")
-            try:
-                if hasattr(self, "_update_last_ha"):
-                    self._update_last_ha("sending...")
-            except Exception:
-                pass
             ok, status, body = self.notify_service.send_home_assistant(payload)
             if ok and status:
                 self._update_last_change(summary)
-                try:
-                    if hasattr(self, "_update_last_ha"):
-                        self._update_last_ha(f"sent ({status})")
-                except Exception:
-                    pass
-                try:
-                    if hasattr(self, "_append_ha_audit"):
-                        self._append_ha_audit(payload, True, status, None, summary, "sent")
-                except Exception:
-                    pass
             else:
                 self._capture_log(f"HA response status: {status} body: {str(body)[:200] if body else ''}")
-                err = str(body)[:200] if body else "error"
-                try:
-                    if hasattr(self, "_update_last_ha"):
-                        self._update_last_ha(f"failed ({status or 'error'})")
-                except Exception:
-                    pass
-                try:
-                    if hasattr(self, "_append_ha_audit"):
-                        self._append_ha_audit(payload, False, status, err, summary, "failed")
-                except Exception:
-                    pass
         elif notify_allowed and not quiet_hours:
             if log_only:
                 self._capture_log("HA notifications set to log-only; skipping network send.")
-                try:
-                    if hasattr(self, "_update_last_ha"):
-                        self._update_last_ha("skipped (log only)")
-                except Exception:
-                    pass
-                try:
-                    if hasattr(self, "_append_ha_audit"):
-                        self._append_ha_audit(payload, False, None, "log_only", summary, "skipped_log_only")
-                except Exception:
-                    pass
             else:
                 self._capture_log("HA notifications disabled; skipping.")
-                try:
-                    if hasattr(self, "_update_last_ha"):
-                        self._update_last_ha("skipped (disabled)")
-                except Exception:
-                    pass
-                try:
-                    if hasattr(self, "_append_ha_audit"):
-                        self._append_ha_audit(payload, False, None, "disabled", summary, "skipped_disabled")
-                except Exception:
-                    pass
         try:
             if items:
                 self._generate_change_export(self._get_export_items())
