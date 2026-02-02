@@ -56,6 +56,7 @@ from logger import UILogger
 from notifications import NotificationService
 from theme import apply_style_theme, set_titlebar_dark, compute_colors
 from resources import resource_path
+from history_viewer import open_history_window
 
 # Scraper UI constants
 SCRAPER_TITLE = "Medicann Scraper"
@@ -118,6 +119,7 @@ class App(tk.Tk):
         self.dark_mode_var = tk.BooleanVar(value=self._config_dark)
         self.settings_window = None
         self.capture_window = None
+        self.history_window = None
         self.tray_icon = None
         self.capture_status = "idle"
         self.error_count = 0
@@ -138,6 +140,7 @@ class App(tk.Tk):
         ttk.Button(btns, text="Start Auto-Scraper", command=self.start_auto_capture).pack(side="left", padx=(5, 5))
         ttk.Button(btns, text="Stop Auto-Scraper", command=self.stop_auto_capture).pack(side="left", padx=5)
         ttk.Button(btns, text="Open browser", command=self.open_latest_export).pack(side="left", padx=5)
+        ttk.Button(btns, text="History", command=self._open_history_window).pack(side="left", padx=5)
         ttk.Button(btns, text="Settings", command=self._open_settings_window).pack(side="left", padx=5)
         self.progress = ttk.Progressbar(self, mode="determinate")
         self.progress.pack(fill="x", padx=10, pady=5)
@@ -375,6 +378,21 @@ class App(tk.Tk):
             self._apply_theme_to_window(self.settings_window)
         except Exception as exc:
             messagebox.showerror("Settings", f"Could not open settings:\n{exc}")
+
+    def _open_history_window(self):
+        if self.history_window and tk.Toplevel.winfo_exists(self.history_window):
+            try:
+                self.history_window.deiconify()
+                self.history_window.lift()
+                self.history_window.focus_force()
+            except Exception:
+                pass
+            return
+        try:
+            self.history_window = open_history_window(self, CHANGES_LOG_FILE)
+            self._apply_theme_to_window(self.history_window)
+        except Exception as exc:
+            messagebox.showerror("History", f"Could not open history:\n{exc}")
 
     def _capture_log(self, msg: str):
         if hasattr(self, "logger") and self.logger:
