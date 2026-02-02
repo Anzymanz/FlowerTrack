@@ -157,13 +157,11 @@ class HistoryViewer(tk.Toplevel):
         lines.extend(self._format_list("Stock changes", stock_changes))
         lines.extend(self._format_list("Out of stock", out_of_stock))
         lines.extend(self._format_list("Restocks", restocks))
-        if lines and lines[-1] != "":
-            lines.append("")
-        lines.append("Raw JSON:")
-        lines.append(json.dumps(record, ensure_ascii=False, indent=2))
         return "\n".join(lines)
 
     def _item_label(self, entry: dict) -> str:
+        if entry.get("label"):
+            return str(entry.get("label"))
         parts = []
         for key in ("brand", "producer", "strain", "product_id"):
             val = entry.get(key)
