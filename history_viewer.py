@@ -57,9 +57,9 @@ class HistoryViewer(tk.Toplevel):
         self.tree.column("time", width=180, anchor="center")
         self.tree.column("summary", width=680, anchor="w")
         self.tree.grid(row=0, column=0, sticky="nsew")
-        scroll = ttk.Scrollbar(body, orient="vertical", command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scroll.set)
-        scroll.grid(row=0, column=1, sticky="ns")
+        self.tree_scroll = ttk.Scrollbar(body, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=self.tree_scroll.set)
+        self.tree_scroll.grid(row=0, column=1, sticky="ns")
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
 
         detail_frame = ttk.LabelFrame(body, text="Details", padding=8)
@@ -68,9 +68,9 @@ class HistoryViewer(tk.Toplevel):
         detail_frame.columnconfigure(0, weight=1)
         self.detail_text = tk.Text(detail_frame, wrap="word", height=10, state="disabled")
         self.detail_text.grid(row=0, column=0, sticky="nsew")
-        detail_scroll = ttk.Scrollbar(detail_frame, orient="vertical", command=self.detail_text.yview)
-        self.detail_text.configure(yscrollcommand=detail_scroll.set)
-        detail_scroll.grid(row=0, column=1, sticky="ns")
+        self.detail_scroll = ttk.Scrollbar(detail_frame, orient="vertical", command=self.detail_text.yview)
+        self.detail_text.configure(yscrollcommand=self.detail_scroll.set)
+        self.detail_scroll.grid(row=0, column=1, sticky="ns")
 
         actions = ttk.Frame(self, padding=(10, 6, 10, 10))
         actions.pack(fill="x")
@@ -124,14 +124,35 @@ class HistoryViewer(tk.Toplevel):
         try:
             style = ttk.Style(self)
             style.configure("History.Treeview", background=ctrl_bg, fieldbackground=ctrl_bg, foreground=fg)
-            style.map("History.Treeview", background=[("selected", accent)], foreground=[("selected", "#000" if dark else "#fff")])
+            style.map(
+                "History.Treeview",
+                background=[("selected", accent)],
+                foreground=[("selected", "#000" if dark else "#fff")],
+            )
+            style.configure("History.Treeview.Heading", background=ctrl_bg, foreground=fg)
+            style.map("History.Treeview.Heading", background=[("active", accent)], foreground=[("active", "#000" if dark else "#fff")])
+            style.configure("History.Vertical.TScrollbar", background=ctrl_bg, troughcolor=bg, arrowcolor=fg)
+        except Exception:
+            pass
+        try:
+            self.tree.configure(style="History.Treeview")
+            self.tree_scroll.configure(style="History.Vertical.TScrollbar")
+            self.detail_scroll.configure(style="History.Vertical.TScrollbar")
+        except Exception:
+            pass
+        try:
+            # Keep scrollbars dark even when empty.
+            self.option_add("*Scrollbar.background", ctrl_bg)
+            self.option_add("*Scrollbar.troughColor", bg)
+            self.option_add("*Scrollbar.activeBackground", accent)
+            self.option_add("*Scrollbar.arrowColor", fg)
         except Exception:
             pass
         try:
             if hasattr(self.parent, "_set_window_titlebar_dark"):
-                self.parent._set_window_titlebar_dark(self, dark)
+                self.after(80, lambda: self.parent._set_window_titlebar_dark(self, dark))
             if hasattr(self.parent, "_set_win_titlebar_dark"):
-                self.parent._set_win_titlebar_dark(dark)
+                self.after(120, lambda: self.parent._set_win_titlebar_dark(dark))
         except Exception:
             pass
 
