@@ -206,7 +206,8 @@ class CaptureWorker:
                                     data = json.loads(raw)
                                     parse_failed = False
                                 except Exception as exc:
-                                    self._safe_log(f"Response JSON parse failed for {url}: {exc}")
+                                    if any(tok in url for tok in ("formulary-products", "formulary-products/count")):
+                                        self._safe_log(f"Response JSON parse failed for {url}: {exc}")
                             if parse_failed:
                                 return
                         except Exception as exc:
