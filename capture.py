@@ -471,10 +471,7 @@ class CaptureWorker:
                                             in_stock_only = bool(self.cfg.get('in_stock_only', False))
                                             q['includeInactive'] = ['true' if include_inactive else 'false']
                                             q['requireAvailableStock'] = ['true' if in_stock_only else 'false']
-                                            if requestable_only:
-                                                q['requestableOnly'] = ['true']
-                                            else:
-                                                q.pop('requestableOnly', None)
+                                            q['requestableOnly'] = ['true' if requestable_only else 'false']
                                             new_query = urllib.parse.urlencode(q, doseq=True)
                                             base_url = urllib.parse.urlunparse(parsed._replace(query=new_query))
                                             if base_url != (base_payload.get('url') or ''):
