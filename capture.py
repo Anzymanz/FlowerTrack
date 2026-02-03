@@ -444,6 +444,7 @@ class CaptureWorker:
                                                 time.sleep(1.0 * attempt)
                                 return None
                             def collect_once(refresh: bool) -> bool:
+                                nonlocal api_payloads
                                 if refresh:
                                     try:
                                         self.callbacks["capture_log"]("Refreshing page before capture.")
