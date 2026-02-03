@@ -78,9 +78,7 @@ def _migrate_tracker_data(data: dict) -> dict:
 def load_tracker_data(path: Path | None = None, logger: Optional[Callable[[str], None]] = None) -> dict:
     target = Path(path) if path else TRACKER_DATA_FILE
     if not target.exists():
-        if logger:
-            logger(f"Tracker data not found at {target}")
-        return {}
+        return {"schema_version": SCHEMA_VERSION, "logs": []}
     try:
         raw = json.loads(target.read_text(encoding="utf-8"))
         if isinstance(raw, list):
