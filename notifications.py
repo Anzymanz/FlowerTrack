@@ -55,7 +55,12 @@ def _maybe_send_windows_notification(
         try:
             callback = None
             if launch_url:
-                callback = lambda: webbrowser.open(launch_url)
+                def _cb():
+                    try:
+                        webbrowser.open(launch_url)
+                    finally:
+                        return 0
+                callback = _cb
             if Win10ToastClickNotifier is not None:
                 notifier = Win10ToastClickNotifier()
                 notifier.show_toast(
