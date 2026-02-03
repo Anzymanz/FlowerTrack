@@ -540,10 +540,7 @@ class CannabisTracker:
         if grams_used <= 0:
             messagebox.showerror("Invalid dose", "Dose must be positive.")
             return
-        if self.hide_roa_options:
-            roa = "Unknown"
-        else:
-            roa = self.roa_choice.get().strip() or "Vaped"
+        roa = self._resolve_roa()
         try:
             remaining, log_entry = log_dose_entry(
                 self.flowers,
@@ -561,6 +558,14 @@ class CannabisTracker:
         self._update_scraper_status_icon()
         self.dose_entry.delete(0, tk.END)
         self.save_data()
+
+    def _resolve_roa(self) -> str:
+        if getattr(self, "hide_roa_options", False):
+            return "Unknown"
+        try:
+            return self.roa_choice.get().strip() or "Vaped"
+        except Exception:
+            return "Vaped"
     def edit_log_entry(self) -> None:
         selection = self.log_tree.selection()
         if not selection:
