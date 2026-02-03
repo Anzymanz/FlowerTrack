@@ -1096,15 +1096,6 @@ class App(tk.Tk):
             headers["Authorization"] = f"Bearer {token}"
         data = json.dumps(payload).encode("utf-8")
         quiet_hours = self._quiet_hours_active() if hasattr(self, '_quiet_hours_active') else False
-        try:
-            self._capture_log("Notify flags | ha={} win={} quiet={} log_only={}".format(
-                bool(self.cap_auto_notify_ha.get()),
-                bool(self.notify_windows.get()),
-                quiet_hours,
-                log_only,
-            ))
-        except Exception:
-            pass
         if quiet_hours:
             self._capture_log("Quiet hours active; skipping notifications.")
             self._update_last_change(summary)
