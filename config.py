@@ -79,7 +79,7 @@ DEFAULT_CAPTURE_CONFIG = {
     "retry_wait_seconds": 30.0,
     "retry_backoff_max": 2.0,
     "scroll_times": 0,
-    "scroll_pause_seconds": 0.5,
+    "scroll_pause_seconds": 0.0,
     "dump_capture_html": False,
     "dump_api_json": False,
     "timeout_ms": 45000,
