@@ -291,6 +291,8 @@ def _validate_ui_config(raw: dict, tracker_fallback: dict) -> dict:
 
 def _validate_capture_config(raw: dict) -> dict:
     cfg = dict(DEFAULT_CAPTURE_CONFIG)
+    if not isinstance(raw, dict):
+        return cfg
     cfg["version"] = int(raw.get("version") or SCHEMA_VERSION)
     cfg["url"] = str(raw.get("url") or DEFAULT_CAPTURE_CONFIG["url"]).strip()
     cfg["username"] = str(raw.get("username") or "")

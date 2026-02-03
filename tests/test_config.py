@@ -12,6 +12,11 @@ class ConfigTests(unittest.TestCase):
         self.assertIn("quiet_hours_interval_seconds", cfg)
         self.assertEqual(cfg["quiet_hours_interval_seconds"], config.DEFAULT_CAPTURE_CONFIG["quiet_hours_interval_seconds"])
 
+    def test_validate_capture_non_dict(self):
+        cfg = config._validate_capture_config(None)
+        self.assertEqual(cfg["url"], config.DEFAULT_CAPTURE_CONFIG["url"])
+        self.assertEqual(cfg["username_selector"], config.DEFAULT_CAPTURE_CONFIG["username_selector"])
+
     def test_load_unified_defaults(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "config.json"
