@@ -564,6 +564,37 @@ class CaptureWorker:
                                     except Exception:
                                         pass
                                     return False
+                                # Filter captured payloads to the active filter combination to avoid duplicates.
+                                try:
+                                    include_inactive = bool(self.cfg.get('include_inactive', False))
+                                    requestable_only = bool(self.cfg.get('requestable_only', True))
+                                    in_stock_only = bool(self.cfg.get('in_stock_only', False))
+                                    def _matches_filters(url: str) -> bool:
+                                        try:
+                                            parsed = urllib.parse.urlparse(url)
+                                            if 'formulary-products' not in parsed.path:
+                                                return True
+                                            q = urllib.parse.parse_qs(parsed.query)
+                                            def _q_bool(key: str, default: bool) -> bool:
+                                                raw = q.get(key, [None])[0]
+                                                if raw is None:
+                                                    return default
+                                                return str(raw).lower() == 'true'
+                                            return (
+                                                _q_bool('includeInactive', False) == include_inactive
+                                                and _q_bool('requestableOnly', False) == requestable_only
+                                                and _q_bool('requireAvailableStock', False) == in_stock_only
+                                            )
+                                        except Exception:
+                                            return True
+                                    filtered = []
+                                    for payload in api_payloads:
+                                        url = payload.get('url') or ''
+                                        if not url or _matches_filters(url):
+                                            filtered.append(payload)
+                                    api_payloads = filtered
+                                except Exception:
+                                    pass
                                 api_count = 0
                                 for payload in api_payloads:
                                     try:
