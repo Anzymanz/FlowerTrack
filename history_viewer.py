@@ -10,6 +10,13 @@ from theme import set_titlebar_dark
 import ctypes
 
 
+
+def _log_debug(msg: str) -> None:
+    try:
+        stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f"[{stamp}] {msg}")
+    except Exception:
+        pass
 class HistoryViewer(tk.Toplevel):
     def __init__(self, parent, log_path: Path):
         super().__init__(parent)
@@ -21,8 +28,8 @@ class HistoryViewer(tk.Toplevel):
         try:
             if hasattr(parent, "_resource_path"):
                 self.iconbitmap(parent._resource_path("assets/icon.ico"))
-        except Exception:
-            pass
+        except Exception as exc:
+            _log_debug(f"HistoryViewer suppressed exception: {exc}")
         self.records: list[dict] = []
         self.filtered: list[dict] = []
         self._colors = None
@@ -106,8 +113,8 @@ class HistoryViewer(tk.Toplevel):
         accent = colors["accent"]
         try:
             self.configure(bg=bg)
-        except Exception:
-            pass
+        except Exception as exc:
+            _log_debug(f"HistoryViewer suppressed exception: {exc}")
         def _apply_widget(widget):
             try:
                 if isinstance(widget, ttk.Treeview):
@@ -120,10 +127,10 @@ class HistoryViewer(tk.Toplevel):
                     for opt, val in (("background", bg), ("foreground", fg)):
                         try:
                             widget.configure(**{opt: val})
-                        except Exception:
-                            pass
-            except Exception:
-                pass
+                        except Exception as exc:
+                            _log_debug(f"HistoryViewer suppressed exception: {exc}")
+            except Exception as exc:
+                _log_debug(f"HistoryViewer suppressed exception: {exc}")
             for child in widget.winfo_children():
                 _apply_widget(child)
         _apply_widget(self)
@@ -138,22 +145,22 @@ class HistoryViewer(tk.Toplevel):
             style.configure("History.Treeview.Heading", background=ctrl_bg, foreground=fg)
             style.map("History.Treeview.Heading", background=[("active", accent)], foreground=[("active", "#000" if dark else "#fff")])
             style.configure("History.Vertical.TScrollbar", background=ctrl_bg, troughcolor=bg, arrowcolor=fg)
-        except Exception:
-            pass
+        except Exception as exc:
+            _log_debug(f"HistoryViewer suppressed exception: {exc}")
         try:
             self.tree.configure(style="History.Treeview")
             self.tree_scroll.configure(style="History.Vertical.TScrollbar")
             self.detail_scroll.configure(style="History.Vertical.TScrollbar")
-        except Exception:
-            pass
+        except Exception as exc:
+            _log_debug(f"HistoryViewer suppressed exception: {exc}")
         try:
             # Keep scrollbars dark even when empty.
             self.option_add("*Scrollbar.background", ctrl_bg)
             self.option_add("*Scrollbar.troughColor", bg)
             self.option_add("*Scrollbar.activeBackground", accent)
             self.option_add("*Scrollbar.arrowColor", fg)
-        except Exception:
-            pass
+        except Exception as exc:
+            _log_debug(f"HistoryViewer suppressed exception: {exc}")
         self._schedule_titlebar_updates()
 
     def _apply_titlebar(self) -> None:
@@ -165,32 +172,30 @@ class HistoryViewer(tk.Toplevel):
                 dark = True
         try:
             self.update_idletasks()
-        except Exception:
-            pass
+        except Exception as exc:
+            _log_debug(f"HistoryViewer suppressed exception: {exc}")
         try:
             set_titlebar_dark(self, dark)
-        except Exception:
-            pass
+        except Exception as exc:
+            _log_debug(f"HistoryViewer suppressed exception: {exc}")
         try:
             self._set_titlebar_dark_native(dark)
-        except Exception:
-            pass
+        except Exception as exc:
+            _log_debug(f"HistoryViewer suppressed exception: {exc}")
         try:
             if hasattr(self.parent, "_set_window_titlebar_dark"):
                 self.parent._set_window_titlebar_dark(self, dark)
             if hasattr(self.parent, "_set_win_titlebar_dark"):
                 self.parent._set_win_titlebar_dark(dark)
-        except Exception:
-            pass
-
+        except Exception as exc:
+            _log_debug(f"HistoryViewer suppressed exception: {exc}")
     def _schedule_titlebar_updates(self) -> None:
         # Titlebar theming on Toplevels can be timing-sensitive; retry a few times.
         for delay in (60, 200, 500, 900):
             try:
                 self.after(delay, self._apply_titlebar)
-            except Exception:
-                pass
-
+            except Exception as exc:
+                _log_debug(f"HistoryViewer suppressed exception: {exc}")
     def _set_titlebar_dark_native(self, enable: bool) -> None:
         if os.name != "nt":
             return
@@ -214,9 +219,8 @@ class HistoryViewer(tk.Toplevel):
                 ctypes.windll.dwmapi.DwmSetWindowAttribute(
                     hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value)
                 )
-        except Exception:
-            pass
-
+        except Exception as exc:
+            _log_debug(f"HistoryViewer suppressed exception: {exc}")
     def _load_records(self) -> None:
         self.records = []
         if not self.log_path.exists():
@@ -419,11 +423,11 @@ def open_history_window(parent, log_path: Path) -> HistoryViewer:
     try:
         win.lift()
         win.focus_force()
-    except Exception:
-        pass
+    except Exception as exc:
+        _log_debug(f"HistoryViewer suppressed exception: {exc}")
     try:
         if hasattr(parent, "_set_window_titlebar_dark"):
             parent.after(80, lambda: parent._set_window_titlebar_dark(win, bool(parent.dark_mode_var.get())))
-    except Exception:
-        pass
+    except Exception as exc:
+        _log_debug(f"HistoryViewer suppressed exception: {exc}")
     return win

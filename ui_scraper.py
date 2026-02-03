@@ -100,8 +100,8 @@ class App(tk.Tk):
         try:
             init_exports(ASSETS_DIR, EXPORTS_DIR_DEFAULT)
             set_exports_dir(EXPORTS_DIR_DEFAULT)
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         try:
             # Prefer bundled assets/icon.ico if present; fallback to old asset
             icon_path = ASSETS_DIR / "icon.ico"
@@ -109,8 +109,8 @@ class App(tk.Tk):
                 self.iconbitmap(str(icon_path))
             else:
                 self.iconbitmap(self._resource_path('assets/icon2.ico'))
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         # Start lightweight export server for consistent origin (favorites persistence)
         self._ensure_export_server()
         self.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -173,8 +173,8 @@ class App(tk.Tk):
             ts = get_last_scrape(SCRAPER_STATE_FILE)
             if ts:
                 self.last_scrape_label.config(text=f"Last successful scrape: {ts}")
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         self.data = []
         self.price_up_count = 0
         self.price_down_count = 0
@@ -199,8 +199,8 @@ class App(tk.Tk):
         try:
             self.after(120, lambda: self._set_window_titlebar_dark(self, self.dark_mode_var.get()))
             self.after(150, lambda: self._set_win_titlebar_dark(self.dark_mode_var.get()))
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def _build_capture_controls(self) -> None:
         cfg = _load_capture_config()
         self.capture_config_path = Path(CONFIG_FILE)
@@ -317,8 +317,8 @@ class App(tk.Tk):
             return
         try:
             self._save_capture_window()
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         cfg = self._collect_capture_cfg()
         if not cfg.get("url"):
             messagebox.showwarning("Auto-capture", "Please set the target URL before starting.")
@@ -357,17 +357,16 @@ class App(tk.Tk):
         try:
             if seconds and seconds > 0:
                 self.status.config(text=f"Next capture in {int(seconds)}s")
-        except Exception:
-            pass
-
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def _open_settings_window(self):
         if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window):
             try:
                 self.settings_window.deiconify()
                 self.settings_window.lift()
                 self.settings_window.focus_force()
-            except Exception:
-                pass
+            except Exception as exc:
+                self._debug_log(f"Suppressed exception: {exc}")
             return
         try:
             self.settings_window = open_settings_window(self, self.assets_dir)
@@ -382,8 +381,8 @@ class App(tk.Tk):
                 self.history_window.lift()
                 self.history_window.focus_force()
                 self._apply_theme_to_window(self.history_window)
-            except Exception:
-                pass
+            except Exception as exc:
+                self._debug_log(f"Suppressed exception: {exc}")
             return
         try:
             self.history_window = open_history_window(self, CHANGES_LOG_FILE)
@@ -399,9 +398,8 @@ class App(tk.Tk):
         # Update status label for capture-related messages
         try:
             self.status.config(text=msg)
-        except Exception:
-            pass
-
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def _generate_change_export(self, items: list[dict] | None = None, silent: bool = False):
         """Generate an HTML snapshot for the latest items and keep only recent ones."""
         data = items if items is not None else self._get_export_items()
@@ -409,8 +407,8 @@ class App(tk.Tk):
             if not silent:
                 try:
                     messagebox.showinfo("Open Export", "No data available to export yet.")
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self._debug_log(f"Suppressed exception: {exc}")
             return
         try:
             path = export_html_auto(data, exports_dir=EXPORTS_DIR_DEFAULT, open_file=False, fetch_images=False)
@@ -499,8 +497,8 @@ class App(tk.Tk):
             self.lift()
             self.focus_force()
             self._restore_settings_window()
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def _exit_from_tray(self, icon=None, item=None):
         self.after(0, self._exit_app)
     def _show_tray_icon(self):
@@ -512,14 +510,14 @@ class App(tk.Tk):
         try:
             if event.widget is self:
                 self.after(50, self._minimize_to_tray)
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def _on_map(self, event):
         try:
             if event.widget is self:
                 pass
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def _is_capture_running(self) -> bool:
         return bool(self.capture_thread and self.capture_thread.is_alive())
     def _update_tray_status(self):
@@ -533,31 +531,36 @@ class App(tk.Tk):
                     empty_retry=getattr(self, "_empty_retry_pending", False),
                 )
                 update_tray_icon(self.tray_icon, running, warn)
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def _hide_settings_window(self):
         try:
             self._save_capture_window()
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         try:
             if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window):
                 self.settings_window.withdraw()
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def _restore_settings_window(self):
         try:
             if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window):
                 self.settings_window.deiconify()
                 self.settings_window.lift()
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
+    def _debug_log(self, msg: str) -> None:
+        try:
+            _log_debug(msg)
         except Exception:
             pass
     def _log_console(self, msg: str):
         if threading.current_thread() is not getattr(self, "_ui_thread", None):
             try:
                 self.after(0, lambda m=msg: self._log_console_ui(m))
-            except Exception:
-                pass
+            except Exception as exc:
+                self._debug_log(f"Suppressed exception: {exc}")
             return
         self._log_console_ui(msg)
     def _log_console_ui(self, msg: str):
@@ -572,27 +575,26 @@ class App(tk.Tk):
             self.console.insert("end", line)
             self.console.see("end")
             self.console.configure(state="disabled")
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         try:
             self.status.config(text=msg)
-        except Exception:
-            pass
-
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def _update_last_change(self, summary: str):
         ts_line = f"{datetime.now().astimezone().strftime('%Y-%m-%d %H:%M:%S%z')} | {summary}"
         write_scraper_state(SCRAPER_STATE_FILE, last_change=ts_line)
         try:
             self.last_change_label.config(text=f"Last change detected: {ts_line}")
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def _update_last_scrape(self):
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         write_scraper_state(SCRAPER_STATE_FILE, last_scrape=ts)
         try:
             self.last_scrape_label.config(text=f"Last successful scrape: {ts}")
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def _goto_with_log(self, page, url: str, PlaywrightTimeoutError):
         try:
             page.goto(url, wait_until="domcontentloaded", timeout=60000)
@@ -647,8 +649,8 @@ class App(tk.Tk):
         start = time.time()
         try:
             self.after(0, lambda: self.progress.config(mode="determinate", maximum=100, value=0))
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         while time.time() < end:
             if self.capture_stop.is_set():
                 return True
@@ -657,21 +659,21 @@ class App(tk.Tk):
                 msg = f"{label}: {remaining:.1f}s remaining"
                 try:
                     self.after(0, lambda m=msg: self.status.config(text=m))
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self._debug_log(f"Suppressed exception: {exc}")
                 last_update = time.time()
             try:
                 elapsed = time.time() - start
                 pct = min(100, max(0, (elapsed / target * 100) if target else 100))
                 self.after(0, lambda v=pct: self.progress.config(value=v))
-            except Exception:
-                pass
+            except Exception as exc:
+                self._debug_log(f"Suppressed exception: {exc}")
             time.sleep(min(0.2, remaining))
         # status reset handled by worker status callbacks
         try:
             self.after(0, lambda: self.progress.config(value=0))
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         return self.capture_stop.is_set()
     def _on_capture_status(self, status: str, msg: str | None = None):
         """Handle worker status updates; reflect in UI/tray."""
@@ -681,14 +683,14 @@ class App(tk.Tk):
                 self.status.config(text=msg)
             else:
                 self.status.config(text=f"Status: {status}")
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         self._update_tray_status()
     def _write_scraper_state(self, status: str) -> None:
         try:
             write_scraper_state(SCRAPER_STATE_FILE, status, pid=os.getpid())
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def load_capture_config(self):
         path = filedialog.askopenfilename(
             title="Select capture config JSON",
@@ -835,6 +837,7 @@ class App(tk.Tk):
         diff_override: dict | None = None,
         items_override: list[dict] | None = None,
     ):
+        debug_log = getattr(self, "_debug_log", _log_debug)
         url = self.cap_ha_webhook.get().strip()
         if not url and not log_only:
             if ui_errors:
@@ -853,8 +856,8 @@ class App(tk.Tk):
                 try:
                     prev_items = load_last_parse(LAST_PARSE_FILE)
                     prev_keys = { _identity_key_cached(it, identity_cache) for it in prev_items }
-                except Exception:
-                    pass
+                except Exception as exc:
+                    debug_log(f"Suppressed exception: {exc}")
             diff = compute_diffs(items, prev_items)
         new_items = diff["new_items"]
         removed_items = diff["removed_items"]
@@ -1080,8 +1083,8 @@ class App(tk.Tk):
                 "restock_changes": log_restock_change_compact,
             }
             append_change_log(CHANGES_LOG_FILE, log_record)
-        except Exception:
-            pass
+        except Exception as exc:
+            debug_log(f"Suppressed exception: {exc}")
         headers = {
             "Content-Type": "application/json",
         }
@@ -1106,8 +1109,8 @@ class App(tk.Tk):
                 self._generate_change_export(self._get_export_items(), silent=True)
                 launch_url = self._latest_export_url() or launch_url
                 export_generated = True
-            except Exception:
-                pass
+            except Exception as exc:
+                debug_log(f"Suppressed exception: {exc}")
         if not launch_url:
             try:
                 launch_url = self._latest_export_url()
@@ -1228,8 +1231,8 @@ class App(tk.Tk):
             _log_debug("[server] ensure_export_server: port not ready; restarting server")
             try:
                 self.stop_export_server()
-            except Exception:
-                pass
+            except Exception as exc:
+                self._debug_log(f"Suppressed exception: {exc}")
         ok = self.start_export_server()
         if not ok and not self._server_failed:
             self._server_failed = True
@@ -1253,29 +1256,29 @@ class App(tk.Tk):
         try:
             # mark scraper stopped
             self._write_scraper_state("stopped")
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         try:
             self.capture_stop.set()
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         try:
             self.stop_export_server()
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         try:
             if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window):
                 self.settings_window.destroy()
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         try:
             self._hide_tray_icon()
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         try:
             self.destroy()
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def _open_url_with_fallback(self, url: str, file_path: Path) -> None:
         """
         Try to hit the server URL; if unreachable, fall back to opening the file:// version.
@@ -1392,8 +1395,8 @@ class App(tk.Tk):
         try:
             self.progress.config(mode='determinate', maximum=len(deduped))
             self.progress['value'] = 0
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         self.status.config(text="Processing.")
         def worker():
             try:
@@ -1459,8 +1462,8 @@ class App(tk.Tk):
             self._capture_log(f"Failed to save last parse: {exc}")
         try:
             self._set_next_capture_timer(float(self.cap_interval.get() or 0))
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         # Update prev cache for next run after notifications are sent
         self.prev_items = list(items)
         self.prev_keys = diff.get("current_keys", set())
@@ -1476,8 +1479,8 @@ class App(tk.Tk):
                     self.status.config(text=f"Processing {idx} / {total}")
                     try:
                         self.progress['value'] = idx
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        self._debug_log(f"Suppressed exception: {exc}")
                 elif msg[0] == "error":
                     _, err = msg
                     self.progress.stop()
@@ -1486,8 +1489,8 @@ class App(tk.Tk):
                 elif msg[0] == "done":
                     try:
                         self.progress['value'] = self.progress['maximum']
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        self._debug_log(f"Suppressed exception: {exc}")
                     # Parse stage (already collected in worker)
                     parsed_items = self._stage_parse()
                     if not parsed_items:
@@ -1522,14 +1525,14 @@ class App(tk.Tk):
             ts = get_last_change(SCRAPER_STATE_FILE)
             if ts:
                 self.last_change_label.config(text=f"Last change detected: {ts}")
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         try:
             ts = get_last_scrape(SCRAPER_STATE_FILE)
             if ts:
                 self.last_scrape_label.config(text=f"Last successful scrape: {ts}")
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def _get_export_items(self):
         combined = list(self.data)
         if getattr(self, "removed_data", None):
@@ -1544,23 +1547,23 @@ class App(tk.Tk):
         try:
             if LAST_PARSE_FILE.exists():
                 LAST_PARSE_FILE.unlink()
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         for path in (CHANGES_LOG_FILE,):
             try:
                 if path.exists():
                     path.unlink()
-            except Exception:
-                pass
+            except Exception as exc:
+                self._debug_log(f"Suppressed exception: {exc}")
         try:
             self.progress['value'] = 0
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         try:
             self.last_change_label.config(text="Last change detected: none")
             self.last_scrape_label.config(text="Last successful scrape: none")
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         update_scraper_state(SCRAPER_STATE_FILE, last_change=None, last_scrape=None)
         self.status.config(text="Cache cleared")
         messagebox.showinfo("Cleared", "Cache cleared (including previous parse and logs).")
@@ -1574,12 +1577,11 @@ class App(tk.Tk):
                 try:
                     self.progress.stop()
                     self.progress.config(mode='determinate', value=0)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self._debug_log(f"Suppressed exception: {exc}")
                 self.status.config(text="Idle")
-        except Exception:
-            pass
-
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def apply_theme(self):
         dark = self.dark_mode_var.get()
         colors = compute_colors(dark)
@@ -1627,8 +1629,8 @@ class App(tk.Tk):
             self.option_add("*Scrollbar.relief", "flat")
             self.option_add("*Scrollbar.borderWidth", 0)
             self.option_add("*Scrollbar.highlightThickness", 0)
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         for child in self.winfo_children():
             if isinstance(child, tk.Text):
                 child.configure(bg=colors["bg"], fg=colors["fg"], insertbackground=colors["fg"])
@@ -1648,42 +1650,42 @@ class App(tk.Tk):
                 try:
                     if hasattr(self, "console_scroll"):
                         self.console_scroll.configure(style="Dark.Vertical.TScrollbar")
-                except Exception:
-                    pass
-            except Exception:
-                pass
+                except Exception as exc:
+                    self._debug_log(f"Suppressed exception: {exc}")
+            except Exception as exc:
+                self._debug_log(f"Suppressed exception: {exc}")
         try:
             ts = get_last_change(SCRAPER_STATE_FILE)
             if ts:
                 self.last_change_label.config(text=f"Last change detected: {ts}")
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         try:
             ts = get_last_scrape(SCRAPER_STATE_FILE)
             if ts:
                 self.last_scrape_label.config(text=f"Last successful scrape: {ts}")
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         self.after(50, lambda: set_titlebar_dark(self, dark))
         if self.capture_window and tk.Toplevel.winfo_exists(self.capture_window):
             self._apply_theme_to_window(self.capture_window)
         # Ensure main titlebar follows theme
         try:
             self._set_window_titlebar_dark(self, dark)
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def _refresh_theme_from_config(self):
         try:
             desired = bool(self._load_dark_mode())
             if desired != bool(self.dark_mode_var.get()):
                 self.dark_mode_var.set(desired)
                 self.apply_theme()
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         try:
             self.after(2000, self._refresh_theme_from_config)
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def toggle_theme(self):
         self.apply_theme()
         _save_tracker_dark_mode(self.dark_mode_var.get())
@@ -1710,8 +1712,8 @@ class App(tk.Tk):
             # Try newer attribute, fallback to older if it fails
             if ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)) != 0:
                 ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value))
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def _set_window_titlebar_dark(self, window, enable: bool):
         """Apply dark title bar to a specific window."""
         if os.name != 'nt':
@@ -1729,8 +1731,8 @@ class App(tk.Tk):
             value = BOOL(1 if enable else 0)
             if ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)) != 0:
                 ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value))
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def _apply_theme_recursive(self, widget, bg, fg, ctrl_bg, accent, dark):
         """Lightweight recursive theming for child widgets."""
         try:
@@ -1743,40 +1745,40 @@ class App(tk.Tk):
                         background=[("selected", accent), ("!selected", ctrl_bg)],
                         foreground=[("selected", "#000" if dark else "#fff"), ("!selected", fg)],
                     )
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self._debug_log(f"Suppressed exception: {exc}")
             elif isinstance(widget, ttk.Labelframe):
                 try:
                     widget.configure(style="Parser.TLabelframe")
                     self.style.configure("Parser.TLabelframe", background=bg, foreground=fg, bordercolor=accent, relief="groove")
                     self.style.configure("Parser.TLabelframe.Label", background=bg, foreground=fg)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self._debug_log(f"Suppressed exception: {exc}")
             elif isinstance(widget, ttk.Frame):
                 try:
                     widget.configure(style="TFrame")
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self._debug_log(f"Suppressed exception: {exc}")
             elif isinstance(widget, ttk.Label):
                 try:
                     widget.configure(style="TLabel")
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self._debug_log(f"Suppressed exception: {exc}")
             elif isinstance(widget, ttk.Button):
                 try:
                     widget.configure(style="TButton")
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self._debug_log(f"Suppressed exception: {exc}")
             elif isinstance(widget, ttk.Entry):
                 try:
                     widget.configure(style="TEntry")
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self._debug_log(f"Suppressed exception: {exc}")
             elif isinstance(widget, ttk.Checkbutton):
                 try:
                     widget.configure(style="TCheckbutton")
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self._debug_log(f"Suppressed exception: {exc}")
             if isinstance(widget, tk.Listbox):
                 widget.configure(bg=bg if dark else "#ffffff", fg=fg, selectbackground=accent, selectforeground="#000" if dark else "#fff", highlightbackground=bg)
             elif isinstance(widget, tk.Text):
@@ -1786,12 +1788,12 @@ class App(tk.Tk):
                 for opt, val in (("background", bg), ("foreground", fg)):
                     try:
                         widget.configure(**{opt: val})
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        self._debug_log(f"Suppressed exception: {exc}")
             for child in widget.winfo_children():
                 self._apply_theme_recursive(child, bg, fg, ctrl_bg, accent, dark)
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
     def _apply_theme_to_window(self, window):
         dark = self.dark_mode_var.get()
         colors = compute_colors(dark)
@@ -1805,7 +1807,7 @@ class App(tk.Tk):
                 self._apply_theme_recursive(widget, bg, fg, ctrl_bg, accent, dark)
             self._set_window_titlebar_dark(window, dark)
             self._set_win_titlebar_dark(dark)
-        except Exception:
-            pass
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
 if __name__ == "__main__":
     App().mainloop()

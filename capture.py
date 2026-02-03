@@ -128,6 +128,15 @@ class CaptureWorker:
         self.scheduler = IntervalScheduler(self.callbacks["stop_event"], self.callbacks["responsive_wait"])
         self._backoff_logged_for: int = 0
 
+    def _safe_log(self, msg: str) -> None:
+        try:
+            self.callbacks.get("capture_log", lambda m: None)(msg)
+        except Exception:
+            try:
+                print(msg)
+            except Exception:
+                pass
+
     def _set_status(self, status: Status, msg: Optional[str] = None):
         if msg:
             self.callbacks.get("capture_log", lambda m: None)(msg)
@@ -142,13 +151,8 @@ class CaptureWorker:
             if cb:
                 try:
                     cb(self.status, msg)
-                except Exception:
-                    try:
-                        self.callbacks.get("capture_log", lambda m: None)(
-                            f"Status callback failed for {self.status}"
-                        )
-                    except Exception:
-                        pass
+                except Exception as exc:
+                    self._safe_log(f"Status callback failed for {self.status}: {exc}")
 
     def start(self) -> threading.Thread:
         self.thread = threading.Thread(target=self._run, daemon=True)
@@ -201,11 +205,12 @@ class CaptureWorker:
                                     raw = resp.text()
                                     data = json.loads(raw)
                                     parse_failed = False
-                                except Exception:
-                                    pass
+                                except Exception as exc:
+                                    self._safe_log(f"Response JSON parse failed for {url}: {exc}")
                             if parse_failed:
                                 return
-                        except Exception:
+                        except Exception as exc:
+                            self._safe_log(f"Response capture failed: {exc}")
                             return
                         try:
                             if isinstance(data, list) and data and isinstance(data[0], dict):
@@ -534,8 +539,8 @@ class CaptureWorker:
                                         if total is not None:
                                             try:
                                                 self.callbacks["capture_log"](f"Pagination: base={len(data_list)} total={total} take={take}")
-                                            except Exception:
-                                                pass
+                                            except Exception as exc:
+                                                self._safe_log(f"Pagination log failed: {exc}")
                                         if total and isinstance(data_list, list) and len(data_list) < total:
 
                                             for skip in range(take, int(total), take):
@@ -554,24 +559,24 @@ class CaptureWorker:
                                                     if isinstance(more, list):
                                                         try:
                                                             self.callbacks["capture_log"](f"Pagination fetch skip={skip} status=200")
-                                                        except Exception:
-                                                            pass
+                                                        except Exception as exc:
+                                                            self._safe_log(f"Pagination fetch log failed: {exc}")
                                                         api_payloads.append({"url": next_url, "content_type": "application/json", "kind": "list", "count": len(more), "data": more})
                                                     else:
                                                         try:
                                                             self.callbacks["capture_log"](f"Pagination fetch skip={skip} status=error")
-                                                        except Exception:
-                                                            pass
+                                                        except Exception as exc:
+                                                            self._safe_log(f"Pagination fetch log failed: {exc}")
                                                 except Exception as exc:
                                                     self.callbacks["capture_log"](f"Pagination fetch failed: {exc}")
                                                     break
-                                except Exception:
-                                    pass
+                                except Exception as exc:
+                                    self._safe_log(f"Pagination handling failed: {exc}")
                                 if not pagination_is_complete(data_list, total, pagination_failed):
                                     try:
                                         self.callbacks["capture_log"]("Pagination incomplete; skipping apply to avoid partial capture.")
-                                    except Exception:
-                                        pass
+                                    except Exception as exc:
+                                        self._safe_log(f"Pagination incomplete log failed: {exc}")
                                     return False
                                 # Filter captured payloads to the active filter combination to avoid duplicates.
                                 try:
@@ -602,8 +607,8 @@ class CaptureWorker:
                                         if not url or _matches_filters(url):
                                             filtered.append(payload)
                                     api_payloads = filtered
-                                except Exception:
-                                    pass
+                                except Exception as exc:
+                                    self._safe_log(f"Filter normalization failed: {exc}")
                                 api_count = 0
                                 for payload in api_payloads:
                                     try:
@@ -623,8 +628,8 @@ class CaptureWorker:
                                         try:
                                             urls = [p.get("url") for p in api_payloads[:5]]
                                             self.callbacks["capture_log"](f"No API list data found. Sample URLs: {urls}")
-                                        except Exception:
-                                            pass
+                                        except Exception as exc:
+                                            self._safe_log(f"Sample URL log failed: {exc}")
                                     else:
                                         if xhr_urls:
                                             sample = list(dict.fromkeys(xhr_urls))[:5]
@@ -680,8 +685,8 @@ class CaptureWorker:
                                         self.callbacks["capture_log"](f"HTML dump failed: {exc}")
                                 try:
                                     self.callbacks["apply_text"]("")
-                                except Exception:
-                                    pass
+                                except Exception as exc:
+                                    self._safe_log(f"Apply text callback failed: {exc}")
                                 return True
 
                             # First attempt: no refresh, assume page loaded during waits.
@@ -723,7 +728,7 @@ class CaptureWorker:
                                             f"Capture backoff active: failures={self.empty_failures} next_interval={interval:.1f}s"
                                         )
                                     except Exception:
-                                        pass
+                                        self._safe_log("API count scan failed.")
                         if self.scheduler.wait(interval, label="Waiting for next capture"):
                             break
                     try:
