@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import json
+import os
+import ssl
+import sys
 import urllib.parse
 import urllib.request
-import os
-import sys
 import threading
 from threading import Event
 import time
@@ -15,6 +16,13 @@ from typing import Callable, Dict, Literal, Optional, TypedDict
 
 
 _Playwright = None
+
+def _make_ssl_context() -> ssl.SSLContext:
+    try:
+        import certifi  # type: ignore
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        return ssl.create_default_context()
 
 Status = Literal["idle", "running", "retrying", "faulted", "stopped"]
 
@@ -426,10 +434,11 @@ class CaptureWorker:
                                 if self.formulary_cookie_header:
                                     headers['Cookie'] = self.formulary_cookie_header
                                 attempts = 3
+                                ssl_ctx = _make_ssl_context()
                                 for attempt in range(1, attempts + 1):
                                     try:
                                         req = urllib.request.Request(url, headers=headers)
-                                        with urllib.request.urlopen(req, timeout=20) as resp:
+                                        with urllib.request.urlopen(req, timeout=20, context=ssl_ctx) as resp:
                                             body = resp.read()
                                         return json.loads(body.decode('utf-8'))
                                     except Exception as exc:
