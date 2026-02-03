@@ -137,6 +137,7 @@ DEFAULT_TRACKER_CONFIG = {
     "target_daily_grams": 1.0,
     "target_daily_cbd_grams": 0.0,
     "roa_options": {"Vaped": 0.60, "Eaten": 0.10, "Smoked": 0.30},
+    "hide_roa_options": False,
     "window_geometry": "",
     "stock_column_widths": {},
     "log_column_widths": {},

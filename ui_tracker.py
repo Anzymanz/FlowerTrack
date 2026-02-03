@@ -97,6 +97,7 @@ class CannabisTracker:
         self.enable_stock_coloring_thc = True
         self.enable_stock_coloring_cbd = True
         self.enable_usage_coloring = True
+        self.hide_roa_options = False
         self.roa_options = {
             "Vaped": 0.60,
             "Eaten": 0.10,
@@ -341,7 +342,8 @@ class CannabisTracker:
         ttk.Label(dose_frame, text="Dose (grams)").grid(row=0, column=1, sticky="w")
         self.dose_entry = ttk.Entry(dose_frame, width=10)
         self.dose_entry.grid(row=1, column=1, padx=(0, 8))
-        ttk.Label(dose_frame, text="Route").grid(row=0, column=2, sticky="w")
+        self.roa_label = ttk.Label(dose_frame, text="Route")
+        self.roa_label.grid(row=0, column=2, sticky="w")
         self.roa_choice = ttk.Combobox(
             dose_frame,
             state="readonly",
@@ -380,6 +382,7 @@ class CannabisTracker:
         nav.columnconfigure(1, weight=1)
         log_cols = ("time", "flower", "roa", "grams", "thc_mg", "cbd_mg")
         self.log_tree = ttk.Treeview(log_frame, columns=log_cols, show="headings", height=12, style=self.tree_style)
+        self.log_tree["displaycolumns"] = log_cols
         headings = {
             "time": "Time",
             "flower": "Flower",
@@ -537,7 +540,10 @@ class CannabisTracker:
         if grams_used <= 0:
             messagebox.showerror("Invalid dose", "Dose must be positive.")
             return
-        roa = self.roa_choice.get().strip() or "Vaped"
+        if self.hide_roa_options:
+            roa = "Unknown"
+        else:
+            roa = self.roa_choice.get().strip() or "Vaped"
         try:
             remaining, log_entry = log_dose_entry(
                 self.flowers,
@@ -1057,6 +1063,8 @@ class CannabisTracker:
         self.track_cbd_usage = track_cbd_usage
         self.enable_stock_coloring = enable_stock_coloring
         self.enable_usage_coloring = enable_usage_coloring
+        if hasattr(self, "hide_roa_var"):
+            self.hide_roa_options = bool(self.hide_roa_var.get())
         self.roa_options = roa_opts
         self.minimize_to_tray = self.minimize_var.get()
         self.close_to_tray = self.close_var.get()
@@ -1078,6 +1086,7 @@ class CannabisTracker:
         self.roa_choice["values"] = values
         if self.roa_choice.get() not in values and values:
             self.roa_choice.set(values[0])
+        self._apply_roa_visibility()
         self._refresh_stock()
         self._refresh_log()
         self.save_data()
@@ -1666,6 +1675,7 @@ class CannabisTracker:
         self.track_cbd_usage = bool(cfg.get("track_cbd_usage", False))
         self.enable_stock_coloring = bool(cfg.get("enable_stock_coloring", True))
         self.enable_usage_coloring = bool(cfg.get("enable_usage_coloring", True))
+        self.hide_roa_options = bool(cfg.get("hide_roa_options", False))
         self.minimize_to_tray = bool(cfg.get("minimize_to_tray", self.minimize_to_tray))
         self.close_to_tray = bool(cfg.get("close_to_tray", self.close_to_tray))
         self.show_scraper_status_icon = bool(cfg.get("show_scraper_status_icon", self.show_scraper_status_icon))
@@ -1711,6 +1721,7 @@ class CannabisTracker:
                 if col in self.log_tree["columns"]:
                     self.log_tree.column(col, width=width)
         self._apply_scraper_controls_visibility()
+        self._apply_roa_visibility()
     def _save_config(self) -> None:
         cfg = {
             "data_path": self.data_path or str(TRACKER_DATA_FILE),
@@ -1731,6 +1742,7 @@ class CannabisTracker:
             "target_daily_cbd_grams": self.target_daily_cbd_grams,
             "dark_mode": self.dark_var.get(),
             "roa_options": self.roa_options,
+            "hide_roa_options": self.hide_roa_options,
             "window_geometry": self.window_geometry,
             "stock_column_widths": self.stock_column_widths,
             "log_column_widths": self.log_column_widths,
@@ -2284,6 +2296,32 @@ class CannabisTracker:
                 (btn.grid if self.show_scraper_buttons else btn.grid_remove)()
             except Exception:
                 pass
+
+    def _apply_roa_visibility(self) -> None:
+        hide = bool(getattr(self, "hide_roa_options", False))
+        try:
+            if hide:
+                if hasattr(self, "roa_label"):
+                    self.roa_label.grid_remove()
+                if hasattr(self, "roa_choice"):
+                    self.roa_choice.grid_remove()
+            else:
+                if hasattr(self, "roa_label"):
+                    self.roa_label.grid()
+                if hasattr(self, "roa_choice"):
+                    self.roa_choice.grid()
+        except Exception:
+            pass
+        try:
+            if hasattr(self, "log_tree"):
+                cols = list(self.log_tree["columns"])
+                if hide:
+                    display = [c for c in cols if c not in ("roa", "thc_mg", "cbd_mg")]
+                else:
+                    display = cols
+                self.log_tree["displaycolumns"] = display
+        except Exception:
+            pass
 
     def _apply_scraper_status_visibility(self) -> None:
         label = getattr(self, 'scraper_status_label', None)
