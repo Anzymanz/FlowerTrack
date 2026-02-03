@@ -466,8 +466,16 @@ class CaptureWorker:
                                         try:
                                             parsed = urllib.parse.urlparse(base_url)
                                             q = urllib.parse.parse_qs(parsed.query)
-                                            q['includeInactive'] = [str(bool(self.cfg.get('include_inactive', False))).lower()]
-                                            q['requestableOnly'] = [str(bool(self.cfg.get('requestable_only', True))).lower()]
+                                            include_inactive = bool(self.cfg.get('include_inactive', False))
+                                            requestable_only = bool(self.cfg.get('requestable_only', True))
+                                            if include_inactive:
+                                                q['includeInactive'] = ['true']
+                                            else:
+                                                q.pop('includeInactive', None)
+                                            if requestable_only:
+                                                q['requestableOnly'] = ['true']
+                                            else:
+                                                q.pop('requestableOnly', None)
                                             new_query = urllib.parse.urlencode(q, doseq=True)
                                             base_url = urllib.parse.urlunparse(parsed._replace(query=new_query))
                                             if base_url != (base_payload.get('url') or ''):
