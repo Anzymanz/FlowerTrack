@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import ssl
 import json
 import urllib.request
 from pathlib import Path
@@ -9,6 +10,13 @@ import threading
 import webbrowser
 
 _WIN_TOAST_FAILED = False
+
+def _make_ssl_context() -> ssl.SSLContext:
+    try:
+        import certifi  # type: ignore
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        return ssl.create_default_context()
 
 def _log_debug(msg: str) -> None:
     """Lightweight stdout logger with timestamp."""
@@ -187,11 +195,12 @@ class NotificationService:
             self.log("Home Assistant webhook URL is not set.")
             return False, None, None
         try:
+            ssl_ctx = _make_ssl_context()
             data = json.dumps(payload).encode("utf-8")
             req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
             if token:
                 req.add_header("Authorization", f"Bearer {token}")
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            with urllib.request.urlopen(req, timeout=10, context=ssl_ctx) as resp:
                 body = resp.read().decode("utf-8", errors="ignore")
                 self.log(f"Sent data to Home Assistant (status {resp.status}).")
                 return True, resp.status, body
