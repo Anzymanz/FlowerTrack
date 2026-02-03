@@ -186,6 +186,12 @@ py -m pytest
   playwright install
   ```
 - If the scraper logs "No products parsed", increase wait time or retries.
+- If you see SSL/certificate errors on a fresh PC (CERTIFICATE_VERIFY_FAILED), install/update certifi and restart:
+  ```powershell
+  py -m pip install -U certifi
+  ```
+  The app uses certifi for API/HA HTTPS validation; missing roots on Windows can cause fetch failures.
+- If scraper settings look blank or defaults are missing, delete `%APPDATA%\FlowerTrack\flowertrack_config.json` and relaunch to re-seed defaults.
 - Use the console log in-app for detailed scrape output.
 
 ## Repository layout
