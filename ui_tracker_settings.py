@@ -6,7 +6,12 @@ from tkinter import ttk
 
 def open_tracker_settings(app) -> None:
     if app.settings_window and tk.Toplevel.winfo_exists(app.settings_window):
-        app.settings_window.lift()
+        try:
+            app.settings_window.deiconify()
+            app.settings_window.lift()
+            app.settings_window.focus_force()
+        except Exception:
+            pass
         return
     win = tk.Toplevel(app.root)
     win.title("Settings")

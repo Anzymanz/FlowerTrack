@@ -12,6 +12,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     """
     if app.settings_window and tk.Toplevel.winfo_exists(app.settings_window):
         try:
+            app.settings_window.deiconify()
             app.settings_window.lift()
             app.settings_window.focus_force()
         except Exception:

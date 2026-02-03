@@ -936,7 +936,12 @@ class CannabisTracker:
         open_tracker_settings(self)
     def open_tools(self) -> None:
         if self.tools_window and tk.Toplevel.winfo_exists(self.tools_window):
-            self.tools_window.lift()
+            try:
+                self.tools_window.deiconify()
+                self.tools_window.lift()
+                self.tools_window.focus_force()
+            except Exception:
+                pass
             return
         win = tk.Toplevel(self.root)
         win._stats_period = period
