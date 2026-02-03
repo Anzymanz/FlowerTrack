@@ -159,6 +159,7 @@ Credentials and tokens are stored encrypted (DPAPI on Windows).
 - Windows 10/11
 - Python 3.12 (dev only)
 - Playwright browsers (used for authenticated scraping; auto-installed on first run or via `playwright install`)
+- certifi (dev/runtime dependency for HTTPS validation on fresh PCs)
 
 ## Quick start (development)
 ```powershell

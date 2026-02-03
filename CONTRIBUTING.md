@@ -8,7 +8,7 @@ Thanks for helping out.
 
 Install deps (for dev/build/tests):
 ```powershell
-pip install pyinstaller playwright pillow
+pip install pyinstaller playwright pillow certifi
 ```
 
 If Playwright browsers are missing:
