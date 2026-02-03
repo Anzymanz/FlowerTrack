@@ -1106,10 +1106,12 @@ class App(tk.Tk):
         except TypeError:
             windows_body = self.notify_service.format_windows_body(payload, summary)
         launch_url = self.cap_url.get().strip() if hasattr(self, 'cap_url') else ''
+        export_generated = False
         if items:
             try:
                 self._generate_change_export(self._get_export_items(), silent=True)
                 launch_url = self._latest_export_url() or launch_url
+                export_generated = True
             except Exception:
                 pass
         if not launch_url:
@@ -1138,11 +1140,11 @@ class App(tk.Tk):
                 self._capture_log("HA notifications set to log-only; skipping network send.")
             else:
                 self._capture_log("HA notifications disabled; skipping.")
-        try:
-            if items:
+        if items and not export_generated:
+            try:
                 self._generate_change_export(self._get_export_items())
-        except Exception as exc:
-            self._capture_log(f"Export generation error: {exc}")
+            except Exception as exc:
+                self._capture_log(f"Export generation error: {exc}")
     def _send_ha_error(self, message: str):
         url = self.cap_ha_webhook.get().strip()
         if not url:
