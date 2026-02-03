@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import os
-import ssl
 import sys
 import urllib.parse
 import urllib.request
@@ -14,15 +13,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable, Dict, Literal, Optional, TypedDict
 
+from net_utils import make_ssl_context
 
 _Playwright = None
-
-def _make_ssl_context() -> ssl.SSLContext:
-    try:
-        import certifi  # type: ignore
-        return ssl.create_default_context(cafile=certifi.where())
-    except Exception:
-        return ssl.create_default_context()
 
 Status = Literal["idle", "running", "retrying", "faulted", "stopped"]
 
@@ -440,7 +433,7 @@ class CaptureWorker:
                                 if self.formulary_cookie_header:
                                     headers['Cookie'] = self.formulary_cookie_header
                                 attempts = 3
-                                ssl_ctx = _make_ssl_context()
+                                ssl_ctx = make_ssl_context()
                                 for attempt in range(1, attempts + 1):
                                     try:
                                         req = urllib.request.Request(url, headers=headers)
