@@ -468,10 +468,7 @@ class CaptureWorker:
                                             q = urllib.parse.parse_qs(parsed.query)
                                             include_inactive = bool(self.cfg.get('include_inactive', False))
                                             requestable_only = bool(self.cfg.get('requestable_only', True))
-                                            if include_inactive:
-                                                q['includeInactive'] = ['true']
-                                            else:
-                                                q.pop('includeInactive', None)
+                                            q['includeInactive'] = ['true' if include_inactive else 'false']
                                             if requestable_only:
                                                 q['requestableOnly'] = ['true']
                                             else:
