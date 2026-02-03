@@ -2,7 +2,7 @@ import unittest
 import tempfile
 from pathlib import Path
 
-from inventory import Flower, add_stock_entry, log_dose_entry, is_cbd_dominant, _normalize_log_entry, save_tracker_data
+from inventory import Flower, add_stock_entry, log_dose_entry, is_cbd_dominant, _normalize_log_entry, save_tracker_data, load_tracker_data
 
 
 class InventoryTests(unittest.TestCase):
@@ -53,6 +53,16 @@ class InventoryTests(unittest.TestCase):
             backup_dir = data_path.parent / "backups"
             backups = list(backup_dir.glob("tracker_data-*.json"))
             self.assertLessEqual(len(backups), 5)
+
+    def test_load_missing_tracker_data_returns_empty(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data_path = Path(tmp) / "tracker_data.json"
+            save_tracker_data({"logs": []}, path=data_path)
+            # delete to simulate missing file
+            data_path.unlink()
+            loaded = load_tracker_data(path=data_path)
+            self.assertEqual(loaded.get("logs"), [])
+            self.assertEqual(loaded.get("schema_version"), 1)
 
 
 if __name__ == "__main__":
