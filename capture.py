@@ -421,7 +421,6 @@ class CaptureWorker:
                                 page.wait_for_load_state("networkidle", timeout=20000)
                             except Exception:
                                 pass
-                            # Scrolling disabled: API responses are sufficient and scrolling adds delay.
                             def _http_get_json(url: str):
                                 headers = dict(self.formulary_headers or {})
                                 if self.formulary_cookie_header:

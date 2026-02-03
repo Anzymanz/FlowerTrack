@@ -78,8 +78,6 @@ DEFAULT_CAPTURE_CONFIG = {
     "retry_attempts": 3,
     "retry_wait_seconds": 30.0,
     "retry_backoff_max": 2.0,
-    "scroll_times": 0,
-    "scroll_pause_seconds": 0.0,
     "dump_capture_html": False,
     "dump_api_json": False,
     "timeout_ms": 45000,
@@ -301,8 +299,6 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["login_button_selector"] = str(raw.get("login_button_selector") or "")
     cfg["organization"] = str(raw.get("organization") or "")
     cfg["organization_selector"] = str(raw.get("organization_selector") or "").strip()
-    cfg["scroll_times"] = int(_coerce_float(raw.get("scroll_times"), DEFAULT_CAPTURE_CONFIG["scroll_times"], 0))
-    cfg["scroll_pause_seconds"] = _coerce_float(raw.get("scroll_pause_seconds"), DEFAULT_CAPTURE_CONFIG["scroll_pause_seconds"], 0.0)
     cfg["dump_capture_html"] = _coerce_bool(raw.get("dump_capture_html"), DEFAULT_CAPTURE_CONFIG["dump_capture_html"])
     cfg["dump_api_json"] = _coerce_bool(raw.get("dump_api_json"), DEFAULT_CAPTURE_CONFIG["dump_api_json"])
     cfg["window_geometry"] = str(raw.get("window_geometry") or DEFAULT_CAPTURE_CONFIG["window_geometry"]).strip() or DEFAULT_CAPTURE_CONFIG["window_geometry"]

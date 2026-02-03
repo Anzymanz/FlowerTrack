@@ -209,8 +209,6 @@ class App(tk.Tk):
         self.cap_headless = tk.BooleanVar(value=bool(cfg.get("headless", True)))
         self.cap_login_wait = tk.StringVar(value=str(cfg.get("login_wait_seconds", 3)))
         self.cap_post_wait = tk.StringVar(value=str(cfg.get("post_nav_wait_seconds", 30)))
-        self.cap_scroll_times = tk.StringVar(value=str(cfg.get("scroll_times", 0)))
-        self.cap_scroll_pause = tk.StringVar(value=str(cfg.get("scroll_pause_seconds", 0.5)))
         self.cap_retry_attempts = tk.StringVar(value=str(cfg.get("retry_attempts", 3)))
         self.cap_retry_wait = tk.StringVar(value=str(cfg.get("retry_wait_seconds", cfg.get("post_nav_wait_seconds", 30))))
         self.cap_retry_backoff = tk.StringVar(value=str(cfg.get("retry_backoff_max", 4)))
@@ -275,8 +273,6 @@ class App(tk.Tk):
             "retry_attempts": _parse_int(self.cap_retry_attempts.get(), DEFAULT_CAPTURE_CONFIG["retry_attempts"], "retry_attempts"),
             "retry_wait_seconds": _parse_float(self.cap_retry_wait.get(), DEFAULT_CAPTURE_CONFIG["retry_wait_seconds"], "retry_wait_seconds"),
             "retry_backoff_max": _parse_float(self.cap_retry_backoff.get(), DEFAULT_CAPTURE_CONFIG["retry_backoff_max"], "retry_backoff_max"),
-            "scroll_times": _parse_int(self.cap_scroll_times.get(), DEFAULT_CAPTURE_CONFIG["scroll_times"], "scroll_times"),
-            "scroll_pause_seconds": _parse_float(self.cap_scroll_pause.get(), DEFAULT_CAPTURE_CONFIG["scroll_pause_seconds"], "scroll_pause_seconds"),
             "dump_capture_html": bool(self.cap_dump_html.get()),
             "dump_api_json": bool(self.cap_dump_api.get()),
             "username": self.cap_user.get(),
@@ -720,8 +716,6 @@ class App(tk.Tk):
         self.cap_retry_attempts.set(int(cfg.get("retry_attempts", 3)))
         self.cap_retry_wait.set(str(cfg.get("retry_wait_seconds", cfg.get("post_nav_wait_seconds", 30))))
         self.cap_retry_backoff.set(str(cfg.get("retry_backoff_max", 4)))
-        self.cap_scroll_times.set(str(cfg.get("scroll_times", 0)))
-        self.cap_scroll_pause.set(str(cfg.get("scroll_pause_seconds", 0.5)))
         self.cap_dump_html.set(bool(cfg.get("dump_capture_html", False)))
         self.cap_dump_api.set(bool(cfg.get("dump_api_json", False)))
         self.cap_user.set(decrypt_secret(cfg.get("username", "")))

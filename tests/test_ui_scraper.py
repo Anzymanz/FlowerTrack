@@ -77,8 +77,6 @@ class UiScraperTests(unittest.TestCase):
                 self.cap_retry_attempts = _Var("x")
                 self.cap_retry_wait = _Var("y")
                 self.cap_retry_backoff = _Var("z")
-                self.cap_scroll_times = _Var("w")
-                self.cap_scroll_pause = _Var("v")
                 self.cap_dump_html = _Var(False)
                 self.cap_dump_api = _Var(False)
                 self.cap_user = _Var("user")
