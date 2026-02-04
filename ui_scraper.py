@@ -607,9 +607,7 @@ class App(tk.Tk):
                     delta = self.console_frame.winfo_height() or self.console_frame.winfo_reqheight()
                     self.console_frame.pack_forget()
                     self.update_idletasks()
-                    base_height = self.winfo_reqheight()
-                    target = base_height - 300 if base_height else current_height - int(delta) - 300
-                    new_height = max(300, int(target))
+                    new_height = 420
                     self.geometry(f"{self.winfo_width()}x{new_height}")
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
