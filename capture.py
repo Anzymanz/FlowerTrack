@@ -439,6 +439,10 @@ class CaptureWorker:
             except Exception as exc:
                 self._safe_log(f"Auth bootstrap browser launch failed: {exc}")
                 return None
+            try:
+                self.callbacks["capture_log"]("Auth bootstrap: browser launched.")
+            except Exception:
+                pass
             page = browser.new_page()
             try:
                 page.on("request", _capture_request)
@@ -559,6 +563,10 @@ class CaptureWorker:
                 except Exception:
                     time.sleep(wait_post)
             try:
+                self.callbacks["capture_log"]("Auth bootstrap: waiting for API auth headers.")
+            except Exception:
+                pass
+            try:
                 page.wait_for_load_state("networkidle", timeout=20000)
             except Exception:
                 pass
@@ -572,6 +580,13 @@ class CaptureWorker:
                     time.sleep(0.5)
             try:
                 browser.close()
+            except Exception:
+                pass
+            try:
+                if captured_auth["ready"]:
+                    self.callbacks["capture_log"]("Auth bootstrap: token captured, closing browser.")
+                else:
+                    self.callbacks["capture_log"]("Auth bootstrap: token not captured before timeout.")
             except Exception:
                 pass
         if not api_payloads:
@@ -610,6 +625,10 @@ class CaptureWorker:
                     self._set_status("running", "API-only capture running...")
                     api_payloads = self._direct_api_capture()
                     if not api_payloads and not self._auth_cache_valid():
+                        try:
+                            self.callbacks["capture_log"]("API-only auth cache missing/expired; attempting bootstrap.")
+                        except Exception:
+                            pass
                         bootstrap_payloads = self._bootstrap_auth_with_playwright()
                         if bootstrap_payloads:
                             try:
@@ -617,6 +636,11 @@ class CaptureWorker:
                             except Exception as exc:
                                 self._safe_log(f"Auth bootstrap persist failed: {exc}")
                             api_payloads = self._direct_api_capture()
+                        else:
+                            try:
+                                self.callbacks["capture_log"]("API-only auth bootstrap failed; retrying later.")
+                            except Exception:
+                                pass
                     if api_payloads:
                         try:
                             # Persist auth cache and optionally dump data
