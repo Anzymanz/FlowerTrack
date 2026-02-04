@@ -474,6 +474,9 @@ class CaptureWorker:
                                 return None
                             def collect_once(refresh: bool) -> bool:
                                 nonlocal api_payloads
+                                headers = dict(self.formulary_headers or {})
+                                if self.formulary_cookie_header:
+                                    headers["Cookie"] = self.formulary_cookie_header
                                 if refresh:
                                     try:
                                         self.callbacks["capture_log"]("Refreshing page before capture.")
