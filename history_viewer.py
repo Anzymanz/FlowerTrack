@@ -123,6 +123,8 @@ class HistoryViewer(tk.Toplevel):
                     widget.configure(bg=bg, fg=fg, insertbackground=fg, highlightbackground=bg)
                 elif isinstance(widget, tk.Listbox):
                     widget.configure(bg=bg if dark else "#ffffff", fg=fg, selectbackground=accent, selectforeground="#000" if dark else "#fff", highlightbackground=bg)
+                elif isinstance(widget, ttk.Widget):
+                    pass
                 else:
                     for opt, val in (("background", bg), ("foreground", fg)):
                         try:
