@@ -372,7 +372,6 @@ class CaptureWorker:
         return self.thread
 
     def _run(self):
-        sync_playwright, PlaywrightTimeoutError = _Playwright
         try:
             self._set_status("running", "Auto-capture started.")
             if self.cfg.get("api_only"):
@@ -404,6 +403,7 @@ class CaptureWorker:
                         break
                 self._set_status("stopped")
                 return
+            sync_playwright, PlaywrightTimeoutError = _Playwright
             with sync_playwright() as p:
                 attempted_install = False
                 while not self.callbacks["stop_event"].is_set():
