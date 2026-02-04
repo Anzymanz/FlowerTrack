@@ -593,10 +593,22 @@ class App(tk.Tk):
     def _apply_log_window_visibility(self) -> None:
         try:
             show = bool(self.cap_show_log_window.get()) if hasattr(self, "cap_show_log_window") else True
+            self.update_idletasks()
+            current_height = self.winfo_height()
             if show:
-                self.console_frame.pack(fill="both", expand=True, padx=10, pady=(0, 8))
+                if not self.console_frame.winfo_ismapped():
+                    self.console_frame.pack(fill="both", expand=True, padx=10, pady=(0, 8))
+                    self.update_idletasks()
+                    delta = self.console_frame.winfo_height() or self.console_frame.winfo_reqheight()
+                    if delta:
+                        self.geometry(f"{self.winfo_width()}x{current_height + int(delta)}")
             else:
-                self.console_frame.pack_forget()
+                if self.console_frame.winfo_ismapped():
+                    delta = self.console_frame.winfo_height() or self.console_frame.winfo_reqheight()
+                    self.console_frame.pack_forget()
+                    if delta:
+                        new_height = max(300, current_height - int(delta))
+                        self.geometry(f"{self.winfo_width()}x{new_height}")
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
     def _update_last_change(self, summary: str):
