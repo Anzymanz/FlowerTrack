@@ -607,7 +607,7 @@ class App(tk.Tk):
                     delta = self.console_frame.winfo_height() or self.console_frame.winfo_reqheight()
                     self.console_frame.pack_forget()
                     if delta:
-                        new_height = max(300, current_height - int(delta))
+                        new_height = max(300, current_height - int(delta) - 300)
                         self.geometry(f"{self.winfo_width()}x{new_height}")
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
