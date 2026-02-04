@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Callable, Dict, Literal, Optional, TypedDict
 
 from net_utils import make_ssl_context
+from config import encrypt_secret, decrypt_secret
 
 _Playwright = None
 
@@ -217,6 +218,13 @@ class CaptureWorker:
         auth = self._extract_auth_from_payloads(api_payloads)
         if not auth:
             return
+        try:
+            if auth.get("token"):
+                auth["token"] = encrypt_secret(str(auth["token"]))
+            if auth.get("refresh_token"):
+                auth["refresh_token"] = encrypt_secret(str(auth["refresh_token"]))
+        except Exception as exc:
+            self._safe_log(f"Auth cache encryption failed: {exc}")
         path = self._auth_cache_path()
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -230,7 +238,18 @@ class CaptureWorker:
             return None
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
-            return data if isinstance(data, dict) else None
+            if not isinstance(data, dict):
+                return None
+            try:
+                token = data.get("token")
+                if token:
+                    data["token"] = decrypt_secret(str(token))
+                refresh = data.get("refresh_token")
+                if refresh:
+                    data["refresh_token"] = decrypt_secret(str(refresh))
+            except Exception:
+                pass
+            return data
         except Exception:
             return None
 
