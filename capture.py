@@ -10,7 +10,7 @@ import threading
 from threading import Event
 import time
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Dict, Literal, Optional, TypedDict
 
@@ -244,6 +244,20 @@ class CaptureWorker:
         except Exception:
             return False
 
+    def _auth_cache_valid(self) -> bool:
+        auth = self._load_auth_cache()
+        if not auth:
+            return False
+        token = auth.get("token")
+        if not token or self._auth_is_expired(str(token)):
+            return False
+        rpc_host = auth.get("rpc_host")
+        patient_id = auth.get("patient_id")
+        pharmacy_id = auth.get("pharmacy_id")
+        if not rpc_host or not patient_id or not pharmacy_id:
+            return False
+        return True
+
     def _direct_api_capture(self) -> list[dict] | None:
         auth = self._load_auth_cache()
         if not auth:
@@ -349,6 +363,223 @@ class CaptureWorker:
                     break
         return api_payloads
 
+    def _ensure_playwright_ready(self) -> bool:
+        global _Playwright
+        if _Playwright:
+            return True
+        app_dir = self.app_dir or Path(os.getcwd())
+        try:
+            req = ensure_browser_available(app_dir, self.callbacks.get("capture_log", lambda m: None), install_cb=self.install_fn)
+        except Exception as exc:
+            self._safe_log(f"Playwright init failed: {exc}")
+            return False
+        if not req:
+            self._safe_log("Playwright not available for auth bootstrap.")
+            return False
+        return True
+
+    def _bootstrap_auth_with_playwright(self) -> list[dict] | None:
+        if not self._ensure_playwright_ready():
+            return None
+        if self.callbacks["stop_event"].is_set():
+            return None
+        sync_playwright, PlaywrightTimeoutError = _Playwright
+        api_payloads: list[dict] = []
+        captured_auth = {"ready": False}
+
+        def _capture_request(req):
+            try:
+                url = req.url or ""
+                if not url:
+                    return
+                if not any(tok in url for tok in ("formulary-products", "auth/initialize", "rpc-api")):
+                    return
+                payload = {"url": url}
+                try:
+                    req_headers = req.headers
+                    if isinstance(req_headers, dict):
+                        payload["request_headers"] = dict(req_headers)
+                except Exception:
+                    pass
+                api_payloads.append(payload)
+                if "formulary-products" in url:
+                    headers = payload.get("request_headers") or {}
+                    token = headers.get("authorization") or headers.get("Authorization")
+                    if token:
+                        captured_auth["ready"] = True
+            except Exception:
+                pass
+
+        def _capture_response(resp):
+            try:
+                url = resp.url or ""
+                if "auth/initialize" not in url:
+                    return
+                data = None
+                try:
+                    data = resp.json()
+                except Exception:
+                    try:
+                        raw = resp.text()
+                        data = json.loads(raw)
+                    except Exception:
+                        data = None
+                if data is None:
+                    return
+                payload = {"url": url, "content_type": (resp.headers.get("content-type") or "").lower()}
+                payload["data"] = data
+                api_payloads.append(payload)
+            except Exception:
+                pass
+
+        with sync_playwright() as p:
+            browser = None
+            try:
+                browser = p.chromium.launch(headless=self.cfg.get("headless", True))
+            except Exception as exc:
+                self._safe_log(f"Auth bootstrap browser launch failed: {exc}")
+                return None
+            page = browser.new_page()
+            try:
+                page.on("request", _capture_request)
+                page.on("response", _capture_response)
+            except Exception:
+                pass
+            nav_timeout = self.cfg.get("timeout_ms") or self.cfg.get("timeout") or 45000
+            try:
+                page.set_default_timeout(nav_timeout)
+                page.set_default_navigation_timeout(nav_timeout)
+            except Exception:
+                pass
+            try:
+                page.goto(self.cfg["url"], timeout=0, wait_until="domcontentloaded")
+            except Exception:
+                pass
+            # Short wait for form/UI to render.
+            time.sleep(3)
+            try:
+                self.callbacks["capture_log"]("API-only auth missing; launching browser to refresh token...")
+            except Exception:
+                pass
+            try:
+                user_sels = [
+                    self.cfg.get("username_selector") or "",
+                    'input[data-path="email"]',
+                    'input[placeholder="Email"]',
+                    'input[type="email"]',
+                    'input#email',
+                    'input[name="email"]',
+                ]
+                pass_sels = [
+                    self.cfg.get("password_selector") or "",
+                    'input[data-path="password"]',
+                    'input[placeholder="Password"]',
+                    'input[type="password"]',
+                    'input#password',
+                    'input[name="password"]',
+                ]
+                btn_sels = [
+                    self.cfg.get("login_button_selector") or "",
+                    'button[type="submit"]',
+                    'button:has-text("Sign in")',
+                    'button:has-text("Login")',
+                ]
+                user_union = ",".join([s for s in user_sels if s])
+                pass_union = ",".join([s for s in pass_sels if s])
+                btn_union = ",".join([s for s in btn_sels if s])
+
+                org_value = (self.cfg.get("organization") or "").strip()
+                if org_value:
+                    org_sels = [
+                        self.cfg.get("organization_selector") or "",
+                        'select[name="organization"]',
+                        'select#organization',
+                        'input[data-path="organization"]',
+                        'input[placeholder="Organization"]',
+                        '[data-path="organization"]',
+                    ]
+                    org_union = ",".join([s for s in org_sels if s])
+                    if org_union:
+                        try:
+                            page.select_option(org_union, label=org_value)
+                        except Exception:
+                            try:
+                                loc = page.wait_for_selector(org_union, timeout=5000)
+                                loc.click()
+                                try:
+                                    page.click(f"text={org_value}")
+                                except Exception:
+                                    page.keyboard.type(org_value)
+                                    page.keyboard.press("Enter")
+                            except Exception:
+                                pass
+                if self.cfg.get("username") and user_union:
+                    try:
+                        loc = page.wait_for_selector(user_union, timeout=10000)
+                        loc.fill(self.cfg["username"])
+                    except Exception:
+                        pass
+                if self.cfg.get("password") and pass_union:
+                    try:
+                        loc = page.wait_for_selector(pass_union, timeout=10000)
+                        loc.fill(self.cfg["password"])
+                    except Exception:
+                        pass
+                clicked = False
+                if btn_union:
+                    try:
+                        page.wait_for_selector(btn_union, timeout=5000)
+                        page.click(btn_union)
+                        clicked = True
+                    except Exception:
+                        clicked = False
+                if not clicked:
+                    try:
+                        page.keyboard.press("Enter")
+                    except Exception:
+                        pass
+            except PlaywrightTimeoutError:
+                pass
+            except Exception:
+                pass
+            wait_login = self.cfg.get("login_wait_seconds", 0)
+            if wait_login:
+                try:
+                    self.callbacks["responsive_wait"](wait_login, label="Waiting after login")
+                except Exception:
+                    time.sleep(wait_login)
+            try:
+                page.goto(self.cfg["url"], timeout=0, wait_until="domcontentloaded")
+            except Exception:
+                pass
+            wait_post = max(self.cfg.get("post_nav_wait_seconds", 0), 0)
+            if wait_post:
+                try:
+                    self.callbacks["responsive_wait"](wait_post, label="Waiting after navigation")
+                except Exception:
+                    time.sleep(wait_post)
+            try:
+                page.wait_for_load_state("networkidle", timeout=20000)
+            except Exception:
+                pass
+            start = time.time()
+            while not captured_auth["ready"] and (time.time() - start) < 20:
+                if self.callbacks["stop_event"].is_set():
+                    break
+                try:
+                    self.callbacks["responsive_wait"](0.5, label="Waiting for auth bootstrap")
+                except Exception:
+                    time.sleep(0.5)
+            try:
+                browser.close()
+            except Exception:
+                pass
+        if not api_payloads:
+            return None
+        if not self._extract_auth_from_payloads(api_payloads):
+            return None
+        return api_payloads
+
     def _set_status(self, status: Status, msg: Optional[str] = None):
         if msg:
             self.callbacks.get("capture_log", lambda m: None)(msg)
@@ -378,6 +609,14 @@ class CaptureWorker:
                 while not self.callbacks["stop_event"].is_set():
                     self._set_status("running", "API-only capture running...")
                     api_payloads = self._direct_api_capture()
+                    if not api_payloads and not self._auth_cache_valid():
+                        bootstrap_payloads = self._bootstrap_auth_with_playwright()
+                        if bootstrap_payloads:
+                            try:
+                                self._persist_auth_cache(bootstrap_payloads)
+                            except Exception as exc:
+                                self._safe_log(f"Auth bootstrap persist failed: {exc}")
+                            api_payloads = self._direct_api_capture()
                     if api_payloads:
                         try:
                             # Persist auth cache and optionally dump data
