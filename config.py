@@ -82,7 +82,7 @@ DEFAULT_CAPTURE_CONFIG = {
     "dump_api_json": False,
     "timeout_ms": 45000,
     "headless": True,
-    "api_only": False,
+    "api_only": True,
     "auto_notify_ha": False,
     "ha_webhook_url": "",
     "ha_token": "",

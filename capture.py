@@ -669,7 +669,7 @@ class CaptureWorker:
     def _run(self):
         try:
             self._set_status("running", "Auto-capture started.")
-            if self.cfg.get("api_only"):
+            if self.cfg.get("api_only", True):
                 while not self.callbacks["stop_event"].is_set():
                     self._set_status("running", "API-only capture running...")
                     api_payloads = self._direct_api_capture()

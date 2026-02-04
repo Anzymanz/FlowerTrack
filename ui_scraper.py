@@ -207,7 +207,6 @@ class App(tk.Tk):
         self.cap_url = tk.StringVar(value=cfg.get("url", ""))
         self.cap_interval = tk.StringVar(value=str(cfg.get("interval_seconds", 60)))
         self.cap_headless = tk.BooleanVar(value=bool(cfg.get("headless", True)))
-        self.cap_api_only = tk.BooleanVar(value=bool(cfg.get("api_only", False)))
         self.cap_login_wait = tk.StringVar(value=str(cfg.get("login_wait_seconds", 3)))
         self.cap_post_wait = tk.StringVar(value=str(cfg.get("post_nav_wait_seconds", 30)))
         self.cap_retry_attempts = tk.StringVar(value=str(cfg.get("retry_attempts", 3)))
@@ -284,7 +283,6 @@ class App(tk.Tk):
             "organization": self.cap_org.get(),
             "organization_selector": self.cap_org_sel.get(),
             "headless": bool(self.cap_headless.get()),
-            "api_only": bool(self.cap_api_only.get()),
             "auto_notify_ha": bool(self.cap_auto_notify_ha.get()),
             "ha_webhook_url": self.cap_ha_webhook.get(),
             "ha_token": self.cap_ha_token.get(),
@@ -332,7 +330,7 @@ class App(tk.Tk):
         self._write_scraper_state("running")
         def install_cb():
             return install_playwright_browsers(Path(APP_DIR), self._capture_log)
-        if not cfg.get("api_only"):
+        if not cfg.get("api_only", True):
             req = ensure_browser_available(Path(APP_DIR), self._capture_log, install_cb=install_cb)
             if not req:
                 messagebox.showerror("Auto-capture", "Playwright is not available. See logs for details.")
