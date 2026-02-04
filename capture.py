@@ -234,7 +234,29 @@ class CaptureWorker:
                         except Exception:
                             pass
                         try:
+                            req_headers = None
+                            try:
+                                req_headers = resp.request.headers if resp.request else None
+                            except Exception:
+                                req_headers = None
+                            filtered_headers = None
+                            if isinstance(req_headers, dict):
+                                filtered_headers = {
+                                    k: v
+                                    for k, v in req_headers.items()
+                                    if k.lower() not in ("accept-encoding", "host", "content-length")
+                                }
                             payload = {"url": resp.url, "content_type": ctype, "status": getattr(resp, "status", None)}
+                            if filtered_headers:
+                                payload["request_headers"] = filtered_headers
+                            try:
+                                resp_headers = resp.headers
+                                if isinstance(resp_headers, dict):
+                                    payload["response_headers"] = dict(resp_headers)
+                            except Exception:
+                                pass
+                            if self.formulary_cookie_header:
+                                payload["cookie_header"] = self.formulary_cookie_header
                             if data is not None:
                                 if isinstance(data, dict):
                                     payload["kind"] = "dict"
@@ -486,8 +508,16 @@ class CaptureWorker:
                                                 more = _http_get_json(base_url)
                                                 if more is None:
                                                     pagination_failed = True
-                                                if isinstance(more, list):
-                                                    api_payloads.append({"url": base_url, "content_type": "application/json", "kind": "list", "count": len(more), "data": more})
+                                            if isinstance(more, list):
+                                                api_payloads.append({
+                                                    "url": base_url,
+                                                    "content_type": "application/json",
+                                                    "kind": "list",
+                                                    "count": len(more),
+                                                    "data": more,
+                                                    "request_headers": headers,
+                                                    "cookie_header": self.formulary_cookie_header,
+                                                })
                                         except Exception as exc:
                                             self.callbacks["capture_log"](f"Base formulary fetch failed: {exc}")
                                     count_payload = next((p for p in api_payloads if "formulary-products/count" in (p.get("url") or "") and isinstance(p.get("data"), dict)), None)
@@ -555,7 +585,15 @@ class CaptureWorker:
                                                             self.callbacks["capture_log"](f"Pagination fetch skip={skip} status=200")
                                                         except Exception as exc:
                                                             self._safe_log(f"Pagination fetch log failed: {exc}")
-                                                        api_payloads.append({"url": next_url, "content_type": "application/json", "kind": "list", "count": len(more), "data": more})
+                                                        api_payloads.append({
+                                                            "url": next_url,
+                                                            "content_type": "application/json",
+                                                            "kind": "list",
+                                                            "count": len(more),
+                                                            "data": more,
+                                                            "request_headers": headers,
+                                                            "cookie_header": self.formulary_cookie_header,
+                                                        })
                                                     else:
                                                         try:
                                                             self.callbacks["capture_log"](f"Pagination fetch skip={skip} status=error")
