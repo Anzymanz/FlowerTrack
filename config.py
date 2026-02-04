@@ -83,6 +83,7 @@ DEFAULT_CAPTURE_CONFIG = {
     "timeout_ms": 45000,
     "headless": True,
     "api_only": True,
+    "show_log_window": True,
     "auto_notify_ha": False,
     "ha_webhook_url": "",
     "ha_token": "",
@@ -321,6 +322,7 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["headless"] = _coerce_bool(raw.get("headless"), DEFAULT_CAPTURE_CONFIG["headless"])
     cfg["api_only"] = _coerce_bool(raw.get("api_only"), DEFAULT_CAPTURE_CONFIG["api_only"])
     cfg["auto_notify_ha"] = _coerce_bool(raw.get("auto_notify_ha"), DEFAULT_CAPTURE_CONFIG["auto_notify_ha"])
+    cfg["show_log_window"] = _coerce_bool(raw.get("show_log_window"), DEFAULT_CAPTURE_CONFIG["show_log_window"])
     cfg["ha_webhook_url"] = str(raw.get("ha_webhook_url") or "")
     cfg["ha_token"] = str(raw.get("ha_token") or "")
     cfg["notify_price_changes"] = _coerce_bool(raw.get("notify_price_changes"), DEFAULT_CAPTURE_CONFIG["notify_price_changes"])

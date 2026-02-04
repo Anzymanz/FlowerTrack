@@ -149,6 +149,9 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Checkbutton(advanced_frame, text="Dump API JSON responses", variable=app.cap_dump_api).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
     adv_row += 1
 
+    ttk.Checkbutton(advanced_frame, text="Show log window", variable=app.cap_show_log_window).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
+    adv_row += 1
+
     ttk.Checkbutton(advanced_frame, text="Include inactive products", variable=app.cap_include_inactive).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
     adv_row += 1
 

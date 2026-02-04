@@ -153,10 +153,10 @@ class App(tk.Tk):
         self.error_threshold = 3
         self._empty_retry_pending = False
         # Console log at bottom
-        console_frame = ttk.Frame(self)
-        console_frame.pack(fill="both", expand=True, padx=10, pady=(0, 8))
-        ttk.Label(console_frame, text="Console Log").pack(anchor="w")
-        console_inner = ttk.Frame(console_frame)
+        self.console_frame = ttk.Frame(self)
+        self.console_frame.pack(fill="both", expand=True, padx=10, pady=(0, 8))
+        ttk.Label(self.console_frame, text="Console Log").pack(anchor="w")
+        console_inner = ttk.Frame(self.console_frame)
         console_inner.pack(fill="both", expand=True)
         self.console = tk.Text(console_inner, height=10, wrap="word", state="disabled", relief="flat", borderwidth=0)
         self.console_scroll = ttk.Scrollbar(
@@ -195,6 +195,7 @@ class App(tk.Tk):
         self.bind("<Map>", self._on_map)
         self.apply_theme()
         self.after(2000, self._refresh_theme_from_config)
+        self._apply_log_window_visibility()
         # Ensure dark titlebar sticks (especially in frozen builds)
         try:
             self.after(120, lambda: self._set_window_titlebar_dark(self, self.dark_mode_var.get()))
@@ -221,6 +222,11 @@ class App(tk.Tk):
         self.cap_org_sel = tk.StringVar(value=cfg.get("organization_selector", ""))
         self.cap_dump_html = tk.BooleanVar(value=bool(cfg.get("dump_capture_html", False)))
         self.cap_dump_api = tk.BooleanVar(value=bool(cfg.get("dump_api_json", False)))
+        self.cap_show_log_window = tk.BooleanVar(value=bool(cfg.get("show_log_window", True)))
+        try:
+            self.cap_show_log_window.trace_add("write", lambda *_: self._apply_log_window_visibility())
+        except Exception:
+            pass
         self.cap_auto_notify_ha = tk.BooleanVar(value=bool(cfg.get("auto_notify_ha", False)))
         self.cap_ha_webhook = tk.StringVar(value=cfg.get("ha_webhook_url", ""))
         self.cap_ha_token = tk.StringVar(value=decrypt_secret(cfg.get("ha_token", "")))
@@ -275,6 +281,7 @@ class App(tk.Tk):
             "retry_backoff_max": _parse_float(self.cap_retry_backoff.get(), DEFAULT_CAPTURE_CONFIG["retry_backoff_max"], "retry_backoff_max"),
             "dump_capture_html": bool(self.cap_dump_html.get()),
             "dump_api_json": bool(self.cap_dump_api.get()),
+            "show_log_window": bool(self.cap_show_log_window.get()),
             "username": self.cap_user.get(),
             "password": self.cap_pass.get(),
             "username_selector": self.cap_user_sel.get(),
@@ -580,6 +587,16 @@ class App(tk.Tk):
             self._debug_log(f"Suppressed exception: {exc}")
         try:
             self.status.config(text=msg)
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
+
+    def _apply_log_window_visibility(self) -> None:
+        try:
+            show = bool(self.cap_show_log_window.get()) if hasattr(self, "cap_show_log_window") else True
+            if show:
+                self.console_frame.pack(fill="both", expand=True, padx=10, pady=(0, 8))
+            else:
+                self.console_frame.pack_forget()
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
     def _update_last_change(self, summary: str):
