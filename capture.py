@@ -297,8 +297,9 @@ class CaptureWorker:
                 try:
                     req = urllib.request.Request(url, headers=headers)
                     with urllib.request.urlopen(req, timeout=20, context=ssl_ctx) as resp:
+                        status = getattr(resp, "status", None) or resp.getcode()
                         body = resp.read()
-                    return json.loads(body.decode("utf-8"))
+                    return json.loads(body.decode("utf-8")), status
                 except Exception as exc:
                     self.callbacks["capture_log"](
                         f"API-only fetch failed (attempt {attempt}/{attempts}): {exc}"
@@ -311,9 +312,11 @@ class CaptureWorker:
             return None
 
         api_payloads: list[dict] = []
-        data_list = _http_get_json(base_url)
-        if not isinstance(data_list, list):
+        start_ts = time.time()
+        data_list_resp = _http_get_json(base_url)
+        if not data_list_resp or not isinstance(data_list_resp[0], list):
             return None
+        data_list, base_status = data_list_resp
         api_payloads.append({
             "url": base_url,
             "content_type": "application/json",
@@ -334,11 +337,22 @@ class CaptureWorker:
         except Exception:
             count_resp = None
         total = None
-        if isinstance(count_resp, dict):
-            total = count_resp.get("count") or count_resp.get("total")
+        count_status = None
+        if count_resp and isinstance(count_resp[0], dict):
+            count_data, count_status = count_resp
+            total = count_data.get("count") or count_data.get("total")
         if total is None:
             total = len(data_list)
+        try:
+            status_txt = f" status={count_status}" if count_status is not None else ""
+            self.callbacks["capture_log"](f"API-only count fetch{status_txt} total={total}")
+        except Exception:
+            pass
         take = 50
+        try:
+            self.callbacks["capture_log"](f"API-only pagination: base={len(data_list)} total={total} take={take}")
+        except Exception:
+            pass
         if total and len(data_list) < total:
             for skip in range(take, int(total), take):
                 if self.callbacks["stop_event"].is_set():
@@ -349,8 +363,14 @@ class CaptureWorker:
                     q["skip"] = [str(skip)]
                     q["take"] = [str(take)]
                     next_url = urllib.parse.urlunparse(parsed._replace(query=urllib.parse.urlencode(q, doseq=True)))
-                    more = _http_get_json(next_url)
-                    if isinstance(more, list):
+                    more_resp = _http_get_json(next_url)
+                    if more_resp and isinstance(more_resp[0], list):
+                        more, more_status = more_resp
+                        try:
+                            status_txt = f" status={more_status}" if more_status is not None else ""
+                            self.callbacks["capture_log"](f"API-only pagination fetch skip={skip}{status_txt}")
+                        except Exception:
+                            pass
                         api_payloads.append({
                             "url": next_url,
                             "content_type": "application/json",
@@ -359,8 +379,18 @@ class CaptureWorker:
                             "data": more,
                             "request_headers": headers,
                         })
+                    else:
+                        try:
+                            self.callbacks["capture_log"](f"API-only pagination fetch skip={skip} status=error")
+                        except Exception:
+                            pass
                 except Exception:
                     break
+        try:
+            elapsed = time.time() - start_ts
+            self.callbacks["capture_log"](f"API-only capture fetched {len(api_payloads)} payloads in {elapsed:.1f}s")
+        except Exception:
+            pass
         return api_payloads
 
     def _ensure_playwright_ready(self) -> bool:
