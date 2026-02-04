@@ -82,6 +82,7 @@ DEFAULT_CAPTURE_CONFIG = {
     "dump_api_json": False,
     "timeout_ms": 45000,
     "headless": True,
+    "api_only": False,
     "auto_notify_ha": False,
     "ha_webhook_url": "",
     "ha_token": "",
@@ -318,6 +319,7 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["retry_backoff_max"] = _coerce_float(raw.get("retry_backoff_max"), DEFAULT_CAPTURE_CONFIG["retry_backoff_max"], 1.0)
     cfg["timeout_ms"] = int(_coerce_float(raw.get("timeout_ms"), DEFAULT_CAPTURE_CONFIG["timeout_ms"], 0))
     cfg["headless"] = _coerce_bool(raw.get("headless"), DEFAULT_CAPTURE_CONFIG["headless"])
+    cfg["api_only"] = _coerce_bool(raw.get("api_only"), DEFAULT_CAPTURE_CONFIG["api_only"])
     cfg["auto_notify_ha"] = _coerce_bool(raw.get("auto_notify_ha"), DEFAULT_CAPTURE_CONFIG["auto_notify_ha"])
     cfg["ha_webhook_url"] = str(raw.get("ha_webhook_url") or "")
     cfg["ha_token"] = str(raw.get("ha_token") or "")

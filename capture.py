@@ -131,6 +131,224 @@ class CaptureWorker:
             except Exception:
                 pass
 
+    def _auth_cache_path(self) -> Path:
+        if self.app_dir:
+            return Path(self.app_dir) / "data" / "api_auth.json"
+        appdata = Path(os.getenv("APPDATA", os.path.expanduser("~")))
+        return appdata / "FlowerTrack" / "data" / "api_auth.json"
+
+    def _decode_jwt_payload(self, token: str) -> dict:
+        try:
+            raw = token.strip()
+            if raw.lower().startswith("bearer "):
+                raw = raw[7:].strip()
+            parts = raw.split(".")
+            if len(parts) < 2:
+                return {}
+            payload_b64 = parts[1]
+            payload_b64 += "=" * (-len(payload_b64) % 4)
+            decoded = base64.urlsafe_b64decode(payload_b64.encode("utf-8"))
+            return json.loads(decoded.decode("utf-8"))
+        except Exception:
+            return {}
+
+    def _extract_auth_from_payloads(self, api_payloads: list[dict]) -> dict | None:
+        rpc_host = None
+        patient_id = None
+        pharmacy_id = None
+        token = None
+        refresh_token = None
+        user_agent = None
+
+        for payload in api_payloads:
+            url = payload.get("url") or ""
+            if "production-rpc-api" in url:
+                try:
+                    rpc_host = urllib.parse.urlparse(url).netloc
+                except Exception:
+                    pass
+            if "formulary-products" in url:
+                try:
+                    parsed = urllib.parse.urlparse(url)
+                    q = urllib.parse.parse_qs(parsed.query)
+                    patient_id = q.get("patientId", [patient_id])[0]
+                    pharmacy_id = q.get("pharmacyId", [pharmacy_id])[0]
+                except Exception:
+                    pass
+            req_headers = payload.get("request_headers") or {}
+            if isinstance(req_headers, dict):
+                token = token or req_headers.get("authorization") or req_headers.get("Authorization")
+                user_agent = user_agent or req_headers.get("user-agent") or req_headers.get("User-Agent")
+
+        for payload in api_payloads:
+            url = payload.get("url") or ""
+            data = payload.get("data")
+            if "auth/initialize" in url and isinstance(data, dict):
+                tokens = data.get("tokens") or {}
+                access = tokens.get("accessToken")
+                refresh = tokens.get("refreshToken")
+                if access:
+                    token = token or f"Bearer {access}"
+                if refresh:
+                    refresh_token = refresh
+
+        if token and (patient_id is None or pharmacy_id is None):
+            jwt_payload = self._decode_jwt_payload(token)
+            if patient_id is None:
+                patient_id = jwt_payload.get("roleEntityId")
+            ctx = jwt_payload.get("context") if isinstance(jwt_payload, dict) else None
+            if pharmacy_id is None and isinstance(ctx, dict):
+                pharmacy_id = ctx.get("organizationId")
+
+        if not token or not rpc_host or not patient_id or not pharmacy_id:
+            return None
+
+        return {
+            "token": token,
+            "refresh_token": refresh_token,
+            "patient_id": patient_id,
+            "pharmacy_id": pharmacy_id,
+            "rpc_host": rpc_host,
+            "user_agent": user_agent,
+            "captured_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+    def _persist_auth_cache(self, api_payloads: list[dict]) -> None:
+        auth = self._extract_auth_from_payloads(api_payloads)
+        if not auth:
+            return
+        path = self._auth_cache_path()
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(auth, ensure_ascii=False, indent=2), encoding="utf-8")
+        except Exception as exc:
+            self._safe_log(f"Auth cache write failed: {exc}")
+
+    def _load_auth_cache(self) -> dict | None:
+        path = self._auth_cache_path()
+        if not path.exists():
+            return None
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            return data if isinstance(data, dict) else None
+        except Exception:
+            return None
+
+    def _auth_is_expired(self, token: str) -> bool:
+        payload = self._decode_jwt_payload(token)
+        exp = payload.get("exp")
+        try:
+            if exp is None:
+                return False
+            return time.time() > (float(exp) - 60)
+        except Exception:
+            return False
+
+    def _direct_api_capture(self) -> list[dict] | None:
+        auth = self._load_auth_cache()
+        if not auth:
+            return None
+        token = auth.get("token")
+        if not token or self._auth_is_expired(str(token)):
+            return None
+        rpc_host = auth.get("rpc_host")
+        patient_id = auth.get("patient_id")
+        pharmacy_id = auth.get("pharmacy_id")
+        if not rpc_host or not patient_id or not pharmacy_id:
+            return None
+        headers = {
+            "authorization": str(token),
+            "accept": "application/json",
+        }
+        user_agent = auth.get("user_agent")
+        if user_agent:
+            headers["user-agent"] = str(user_agent)
+
+        include_inactive = bool(self.cfg.get("include_inactive", False))
+        requestable_only = bool(self.cfg.get("requestable_only", True))
+        in_stock_only = bool(self.cfg.get("in_stock_only", False))
+        base_url = (
+            f"https://{rpc_host}/formulary-products?"
+            f"patientId={patient_id}&pharmacyId={pharmacy_id}"
+            f"&productType=CANNABIS_PRODUCT&take=50&skip=0"
+            f"&includeInactive={'true' if include_inactive else 'false'}"
+            f"&requestableOnly={'true' if requestable_only else 'false'}"
+            f"&requireAvailableStock={'true' if in_stock_only else 'false'}"
+        )
+
+        def _http_get_json(url: str):
+            attempts = 3
+            ssl_ctx = make_ssl_context()
+            for attempt in range(1, attempts + 1):
+                try:
+                    req = urllib.request.Request(url, headers=headers)
+                    with urllib.request.urlopen(req, timeout=20, context=ssl_ctx) as resp:
+                        body = resp.read()
+                    return json.loads(body.decode("utf-8"))
+                except Exception as exc:
+                    self.callbacks["capture_log"](
+                        f"API-only fetch failed (attempt {attempt}/{attempts}): {exc}"
+                    )
+                    if attempt < attempts:
+                        try:
+                            self.callbacks["responsive_wait"](1.0 * attempt, label="API-only retry")
+                        except Exception:
+                            time.sleep(1.0 * attempt)
+            return None
+
+        api_payloads: list[dict] = []
+        data_list = _http_get_json(base_url)
+        if not isinstance(data_list, list):
+            return None
+        api_payloads.append({
+            "url": base_url,
+            "content_type": "application/json",
+            "kind": "list",
+            "count": len(data_list),
+            "data": data_list,
+            "request_headers": headers,
+        })
+        # count endpoint for pagination
+        try:
+            parsed = urllib.parse.urlparse(base_url)
+            q = urllib.parse.parse_qs(parsed.query)
+            q.pop("take", None)
+            q.pop("skip", None)
+            count_path = parsed.path.replace("formulary-products", "formulary-products/count")
+            count_url = urllib.parse.urlunparse(parsed._replace(path=count_path, query=urllib.parse.urlencode(q, doseq=True)))
+            count_resp = _http_get_json(count_url)
+        except Exception:
+            count_resp = None
+        total = None
+        if isinstance(count_resp, dict):
+            total = count_resp.get("count") or count_resp.get("total")
+        if total is None:
+            total = len(data_list)
+        take = 50
+        if total and len(data_list) < total:
+            for skip in range(take, int(total), take):
+                if self.callbacks["stop_event"].is_set():
+                    break
+                try:
+                    parsed = urllib.parse.urlparse(base_url)
+                    q = urllib.parse.parse_qs(parsed.query)
+                    q["skip"] = [str(skip)]
+                    q["take"] = [str(take)]
+                    next_url = urllib.parse.urlunparse(parsed._replace(query=urllib.parse.urlencode(q, doseq=True)))
+                    more = _http_get_json(next_url)
+                    if isinstance(more, list):
+                        api_payloads.append({
+                            "url": next_url,
+                            "content_type": "application/json",
+                            "kind": "list",
+                            "count": len(more),
+                            "data": more,
+                            "request_headers": headers,
+                        })
+                except Exception:
+                    break
+        return api_payloads
+
     def _set_status(self, status: Status, msg: Optional[str] = None):
         if msg:
             self.callbacks.get("capture_log", lambda m: None)(msg)
@@ -157,6 +375,35 @@ class CaptureWorker:
         sync_playwright, PlaywrightTimeoutError = _Playwright
         try:
             self._set_status("running", "Auto-capture started.")
+            if self.cfg.get("api_only"):
+                while not self.callbacks["stop_event"].is_set():
+                    self._set_status("running", "API-only capture running...")
+                    api_payloads = self._direct_api_capture()
+                    if api_payloads:
+                        try:
+                            # Persist auth cache and optionally dump data
+                            self._persist_auth_cache(api_payloads)
+                            dump_dir = Path(self.app_dir) / "data" if self.app_dir else None
+                            stamp = time.strftime("%Y%m%d_%H%M%S")
+                            if dump_dir:
+                                dump_dir.mkdir(parents=True, exist_ok=True)
+                                if self.cfg.get("dump_api_json"):
+                                    try:
+                                        api_path = dump_dir / f"api_dump_{stamp}.json"
+                                        api_path.write_text(json.dumps(api_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
+                                        self.callbacks["capture_log"](f"Saved API dump: {api_path}")
+                                    except Exception as exc:
+                                        self.callbacks["capture_log"](f"API dump failed: {exc}")
+                            self.callbacks["apply_text"]("")
+                        except Exception as exc:
+                            self._safe_log(f"API-only capture apply failed: {exc}")
+                    else:
+                        self._set_status("retrying", "API-only capture failed; waiting before retry.")
+                    interval = self.scheduler.next_interval(self.cfg["interval_seconds"], self.cfg)
+                    if self.scheduler.wait(interval, label="Waiting for next capture"):
+                        break
+                self._set_status("stopped")
+                return
             with sync_playwright() as p:
                 attempted_install = False
                 while not self.callbacks["stop_event"].is_set():
@@ -760,6 +1007,7 @@ class CaptureWorker:
                                     if not api_payloads:
                                         self.callbacks["capture_log"]("No API JSON responses captured.")
                                     else:
+                                        self._persist_auth_cache(api_payloads)
                                         try:
                                             latest_path = dump_dir / "api_latest.json"
                                             latest_path.write_text(json.dumps(api_payloads, ensure_ascii=False, indent=2), encoding="utf-8")

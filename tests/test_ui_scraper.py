@@ -87,6 +87,7 @@ class UiScraperTests(unittest.TestCase):
                 self.cap_org = _Var("")
                 self.cap_org_sel = _Var("")
                 self.cap_headless = _Var(True)
+                self.cap_api_only = _Var(False)
                 self.cap_auto_notify_ha = _Var(False)
                 self.cap_ha_webhook = _Var("")
                 self.cap_ha_token = _Var("")

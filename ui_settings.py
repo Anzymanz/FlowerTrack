@@ -143,6 +143,11 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Checkbutton(advanced_frame, variable=app.cap_headless).grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
     adv_row += 1
 
+    ttk.Checkbutton(advanced_frame, text="API-only capture (skip browser)", variable=app.cap_api_only).grid(
+        row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2
+    )
+    adv_row += 1
+
     ttk.Checkbutton(advanced_frame, text="Dump page HTML to file", variable=app.cap_dump_html).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
     adv_row += 1
 
