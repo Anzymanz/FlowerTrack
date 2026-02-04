@@ -321,11 +321,11 @@ class CaptureWorker:
                     return json.loads(body.decode("utf-8")), status
                 except Exception as exc:
                     self.callbacks["capture_log"](
-                        f"API-only fetch failed (attempt {attempt}/{attempts}): {exc}"
+                        f"API fetch failed (attempt {attempt}/{attempts}): {exc}"
                     )
                     if attempt < attempts:
                         try:
-                            self.callbacks["responsive_wait"](1.0 * attempt, label="API-only retry")
+                            self.callbacks["responsive_wait"](1.0 * attempt, label="API retry")
                         except Exception:
                             time.sleep(1.0 * attempt)
             return None
@@ -364,12 +364,12 @@ class CaptureWorker:
             total = len(data_list)
         try:
             status_txt = f" status={count_status}" if count_status is not None else ""
-            self.callbacks["capture_log"](f"API-only count fetch{status_txt} total={total}")
+            self.callbacks["capture_log"](f"API count fetch{status_txt} total={total}")
         except Exception:
             pass
         take = 50
         try:
-            self.callbacks["capture_log"](f"API-only pagination: base={len(data_list)} total={total} take={take}")
+            self.callbacks["capture_log"](f"API pagination: base={len(data_list)} total={total} take={take}")
         except Exception:
             pass
         if total and len(data_list) < total:
@@ -387,7 +387,7 @@ class CaptureWorker:
                         more, more_status = more_resp
                         try:
                             status_txt = f" status={more_status}" if more_status is not None else ""
-                            self.callbacks["capture_log"](f"API-only pagination fetch skip={skip}{status_txt}")
+                            self.callbacks["capture_log"](f"API pagination fetch skip={skip}{status_txt}")
                         except Exception:
                             pass
                         api_payloads.append({
@@ -400,14 +400,14 @@ class CaptureWorker:
                         })
                     else:
                         try:
-                            self.callbacks["capture_log"](f"API-only pagination fetch skip={skip} status=error")
+                            self.callbacks["capture_log"](f"API pagination fetch skip={skip} status=error")
                         except Exception:
                             pass
                 except Exception:
                     break
         try:
             elapsed = time.time() - start_ts
-            self.callbacks["capture_log"](f"API-only capture fetched {len(api_payloads)} payloads in {elapsed:.1f}s")
+            self.callbacks["capture_log"](f"API capture fetched {len(api_payloads)} payloads in {elapsed:.1f}s")
         except Exception:
             pass
         return api_payloads
@@ -511,7 +511,7 @@ class CaptureWorker:
             # Short wait for form/UI to render.
             time.sleep(3)
             try:
-                self.callbacks["capture_log"]("API-only auth missing; launching browser to refresh token...")
+                self.callbacks["capture_log"]("Auth missing; launching browser to refresh token...")
             except Exception:
                 pass
             try:
@@ -671,11 +671,11 @@ class CaptureWorker:
             self._set_status("running", "Auto-capture started.")
             if self.cfg.get("api_only", True):
                 while not self.callbacks["stop_event"].is_set():
-                    self._set_status("running", "API-only capture running...")
+                    self._set_status("running", "API capture running...")
                     api_payloads = self._direct_api_capture()
                     if not api_payloads and not self._auth_cache_valid():
                         try:
-                            self.callbacks["capture_log"]("API-only auth cache missing/expired; attempting bootstrap.")
+                            self.callbacks["capture_log"]("Auth cache missing/expired; attempting bootstrap.")
                         except Exception:
                             pass
                         bootstrap_payloads = self._bootstrap_auth_with_playwright()
@@ -687,7 +687,7 @@ class CaptureWorker:
                             api_payloads = self._direct_api_capture()
                         else:
                             try:
-                                self.callbacks["capture_log"]("API-only auth bootstrap failed; retrying later.")
+                                self.callbacks["capture_log"]("Auth bootstrap failed; retrying later.")
                             except Exception:
                                 pass
                     if api_payloads:
@@ -707,9 +707,9 @@ class CaptureWorker:
                                         self.callbacks["capture_log"](f"API dump failed: {exc}")
                             self.callbacks["apply_text"]("")
                         except Exception as exc:
-                            self._safe_log(f"API-only capture apply failed: {exc}")
+                            self._safe_log(f"API capture apply failed: {exc}")
                     else:
-                        self._set_status("retrying", "API-only capture failed; waiting before retry.")
+                        self._set_status("retrying", "API capture failed; waiting before retry.")
                     interval = self.scheduler.next_interval(self.cfg["interval_seconds"], self.cfg)
                     if self.scheduler.wait(interval, label="Waiting for next capture"):
                         break
