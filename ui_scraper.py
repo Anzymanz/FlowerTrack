@@ -15,7 +15,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 from queue import Queue, Empty
 from capture import ensure_browser_available, install_playwright_browsers, start_capture_worker
-from exports import export_html_auto
+from exports import export_html_auto, init_exports, set_exports_dir
 from export_server import start_export_server as srv_start_export_server, stop_export_server as srv_stop_export_server
 from ui_settings import open_settings_window
 from app_core import (  # shared globals/imports
@@ -1786,6 +1786,8 @@ class App(tk.Tk):
                 widget.configure(bg=bg if dark else "#ffffff", fg=fg, selectbackground=accent, selectforeground="#000" if dark else "#fff", highlightbackground=bg)
             elif isinstance(widget, tk.Text):
                 widget.configure(bg=bg, fg=fg, insertbackground=fg, highlightbackground=bg)
+            elif isinstance(widget, ttk.Widget):
+                pass
             else:
                 # Attempt generic background/foreground where supported (covers frames/labels/buttons)
                 for opt, val in (("background", bg), ("foreground", fg)):
