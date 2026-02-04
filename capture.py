@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import os
 import sys
@@ -492,6 +493,79 @@ class CaptureWorker:
                                 data_list = []
                                 try:
                                     base_payload = next((p for p in api_payloads if 'formulary-products' in (p.get('url') or '') and isinstance(p.get('data'), list)), None)
+                                    if base_payload is None:
+                                        def _extract_auth_token():
+                                            for payload in api_payloads:
+                                                if not isinstance(payload, dict):
+                                                    continue
+                                                req_headers = payload.get("request_headers") or {}
+                                                token = req_headers.get("authorization") or req_headers.get("Authorization")
+                                                if token:
+                                                    return token
+                                            for payload in api_payloads:
+                                                url = payload.get("url") or ""
+                                                data = payload.get("data")
+                                                if "auth/initialize" in url and isinstance(data, dict):
+                                                    tokens = data.get("tokens") or {}
+                                                    access = tokens.get("accessToken")
+                                                    if access:
+                                                        return f"Bearer {access}"
+                                            return None
+                                        def _decode_jwt_payload(token: str) -> dict:
+                                            try:
+                                                raw = token.strip()
+                                                if raw.lower().startswith("bearer "):
+                                                    raw = raw[7:].strip()
+                                                parts = raw.split(".")
+                                                if len(parts) < 2:
+                                                    return {}
+                                                payload_b64 = parts[1]
+                                                payload_b64 += "=" * (-len(payload_b64) % 4)
+                                                decoded = base64.urlsafe_b64decode(payload_b64.encode("utf-8"))
+                                                return json.loads(decoded.decode("utf-8"))
+                                            except Exception:
+                                                return {}
+                                        def _find_rpc_host() -> str | None:
+                                            for payload in api_payloads:
+                                                url = payload.get("url") or ""
+                                                if "production-rpc-api" in url:
+                                                    return urllib.parse.urlparse(url).netloc
+                                            return None
+                                        token = _extract_auth_token()
+                                        rpc_host = _find_rpc_host()
+                                        if token and rpc_host:
+                                            jwt_payload = _decode_jwt_payload(token)
+                                            patient_id = jwt_payload.get("roleEntityId")
+                                            org_id = None
+                                            ctx = jwt_payload.get("context") if isinstance(jwt_payload, dict) else None
+                                            if isinstance(ctx, dict):
+                                                org_id = ctx.get("organizationId")
+                                            if patient_id and org_id:
+                                                include_inactive = bool(self.cfg.get('include_inactive', False))
+                                                requestable_only = bool(self.cfg.get('requestable_only', True))
+                                                in_stock_only = bool(self.cfg.get('in_stock_only', False))
+                                                base_url = (
+                                                    f"https://{rpc_host}/formulary-products?"
+                                                    f"patientId={patient_id}&pharmacyId={org_id}"
+                                                    f"&productType=CANNABIS_PRODUCT&take=50&skip=0"
+                                                    f"&includeInactive={'true' if include_inactive else 'false'}"
+                                                    f"&requestableOnly={'true' if requestable_only else 'false'}"
+                                                    f"&requireAvailableStock={'true' if in_stock_only else 'false'}"
+                                                )
+                                                headers = dict(headers)
+                                                headers["authorization"] = token
+                                                more = _http_get_json(base_url)
+                                                if isinstance(more, list):
+                                                    base_payload = {
+                                                        "url": base_url,
+                                                        "content_type": "application/json",
+                                                        "kind": "list",
+                                                        "count": len(more),
+                                                        "data": more,
+                                                        "request_headers": headers,
+                                                        "cookie_header": self.formulary_cookie_header,
+                                                    }
+                                                    api_payloads.append(base_payload)
                                     base_url = None
                                     if base_payload:
                                         base_url = base_url or (base_payload.get('url') or '')
