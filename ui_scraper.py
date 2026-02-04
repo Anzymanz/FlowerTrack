@@ -597,7 +597,7 @@ class App(tk.Tk):
             current_height = self.winfo_height()
             if show:
                 if not self.console_frame.winfo_ismapped():
-                    self.console_frame.pack(fill="both", expand=True, padx=10, pady=(0, 8))
+                    self.console_frame.pack(fill="both", expand=True, padx=10, pady=(0, 8), before=self.last_change_label)
                     self.update_idletasks()
                     delta = self.console_frame.winfo_height() or self.console_frame.winfo_reqheight()
                     if delta:
