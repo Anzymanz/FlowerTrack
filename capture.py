@@ -698,6 +698,11 @@ class CaptureWorker:
                             stamp = time.strftime("%Y%m%d_%H%M%S")
                             if dump_dir:
                                 dump_dir.mkdir(parents=True, exist_ok=True)
+                                try:
+                                    latest_path = dump_dir / "api_latest.json"
+                                    latest_path.write_text(json.dumps(api_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
+                                except Exception as exc:
+                                    self.callbacks["capture_log"](f"API latest write failed: {exc}")
                                 if self.cfg.get("dump_api_json"):
                                     try:
                                         api_path = dump_dir / f"api_dump_{stamp}.json"
