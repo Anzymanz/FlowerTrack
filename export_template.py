@@ -548,10 +548,16 @@ applyTheme(saved === 'light');
             priceMaxEl.value = priceMaxSel;
             priceMinEl.value = priceMinSel;
             updatePriceLabel();
-            applyFilters();
         };
+        const applyPriceFilters = () => { syncPrice(); applyFilters(); };
         priceMinEl.addEventListener('input', syncPrice);
         priceMaxEl.addEventListener('input', syncPrice);
+        priceMinEl.addEventListener('change', applyPriceFilters);
+        priceMaxEl.addEventListener('change', applyPriceFilters);
+        priceMinEl.addEventListener('mouseup', applyPriceFilters);
+        priceMaxEl.addEventListener('mouseup', applyPriceFilters);
+        priceMinEl.addEventListener('touchend', applyPriceFilters);
+        priceMaxEl.addEventListener('touchend', applyPriceFilters);
         updatePriceLabel();
     }
     if (thcMinEl && thcMaxEl) {
@@ -564,10 +570,16 @@ applyTheme(saved === 'light');
             thcMaxEl.value = thcMaxSel;
             thcMinEl.value = thcMinSel;
             updateThcLabel();
-            applyFilters();
         };
+        const applyThcFilters = () => { syncThc(); applyFilters(); };
         thcMinEl.addEventListener('input', syncThc);
         thcMaxEl.addEventListener('input', syncThc);
+        thcMinEl.addEventListener('change', applyThcFilters);
+        thcMaxEl.addEventListener('change', applyThcFilters);
+        thcMinEl.addEventListener('mouseup', applyThcFilters);
+        thcMaxEl.addEventListener('mouseup', applyThcFilters);
+        thcMinEl.addEventListener('touchend', applyThcFilters);
+        thcMaxEl.addEventListener('touchend', applyThcFilters);
         updateThcLabel();
     }
     document.querySelectorAll('[data-filter-type]').forEach(btn => {
