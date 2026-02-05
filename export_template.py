@@ -243,6 +243,7 @@ let favorites = new Set();
 let basketTotal = 0;
 let basketCount = 0;
 let basket = new Map();
+const DELIVERY_FEE = 4.99;
 function refreshBasketButtons() {
     document.querySelectorAll('.card').forEach(card => {
         const key = card.dataset.key || card.dataset.favkey || card.dataset.productId || card.dataset.strain;
@@ -267,6 +268,9 @@ function updateBasketUI() {
         basketCount += item.qty;
         basketTotal += item.price * item.qty;
     });
+    if (basketCount > 0) {
+        basketTotal += DELIVERY_FEE;
+    }
     if (c) c.textContent = basketCount;
     if (t) t.textContent = basketTotal.toFixed(2);
 }
@@ -320,12 +324,16 @@ function renderBasketModal(show) {
             `);
         });
     }
+    const feeLine = (basketCount > 0) ? `<div class='small'>Delivery: £${DELIVERY_FEE.toFixed(2)}</div>` : '';
     modal.innerHTML = `
       <div class='basket-panel'>
         <div class='basket-title'>Basket</div>
         ${rows.join("\\n")}
         <div style='margin-top:12px;display:flex;justify-content:space-between;align-items:center;'>
-          <div><strong>Total:</strong> £${basketTotal.toFixed(2)} (${basketCount} item${basketCount===1?"":"s"})</div>
+          <div>
+            <div><strong>Total:</strong> £${basketTotal.toFixed(2)} (${basketCount} item${basketCount===1?"":"s"})</div>
+            ${feeLine}
+          </div>
           <button class='btn-basket' onclick='closeBasket()'>Close</button>
         </div>
       </div>
