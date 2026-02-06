@@ -206,7 +206,7 @@ def apply_rounded_buttons(style: ttk.Style, colors: dict, radius: int = 8) -> No
     bg = colors.get("bg", "#111")
     ctrl_bg = colors.get("ctrl_bg", "#222")
     accent = colors.get("accent", "#3c3c3c")
-    border = "#2f2f2f" if bg == "#111" else "#c0c0c0"
+    border = colors.get("ctrl_bg", "#222")
     disabled = "#2a2a2a" if bg == "#111" else "#d0d0d0"
     element_name = f"Rounded.Button.{ctrl_bg.replace('#','')}.{accent.replace('#','')}"
 
