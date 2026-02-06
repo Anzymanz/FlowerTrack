@@ -95,6 +95,14 @@ DEFAULT_CAPTURE_CONFIG = {
     "notify_new_items": True,
     "notify_removed_items": True,
     "notify_windows": True,
+    "notify_throttle_minutes": {
+        "new": 0.0,
+        "removed": 0.0,
+        "price": 5.0,
+        "stock": 5.0,
+        "out_of_stock": 5.0,
+        "restock": 5.0,
+    },
     "quiet_hours_enabled": False,
     "quiet_hours_start": "22:00",
     "quiet_hours_end": "07:00",
@@ -229,6 +237,23 @@ def _coerce_float(val: Any, default: float, min_value: float | None = None) -> f
         return default
 
 
+def _coerce_notify_throttle(value: Any, default: dict) -> dict:
+    if not isinstance(default, dict):
+        return {}
+    data = dict(default)
+    if not isinstance(value, dict):
+        return data
+    for key in default.keys():
+        if key not in value:
+            continue
+        raw = value.get(key)
+        try:
+            data[key] = float(raw)
+        except Exception:
+            data[key] = float(default.get(key, 0.0))
+    return data
+
+
 def _coerce_int(val: Any, default: int, min_value: int | None = None) -> int:
     try:
         i = int(float(val))
@@ -334,6 +359,10 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["notify_new_items"] = _coerce_bool(raw.get("notify_new_items"), DEFAULT_CAPTURE_CONFIG["notify_new_items"])
     cfg["notify_removed_items"] = _coerce_bool(raw.get("notify_removed_items"), DEFAULT_CAPTURE_CONFIG["notify_removed_items"])
     cfg["notify_windows"] = _coerce_bool(raw.get("notify_windows"), DEFAULT_CAPTURE_CONFIG["notify_windows"])
+    cfg["notify_throttle_minutes"] = _coerce_notify_throttle(
+        raw.get("notify_throttle_minutes"),
+        DEFAULT_CAPTURE_CONFIG["notify_throttle_minutes"],
+    )
     cfg["quiet_hours_enabled"] = _coerce_bool(raw.get("quiet_hours_enabled"), DEFAULT_CAPTURE_CONFIG["quiet_hours_enabled"])
     cfg["quiet_hours_start"] = str(raw.get("quiet_hours_start") or DEFAULT_CAPTURE_CONFIG["quiet_hours_start"]).strip()
     cfg["quiet_hours_end"] = str(raw.get("quiet_hours_end") or DEFAULT_CAPTURE_CONFIG["quiet_hours_end"]).strip()
