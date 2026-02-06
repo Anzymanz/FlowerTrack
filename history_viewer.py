@@ -7,7 +7,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
 from datetime import datetime
-from theme import set_titlebar_dark
+from theme import set_titlebar_dark, apply_rounded_buttons
 import ctypes
 
 
@@ -149,6 +149,7 @@ class HistoryViewer(tk.Toplevel):
             style.configure("History.Treeview.Heading", background=ctrl_bg, foreground=fg)
             style.map("History.Treeview.Heading", background=[("active", accent)], foreground=[("active", "#000" if dark else "#fff")])
             style.configure("History.Vertical.TScrollbar", background=ctrl_bg, troughcolor=bg, arrowcolor=fg)
+            apply_rounded_buttons(style, {"bg": bg, "fg": fg, "ctrl_bg": ctrl_bg, "accent": accent})
         except Exception as exc:
             _log_debug(f"HistoryViewer suppressed exception: {exc}")
         try:

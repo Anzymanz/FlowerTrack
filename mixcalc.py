@@ -6,6 +6,7 @@ from pathlib import Path
 from datetime import datetime
 import tkinter as tk
 from tkinter import ttk, messagebox
+from theme import apply_rounded_buttons
 import ctypes
 from config import load_tracker_config
 from resources import resource_path
@@ -491,6 +492,7 @@ def apply_theme(root, dark: bool):
         background=[("active", accent), ("pressed", accent)],
         foreground=[("active", bg if dark else "#fff"), ("pressed", bg if dark else "#fff")],
     )
+    apply_rounded_buttons(style, {"bg": bg, "fg": fg, "ctrl_bg": ctrl_bg, "accent": accent})
     root.configure(bg=bg)
     style.configure(
         "TEntry",
