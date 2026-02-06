@@ -188,9 +188,13 @@ def log_dose():
     if total_g <= 0:
         messagebox.showinfo("Weight", "Total grams must be greater than zero.")
         return
-    target_ratio = ratio_var.get()
+    target_ratio = _get_target_ratio()
+    if target_ratio is None:
+        return
     item_a = items[idx_a]
     item_b = items[idx_b]
+    name_a = str(item_a.get("name", "")).strip()
+    name_b = str(item_b.get("name", "")).strip()
     result, err = compute_mix(total_g, target_ratio, item_a, item_b)
     if err:
         messagebox.showinfo("Cannot log", err)
@@ -329,7 +333,9 @@ def add_to_stock():
         messagebox.showinfo("Weight", "Total grams must be greater than zero.")
         return
     blend_name = blend_name_var.get().strip()
-    target_ratio = ratio_var.get()
+    target_ratio = _get_target_ratio()
+    if target_ratio is None:
+        return
     item_a = items[idx_a]
     item_b = items[idx_b]
     name_a = str(item_a.get("name", "")).strip()
@@ -436,7 +442,9 @@ def calculate():
         messagebox.showinfo("Weight", "Total grams must be greater than zero.")
         return
 
-    target_ratio = ratio_var.get()
+    target_ratio = _get_target_ratio()
+    if target_ratio is None:
+        return
     item_a = items[idx_a]
     item_b = items[idx_b]
     result, err = compute_mix(total_g, target_ratio, item_a, item_b)
@@ -637,19 +645,27 @@ ttk.Label(controls, text="Total grams").grid(row=0, column=0, sticky="e", padx=(
 total_var = tk.StringVar(value="0.150")
 ttk.Entry(controls, textvariable=total_var, width=8).grid(row=0, column=1, sticky="w")
 
-ratio_var = tk.DoubleVar(value=1.0)
-ttk.Label(controls, text="Target THC:CBD (X:1)").grid(row=0, column=2, sticky="e", padx=(12, 6))
-ratio_scale = ttk.Scale(controls, from_=0.1, to=30.0, orient="horizontal", variable=ratio_var, length=360)
-ratio_scale.grid(row=0, column=3, sticky="we")
+ttk.Label(controls, text="Target THC:CBD").grid(row=0, column=2, sticky="e", padx=(12, 6))
+ratio_a_var = tk.StringVar(value="1")
+ratio_b_var = tk.StringVar(value="1")
+ratio_frame = ttk.Frame(controls)
+ratio_frame.grid(row=0, column=3, sticky="w")
+ttk.Entry(ratio_frame, textvariable=ratio_a_var, width=4).pack(side="left")
+ttk.Label(ratio_frame, text=":").pack(side="left", padx=(4, 4))
+ttk.Entry(ratio_frame, textvariable=ratio_b_var, width=4).pack(side="left")
 controls.columnconfigure(3, weight=1)
-ratio_val_lbl = ttk.Label(controls, text="1.0:1")
-ratio_val_lbl.grid(row=0, column=4, padx=(6, 0))
 
-def _update_ratio_label(*_):
-    r = ratio_var.get()
-    ratio_val_lbl.config(text=f"{r:.1f}:1")
-
-ratio_var.trace_add("write", _update_ratio_label)
+def _get_target_ratio():
+    try:
+        a = float(ratio_a_var.get())
+        b = float(ratio_b_var.get())
+    except Exception:
+        messagebox.showinfo("Ratio", "Enter a valid THC:CBD ratio (e.g., 1 : 1 or 60 : 40).")
+        return None
+    if a <= 0 or b <= 0:
+        messagebox.showinfo("Ratio", "Ratio values must be greater than zero.")
+        return None
+    return a / b
 
 blend_name_var = tk.StringVar()
 if IS_STOCK_MODE:
