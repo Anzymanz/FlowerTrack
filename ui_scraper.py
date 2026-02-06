@@ -189,7 +189,6 @@ class App(tk.Tk):
         self.capture_stop = _threading.Event()
         self._playwright_available = None
         self.last_change_summary = "none"
-        self._notify_throttle_last = {}
         self._log_window_last_full_height = None
         self._build_capture_controls()
         # Tray behavior
@@ -245,11 +244,6 @@ class App(tk.Tk):
         self.notify_new_items = tk.BooleanVar(value=bool(cfg.get("notify_new_items", True)))
         self.notify_removed_items = tk.BooleanVar(value=bool(cfg.get("notify_removed_items", True)))
         self.notify_windows = tk.BooleanVar(value=bool(cfg.get("notify_windows", True)))
-        self.notify_throttle_minutes = self._coerce_notify_throttle_cfg(cfg.get("notify_throttle_minutes"))
-        self.notify_throttle_vars = {
-            key: tk.StringVar(value=str(self.notify_throttle_minutes.get(key, 0.0)))
-            for key in ("new", "removed", "price", "stock", "out_of_stock", "restock")
-        }
         self.cap_quiet_hours_enabled = tk.BooleanVar(value=bool(cfg.get("quiet_hours_enabled", False)))
         self.cap_quiet_start = tk.StringVar(value=cfg.get("quiet_hours_start", "22:00"))
         self.cap_quiet_end = tk.StringVar(value=cfg.get("quiet_hours_end", "07:00"))
@@ -314,7 +308,6 @@ class App(tk.Tk):
             "notify_new_items": bool(self.notify_new_items.get()),
             "notify_removed_items": bool(self.notify_removed_items.get()),
             "notify_windows": bool(self.notify_windows.get()),
-            "notify_throttle_minutes": dict(getattr(self, "notify_throttle_minutes", DEFAULT_CAPTURE_CONFIG["notify_throttle_minutes"])),
             "log_window_hidden_height": float(getattr(self, "scraper_log_hidden_height", 260.0) or 260.0),
             "quiet_hours_enabled": bool(self.cap_quiet_hours_enabled.get()),
             "quiet_hours_start": self.cap_quiet_start.get(),
@@ -333,66 +326,6 @@ class App(tk.Tk):
             "window_geometry": self.geometry(),
             "settings_geometry": (self.settings_window.geometry() if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window) else self.scraper_settings_geometry),
         }
-
-    def _coerce_notify_throttle_cfg(self, value) -> dict:
-        base = {
-            "new": 0.0,
-            "removed": 0.0,
-            "price": 0.0,
-            "stock": 0.0,
-            "out_of_stock": 0.0,
-            "restock": 0.0,
-        }
-        if isinstance(value, dict):
-            for key in base:
-                if key in value:
-                    try:
-                        base[key] = float(value.get(key))
-                    except Exception:
-                        pass
-        return base
-
-    def _sync_notify_throttle_from_vars(self) -> None:
-        vars_map = getattr(self, "notify_throttle_vars", None)
-        if not isinstance(vars_map, dict):
-            return
-        for key in ("new", "removed", "price", "stock", "out_of_stock", "restock"):
-            var = vars_map.get(key)
-            if not hasattr(var, "get"):
-                continue
-            try:
-                self.notify_throttle_minutes[key] = float(str(var.get()).strip() or 0)
-            except Exception:
-                self.notify_throttle_minutes[key] = 0.0
-
-    def _apply_notify_throttle(self, change_type: str, entries: list[dict]) -> list[dict]:
-        if not entries:
-            return entries
-        throttle_cfg = getattr(self, "notify_throttle_minutes", {})
-        minutes = 0.0
-        try:
-            minutes = float(throttle_cfg.get(change_type, 0.0))
-        except Exception:
-            minutes = 0.0
-        last_map = getattr(self, "_notify_throttle_last", None)
-        if last_map is None:
-            last_map = {}
-            try:
-                self._notify_throttle_last = last_map
-            except Exception:
-                pass
-        if minutes <= 0:
-            try:
-                last_map[change_type] = time.time()
-            except Exception:
-                pass
-            return entries
-        now = time.time()
-        last = last_map.get(change_type)
-        if last is not None and (now - last) < (minutes * 60.0):
-            return []
-        last_map[change_type] = now
-        return entries
 
     def start_auto_capture(self):
         if self._is_capture_running():
@@ -1063,20 +996,6 @@ class App(tk.Tk):
             out_of_stock_changes = []
         if not _notify_flag('notify_restock', True):
             restock_changes = []
-        def _throttle(change_type: str, entries: list[dict]) -> list[dict]:
-            fn = getattr(self, "_apply_notify_throttle", None)
-            if callable(fn):
-                try:
-                    return fn(change_type, entries)
-                except Exception:
-                    return entries
-            return entries
-        new_items = _throttle("new", new_items)
-        removed_items = _throttle("removed", removed_items)
-        price_changes = _throttle("price", price_changes)
-        stock_changes = _throttle("stock", stock_changes)
-        out_of_stock_changes = _throttle("out_of_stock", out_of_stock_changes)
-        restock_changes = _throttle("restock", restock_changes)
         def _flower_label(entry: dict) -> str:
             brand = entry.get("brand") or entry.get("producer") or ""
             strain = entry.get("strain") or ""
