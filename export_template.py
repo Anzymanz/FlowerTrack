@@ -163,6 +163,7 @@ let activeStrains = new Set(['Indica','Sativa','Hybrid']);
 let favoritesOnly = false;
 let showSmalls = true;
 let showOutOfStock = false;
+let brandFilter = "";
 let searchTerm = "";
 const priceMinBound = {price_min_bound};
 const priceMaxBound = {price_max_bound};
@@ -190,15 +191,22 @@ function applyFilters() {
         const showStrain = (!st) ? true : activeStrains.has(st);
         const text = (c.dataset.strain || '') + ' ' + (c.dataset.brand || '') + ' ' + (c.dataset.producer || '') + ' ' + (c.dataset.productId || '');
         const matchesSearch = term ? text.toLowerCase().includes(term) : true;
+        const brandTerm = brandFilter.trim().toLowerCase();
+        const brandText = (c.dataset.brand || '').toLowerCase();
+        const brandOk = brandTerm ? brandText.includes(brandTerm) : true;
         const favOk = favoritesOnly ? favorites.has(favKey) : true;
         const isOut = c.dataset.out === '1';
         const outOk = showOutOfStock || !isOut;
         const smallsOk = showSmalls || !isSmalls;
-        c.style.display = (showType && showStrain && matchesSearch && priceOk && thcOk && favOk && smallsOk && outOk) ? '' : 'none';
+        c.style.display = (showType && showStrain && matchesSearch && brandOk && priceOk && thcOk && favOk && smallsOk && outOk) ? '' : 'none';
     });
 }
 function handleSearch(el) {
     searchTerm = el.value || "";
+    applyFilters();
+}
+function handleBrandFilter(el) {
+    brandFilter = el.value || "";
     applyFilters();
 }
 function toggleType(type, btn) {
@@ -462,6 +470,7 @@ function resetFilters() {
     favoritesOnly = false;
     showSmalls = true;
     showOutOfStock = false;
+    brandFilter = "";
     saveFilterPrefs();
     // Reset sliders
     const priceMinEl = document.getElementById('priceMinRange');
@@ -484,6 +493,8 @@ function resetFilters() {
         thcMinEl.dispatchEvent(new Event('input'));
         thcMaxEl.dispatchEvent(new Event('input'));
     }
+    const brandInput = document.getElementById('brandFilterInput');
+    if (brandInput) brandInput.value = "";
     applyFilters();
 }
 function applyTheme(saved) {
@@ -612,6 +623,7 @@ applyTheme(saved === 'light');
     <button class='btn-filter' onclick="toggleFavorites(this)">Favorites</button>
     <button class='btn-filter active' data-filter-smalls="1" onclick="toggleSmalls(this)">Smalls</button>
     <button class='btn-filter' onclick="toggleOutOfStock(this)">Out of stock</button>
+    <input class="search-box" id="brandFilterInput" type="text" placeholder="Filter brand" oninput="handleBrandFilter(this)" />
     <button onclick="resetFilters()">Reset</button>
     <div class="range-group">
       <div class="range-line">
