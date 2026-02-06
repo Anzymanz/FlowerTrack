@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import csv
 import json
 import os
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
 from datetime import datetime
 from theme import set_titlebar_dark
@@ -79,7 +80,7 @@ class HistoryViewer(tk.Toplevel):
         body.rowconfigure(1, weight=1)
 
         cols = ("time", "summary")
-        self.tree = ttk.Treeview(body, columns=cols, show="headings", height=12)
+        self.tree = ttk.Treeview(body, columns=cols, show="headings", height=12, selectmode="extended")
         self.tree.heading("time", text="Timestamp")
         self.tree.heading("summary", text="Summary")
         self.tree.column("time", width=180, anchor="center")
@@ -103,6 +104,7 @@ class HistoryViewer(tk.Toplevel):
         actions = ttk.Frame(self, padding=(10, 6, 10, 10))
         actions.pack(fill="x")
         ttk.Button(actions, text="Copy JSON", command=self._copy_json).pack(side="left")
+        ttk.Button(actions, text="Export CSV", command=self._export_csv).pack(side="left", padx=(6, 0))
         ttk.Button(actions, text="Open Log File", command=self._open_log_file).pack(side="left", padx=(6, 0))
         ttk.Button(actions, text="Open Log Folder", command=self._open_log_folder).pack(side="left", padx=(6, 0))
 
@@ -449,6 +451,23 @@ class HistoryViewer(tk.Toplevel):
             return None
         return self.filtered[idx]
 
+    def _selected_records(self) -> list[dict]:
+        sel = self.tree.selection()
+        if not sel:
+            return []
+        indices = []
+        for item in sel:
+            try:
+                indices.append(int(item))
+            except Exception:
+                continue
+        indices = sorted(set(indices))
+        records = []
+        for idx in indices:
+            if 0 <= idx < len(self.filtered):
+                records.append(self.filtered[idx])
+        return records
+
     def _on_select(self, _event=None) -> None:
         rec = self._selected_record()
         if rec is None:
@@ -470,6 +489,115 @@ class HistoryViewer(tk.Toplevel):
             self.clipboard_append(text)
         except Exception:
             messagebox.showerror("Copy JSON", "Could not copy to clipboard.")
+
+    def _rows_for_record(self, record: dict) -> list[dict]:
+        timestamp = self._timestamp_for(record)
+        summary = self._summary_for(record)
+        rows: list[dict] = []
+        def add_rows(change_type: str, entries: list[dict]):
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                rows.append({
+                    "timestamp": timestamp,
+                    "summary": summary,
+                    "type": change_type,
+                    "label": self._item_label(entry),
+                    "brand": entry.get("brand") or "",
+                    "strain": entry.get("strain") or "",
+                    "producer": entry.get("producer") or "",
+                    "product_id": entry.get("product_id") or "",
+                    "price_before": entry.get("price_before") or "",
+                    "price_after": entry.get("price_after") or "",
+                    "price_delta": entry.get("price_delta") or "",
+                    "stock_before": entry.get("stock_before") or "",
+                    "stock_after": entry.get("stock_after") or "",
+                })
+        if "_raw" in record:
+            rows.append({
+                "timestamp": timestamp,
+                "summary": summary,
+                "type": "raw",
+                "label": str(record.get("_raw", "")),
+                "brand": "",
+                "strain": "",
+                "producer": "",
+                "product_id": "",
+                "price_before": "",
+                "price_after": "",
+                "price_delta": "",
+                "stock_before": "",
+                "stock_after": "",
+            })
+            return rows
+        add_rows("new", record.get("new_items") or [])
+        add_rows("removed", record.get("removed_items") or [])
+        add_rows("price", record.get("price_changes") or [])
+        add_rows("stock", record.get("stock_changes") or [])
+        add_rows("out_of_stock", record.get("out_of_stock_changes") or [])
+        add_rows("restock", record.get("restock_changes") or [])
+        if not rows:
+            rows.append({
+                "timestamp": timestamp,
+                "summary": summary,
+                "type": "summary",
+                "label": "",
+                "brand": "",
+                "strain": "",
+                "producer": "",
+                "product_id": "",
+                "price_before": "",
+                "price_after": "",
+                "price_delta": "",
+                "stock_before": "",
+                "stock_after": "",
+            })
+        return rows
+
+    def _export_csv(self) -> None:
+        records = self._selected_records()
+        if not records:
+            messagebox.showinfo("Export CSV", "Select one or more records to export.")
+            return
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        default_name = f"changes_export_{timestamp}.csv"
+        initial_dir = str(self.log_path.parent) if self.log_path.parent.exists() else str(Path.cwd())
+        path = filedialog.asksaveasfilename(
+            title="Export CSV",
+            defaultextension=".csv",
+            initialdir=initial_dir,
+            initialfile=default_name,
+            filetypes=[("CSV files", "*.csv")],
+        )
+        if not path:
+            return
+        rows: list[dict] = []
+        for rec in records:
+            rows.extend(self._rows_for_record(rec))
+        fieldnames = [
+            "timestamp",
+            "summary",
+            "type",
+            "label",
+            "brand",
+            "strain",
+            "producer",
+            "product_id",
+            "price_before",
+            "price_after",
+            "price_delta",
+            "stock_before",
+            "stock_after",
+        ]
+        try:
+            with open(path, "w", newline="", encoding="utf-8") as handle:
+                writer = csv.DictWriter(handle, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(rows)
+        except Exception:
+            messagebox.showerror("Export CSV", "Could not write CSV file.")
+            return
+        messagebox.showinfo("Export CSV", f"Exported {len(rows)} rows.")
 
     def _open_log_file(self) -> None:
         if not self.log_path.exists():
