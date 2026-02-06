@@ -343,7 +343,12 @@ let basketTotal = 0;
 let basketCount = 0;
 let basket = new Map();
 const DELIVERY_FEE = 4.99;
-const changesData = __CHANGES_JSON__;
+let changesData = [];
+try {
+    changesData = __CHANGES_JSON__ || [];
+} catch (e) {
+    changesData = [];
+}
 function refreshBasketButtons() {
     document.querySelectorAll('.card').forEach(card => {
         const key = card.dataset.key || card.dataset.favkey || card.dataset.productId || card.dataset.strain;
