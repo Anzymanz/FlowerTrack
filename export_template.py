@@ -247,6 +247,18 @@ function loadMore() {
     applyVisibleLimit();
 }
 let autoLoading = false;
+function tryAutoFill() {
+    const btn = document.getElementById('loadMore');
+    if (!btn || btn.style.display === 'none') return;
+    const bodyShort = document.body.scrollHeight <= (window.innerHeight + 20);
+    if (!bodyShort) return;
+    autoLoading = true;
+    loadMore();
+    setTimeout(() => {
+        autoLoading = false;
+        tryAutoFill();
+    }, 120);
+}
 function autoLoadOnScroll() {
     if (autoLoading) return;
     const btn = document.getElementById('loadMore');
@@ -256,6 +268,20 @@ function autoLoadOnScroll() {
     autoLoading = true;
     loadMore();
     setTimeout(() => { autoLoading = false; }, 200);
+}
+function observeLoadMore() {
+    const sentinel = document.getElementById('loadMoreSentinel');
+    if (!sentinel || !('IntersectionObserver' in window)) return;
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !autoLoading) {
+                autoLoading = true;
+                loadMore();
+                setTimeout(() => { autoLoading = false; }, 150);
+            }
+        });
+    }, { root: null, rootMargin: '200px', threshold: 0.01 });
+    observer.observe(sentinel);
 }
 function toggleBrandFilter(brand, checkbox) {
     if (!brand) return;
@@ -730,6 +756,8 @@ applyTheme(saved === 'light');
     document.addEventListener('click', closeBrandMenu);
     window.addEventListener('scroll', autoLoadOnScroll);
     applyFilters();
+    observeLoadMore();
+    setTimeout(tryAutoFill, 100);
 });
 </script>
 </head><body>
@@ -800,4 +828,5 @@ __CARDS__
   <button id='loadMore' onclick='loadMore()'>Load more</button>
   <span class='small' id='visibleCount'></span>
 </div>
+<div id='loadMoreSentinel' style='height:1px'></div>
 </body></html>"""
