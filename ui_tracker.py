@@ -1802,13 +1802,23 @@ class CannabisTracker:
         self._update_library_path_label()
     def _settings_export_backup(self) -> None:
         backups_dir = Path(APP_DIR) / "backups"
+        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        default_name = f"flowertrack-backup-{stamp}.zip"
+        zip_path = filedialog.asksaveasfilename(
+            title="Export FlowerTrack backup",
+            defaultextension=".zip",
+            initialdir=str(backups_dir) if backups_dir.exists() else ".",
+            initialfile=default_name,
+            filetypes=[("Zip files", "*.zip"), ("All files", "*.*")],
+        )
+        if not zip_path:
+            return
+        zip_path = Path(zip_path)
         try:
-            backups_dir.mkdir(parents=True, exist_ok=True)
+            zip_path.parent.mkdir(parents=True, exist_ok=True)
         except Exception as exc:
             messagebox.showerror("Backup failed", f"Could not create backup folder:\n{exc}")
             return
-        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        zip_path = backups_dir / f"flowertrack-backup-{stamp}.zip"
         try:
             count = self._write_backup_zip(zip_path)
         except Exception as exc:
