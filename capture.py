@@ -196,6 +196,37 @@ class CaptureWorker:
                 if refresh:
                     refresh_token = refresh
 
+        if refresh_token is None:
+            for payload in api_payloads:
+                data = payload.get("data")
+                if not isinstance(data, dict):
+                    continue
+                if payload.get("kind") != "storage":
+                    continue
+                for key, val in data.items():
+                    if not isinstance(key, str):
+                        continue
+                    if "refresh" in key.lower() and isinstance(val, str) and val:
+                        refresh_token = val
+                        break
+                if refresh_token:
+                    break
+        if token is None:
+            for payload in api_payloads:
+                data = payload.get("data")
+                if not isinstance(data, dict):
+                    continue
+                if payload.get("kind") != "storage":
+                    continue
+                for key, val in data.items():
+                    if not isinstance(key, str):
+                        continue
+                    if "token" in key.lower() and isinstance(val, str) and val and "refresh" not in key.lower():
+                        token = val
+                        break
+                if token:
+                    break
+
         if token and (patient_id is None or pharmacy_id is None):
             jwt_payload = self._decode_jwt_payload(token)
             if patient_id is None:
@@ -648,6 +679,26 @@ class CaptureWorker:
                     self.callbacks["responsive_wait"](0.5, label="Waiting for auth bootstrap")
                 except Exception:
                     time.sleep(0.5)
+            try:
+                storage = page.evaluate(
+                    "() => ({localStorage: {...localStorage}, sessionStorage: {...sessionStorage}})"
+                )
+                if isinstance(storage, dict):
+                    flat = {}
+                    local = storage.get("localStorage") or {}
+                    session = storage.get("sessionStorage") or {}
+                    if isinstance(local, dict):
+                        flat.update({f"localStorage.{k}": v for k, v in local.items()})
+                    if isinstance(session, dict):
+                        flat.update({f"sessionStorage.{k}": v for k, v in session.items()})
+                    if flat:
+                        api_payloads.append({
+                            "url": "storage://browser",
+                            "kind": "storage",
+                            "data": flat,
+                        })
+            except Exception:
+                pass
             try:
                 browser.close()
             except Exception:
