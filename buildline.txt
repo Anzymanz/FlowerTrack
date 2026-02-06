@@ -1,1 +1,7 @@
-pyinstaller --noconfirm --clean --onefile --windowed --icon assets/icon.ico --add-data "assets;assets" --add-data "flowerlibrary.py;." --add-data "mixcalc.py;." --name FlowerTrack flowertracker.py
+pyinstaller --noconfirm --clean --onefile --windowed `
+  --icon assets/icon.ico `
+  --add-data "assets;assets" `
+  --add-data "flowerlibrary.py;." `
+  --add-data "mixcalc.py;." `
+  --name FlowerTrack `
+  flowertracker.py
