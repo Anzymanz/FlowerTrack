@@ -618,27 +618,47 @@ class FlowerLibraryApp:
 
     def _dwm_set_titlebar(self, window, enable: bool) -> dict:
         hwnd = window.winfo_id()
-        GetAncestor = ctypes.windll.user32.GetAncestor
-        GA_ROOT = 2
-        GA_ROOTOWNER = 3
-        root = GetAncestor(hwnd, GA_ROOT)
-        if root:
-            hwnd = root
-        root_owner = GetAncestor(hwnd, GA_ROOTOWNER)
-        if root_owner:
-            hwnd = root_owner
         value = ctypes.c_int(1 if enable else 0)
         DWMWA_USE_IMMERSIVE_DARK_MODE = 20
         DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19
-        rc20 = ctypes.windll.dwmapi.DwmSetWindowAttribute(
+
+        rc20_hwnd = ctypes.windll.dwmapi.DwmSetWindowAttribute(
             hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)
         )
-        rc19 = 0
-        if rc20 != 0:
-            rc19 = ctypes.windll.dwmapi.DwmSetWindowAttribute(
+        rc19_hwnd = 0
+        if rc20_hwnd != 0:
+            rc19_hwnd = ctypes.windll.dwmapi.DwmSetWindowAttribute(
                 hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value)
             )
-        return {"hwnd": int(hwnd), "enable": bool(enable), "rc20": int(rc20), "rc19": int(rc19)}
+
+        GetAncestor = ctypes.windll.user32.GetAncestor
+        GA_ROOT = 2
+        GA_ROOTOWNER = 3
+        root = GetAncestor(hwnd, GA_ROOT) or 0
+        root_owner = GetAncestor(hwnd, GA_ROOTOWNER) or 0
+        target = root_owner or root
+
+        rc20_root = None
+        rc19_root = None
+        if target and target != hwnd:
+            rc20_root = ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                target, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)
+            )
+            rc19_root = 0
+            if rc20_root != 0:
+                rc19_root = ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                    target, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value)
+                )
+
+        return {
+            "hwnd": int(hwnd),
+            "target": int(target) if target else None,
+            "enable": bool(enable),
+            "rc20_hwnd": int(rc20_hwnd),
+            "rc19_hwnd": int(rc19_hwnd),
+            "rc20_root": None if rc20_root is None else int(rc20_root),
+            "rc19_root": None if rc19_root is None else int(rc19_root),
+        }
 
     def _place_window_at_pointer(self, win: Toplevel) -> None:
         """Place window with its top-left near the current mouse pointer."""
