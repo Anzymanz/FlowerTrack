@@ -347,6 +347,7 @@ const rawChangesB64 = "__CHANGES_JSON_B64__";
 const rawChangesJson = __CHANGES_JSON__;
 let changesData = null;
 let changesError = "";
+let historyLoaded = false;
 function decodeBase64Utf8(b64) {
     if (!b64) return "";
     const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
@@ -379,6 +380,19 @@ function ensureChangesData() {
         changesData = rawChangesJson;
     }
     return changesData;
+}
+async function preloadHistory() {
+    if (historyLoaded) return;
+    historyLoaded = true;
+    if (ensureChangesData().length) return;
+    try {
+        const resp = await fetch('changes_latest.json', { cache: 'no-store' });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (Array.isArray(data)) {
+            changesData = data;
+        }
+    } catch (e) {}
 }
 function refreshBasketButtons() {
     document.querySelectorAll('.card').forEach(card => {
@@ -487,7 +501,7 @@ function closeBasket() {
     const btn = document.getElementById('basketButton');
     if (btn) btn.classList.remove('active');
 }
-function toggleHistory() {
+async function toggleHistory() {
     let modal = document.getElementById('historyModal');
     if (!modal) {
         modal = document.createElement('div');
@@ -498,6 +512,7 @@ function toggleHistory() {
         });
         document.body.appendChild(modal);
     }
+    await preloadHistory();
     renderHistoryModal();
     modal.style.display = 'flex';
 }
@@ -907,6 +922,7 @@ document.addEventListener('DOMContentLoaded', () => {
     applyFilters();
     observeLoadMore();
     setTimeout(tryAutoFill, 100);
+    preloadHistory();
 });
 </script>
 </head><body>

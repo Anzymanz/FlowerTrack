@@ -549,6 +549,11 @@ def export_html(data, path, fetch_images=False):
     history_json_safe = history_json.replace("</", "<\\/")
     html_text = html_text.replace("__CHANGES_JSON_B64__", history_b64)
     html_text = html_text.replace("__CHANGES_JSON__", history_json_safe)
+    try:
+        history_file = out_path.with_name("changes_latest.json")
+        history_file.write_text(history_json, encoding="utf-8")
+    except Exception:
+        pass
     in_stock = 0
     low_stock = 0
     out_stock = 0
