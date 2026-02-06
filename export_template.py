@@ -46,12 +46,20 @@ body{background:var(--bg);color:var(--fg);font-family:Arial;padding:16px;margin:
 .type-badge{cursor:pointer}
 .basket-panel{background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:12px;min-width:320px;max-width:520px;max-height:70vh;overflow:auto;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,0.3)}
 .history-modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:9999}
-.history-panel{background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:12px;min-width:520px;max-width:900px;max-height:80vh;overflow:hidden;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,0.3);display:flex;flex-direction:column;gap:10px}
-.history-list{flex:1;overflow:auto;border:1px solid var(--border);border-radius:8px}
-.history-item{padding:8px 10px;border-bottom:1px solid var(--border);cursor:pointer}
+.history-panel{background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:12px;min-width:520px;width:1300px;max-width:calc(100vw - 80px);max-height:80vh;overflow:hidden;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,0.3);display:flex;flex-direction:column;gap:10px}
+.history-columns{display:flex;gap:12px;min-height:420px}
+.history-list{flex:0 0 38%;overflow:auto;border:1px solid var(--border);border-radius:8px}
+.history-item{padding:8px 10px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s ease, box-shadow .15s ease}
 .history-item:last-child{border-bottom:none}
 .history-item:hover{background:var(--hover)}
-.history-detail{flex:1;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:10px;white-space:pre-wrap;background:var(--panel)}
+.history-item.active{background:var(--pill);box-shadow:inset 0 0 0 1px var(--border)}
+.history-detail{flex:1;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--panel);min-width:0}
+.history-detail-header{display:flex;flex-direction:column;gap:4px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.history-detail-header .meta{color:var(--muted);font-size:12px}
+.history-detail-section{margin-top:10px}
+.history-detail-section h4{margin:0 0 6px 0;font-size:14px;color:var(--accent)}
+.history-detail-list{margin:0;padding-left:18px}
+.history-detail-line{margin:4px 0}
 .history-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .basket-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
 .basket-row:last-child{border-bottom:none}
@@ -349,6 +357,15 @@ let changesData = null;
 let changesError = "";
 let historyLoaded = false;
 let historyLoading = false;
+function escapeHtml(val) {
+    if (val === null || val === undefined) return "";
+    return String(val)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
 function decodeBase64Utf8(b64) {
     if (!b64) return "";
     const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
@@ -547,17 +564,18 @@ function historySummary(rec) {
     return `+${newCount} new, -${removedCount} removed, ${priceCount} price, ${stockCount} stock, ${outCount} out, ${restockCount} restock`;
 }
 function historyDetails(rec) {
-    if (rec._raw) return rec._raw;
-    const lines = [];
-    if (rec.timestamp) lines.push(`Timestamp: ${rec.timestamp}`);
-    lines.push(`Summary: ${historySummary(rec)}`);
-    lines.push("");
+    if (rec._raw) {
+        return `<div class="history-detail-header"><div><strong>Raw entry</strong></div></div><div class="small">${escapeHtml(rec._raw)}</div>`;
+    }
+    const ts = rec.timestamp ? escapeHtml(rec.timestamp) : "Unknown time";
+    const summary = escapeHtml(historySummary(rec));
+    const sections = [];
+    const label = (it) => (it.label || [it.brand, it.producer, it.strain, it.product_id].filter(Boolean).join(" ") || "Unknown");
     const section = (title, items, fn) => {
         if (!items || !items.length) return;
-        lines.push(`${title} (${items.length}):`);
-        items.forEach(it => lines.push(`  - ${fn(it)}`));
+        const rows = items.map(it => `<li class="history-detail-line">${escapeHtml(fn(it))}</li>`).join("");
+        sections.push(`<div class="history-detail-section"><h4>${escapeHtml(title)} (${items.length})</h4><ul class="history-detail-list">${rows}</ul></div>`);
     };
-    const label = (it) => (it.label || [it.brand, it.producer, it.strain, it.product_id].filter(Boolean).join(" ") || "Unknown");
     section("New items", rec.new_items, label);
     section("Removed items", rec.removed_items, label);
     section("Price changes", rec.price_changes, (it) => {
@@ -568,15 +586,24 @@ function historyDetails(rec) {
     section("Stock changes", rec.stock_changes, (it) => `${label(it)}: ${it.stock_before} -> ${it.stock_after}`);
     section("Out of stock", rec.out_of_stock_changes, (it) => `${label(it)}: ${it.stock_before} -> ${it.stock_after}`);
     section("Restocks", rec.restock_changes, (it) => `${label(it)}: ${it.stock_before} -> ${it.stock_after}`);
-    return lines.join("\\n");
+    if (!sections.length) {
+        sections.push(`<div class="history-detail-section"><div class="small">No change details recorded.</div></div>`);
+    }
+    return `
+        <div class="history-detail-header">
+            <div><strong>${ts}</strong></div>
+            <div class="meta">${summary}</div>
+        </div>
+        ${sections.join("")}
+    `;
 }
 function renderHistoryModal() {
     const modal = document.getElementById('historyModal');
     if (!modal) return;
     const list = ensureChangesData().slice().reverse();
     const items = list.map((rec, idx) => {
-        const ts = rec.timestamp || '';
-        const summary = historySummary(rec);
+        const ts = escapeHtml(rec.timestamp || '');
+        const summary = escapeHtml(historySummary(rec));
         return `<div class='history-item' data-idx='${idx}'><strong>${ts}</strong><div class='small'>${summary}</div></div>`;
     }).join("");
     const emptyNote = historyLoading
@@ -588,7 +615,7 @@ function renderHistoryModal() {
           <div><strong>Change History</strong> <span class='small'>(${list.length} entries)</span></div>
           <button class='btn-basket' onclick='closeHistory()'>Close</button>
         </div>
-        <div style='display:flex;gap:10px;min-height:360px;'>
+        <div class='history-columns'>
           <div class='history-list' id='historyList'>${items || `<div class='small' style='padding:10px;'>${emptyNote}</div>`}</div>
           <div class='history-detail' id='historyDetail'>Select an entry to view details.</div>
         </div>
@@ -599,9 +626,11 @@ function renderHistoryModal() {
     if (listEl && detailEl) {
         listEl.querySelectorAll('.history-item').forEach(el => {
             el.addEventListener('click', () => {
+                listEl.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
+                el.classList.add('active');
                 const idx = parseInt(el.getAttribute('data-idx') || '0', 10);
                 const rec = list[idx];
-                detailEl.textContent = rec ? historyDetails(rec) : '';
+                detailEl.innerHTML = rec ? historyDetails(rec) : '';
             });
         });
     }
