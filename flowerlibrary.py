@@ -104,6 +104,7 @@ class FlowerLibraryApp:
         self.root.bind("<Map>", lambda _e: self._schedule_titlebar_updates(self.root))
         self.root.bind("<Visibility>", lambda _e: self._schedule_titlebar_updates(self.root))
         self.root.bind("<FocusIn>", lambda _e: self._schedule_titlebar_updates(self.root))
+        self._schedule_titlebar_updates(self.root)
 
         self._build_topbar()
         self._build_table()
@@ -311,6 +312,10 @@ class FlowerLibraryApp:
         window.bind("<Visibility>", lambda _evt, w=window: self._schedule_titlebar_updates(w))
         window.bind("<FocusIn>", lambda _evt, w=window: self._schedule_titlebar_updates(w))
         self._schedule_titlebar_updates(window)
+        try:
+            window.wm_attributes("-theme", "dark")
+        except Exception:
+            pass
 
         container = ttk.Frame(window, padding=12)
         container.pack(fill="both", expand=True)
@@ -522,6 +527,10 @@ class FlowerLibraryApp:
             self.root.after(50, lambda w=window: self._set_window_titlebar_dark(w, self.is_dark.get()))
             self.root.after(200, lambda w=window: self._set_window_titlebar_dark(w, self.is_dark.get()))
             self._schedule_titlebar_updates(window)
+            try:
+                window.wm_attributes("-theme", "dark")
+            except Exception:
+                pass
         except Exception:
             try:
                 self._set_window_titlebar_dark(window, self.is_dark.get())
