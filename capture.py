@@ -9,7 +9,6 @@ import urllib.request
 import urllib.error
 import threading
 import subprocess
-import shutil
 from threading import Event
 import time
 from dataclasses import dataclass
@@ -1668,7 +1667,6 @@ def ensure_browser_available(app_dir: Path, log: Callable[[str], None], install_
     Ensure Playwright and browser are available.
     Returns (sync_playwright, TimeoutError) or None on failure after attempts.
     """
-    _seed_browsers_if_bundled(app_dir, log)
     req = ensure_playwright_installed(app_dir, log)
     if req:
         return req
@@ -1688,23 +1686,21 @@ def install_playwright_browsers(app_dir: Path, log: Callable[[str], None]) -> bo
         env = os.environ.copy()
         env["PLAYWRIGHT_BROWSERS_PATH"] = env_path
         if getattr(sys, "frozen", False):
-            # In frozen builds, prefer the Python used to run this EXE (if available) to run playwright install.
-            py_cmd = os.environ.get("PYTHON_EXECUTABLE") or os.environ.get("PYTHON_EXE")
-            if py_cmd and os.path.exists(py_cmd):
-                cmd = [py_cmd, "-m", "playwright", "install", "chromium"]
-            else:
-                playwright_cmd = shutil.which("playwright")
-                if not playwright_cmd:
-                    base = Path(sys.executable).resolve().parent
-                    candidate = base / "playwright.exe"
-                    if candidate.exists():
-                        playwright_cmd = str(candidate)
-                if not playwright_cmd:
-                    log("Playwright CLI not found; cannot install browsers in frozen build.")
-                    return False
-                cmd = [playwright_cmd, "install", "chromium"]
-        else:
-            cmd = [sys.executable, "-m", "playwright", "install", "chromium"]
+            try:
+                log("Installing Playwright browser via embedded installer...")
+                import playwright.__main__ as pw_main  # type: ignore
+                prev_argv = list(sys.argv)
+                sys.argv = ["playwright", "install", "chromium"]
+                try:
+                    pw_main.main()
+                finally:
+                    sys.argv = prev_argv
+                log(f"Playwright browser installed to {env_path}.")
+                return True
+            except Exception as exc:
+                log(f"Playwright install failed: {exc}")
+                return False
+        cmd = [sys.executable, "-m", "playwright", "install", "chromium"]
         try:
             proc = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=1200)
         except subprocess.TimeoutExpired:
@@ -1724,26 +1720,6 @@ def install_playwright_browsers(app_dir: Path, log: Callable[[str], None]) -> bo
         return False
 
 
-def _seed_browsers_if_bundled(app_dir: Path, log: Callable[[str], None]) -> None:
-    """Copy bundled Playwright browsers into APPDATA path when running frozen."""
-    try:
-        if not getattr(sys, "frozen", False):
-            return
-        env_path = Path(os.environ.get("PLAYWRIGHT_BROWSERS_PATH", str(app_dir / "pw-browsers")))
-        if env_path.exists():
-            # Already present; nothing to do.
-            return
-        bundle_root = Path(getattr(sys, "_MEIPASS", ""))
-        if not bundle_root:
-            return
-        bundled = bundle_root / "pw-browsers"
-        if not bundled.exists():
-            return
-        env_path.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(bundled, env_path, dirs_exist_ok=True)
-        log(f"Seeded Playwright browsers to {env_path}.")
-    except Exception as exc:
-        log(f"Playwright browser seed failed: {exc}")
 
 
 def start_capture_worker(
