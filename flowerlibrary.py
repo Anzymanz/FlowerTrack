@@ -101,6 +101,9 @@ class FlowerLibraryApp:
         self.apply_theme()
         # Ensure title bar matches theme once window is realized
         self.root.after(50, lambda: self._apply_titlebar_dark())
+        self.root.bind("<Map>", lambda _e: self._schedule_titlebar_updates(self.root))
+        self.root.bind("<Visibility>", lambda _e: self._schedule_titlebar_updates(self.root))
+        self.root.bind("<FocusIn>", lambda _e: self._schedule_titlebar_updates(self.root))
 
         self._build_topbar()
         self._build_table()
@@ -305,6 +308,9 @@ class FlowerLibraryApp:
         self.root.after(50, lambda w=window: self._set_window_titlebar_dark(w, self.is_dark.get()))
         self.root.after(200, lambda w=window: self._set_window_titlebar_dark(w, self.is_dark.get()))
         window.bind("<Map>", lambda _evt, w=window: self._set_window_titlebar_dark(w, self.is_dark.get()))
+        window.bind("<Visibility>", lambda _evt, w=window: self._schedule_titlebar_updates(w))
+        window.bind("<FocusIn>", lambda _evt, w=window: self._schedule_titlebar_updates(w))
+        self._schedule_titlebar_updates(window)
 
         container = ttk.Frame(window, padding=12)
         container.pack(fill="both", expand=True)
@@ -496,8 +502,10 @@ class FlowerLibraryApp:
         for window in list(self.windows):
             try:
                 self._set_window_titlebar_dark(window, self.is_dark.get())
+                self._set_titlebar_dark_native(window, self.is_dark.get())
             except Exception:
                 continue
+            self._schedule_titlebar_updates(window)
 
     def _prepare_toplevel(self, window: Toplevel) -> None:
         """Apply dark title bar and bg to a child window before showing."""
@@ -513,6 +521,7 @@ class FlowerLibraryApp:
             self._set_window_titlebar_dark(window, self.is_dark.get())
             self.root.after(50, lambda w=window: self._set_window_titlebar_dark(w, self.is_dark.get()))
             self.root.after(200, lambda w=window: self._set_window_titlebar_dark(w, self.is_dark.get()))
+            self._schedule_titlebar_updates(window)
         except Exception:
             try:
                 self._set_window_titlebar_dark(window, self.is_dark.get())
@@ -539,6 +548,57 @@ class FlowerLibraryApp:
                 ctypes.windll.dwmapi.DwmSetWindowAttribute(
                     hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value)
                 )
+        except Exception:
+            pass
+
+    def _set_titlebar_dark_native(self, window, enable: bool) -> None:
+        if os.name != "nt":
+            return
+        try:
+            hwnd = window.winfo_id()
+            GetAncestor = ctypes.windll.user32.GetAncestor
+            GA_ROOT = 2
+            GA_ROOTOWNER = 3
+            root = GetAncestor(hwnd, GA_ROOT)
+            if root:
+                hwnd = root
+            root_owner = GetAncestor(hwnd, GA_ROOTOWNER)
+            if root_owner:
+                hwnd = root_owner
+            DWMWA_USE_IMMERSIVE_DARK_MODE = 20
+            DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19
+            value = ctypes.c_int(1 if enable else 0)
+            if ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)
+            ) != 0:
+                ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                    hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value)
+                )
+        except Exception:
+            pass
+
+    def _schedule_titlebar_updates(self, window) -> None:
+        for delay in (60, 200, 500, 900):
+            try:
+                self.root.after(delay, lambda w=window: self._apply_titlebar_for_window(w))
+            except Exception:
+                pass
+
+    def _apply_titlebar_for_window(self, window) -> None:
+        try:
+            window.update_idletasks()
+        except Exception:
+            pass
+        try:
+            set_titlebar_dark(window, self.is_dark.get())
+        except Exception:
+            pass
+        try:
+            self._set_window_titlebar_dark(window, self.is_dark.get())
+        except Exception:
+            pass
+        try:
+            self._set_titlebar_dark_native(window, self.is_dark.get())
         except Exception:
             pass
 
