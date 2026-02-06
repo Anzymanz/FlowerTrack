@@ -222,6 +222,7 @@ class App(tk.Tk):
         self.cap_org_sel = tk.StringVar(value=cfg.get("organization_selector", ""))
         self.cap_dump_html = tk.BooleanVar(value=bool(cfg.get("dump_capture_html", False)))
         self.cap_dump_api = tk.BooleanVar(value=bool(cfg.get("dump_api_json", False)))
+        self.cap_dump_api_full = tk.BooleanVar(value=bool(cfg.get("dump_api_full", False)))
         self.cap_show_log_window = tk.BooleanVar(value=bool(cfg.get("show_log_window", True)))
         try:
             self.cap_show_log_window.trace_add("write", lambda *_: self._apply_log_window_visibility())
@@ -281,6 +282,7 @@ class App(tk.Tk):
             "retry_backoff_max": _parse_float(self.cap_retry_backoff.get(), DEFAULT_CAPTURE_CONFIG["retry_backoff_max"], "retry_backoff_max"),
             "dump_capture_html": bool(self.cap_dump_html.get()),
             "dump_api_json": bool(self.cap_dump_api.get()),
+            "dump_api_full": bool(self.cap_dump_api_full.get()),
             "show_log_window": bool(self.cap_show_log_window.get()),
             "username": self.cap_user.get(),
             "password": self.cap_pass.get(),

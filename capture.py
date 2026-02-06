@@ -774,6 +774,8 @@ class CaptureWorker:
                                 if url and len(xhr_urls) < 50:
                                     xhr_urls.append(url)
                             wants_data = any(tok in url for tok in ("formulary", "rpc-api", "entity-api", "api", "auth", "oauth", "token"))
+                            if self.cfg.get("dump_api_full"):
+                                wants_data = wants_data or rtype in ("xhr", "fetch")
                             if not wants_data and "json" not in ctype and rtype not in ("xhr", "fetch"):
                                 return
                             data = None
@@ -1366,19 +1368,26 @@ class CaptureWorker:
                                                 self.callbacks["capture_log"](f"Saved API endpoint summary: {summary_path}")
                                             except Exception as exc:
                                                 self.callbacks["capture_log"](f"API endpoint summary failed: {exc}")
-                                        if self.cfg.get("dump_api_json") and stamp:
-                                            try:
-                                                summary_path = dump_dir / f"api_endpoints_{stamp}.json"
-                                                summary_path.write_text(json.dumps(endpoint_summaries, ensure_ascii=False, indent=2), encoding="utf-8")
-                                                self.callbacks["capture_log"](f"Saved API endpoint summary: {summary_path}")
-                                            except Exception as exc:
+                                if self.cfg.get("dump_api_full") and stamp:
+                                    try:
+                                        full_path = dump_dir / f"api_dump_full_{stamp}.json"
+                                        full_path.write_text(json.dumps(api_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
+                                        self.callbacks["capture_log"](f"Saved full API dump: {full_path}")
+                                    except Exception as exc:
+                                        self.callbacks["capture_log"](f"Full API dump failed: {exc}")
+                                if self.cfg.get("dump_api_json") and stamp:
+                                    try:
+                                        summary_path = dump_dir / f"api_endpoints_{stamp}.json"
+                                        summary_path.write_text(json.dumps(endpoint_summaries, ensure_ascii=False, indent=2), encoding="utf-8")
+                                        self.callbacks["capture_log"](f"Saved API endpoint summary: {summary_path}")
+                                    except Exception as exc:
                                                 self.callbacks["capture_log"](f"API endpoint summary failed: {exc}")
-                                            try:
-                                                api_path = dump_dir / f"api_dump_{stamp}.json"
-                                                api_path.write_text(json.dumps(api_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
-                                                self.callbacks["capture_log"](f"Saved API dump: {api_path}")
-                                            except Exception as exc:
-                                                self.callbacks["capture_log"](f"API dump failed: {exc}")
+                                    try:
+                                        api_path = dump_dir / f"api_dump_{stamp}.json"
+                                        api_path.write_text(json.dumps(api_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
+                                        self.callbacks["capture_log"](f"Saved API dump: {api_path}")
+                                    except Exception as exc:
+                                        self.callbacks["capture_log"](f"API dump failed: {exc}")
                                 if self.cfg.get("dump_capture_html") and dump_dir and stamp:
                                     try:
                                         html_path = dump_dir / f"page_dump_{stamp}.html"

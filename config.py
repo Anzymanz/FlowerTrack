@@ -80,6 +80,7 @@ DEFAULT_CAPTURE_CONFIG = {
     "retry_backoff_max": 2.0,
     "dump_capture_html": False,
     "dump_api_json": False,
+    "dump_api_full": False,
     "timeout_ms": 45000,
     "headless": True,
     "api_only": True,
@@ -306,6 +307,7 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["organization_selector"] = str(raw.get("organization_selector") or DEFAULT_CAPTURE_CONFIG["organization_selector"]).strip()
     cfg["dump_capture_html"] = _coerce_bool(raw.get("dump_capture_html"), DEFAULT_CAPTURE_CONFIG["dump_capture_html"])
     cfg["dump_api_json"] = _coerce_bool(raw.get("dump_api_json"), DEFAULT_CAPTURE_CONFIG["dump_api_json"])
+    cfg["dump_api_full"] = _coerce_bool(raw.get("dump_api_full"), DEFAULT_CAPTURE_CONFIG["dump_api_full"])
     cfg["window_geometry"] = str(raw.get("window_geometry") or DEFAULT_CAPTURE_CONFIG["window_geometry"]).strip() or DEFAULT_CAPTURE_CONFIG["window_geometry"]
     cfg["settings_geometry"] = str(raw.get("settings_geometry") or DEFAULT_CAPTURE_CONFIG["settings_geometry"]).strip() or DEFAULT_CAPTURE_CONFIG["settings_geometry"]
     cfg["interval_seconds"] = _coerce_float(raw.get("interval_seconds"), DEFAULT_CAPTURE_CONFIG["interval_seconds"], 1.0)
