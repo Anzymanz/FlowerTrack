@@ -503,6 +503,29 @@ def export_html(data, path, fetch_images=False):
         )
     cards_html = "".join(cards)
     html_text = HTML_TEMPLATE.replace("__CARDS__", cards_html)
+    history_path = None
+    try:
+        appdata = Path(os.getenv("APPDATA", os.path.expanduser("~")))
+        history_path = appdata / "FlowerTrack" / "logs" / "changes.ndjson"
+    except Exception:
+        history_path = None
+    history_entries: list[dict] = []
+    if history_path and history_path.exists():
+        try:
+            lines = history_path.read_text(encoding="utf-8").splitlines()
+            for line in lines[-200:]:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entry = json.loads(line)
+                    if isinstance(entry, dict):
+                        history_entries.append(entry)
+                except Exception:
+                    history_entries.append({"_raw": line})
+        except Exception:
+            history_entries = []
+    html_text = html_text.replace("__CHANGES_JSON__", json.dumps(history_entries, ensure_ascii=False))
     in_stock = 0
     low_stock = 0
     out_stock = 0

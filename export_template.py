@@ -45,6 +45,14 @@ body{background:var(--bg);color:var(--fg);font-family:Arial;padding:16px;margin:
 .image-modal img{max-width:90vw;max-height:85vh;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,0.5)}
 .type-badge{cursor:pointer}
 .basket-panel{background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:12px;min-width:320px;max-width:520px;max-height:70vh;overflow:auto;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,0.3)}
+.history-modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:9999}
+.history-panel{background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:12px;min-width:520px;max-width:900px;max-height:80vh;overflow:hidden;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,0.3);display:flex;flex-direction:column;gap:10px}
+.history-list{flex:1;overflow:auto;border:1px solid var(--border);border-radius:8px}
+.history-item{padding:8px 10px;border-bottom:1px solid var(--border);cursor:pointer}
+.history-item:last-child{border-bottom:none}
+.history-item:hover{background:var(--hover)}
+.history-detail{flex:1;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:10px;white-space:pre-wrap;background:var(--panel)}
+.history-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .basket-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
 .basket-row:last-child{border-bottom:none}
 .basket-title{font-weight:700;font-size:16px;margin-bottom:8px}
@@ -335,6 +343,7 @@ let basketTotal = 0;
 let basketCount = 0;
 let basket = new Map();
 const DELIVERY_FEE = 4.99;
+const changesData = __CHANGES_JSON__;
 function refreshBasketButtons() {
     document.querySelectorAll('.card').forEach(card => {
         const key = card.dataset.key || card.dataset.favkey || card.dataset.productId || card.dataset.strain;
@@ -441,6 +450,90 @@ function closeBasket() {
     if (modal) modal.style.display = 'none';
     const btn = document.getElementById('basketButton');
     if (btn) btn.classList.remove('active');
+}
+function toggleHistory() {
+    let modal = document.getElementById('historyModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'historyModal';
+        modal.className = 'history-modal';
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeHistory();
+        });
+        document.body.appendChild(modal);
+    }
+    renderHistoryModal();
+    modal.style.display = 'flex';
+}
+function closeHistory() {
+    const modal = document.getElementById('historyModal');
+    if (modal) modal.style.display = 'none';
+}
+function historySummary(rec) {
+    const newCount = (rec.new_items || []).length;
+    const removedCount = (rec.removed_items || []).length;
+    const priceCount = (rec.price_changes || []).length;
+    const stockCount = (rec.stock_changes || []).length;
+    const outCount = (rec.out_of_stock_changes || []).length;
+    const restockCount = (rec.restock_changes || []).length;
+    return `+${newCount} new, -${removedCount} removed, ${priceCount} price, ${stockCount} stock, ${outCount} out, ${restockCount} restock`;
+}
+function historyDetails(rec) {
+    if (rec._raw) return rec._raw;
+    const lines = [];
+    if (rec.timestamp) lines.push(`Timestamp: ${rec.timestamp}`);
+    lines.push(`Summary: ${historySummary(rec)}`);
+    lines.push("");
+    const section = (title, items, fn) => {
+        if (!items || !items.length) return;
+        lines.push(`${title} (${items.length}):`);
+        items.forEach(it => lines.push(`  - ${fn(it)}`));
+    };
+    const label = (it) => (it.label || [it.brand, it.producer, it.strain, it.product_id].filter(Boolean).join(" ") || "Unknown");
+    section("New items", rec.new_items, label);
+    section("Removed items", rec.removed_items, label);
+    section("Price changes", rec.price_changes, (it) => {
+        if (it.price_before == null || it.price_after == null) return `${label(it)}: price changed`;
+        const delta = (it.price_delta != null) ? ` (${Number(it.price_delta).toFixed(2)})` : "";
+        return `${label(it)}: ${it.price_before} -> ${it.price_after}${delta}`;
+    });
+    section("Stock changes", rec.stock_changes, (it) => `${label(it)}: ${it.stock_before} -> ${it.stock_after}`);
+    section("Out of stock", rec.out_of_stock_changes, (it) => `${label(it)}: ${it.stock_before} -> ${it.stock_after}`);
+    section("Restocks", rec.restock_changes, (it) => `${label(it)}: ${it.stock_before} -> ${it.stock_after}`);
+    return lines.join("\n");
+}
+function renderHistoryModal() {
+    const modal = document.getElementById('historyModal');
+    if (!modal) return;
+    const list = (changesData || []).slice().reverse();
+    const items = list.map((rec, idx) => {
+        const ts = rec.timestamp || '';
+        const summary = historySummary(rec);
+        return `<div class='history-item' data-idx='${idx}'><strong>${ts}</strong><div class='small'>${summary}</div></div>`;
+    }).join("");
+    modal.innerHTML = `
+      <div class='history-panel'>
+        <div class='history-header'>
+          <div><strong>Change History</strong> <span class='small'>(${list.length} entries)</span></div>
+          <button class='btn-basket' onclick='closeHistory()'>Close</button>
+        </div>
+        <div style='display:flex;gap:10px;min-height:360px;'>
+          <div class='history-list' id='historyList'>${items || "<div class='small' style='padding:10px;'>No history entries found.</div>"}</div>
+          <div class='history-detail' id='historyDetail'>Select an entry to view details.</div>
+        </div>
+      </div>
+    `;
+    const listEl = document.getElementById('historyList');
+    const detailEl = document.getElementById('historyDetail');
+    if (listEl && detailEl) {
+        listEl.querySelectorAll('.history-item').forEach(el => {
+            el.addEventListener('click', () => {
+                const idx = parseInt(el.getAttribute('data-idx') || '0', 10);
+                const rec = list[idx];
+                detailEl.textContent = rec ? historyDetails(rec) : '';
+            });
+        });
+    }
 }
 function openImageModal(src, altText) {
     if (!src) return;
@@ -829,6 +922,7 @@ applyTheme(saved === 'light');
   </div>
 <div class='controls-right'>
     <button class="basket-button" id="basketButton" onclick="toggleBasket()">Basket: <span id="basketCount">0</span> | £<span id="basketTotal">0.00</span></button>
+    <button id="historyButton" onclick="toggleHistory()">History</button>
     <button id="themeToggle" onclick="toggleTheme()">Use light theme</button>
   </div>
 </div>
