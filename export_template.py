@@ -168,8 +168,6 @@ let activeTypes = new Set(['flower','oil','vape']);
 let activeStrains = new Set(['Indica','Sativa','Hybrid']);
 let favoritesOnly = false;
 let showSmalls = true;
-let showInStock = true;
-let showLowStock = true;
 let showOutOfStock = false;
 let brandFilter = new Set();
 let searchTerm = "";
@@ -203,10 +201,7 @@ function applyFilters() {
         const brandOk = brandFilter.size > 0 ? brandFilter.has(brandText) : true;
         const favOk = favoritesOnly ? favorites.has(favKey) : true;
         const isOut = c.dataset.out === '1';
-        const stockStatus = (c.dataset.stockStatus || '').toUpperCase();
-        const isLow = stockStatus.includes('LOW');
-        const isIn = !isOut && !isLow;
-        const stockOk = isRemoved ? true : ((isIn && showInStock) || (isLow && showLowStock) || (isOut && showOutOfStock));
+        const stockOk = showOutOfStock || !isOut;
         const smallsOk = showSmalls || !isSmalls;
         c.style.display = (showType && showStrain && matchesSearch && brandOk && priceOk && thcOk && favOk && smallsOk && stockOk) ? '' : 'none';
     });
@@ -254,18 +249,6 @@ function toggleFavorites(btn) {
 function toggleSmalls(btn) {
     showSmalls = !showSmalls;
     btn.classList.toggle('active', showSmalls);
-    saveFilterPrefs();
-    applyFilters();
-}
-function toggleInStock(btn) {
-    showInStock = !showInStock;
-    btn.classList.toggle('active', showInStock);
-    saveFilterPrefs();
-    applyFilters();
-}
-function toggleLowStock(btn) {
-    showLowStock = !showLowStock;
-    btn.classList.toggle('active', showLowStock);
     saveFilterPrefs();
     applyFilters();
 }
@@ -446,12 +429,6 @@ function loadFilterPrefs() {
         if (typeof data.smalls === 'boolean') {
             showSmalls = data.smalls;
         }
-        if (typeof data.instock === 'boolean') {
-            showInStock = data.instock;
-        }
-        if (typeof data.lowstock === 'boolean') {
-            showLowStock = data.lowstock;
-        }
         if (typeof data.outstock === 'boolean') {
             showOutOfStock = data.outstock;
         }
@@ -463,8 +440,6 @@ function saveFilterPrefs() {
             types: Array.from(activeTypes),
             strains: Array.from(activeStrains),
             smalls: showSmalls,
-            instock: showInStock,
-            lowstock: showLowStock,
             outstock: showOutOfStock,
         };
         localStorage.setItem('ft_filters', JSON.stringify(payload));
@@ -508,8 +483,6 @@ function resetFilters() {
     document.querySelectorAll('.btn-filter').forEach(b => b.classList.add('active'));
     favoritesOnly = false;
     showSmalls = true;
-    showInStock = true;
-    showLowStock = true;
     showOutOfStock = false;
     brandFilter = new Set();
     saveFilterPrefs();
@@ -683,6 +656,18 @@ applyTheme(saved === 'light');
     if (smallsBtn) smallsBtn.classList.toggle('active', showSmalls);
     const outstockBtn = document.querySelector('[data-filter-outstock]');
     if (outstockBtn) outstockBtn.classList.toggle('active', showOutOfStock);
+    // Purge legacy stock filter preferences (in/low) if present.
+    try {
+        const raw = localStorage.getItem('ft_filters');
+        if (raw) {
+            const data = JSON.parse(raw);
+            if (data && (data.instock !== undefined || data.lowstock !== undefined)) {
+                delete data.instock;
+                delete data.lowstock;
+                localStorage.setItem('ft_filters', JSON.stringify(data));
+            }
+        }
+    } catch (e) {}
     const meta = document.getElementById('exportMeta');
     if (meta) {
         const ts = document.body.getAttribute('data-exported') || '';
