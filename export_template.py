@@ -343,19 +343,25 @@ let basketTotal = 0;
 let basketCount = 0;
 let basket = new Map();
 const DELIVERY_FEE = 4.99;
-let changesData = [];
-try {
-    const rawChangesB64 = "__CHANGES_JSON_B64__";
-    if (rawChangesB64 && rawChangesB64 !== "__CHANGES_JSON_B64__") {
+const rawChangesB64 = "__CHANGES_JSON_B64__";
+let changesData = null;
+function ensureChangesData() {
+    if (changesData !== null) return changesData;
+    changesData = [];
+    try {
+        if (!rawChangesB64 || rawChangesB64 === "__CHANGES_JSON_B64__") {
+            return changesData;
+        }
         if (rawChangesB64.length > 200000) {
-            throw new Error("History payload too large for inline decode.");
+            return changesData;
         }
         const bytes = Uint8Array.from(atob(rawChangesB64), c => c.charCodeAt(0));
         const decoded = new TextDecoder().decode(bytes);
         changesData = JSON.parse(decoded) || [];
+    } catch (e) {
+        changesData = [];
     }
-} catch (e) {
-    changesData = [];
+    return changesData;
 }
 function refreshBasketButtons() {
     document.querySelectorAll('.card').forEach(card => {
@@ -518,7 +524,7 @@ function historyDetails(rec) {
 function renderHistoryModal() {
     const modal = document.getElementById('historyModal');
     if (!modal) return;
-    const list = (changesData || []).slice().reverse();
+    const list = ensureChangesData().slice().reverse();
     const items = list.map((rec, idx) => {
         const ts = rec.timestamp || '';
         const summary = historySummary(rec);
@@ -696,7 +702,9 @@ function applyTheme(saved) {
     const body = document.body;
     const useLight = saved === true || saved === 'light';
     body.classList.toggle('light', useLight);
-    localStorage.setItem('ft_theme', useLight ? 'light' : 'dark');
+    try {
+        localStorage.setItem('ft_theme', useLight ? 'light' : 'dark');
+    } catch (e) {}
     const btn = document.getElementById('themeToggle');
     if (btn) btn.textContent = useLight ? 'Use dark theme' : 'Use light theme';
     // Swap type icons to match theme
@@ -706,7 +714,10 @@ function applyTheme(saved) {
     });
 }
 function toggleTheme() {
-    const current = localStorage.getItem('ft_theme') || 'dark';
+    let current = 'dark';
+    try {
+        current = localStorage.getItem('ft_theme') || 'dark';
+    } catch (e) {}
     applyTheme(current !== 'light');
 }
 function toggleBrandMenu() {
@@ -748,8 +759,11 @@ function buildBrandMenu() {
     });
 }
 document.addEventListener('DOMContentLoaded', () => {
-    const saved = localStorage.getItem('ft_theme');
-applyTheme(saved === 'light');
+    let saved = null;
+    try {
+        saved = localStorage.getItem('ft_theme');
+    } catch (e) {}
+    applyTheme(saved === 'light');
     loadFilterPrefs();
     loadFavorites();
     document.querySelectorAll('.card').forEach(applyFavState);
