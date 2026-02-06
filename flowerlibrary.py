@@ -534,11 +534,15 @@ class FlowerLibraryApp:
             return
         try:
             hwnd = window.winfo_id()
-            get_parent = ctypes.windll.user32.GetParent
-            parent = get_parent(hwnd)
-            while parent:
-                hwnd = parent
-                parent = get_parent(hwnd)
+            GetAncestor = ctypes.windll.user32.GetAncestor
+            GA_ROOT = 2
+            GA_ROOTOWNER = 3
+            root = GetAncestor(hwnd, GA_ROOT)
+            if root:
+                hwnd = root
+            root_owner = GetAncestor(hwnd, GA_ROOTOWNER)
+            if root_owner:
+                hwnd = root_owner
             value = ctypes.c_int(1 if enable else 0)
             DWMWA_USE_IMMERSIVE_DARK_MODE = 20
             DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19
