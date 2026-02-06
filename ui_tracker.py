@@ -1181,8 +1181,6 @@ class CannabisTracker:
         self.current_base_color = base
         self.root.configure(bg=base)
         apply_style_theme(self.style, colors)
-        self.style.configure("TButton", background=panel, foreground=text_color, bordercolor=border)
-        self.style.map("TButton", background=[("active", accent)], foreground=[("active", "#ffffff")])
         self.style.configure("TCheckbutton", background=base, foreground=text_color)
         self.style.map("TCheckbutton", background=[("active", accent)], foreground=[("active", "#ffffff")])
         self.style.configure("TEntry", fieldbackground=entry_bg, background=entry_bg, foreground=text_color, insertcolor=cursor_color)

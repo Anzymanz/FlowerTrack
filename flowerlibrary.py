@@ -119,7 +119,6 @@ class FlowerLibraryApp:
         entry_bg = colors["ctrl_bg"]
         text_color = colors["fg"]
         accent = colors["accent"]
-        border = colors["ctrl_bg"]
         selected_bg = colors["accent"]
         selected_fg = "#ffffff"
         cursor = text_color
@@ -134,17 +133,7 @@ class FlowerLibraryApp:
         self.style.configure("Topbar.TLabel", background=panel, foreground=text_color, font=font_body)
         self.style.configure(
             "TButton",
-            background=panel,
-            foreground=text_color,
-            bordercolor=border,
-            focusthickness=1,
             font=font_body,
-        )
-        self.style.map(
-            "TButton",
-            background=[("active", accent), ("pressed", accent)],
-            foreground=[("active", "#ffffff"), ("pressed", "#ffffff")],
-            relief=[("pressed", "sunken")],
         )
         self.style.configure(
             "TEntry",
