@@ -58,21 +58,6 @@ class HistoryViewer(tk.Toplevel):
         ttk.Button(filter_frame, text="Clear", command=self._clear_filter).pack(side="right")
         self.filter_entry.bind("<KeyRelease>", lambda _e: self._apply_filter())
 
-        date_frame = ttk.Frame(self, padding=(10, 0, 10, 8))
-        date_frame.pack(fill="x")
-        ttk.Label(date_frame, text="Date range (YYYY-MM-DD)").pack(side="left")
-        self.start_date_var = tk.StringVar(value="")
-        self.end_date_var = tk.StringVar(value="")
-        self.start_entry = ttk.Entry(date_frame, textvariable=self.start_date_var, width=12)
-        self.start_entry.pack(side="left", padx=(6, 4))
-        ttk.Label(date_frame, text="to").pack(side="left")
-        self.end_entry = ttk.Entry(date_frame, textvariable=self.end_date_var, width=12)
-        self.end_entry.pack(side="left", padx=(4, 6))
-        ttk.Button(date_frame, text="Apply", command=self._apply_filter).pack(side="left")
-        ttk.Button(date_frame, text="Clear dates", command=self._clear_dates).pack(side="left", padx=(6, 0))
-        self.start_entry.bind("<KeyRelease>", lambda _e: self._apply_filter())
-        self.end_entry.bind("<KeyRelease>", lambda _e: self._apply_filter())
-
         body = ttk.Frame(self, padding=10)
         body.pack(fill="both", expand=True)
         body.columnconfigure(0, weight=1)
@@ -291,15 +276,6 @@ class HistoryViewer(tk.Toplevel):
         except Exception:
             return str(raw)
 
-    def _date_for(self, record: dict):
-        raw = record.get("timestamp") if isinstance(record, dict) else None
-        if not raw:
-            return None
-        try:
-            return datetime.fromisoformat(raw.replace("Z", "+00:00")).date()
-        except Exception:
-            return None
-
     def _format_list(self, title: str, items: list[str]) -> list[str]:
         if not items:
             return []
@@ -393,15 +369,8 @@ class HistoryViewer(tk.Toplevel):
 
     def _apply_filter(self) -> None:
         text = self.filter_var.get().strip().lower()
-        start_date = self._parse_date(self.start_date_var.get().strip())
-        end_date = self._parse_date(self.end_date_var.get().strip())
         self.filtered = []
         for rec in self.records:
-            rec_date = self._date_for(rec)
-            if start_date and (rec_date is None or rec_date < start_date):
-                continue
-            if end_date and (rec_date is None or rec_date > end_date):
-                continue
             if not text:
                 self.filtered.append(rec)
                 continue
@@ -425,19 +394,6 @@ class HistoryViewer(tk.Toplevel):
     def _clear_filter(self) -> None:
         self.filter_var.set("")
         self._apply_filter()
-
-    def _clear_dates(self) -> None:
-        self.start_date_var.set("")
-        self.end_date_var.set("")
-        self._apply_filter()
-
-    def _parse_date(self, value: str):
-        if not value:
-            return None
-        try:
-            return datetime.strptime(value, "%Y-%m-%d").date()
-        except Exception:
-            return None
 
     def _selected_record(self) -> dict | None:
         sel = self.tree.selection()
