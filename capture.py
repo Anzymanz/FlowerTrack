@@ -1690,9 +1690,11 @@ def install_playwright_browsers(app_dir: Path, log: Callable[[str], None]) -> bo
                 log("Installing Playwright browser via embedded installer...")
                 import playwright.__main__ as pw_main  # type: ignore
                 prev_argv = list(sys.argv)
+                prev_node = os.environ.get("NODE_OPTIONS")
                 done = {"ok": False, "err": None}
                 def _run_install():
                     try:
+                        os.environ["NODE_OPTIONS"] = "--no-deprecation"
                         sys.argv = ["playwright", "install", "chromium"]
                         pw_main.main()
                         done["ok"] = True
@@ -1700,6 +1702,10 @@ def install_playwright_browsers(app_dir: Path, log: Callable[[str], None]) -> bo
                         done["err"] = exc
                     finally:
                         sys.argv = prev_argv
+                        if prev_node is None:
+                            os.environ.pop("NODE_OPTIONS", None)
+                        else:
+                            os.environ["NODE_OPTIONS"] = prev_node
                 t = threading.Thread(target=_run_install, daemon=True)
                 t.start()
                 t.join(timeout=1200)
