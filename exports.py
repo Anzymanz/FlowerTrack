@@ -503,7 +503,39 @@ def export_html(data, path, fetch_images=False):
         )
     cards_html = "".join(cards)
     html_text = HTML_TEMPLATE.replace("__CARDS__", cards_html)
-    html_text = html_text.replace("<body>", f"<body data-exported='{esc_attr(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}' data-count='{len(data)}'>")
+    in_stock = 0
+    low_stock = 0
+    out_stock = 0
+    for it in data:
+        if it.get("is_removed"):
+            continue
+        remaining = it.get("stock_remaining")
+        status = (it.get("stock_status") or it.get("stock") or "").upper()
+        if isinstance(remaining, (int, float)):
+            if remaining <= 0:
+                out_stock += 1
+            elif remaining <= 10:
+                low_stock += 1
+            else:
+                in_stock += 1
+            continue
+        if "OUT" in status:
+            out_stock += 1
+        elif "LOW" in status:
+            low_stock += 1
+        elif "IN STOCK" in status:
+            in_stock += 1
+        else:
+            in_stock += 1
+    total_products = in_stock + low_stock + out_stock
+    html_text = html_text.replace(
+        "<body>",
+        (
+            f"<body data-exported='{esc_attr(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}' "
+            f"data-count='{total_products}' data-in-stock='{in_stock}' "
+            f"data-low-stock='{low_stock}' data-out-stock='{out_stock}'>"
+        ),
+    )
     html_text = html_text.replace("{price_min_bound}", str(price_min_bound))
     html_text = html_text.replace("{price_max_bound}", str(price_max_bound))
     html_text = html_text.replace("{thc_min_bound}", str(thc_min_bound))

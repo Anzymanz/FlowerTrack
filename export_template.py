@@ -745,12 +745,20 @@ applyTheme(saved === 'light');
     if (meta) {
         const ts = document.body.getAttribute('data-exported') || '';
         const count = document.body.getAttribute('data-count') || '';
-        if (meta) {
-            const parts = [];
-            if (count) parts.push(`${count} items`);
-            if (ts) parts.push(`Updated ${ts}`);
-            meta.textContent = parts.join(' • ');
+        const inStock = document.body.getAttribute('data-in-stock') || '';
+        const lowStock = document.body.getAttribute('data-low-stock') || '';
+        const outStock = document.body.getAttribute('data-out-stock') || '';
+        const parts = [];
+        if (count) {
+            parts.push(
+                `${count} products` +
+                (inStock ? ` - ${inStock} in stock` : "") +
+                (lowStock ? ` - ${lowStock} low stock` : "") +
+                (outStock ? ` - ${outStock} out of stock` : "")
+            );
         }
+        if (ts) parts.push(`Updated ${ts}`);
+        meta.textContent = parts.join(' • ');
     }
     buildBrandMenu();
     document.addEventListener('click', closeBrandMenu);

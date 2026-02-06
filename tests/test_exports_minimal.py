@@ -31,6 +31,7 @@ class ExportTests(unittest.TestCase):
             self.assertIn("loadMoreSentinel", text)
             self.assertIn("const VISIBLE_STEP = 30", text)
             self.assertIn("loading='lazy'", text)
+            self.assertIn("data-in-stock='1'", text)
 
 
 if __name__ == "__main__":
