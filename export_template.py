@@ -108,6 +108,12 @@ button:hover{background:var(--hover)}
 .search{display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--accent);text-decoration:none;font-weight:700;min-width:140px}
 .search:hover{background:var(--panel);color:var(--accent)}
 .small{font-size:13px;opacity:.85;color:var(--muted)}
+.brand-filter{position:relative}
+.brand-menu{position:absolute;top:110%;left:0;min-width:220px;max-height:260px;overflow:auto;display:none;z-index:999;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:8px;box-shadow:0 8px 18px rgba(0,0,0,0.25)}
+.brand-menu.open{display:block}
+.brand-item{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:8px}
+.brand-item:hover{background:var(--hover)}
+.brand-item input{accent-color:var(--accent)}
 .stock-indicator{display:inline-block;width:14px;height:14px;min-width:14px;flex:0 0 14px;border-radius:50%;margin-right:10px;vertical-align:middle}
 .stock-in{background:#2ecc71}
 .stock-low{background:#f5a623}
@@ -163,7 +169,7 @@ let activeStrains = new Set(['Indica','Sativa','Hybrid']);
 let favoritesOnly = false;
 let showSmalls = true;
 let showOutOfStock = false;
-let brandFilter = "";
+let brandFilter = new Set();
 let searchTerm = "";
 const priceMinBound = {price_min_bound};
 const priceMaxBound = {price_max_bound};
@@ -191,9 +197,8 @@ function applyFilters() {
         const showStrain = (!st) ? true : activeStrains.has(st);
         const text = (c.dataset.strain || '') + ' ' + (c.dataset.brand || '') + ' ' + (c.dataset.producer || '') + ' ' + (c.dataset.productId || '');
         const matchesSearch = term ? text.toLowerCase().includes(term) : true;
-        const brandTerm = brandFilter.trim().toLowerCase();
-        const brandText = (c.dataset.brand || '').toLowerCase();
-        const brandOk = brandTerm ? brandText.includes(brandTerm) : true;
+        const brandText = (c.dataset.brand || '').trim();
+        const brandOk = brandFilter.size > 0 ? brandFilter.has(brandText) : true;
         const favOk = favoritesOnly ? favorites.has(favKey) : true;
         const isOut = c.dataset.out === '1';
         const outOk = showOutOfStock || !isOut;
@@ -205,8 +210,13 @@ function handleSearch(el) {
     searchTerm = el.value || "";
     applyFilters();
 }
-function handleBrandFilter(el) {
-    brandFilter = el.value || "";
+function toggleBrandFilter(brand, checkbox) {
+    if (!brand) return;
+    if (checkbox && checkbox.checked) {
+        brandFilter.add(brand);
+    } else {
+        brandFilter.delete(brand);
+    }
     applyFilters();
 }
 function toggleType(type, btn) {
@@ -470,7 +480,7 @@ function resetFilters() {
     favoritesOnly = false;
     showSmalls = true;
     showOutOfStock = false;
-    brandFilter = "";
+    brandFilter = new Set();
     saveFilterPrefs();
     // Reset sliders
     const priceMinEl = document.getElementById('priceMinRange');
@@ -493,8 +503,7 @@ function resetFilters() {
         thcMinEl.dispatchEvent(new Event('input'));
         thcMaxEl.dispatchEvent(new Event('input'));
     }
-    const brandInput = document.getElementById('brandFilterInput');
-    if (brandInput) brandInput.value = "";
+    document.querySelectorAll('[data-brand-option]').forEach(chk => { chk.checked = false; });
     applyFilters();
 }
 function applyTheme(saved) {
@@ -513,6 +522,44 @@ function applyTheme(saved) {
 function toggleTheme() {
     const current = localStorage.getItem('ft_theme') || 'dark';
     applyTheme(current !== 'light');
+}
+function toggleBrandMenu() {
+    const menu = document.getElementById('brandMenu');
+    if (menu) menu.classList.toggle('open');
+}
+function closeBrandMenu(e) {
+    const menu = document.getElementById('brandMenu');
+    const wrapper = document.getElementById('brandFilter');
+    if (!menu || !wrapper) return;
+    if (!wrapper.contains(e.target)) {
+        menu.classList.remove('open');
+    }
+}
+function buildBrandMenu() {
+    const menu = document.getElementById('brandMenu');
+    if (!menu) return;
+    const brands = new Set();
+    document.querySelectorAll('.card').forEach(c => {
+        const brand = (c.dataset.brand || '').trim();
+        if (brand) brands.add(brand);
+    });
+    const items = Array.from(brands).sort((a, b) => a.localeCompare(b));
+    if (!items.length) {
+        menu.innerHTML = "<div class='small'>No brands found.</div>";
+        return;
+    }
+    menu.innerHTML = items.map(brand => (
+        `<label class='brand-item'>
+           <input type='checkbox' data-brand-option='1' data-brand='${brand.replace(/'/g, '&#39;')}'>
+           <span>${brand}</span>
+         </label>`
+    )).join("");
+    menu.querySelectorAll('input[data-brand-option]').forEach(chk => {
+        chk.addEventListener('change', (e) => {
+            const brand = e.currentTarget.getAttribute('data-brand') || '';
+            toggleBrandFilter(brand, e.currentTarget);
+        });
+    });
 }
 document.addEventListener('DOMContentLoaded', () => {
     const saved = localStorage.getItem('ft_theme');
@@ -603,6 +650,8 @@ applyTheme(saved === 'light');
     });
     const smallsBtn = document.querySelector('[data-filter-smalls]');
     if (smallsBtn) smallsBtn.classList.toggle('active', showSmalls);
+    buildBrandMenu();
+    document.addEventListener('click', closeBrandMenu);
     applyFilters();
 });
 </script>
@@ -623,7 +672,10 @@ applyTheme(saved === 'light');
     <button class='btn-filter' onclick="toggleFavorites(this)">Favorites</button>
     <button class='btn-filter active' data-filter-smalls="1" onclick="toggleSmalls(this)">Smalls</button>
     <button class='btn-filter' onclick="toggleOutOfStock(this)">Out of stock</button>
-    <input class="search-box" id="brandFilterInput" type="text" placeholder="Filter brand" oninput="handleBrandFilter(this)" />
+    <div class="brand-filter" id="brandFilter">
+      <button class="btn-filter" onclick="toggleBrandMenu()">Brands ▾</button>
+      <div class="brand-menu" id="brandMenu"></div>
+    </div>
     <button onclick="resetFilters()">Reset</button>
     <div class="range-group">
       <div class="range-line">
