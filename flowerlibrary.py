@@ -609,6 +609,10 @@ class FlowerLibraryApp:
             if result and not getattr(window, "_titlebar_logged", False):
                 setattr(window, "_titlebar_logged", True)
                 log_event("flowerlibrary.titlebar", result, file_name="app.log")
+                try:
+                    print(f"[flowerlibrary.titlebar] {result}")
+                except Exception:
+                    pass
         except Exception:
             pass
 
