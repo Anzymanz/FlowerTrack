@@ -27,6 +27,23 @@ class ConfigTests(unittest.TestCase):
             self.assertIn("scraper", cfg)
             self.assertIn("ui", cfg)
 
+    def test_save_unified_encrypts_scraper_secrets(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "config.json"
+            cfg = config._default_unified_config()
+            cfg["scraper"]["username"] = "user@example.com"
+            cfg["scraper"]["password"] = "secret-pass"
+            cfg["scraper"]["ha_token"] = "ha-token"
+            config.save_unified_config(path, cfg, encrypt_scraper_keys=None)
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            scraper = raw.get("scraper", {})
+            self.assertNotEqual(scraper.get("username"), "user@example.com")
+            self.assertNotEqual(scraper.get("password"), "secret-pass")
+            self.assertNotEqual(scraper.get("ha_token"), "ha-token")
+            self.assertEqual(config.decrypt_secret(scraper.get("username")), "user@example.com")
+            self.assertEqual(config.decrypt_secret(scraper.get("password")), "secret-pass")
+            self.assertEqual(config.decrypt_secret(scraper.get("ha_token")), "ha-token")
+
 
 if __name__ == "__main__":
     unittest.main()

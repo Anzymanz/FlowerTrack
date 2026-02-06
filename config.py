@@ -19,21 +19,50 @@ def ensure_dir(path: Path) -> None:
         _log_config_error(f"ensure_dir failed: {exc}")
 
 
+class _DATA_BLOB(ctypes.Structure):
+    _fields_ = [("cbData", wintypes.DWORD), ("pbData", ctypes.POINTER(ctypes.c_byte))]
+
+
+def _dpapi_encrypt(raw: bytes) -> bytes | None:
+    if raw is None:
+        return None
+    if raw == b"":
+        return b""
+    data_in = _DATA_BLOB(len(raw), ctypes.cast(ctypes.create_string_buffer(raw), ctypes.POINTER(ctypes.c_byte)))
+    data_out = _DATA_BLOB()
+    crypt_protect = ctypes.windll.crypt32.CryptProtectData
+    if crypt_protect(ctypes.byref(data_in), None, None, None, None, 0, ctypes.byref(data_out)):
+        try:
+            return ctypes.string_at(data_out.pbData, data_out.cbData)
+        finally:
+            ctypes.windll.kernel32.LocalFree(data_out.pbData)
+    return None
+
+
+def _dpapi_decrypt(raw: bytes) -> bytes | None:
+    if raw is None:
+        return None
+    if raw == b"":
+        return b""
+    data_in = _DATA_BLOB(len(raw), ctypes.cast(ctypes.create_string_buffer(raw), ctypes.POINTER(ctypes.c_byte)))
+    data_out = _DATA_BLOB()
+    crypt_unprotect = ctypes.windll.crypt32.CryptUnprotectData
+    if crypt_unprotect(ctypes.byref(data_in), None, None, None, None, 0, ctypes.byref(data_out)):
+        try:
+            return ctypes.string_at(data_out.pbData, data_out.cbData)
+        finally:
+            ctypes.windll.kernel32.LocalFree(data_out.pbData)
+    return None
+
+
 def encrypt_secret(value: str) -> str:
     try:
         if value is None:
             return ""
         raw = str(value).encode("utf-8")
-        blob = ctypes.windll.crypt32.CryptProtectData
-        data_in = wintypes.DATA_BLOB(len(raw), ctypes.cast(ctypes.create_string_buffer(raw), ctypes.c_void_p))
-        data_out = wintypes.DATA_BLOB()
-        if blob(ctypes.byref(data_in), None, None, None, None, 0, ctypes.byref(data_out)):
-            try:
-                enc = ctypes.string_at(data_out.pbData, data_out.cbData)
-                ctypes.windll.kernel32.LocalFree(data_out.pbData)
-                return base64.b64encode(enc).decode("utf-8")
-            except Exception:
-                pass
+        enc = _dpapi_encrypt(raw)
+        if enc is not None:
+            return base64.b64encode(enc).decode("utf-8")
     except Exception:
         pass
     return str(value)
@@ -44,19 +73,24 @@ def decrypt_secret(value: str) -> str:
         if not value:
             return ""
         raw = base64.b64decode(str(value).encode("utf-8"), validate=True)
-        blob = ctypes.windll.crypt32.CryptUnprotectData
-        data_in = wintypes.DATA_BLOB(len(raw), ctypes.cast(ctypes.create_string_buffer(raw), ctypes.c_void_p))
-        data_out = wintypes.DATA_BLOB()
-        if blob(ctypes.byref(data_in), None, None, None, None, 0, ctypes.byref(data_out)):
-            try:
-                dec = ctypes.string_at(data_out.pbData, data_out.cbData)
-                ctypes.windll.kernel32.LocalFree(data_out.pbData)
-                return dec.decode("utf-8", errors="ignore")
-            except Exception:
-                pass
+        dec = _dpapi_decrypt(raw)
+        if dec is not None:
+            return dec.decode("utf-8", errors="ignore")
     except Exception:
         pass
     return str(value)
+
+
+def _maybe_encrypt_secret(value: str) -> str:
+    if not value:
+        return ""
+    try:
+        decrypted = decrypt_secret(value)
+    except Exception:
+        decrypted = value
+    if decrypted != str(value):
+        return str(value)
+    return encrypt_secret(str(value))
 
 # Default schema for capture config (centralized)
 SCHEMA_VERSION = 2
@@ -508,9 +542,13 @@ def _atomic_write_json(path: Path, data: dict) -> None:
 
 def save_unified_config(path: Path, data: dict, encrypt_scraper_keys: list[str] | None = None) -> None:
     encrypt_scraper_keys = encrypt_scraper_keys or []
+    # Always protect sensitive scraper fields, even if caller doesn't pass explicit keys.
+    for key in ("username", "password", "ha_token"):
+        if key not in encrypt_scraper_keys:
+            encrypt_scraper_keys.append(key)
     cfg = _normalize_unified_config(data or {})
     for key in encrypt_scraper_keys:
-        cfg["scraper"][key] = encrypt_secret(cfg["scraper"].get(key, ""))
+        cfg["scraper"][key] = _maybe_encrypt_secret(cfg["scraper"].get(key, ""))
     _atomic_write_json(path, cfg)
 
 
