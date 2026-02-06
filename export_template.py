@@ -168,6 +168,8 @@ let activeTypes = new Set(['flower','oil','vape']);
 let activeStrains = new Set(['Indica','Sativa','Hybrid']);
 let favoritesOnly = false;
 let showSmalls = true;
+let showInStock = true;
+let showLowStock = true;
 let showOutOfStock = false;
 let brandFilter = new Set();
 let searchTerm = "";
@@ -201,9 +203,12 @@ function applyFilters() {
         const brandOk = brandFilter.size > 0 ? brandFilter.has(brandText) : true;
         const favOk = favoritesOnly ? favorites.has(favKey) : true;
         const isOut = c.dataset.out === '1';
-        const outOk = showOutOfStock || !isOut;
+        const stockStatus = (c.dataset.stockStatus || '').toUpperCase();
+        const isLow = stockStatus.includes('LOW');
+        const isIn = !isOut && !isLow;
+        const stockOk = isRemoved ? true : ((isIn && showInStock) || (isLow && showLowStock) || (isOut && showOutOfStock));
         const smallsOk = showSmalls || !isSmalls;
-        c.style.display = (showType && showStrain && matchesSearch && brandOk && priceOk && thcOk && favOk && smallsOk && outOk) ? '' : 'none';
+        c.style.display = (showType && showStrain && matchesSearch && brandOk && priceOk && thcOk && favOk && smallsOk && stockOk) ? '' : 'none';
     });
 }
 function handleSearch(el) {
@@ -249,6 +254,18 @@ function toggleFavorites(btn) {
 function toggleSmalls(btn) {
     showSmalls = !showSmalls;
     btn.classList.toggle('active', showSmalls);
+    saveFilterPrefs();
+    applyFilters();
+}
+function toggleInStock(btn) {
+    showInStock = !showInStock;
+    btn.classList.toggle('active', showInStock);
+    saveFilterPrefs();
+    applyFilters();
+}
+function toggleLowStock(btn) {
+    showLowStock = !showLowStock;
+    btn.classList.toggle('active', showLowStock);
     saveFilterPrefs();
     applyFilters();
 }
@@ -429,6 +446,15 @@ function loadFilterPrefs() {
         if (typeof data.smalls === 'boolean') {
             showSmalls = data.smalls;
         }
+        if (typeof data.instock === 'boolean') {
+            showInStock = data.instock;
+        }
+        if (typeof data.lowstock === 'boolean') {
+            showLowStock = data.lowstock;
+        }
+        if (typeof data.outstock === 'boolean') {
+            showOutOfStock = data.outstock;
+        }
     } catch (e) {}
 }
 function saveFilterPrefs() {
@@ -437,6 +463,9 @@ function saveFilterPrefs() {
             types: Array.from(activeTypes),
             strains: Array.from(activeStrains),
             smalls: showSmalls,
+            instock: showInStock,
+            lowstock: showLowStock,
+            outstock: showOutOfStock,
         };
         localStorage.setItem('ft_filters', JSON.stringify(payload));
     } catch (e) {}
@@ -479,6 +508,8 @@ function resetFilters() {
     document.querySelectorAll('.btn-filter').forEach(b => b.classList.add('active'));
     favoritesOnly = false;
     showSmalls = true;
+    showInStock = true;
+    showLowStock = true;
     showOutOfStock = false;
     brandFilter = new Set();
     saveFilterPrefs();
@@ -650,6 +681,12 @@ applyTheme(saved === 'light');
     });
     const smallsBtn = document.querySelector('[data-filter-smalls]');
     if (smallsBtn) smallsBtn.classList.toggle('active', showSmalls);
+    const instockBtn = document.querySelector('[data-filter-instock]');
+    if (instockBtn) instockBtn.classList.toggle('active', showInStock);
+    const lowstockBtn = document.querySelector('[data-filter-lowstock]');
+    if (lowstockBtn) lowstockBtn.classList.toggle('active', showLowStock);
+    const outstockBtn = document.querySelector('[data-filter-outstock]');
+    if (outstockBtn) outstockBtn.classList.toggle('active', showOutOfStock);
     const meta = document.getElementById('exportMeta');
     if (meta) {
         const ts = document.body.getAttribute('data-exported') || '';
@@ -681,7 +718,9 @@ applyTheme(saved === 'light');
     <button class='btn-filter active' data-filter-strain="Hybrid" onclick="toggleStrain('Hybrid', this)">Hybrid</button>
     <button class='btn-filter' onclick="toggleFavorites(this)">Favorites</button>
     <button class='btn-filter active' data-filter-smalls="1" onclick="toggleSmalls(this)">Smalls</button>
-    <button class='btn-filter' onclick="toggleOutOfStock(this)">Out of stock</button>
+    <button class='btn-filter active' data-filter-instock="1" onclick="toggleInStock(this)">In stock</button>
+    <button class='btn-filter active' data-filter-lowstock="1" onclick="toggleLowStock(this)">Low stock</button>
+    <button class='btn-filter' data-filter-outstock="1" onclick="toggleOutOfStock(this)">Out of stock</button>
     <div class="brand-filter" id="brandFilter">
       <button class="btn-filter" onclick="toggleBrandMenu()">Brands ▾</button>
       <div class="brand-menu" id="brandMenu"></div>

@@ -211,6 +211,7 @@ def _render_card_html(
       data-producer='{esc_attr(it.get('producer') or '')}'
       data-product-id='{esc_attr(it.get("product_id") or '')}'
       data-stock='{esc_attr(stock_text)}'
+      data-stock-status='{esc_attr((it.get("stock_status") or it.get("stock") or "").upper())}'
       data-requestable='{1 if it.get("requestable") else 0}'
       data-active='{1 if it.get("is_active") else 0}'
       data-inactive='{1 if it.get("is_inactive") else 0}'
