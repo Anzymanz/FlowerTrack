@@ -75,7 +75,7 @@ button.btn-filter{background:var(--panel);color:var(--accent)}
 button.btn-filter.active{background:var(--accent);color:var(--bg);background-image:none}
 button:hover{background:var(--hover)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
-.card{background:var(--panel);padding:12px;border-radius:12px;border:1px solid var(--border);position:relative;display:flex;flex-direction:column;min-height:300px}
+.card{background:var(--panel);padding:12px;border-radius:12px;border:1px solid var(--border);position:relative;display:flex;flex-direction:column;min-height:300px;content-visibility:auto;contain-intrinsic-size:320px 320px}
 .card-new{background:#0f2616;border-color:#1f5d35}
 .card-removed{background:#2b1313;border-color:#6a1f1f}
 .card-out{background:#2a0f10;border-color:#7a2626}
@@ -117,6 +117,7 @@ button:hover{background:var(--hover)}
 .brand-item{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:8px}
 .brand-item:hover{background:var(--hover)}
 .brand-item input{accent-color:var(--accent)}
+.load-more{display:flex;align-items:center;justify-content:center;gap:12px;margin:18px 0}
 .stock-indicator{display:inline-block;width:14px;height:14px;min-width:14px;flex:0 0 14px;border-radius:50%;margin-right:10px;vertical-align:middle}
 .stock-in{background:#2ecc71}
 .stock-low{background:#f5a623}
@@ -166,6 +167,7 @@ function sortCards(key, btn) {
     });
     cards.forEach(c => grid.appendChild(c));
     updateSortButtons();
+    applyVisibleLimit();
 }
 let activeTypes = new Set(['flower','oil','vape']);
 let activeStrains = new Set(['Indica','Sativa','Hybrid']);
@@ -174,6 +176,9 @@ let showSmalls = true;
 let showOutOfStock = false;
 let brandFilter = new Set();
 let searchTerm = "";
+const VISIBLE_STEP = 120;
+let visibleLimit = VISIBLE_STEP;
+let filteredCards = [];
 const priceMinBound = {price_min_bound};
 const priceMaxBound = {price_max_bound};
 let priceMinSel = priceMinBound;
@@ -182,10 +187,30 @@ const thcMinBound = {thc_min_bound};
 const thcMaxBound = {thc_max_bound};
 let thcMinSel = thcMinBound;
 let thcMaxSel = thcMaxBound;
-function applyFilters() {
+function applyVisibleLimit() {
+    let shown = 0;
+    filteredCards.forEach(c => {
+        if (shown < visibleLimit) {
+            c.style.display = '';
+            shown += 1;
+        } else {
+            c.style.display = 'none';
+        }
+    });
+    const btn = document.getElementById('loadMore');
+    if (btn) btn.style.display = filteredCards.length > visibleLimit ? '' : 'none';
+    const count = document.getElementById('visibleCount');
+    if (count) {
+        const total = filteredCards.length;
+        count.textContent = total ? `${Math.min(visibleLimit, total)} / ${total}` : '';
+    }
+}
+function applyFilters(resetLimit = true) {
     const grid = document.getElementById('grid');
     const cards = Array.from(grid.children);
     const term = searchTerm.trim().toLowerCase();
+    if (resetLimit) visibleLimit = VISIBLE_STEP;
+    filteredCards = [];
     cards.forEach(c => {
         const pt = (c.dataset.pt || '').toLowerCase();
         const isRemoved = c.dataset.removed === '1';
@@ -206,12 +231,20 @@ function applyFilters() {
         const isOut = c.dataset.out === '1';
         const stockOk = showOutOfStock || !isOut;
         const smallsOk = showSmalls || !isSmalls;
-        c.style.display = (showType && showStrain && matchesSearch && brandOk && priceOk && thcOk && favOk && smallsOk && stockOk) ? '' : 'none';
+        if (showType && showStrain && matchesSearch && brandOk && priceOk && thcOk && favOk && smallsOk && stockOk) {
+            filteredCards.push(c);
+        }
+        c.style.display = 'none';
     });
+    applyVisibleLimit();
 }
 function handleSearch(el) {
     searchTerm = el.value || "";
     applyFilters();
+}
+function loadMore() {
+    visibleLimit += VISIBLE_STEP;
+    applyVisibleLimit();
 }
 function toggleBrandFilter(brand, checkbox) {
     if (!brand) return;
@@ -755,4 +788,9 @@ applyTheme(saved === 'light');
 </div>
 <div class='grid' id='grid'>
 __CARDS__
-</div></body></html>"""
+</div>
+<div class='load-more'>
+  <button id='loadMore' onclick='loadMore()'>Load more</button>
+  <span class='small' id='visibleCount'></span>
+</div>
+</body></html>"""

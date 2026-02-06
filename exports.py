@@ -222,9 +222,9 @@ def _render_card_html(
       data-removed='{1 if it.get("is_removed") else 0}'
       data-out='{1 if is_out else 0}'>
     <button class='fav-btn' onclick='toggleFavorite(this)' title='Favorite this item'>★</button>
-    {image_html if image_html else ("<img class='type-badge' data-theme-icon='dark' src='" + esc_attr(type_icon_dark) + "' alt='" + esc_attr(it.get('product_type') or '') + "' />") if type_icon_dark else ""}
-    {"" if image_html else ("<img class='type-badge' data-theme-icon='light' src='" + esc_attr(type_icon_light) + "' alt='" + esc_attr(it.get('product_type') or '') + "' style='display:none;' />") if type_icon_light else ""}
-    {"" if image_html else (("<img class='strain-badge' src='" + esc_attr(strain_badge_src) + "' alt='" + esc_attr(it.get('strain_type') or '') + "' />") if strain_badge_src else "")}
+    {image_html if image_html else ("<img class='type-badge' data-theme-icon='dark' loading='lazy' decoding='async' src='" + esc_attr(type_icon_dark) + "' alt='" + esc_attr(it.get('product_type') or '') + "' />") if type_icon_dark else ""}
+    {"" if image_html else ("<img class='type-badge' data-theme-icon='light' loading='lazy' decoding='async' src='" + esc_attr(type_icon_light) + "' alt='" + esc_attr(it.get('product_type') or '') + "' style='display:none;' />") if type_icon_light else ""}
+    {"" if image_html else (("<img class='strain-badge' loading='lazy' decoding='async' src='" + esc_attr(strain_badge_src) + "' alt='" + esc_attr(it.get('strain_type') or '') + "' />") if strain_badge_src else "")}
     {("<span class='badge-new'>New</span>") if it.get('is_new') else ("<span class='badge-removed'>Removed</span>" if it.get('is_removed') else "")}
     <div style='display:flex;flex-direction:column;align-items:flex-start;gap:4px;'>
       {price_badge}
@@ -243,7 +243,7 @@ def _render_card_html(
       {stock_pill}
         {f"<span class='pill'>£/g {ppg:.2f}</span>" if ppg is not None else ''}
         {f"<span class='pill'>🍃 {esc(it.get('strain_type'))}</span>" if it.get('strain_type') else ''}
-        {f"<span class='pill pill-flag'><img class='flag-icon' src='{esc_attr(_flag_cdn_url(it.get('origin_country')))}' alt='{esc_attr(it.get('origin_country') or '')}' /> {esc(it.get('origin_country'))}</span>" if _flag_cdn_url(it.get('origin_country')) else ''}
+        {f"<span class='pill pill-flag'><img class='flag-icon' loading='lazy' decoding='async' src='{esc_attr(_flag_cdn_url(it.get('origin_country')))}' alt='{esc_attr(it.get('origin_country') or '')}' /> {esc(it.get('origin_country'))}</span>" if _flag_cdn_url(it.get('origin_country')) else ''}
         {f"<span class='pill'>☢️ {esc(it.get('irradiation_type'))}</span>" if (it.get('irradiation_type') and (it.get('product_type') or '').lower() not in ('vape','oil','device')) else ''}
     </div>
     <div class='small'>🌞THC: {esc(disp_thc)}</div>
@@ -365,7 +365,7 @@ def export_html(data, path, fetch_images=False):
         if image_url:
             alt_text = it.get("brand") or it.get("producer") or it.get("title") or ""
             image_html = (
-                "<img class='type-badge' src='"
+                "<img class='type-badge' loading='lazy' decoding='async' src='"
                 + esc_attr(image_url)
                 + "' alt='"
                 + esc_attr(alt_text)
