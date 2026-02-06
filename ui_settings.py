@@ -253,6 +253,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Button(scraper_btns, text="Load config", command=app.load_capture_config).pack(side="left", padx=4)
     ttk.Button(scraper_btns, text="Export config", command=app.save_capture_config).pack(side="left", padx=4)
     ttk.Button(scraper_btns, text="Clear cache", command=app.clear_cache).pack(side="right", padx=4)
+    ttk.Button(scraper_btns, text="Clear auth cache", command=app._clear_auth_cache).pack(side="right", padx=4)
     ttk.Button(scraper_btns, text="Send test notification", command=app.send_test_notification).pack(side="right", padx=4)
 
     btn_row = ttk.Frame(win)

@@ -142,7 +142,6 @@ class App(tk.Tk):
         ttk.Button(btns, text="Open browser", command=self.open_latest_export).pack(side="left", padx=5)
         ttk.Button(btns, text="History", command=self._open_history_window).pack(side="left", padx=5)
         ttk.Button(btns, text="Settings", command=self._open_settings_window).pack(side="left", padx=5)
-        ttk.Button(btns, text="Clear Auth Cache", command=self._clear_auth_cache).pack(side="left", padx=5)
         self.progress = ttk.Progressbar(self, mode="determinate")
         self.progress.pack(fill="x", padx=10, pady=5)
         self.status = ttk.Label(self, text="Idle")
