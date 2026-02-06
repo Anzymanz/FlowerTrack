@@ -636,28 +636,43 @@ class FlowerLibraryApp:
         GA_ROOTOWNER = 3
         root = GetAncestor(hwnd, GA_ROOT) or 0
         root_owner = GetAncestor(hwnd, GA_ROOTOWNER) or 0
-        target = root_owner or root
+        target_root = root or hwnd
 
         rc20_root = None
         rc19_root = None
-        if target and target != hwnd:
+        if target_root and target_root != hwnd:
             rc20_root = ctypes.windll.dwmapi.DwmSetWindowAttribute(
-                target, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)
+                target_root, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)
             )
             rc19_root = 0
             if rc20_root != 0:
                 rc19_root = ctypes.windll.dwmapi.DwmSetWindowAttribute(
-                    target, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value)
+                    target_root, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value)
+                )
+
+        rc20_owner = None
+        rc19_owner = None
+        if root_owner and root_owner not in {hwnd, target_root}:
+            rc20_owner = ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                root_owner, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)
+            )
+            rc19_owner = 0
+            if rc20_owner != 0:
+                rc19_owner = ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                    root_owner, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value)
                 )
 
         return {
             "hwnd": int(hwnd),
-            "target": int(target) if target else None,
+            "root": int(root) if root else None,
+            "owner": int(root_owner) if root_owner else None,
             "enable": bool(enable),
             "rc20_hwnd": int(rc20_hwnd),
             "rc19_hwnd": int(rc19_hwnd),
             "rc20_root": None if rc20_root is None else int(rc20_root),
             "rc19_root": None if rc19_root is None else int(rc19_root),
+            "rc20_owner": None if rc20_owner is None else int(rc20_owner),
+            "rc19_owner": None if rc19_owner is None else int(rc19_owner),
         }
 
     def _place_window_at_pointer(self, win: Toplevel) -> None:
