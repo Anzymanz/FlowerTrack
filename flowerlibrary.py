@@ -7,6 +7,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import Tk, Toplevel, StringVar, BooleanVar, ttk, messagebox, filedialog
 from theme import apply_style_theme, compute_colors, set_titlebar_dark
+from logger import log_event
 from config import load_library_config, save_library_config, load_tracker_config, save_tracker_config
 from resources import resource_path
 
@@ -546,25 +547,7 @@ class FlowerLibraryApp:
         if os.name != "nt":
             return
         try:
-            hwnd = window.winfo_id()
-            GetAncestor = ctypes.windll.user32.GetAncestor
-            GA_ROOT = 2
-            GA_ROOTOWNER = 3
-            root = GetAncestor(hwnd, GA_ROOT)
-            if root:
-                hwnd = root
-            root_owner = GetAncestor(hwnd, GA_ROOTOWNER)
-            if root_owner:
-                hwnd = root_owner
-            value = ctypes.c_int(1 if enable else 0)
-            DWMWA_USE_IMMERSIVE_DARK_MODE = 20
-            DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19
-            if ctypes.windll.dwmapi.DwmSetWindowAttribute(
-                hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)
-            ) != 0:
-                ctypes.windll.dwmapi.DwmSetWindowAttribute(
-                    hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value)
-                )
+            self._dwm_set_titlebar(window, enable)
         except Exception:
             pass
 
@@ -611,6 +594,10 @@ class FlowerLibraryApp:
         except Exception:
             pass
         try:
+            result = self._dwm_set_titlebar(window, self.is_dark.get())
+        except Exception:
+            result = None
+        try:
             self._set_window_titlebar_dark(window, self.is_dark.get())
         except Exception:
             pass
@@ -618,6 +605,36 @@ class FlowerLibraryApp:
             self._set_titlebar_dark_native(window, self.is_dark.get())
         except Exception:
             pass
+        try:
+            if result and not getattr(window, "_titlebar_logged", False):
+                setattr(window, "_titlebar_logged", True)
+                log_event("flowerlibrary.titlebar", result, file_name="app.log")
+        except Exception:
+            pass
+
+    def _dwm_set_titlebar(self, window, enable: bool) -> dict:
+        hwnd = window.winfo_id()
+        GetAncestor = ctypes.windll.user32.GetAncestor
+        GA_ROOT = 2
+        GA_ROOTOWNER = 3
+        root = GetAncestor(hwnd, GA_ROOT)
+        if root:
+            hwnd = root
+        root_owner = GetAncestor(hwnd, GA_ROOTOWNER)
+        if root_owner:
+            hwnd = root_owner
+        value = ctypes.c_int(1 if enable else 0)
+        DWMWA_USE_IMMERSIVE_DARK_MODE = 20
+        DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19
+        rc20 = ctypes.windll.dwmapi.DwmSetWindowAttribute(
+            hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)
+        )
+        rc19 = 0
+        if rc20 != 0:
+            rc19 = ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value)
+            )
+        return {"hwnd": int(hwnd), "enable": bool(enable), "rc20": int(rc20), "rc19": int(rc19)}
 
     def _place_window_at_pointer(self, win: Toplevel) -> None:
         """Place window with its top-left near the current mouse pointer."""
