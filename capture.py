@@ -715,13 +715,16 @@ class CaptureWorker:
                         try:
                             # Persist auth cache and optionally dump data
                             self._persist_auth_cache(api_payloads)
-                            dump_dir = Path(self.app_dir) / "data" if self.app_dir else None
+                            dump_dir = Path(self.app_dir) / "dumps" if self.app_dir else None
+                            data_dir = Path(self.app_dir) / "data" if self.app_dir else None
                             stamp = time.strftime("%Y%m%d_%H%M%S")
                             if dump_dir:
                                 dump_dir.mkdir(parents=True, exist_ok=True)
                                 try:
-                                    latest_path = dump_dir / "api_latest.json"
-                                    save_api_latest(latest_path, api_payloads)
+                                    if data_dir:
+                                        data_dir.mkdir(parents=True, exist_ok=True)
+                                        latest_path = data_dir / "api_latest.json"
+                                        save_api_latest(latest_path, api_payloads)
                                 except Exception as exc:
                                     self.callbacks["capture_log"](f"API latest write failed: {exc}")
                                 if self.cfg.get("dump_api_json"):
@@ -1333,12 +1336,16 @@ class CaptureWorker:
                                     return False
                                 self.empty_failures = 0
                                 dump_dir = None
+                                data_dir = None
                                 stamp = None
                                 try:
-                                    dump_dir = Path(self.app_dir) / "data"
+                                    dump_dir = Path(self.app_dir) / "dumps"
                                     dump_dir.mkdir(parents=True, exist_ok=True)
+                                    data_dir = Path(self.app_dir) / "data"
+                                    data_dir.mkdir(parents=True, exist_ok=True)
                                 except Exception:
                                     dump_dir = None
+                                    data_dir = None
                                 if self.cfg.get("dump_capture_html") or self.cfg.get("dump_api_json"):
                                     stamp = time.strftime("%Y%m%d_%H%M%S")
                                 if dump_dir:
@@ -1347,8 +1354,9 @@ class CaptureWorker:
                                     else:
                                         self._persist_auth_cache(api_payloads)
                                         try:
-                                            latest_path = dump_dir / "api_latest.json"
-                                            save_api_latest(latest_path, api_payloads)
+                                            if data_dir:
+                                                latest_path = data_dir / "api_latest.json"
+                                                save_api_latest(latest_path, api_payloads)
                                         except Exception as exc:
                                             self.callbacks["capture_log"](f"API latest write failed: {exc}")
                                         if endpoint_summaries and stamp:
