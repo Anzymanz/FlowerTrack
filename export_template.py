@@ -246,6 +246,17 @@ function loadMore() {
     visibleLimit += VISIBLE_STEP;
     applyVisibleLimit();
 }
+let autoLoading = false;
+function autoLoadOnScroll() {
+    if (autoLoading) return;
+    const btn = document.getElementById('loadMore');
+    if (!btn || btn.style.display === 'none') return;
+    const nearBottom = (window.innerHeight + window.scrollY) >= (document.body.scrollHeight - 200);
+    if (!nearBottom) return;
+    autoLoading = true;
+    loadMore();
+    setTimeout(() => { autoLoading = false; }, 200);
+}
 function toggleBrandFilter(brand, checkbox) {
     if (!brand) return;
     if (checkbox && checkbox.checked) {
@@ -717,6 +728,7 @@ applyTheme(saved === 'light');
     }
     buildBrandMenu();
     document.addEventListener('click', closeBrandMenu);
+    window.addEventListener('scroll', autoLoadOnScroll);
     applyFilters();
 });
 </script>

@@ -246,6 +246,10 @@ class App(tk.Tk):
         self.notify_removed_items = tk.BooleanVar(value=bool(cfg.get("notify_removed_items", True)))
         self.notify_windows = tk.BooleanVar(value=bool(cfg.get("notify_windows", True)))
         self.notify_throttle_minutes = self._coerce_notify_throttle_cfg(cfg.get("notify_throttle_minutes"))
+        self.notify_throttle_vars = {
+            key: tk.StringVar(value=str(self.notify_throttle_minutes.get(key, 0.0)))
+            for key in ("new", "removed", "price", "stock", "out_of_stock", "restock")
+        }
         self.cap_quiet_hours_enabled = tk.BooleanVar(value=bool(cfg.get("quiet_hours_enabled", False)))
         self.cap_quiet_start = tk.StringVar(value=cfg.get("quiet_hours_start", "22:00"))
         self.cap_quiet_end = tk.StringVar(value=cfg.get("quiet_hours_end", "07:00"))
@@ -347,6 +351,19 @@ class App(tk.Tk):
                     except Exception:
                         pass
         return base
+
+    def _sync_notify_throttle_from_vars(self) -> None:
+        vars_map = getattr(self, "notify_throttle_vars", None)
+        if not isinstance(vars_map, dict):
+            return
+        for key in ("new", "removed", "price", "stock", "out_of_stock", "restock"):
+            var = vars_map.get(key)
+            if not hasattr(var, "get"):
+                continue
+            try:
+                self.notify_throttle_minutes[key] = float(str(var.get()).strip() or 0)
+            except Exception:
+                self.notify_throttle_minutes[key] = 0.0
 
     def _apply_notify_throttle(self, change_type: str, entries: list[dict]) -> list[dict]:
         if not entries:

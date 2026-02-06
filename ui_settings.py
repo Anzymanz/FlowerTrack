@@ -219,6 +219,22 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Checkbutton(notify_frame, text="Send Windows desktop notifications", variable=app.notify_windows).pack(anchor="w", pady=2)
     ttk.Checkbutton(notify_frame, text="Send Home Assistant notifications", variable=app.cap_auto_notify_ha).pack(anchor="w", pady=2)
 
+    throttle_frame = ttk.LabelFrame(notify_frame, text="Notification throttle (minutes)", padding=6)
+    throttle_frame.pack(fill="x", pady=(6, 2))
+    throttle_rows = (
+        ("New", "new"),
+        ("Removed", "removed"),
+        ("Price", "price"),
+        ("Stock", "stock"),
+        ("Out of stock", "out_of_stock"),
+        ("Restock", "restock"),
+    )
+    for idx, (label, key) in enumerate(throttle_rows):
+        ttk.Label(throttle_frame, text=label).grid(row=idx, column=0, sticky="w", padx=4, pady=2)
+        var = app.notify_throttle_vars.get(key)
+        ttk.Entry(throttle_frame, textvariable=var, width=8).grid(row=idx, column=1, sticky="w", padx=4, pady=2)
+    throttle_frame.columnconfigure(1, weight=1)
+
     quiet_frame = ttk.Frame(notify_frame)
     quiet_frame.pack(fill="x", pady=(6, 2))
     ttk.Checkbutton(quiet_frame, text="Quiet hours", variable=app.cap_quiet_hours_enabled).pack(side="left")
@@ -237,6 +253,8 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
 
     def save_and_close():
         try:
+            if hasattr(app, "_sync_notify_throttle_from_vars"):
+                app._sync_notify_throttle_from_vars()
             app._save_capture_window()
         except Exception as exc:
             messagebox.showerror("Save", f"Failed to save scraper settings:\n{exc}")
