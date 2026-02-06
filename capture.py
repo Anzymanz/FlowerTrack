@@ -1668,6 +1668,7 @@ def ensure_browser_available(app_dir: Path, log: Callable[[str], None], install_
     Ensure Playwright and browser are available.
     Returns (sync_playwright, TimeoutError) or None on failure after attempts.
     """
+    _seed_browsers_if_bundled(app_dir, log)
     req = ensure_playwright_installed(app_dir, log)
     if req:
         return req
@@ -1721,6 +1722,28 @@ def install_playwright_browsers(app_dir: Path, log: Callable[[str], None]) -> bo
     except Exception as exc:
         log(f"Playwright install failed: {exc}")
         return False
+
+
+def _seed_browsers_if_bundled(app_dir: Path, log: Callable[[str], None]) -> None:
+    """Copy bundled Playwright browsers into APPDATA path when running frozen."""
+    try:
+        if not getattr(sys, "frozen", False):
+            return
+        env_path = Path(os.environ.get("PLAYWRIGHT_BROWSERS_PATH", str(app_dir / "pw-browsers")))
+        if env_path.exists():
+            # Already present; nothing to do.
+            return
+        bundle_root = Path(getattr(sys, "_MEIPASS", ""))
+        if not bundle_root:
+            return
+        bundled = bundle_root / "pw-browsers"
+        if not bundled.exists():
+            return
+        env_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(bundled, env_path, dirs_exist_ok=True)
+        log(f"Seeded Playwright browsers to {env_path}.")
+    except Exception as exc:
+        log(f"Playwright browser seed failed: {exc}")
 
 
 def start_capture_worker(
