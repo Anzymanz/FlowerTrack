@@ -92,6 +92,21 @@ def _coerce_int(value: Any) -> int | None:
     except Exception:
         return None
 
+def _coerce_bool(value: Any) -> bool | None:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        raw = value.strip().lower()
+        if raw in {"true", "1", "yes", "y", "on"}:
+            return True
+        if raw in {"false", "0", "no", "n", "off"}:
+            return False
+    return None
+
 def _clean_title(value: str | None) -> str | None:
     if not value:
         return value
@@ -190,6 +205,33 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
         or 'FORMULATION ONLY' in str(name).upper()
     ):
         return None
+    status = entry.get("status") or product.get("status") or metadata.get("status")
+    requestable = _coerce_bool(
+        entry.get("requestable")
+        or entry.get("isRequestable")
+        or product.get("requestable")
+        or product.get("isRequestable")
+        or metadata.get("requestable")
+    )
+    is_active = _coerce_bool(
+        entry.get("active")
+        or entry.get("isActive")
+        or product.get("active")
+        or product.get("isActive")
+        or metadata.get("active")
+    )
+    is_inactive = _coerce_bool(
+        entry.get("inactive")
+        or entry.get("isInactive")
+        or product.get("inactive")
+        or product.get("isInactive")
+        or metadata.get("inactive")
+    )
+    status_upper = str(status).upper() if status else ""
+    if is_active is None and status_upper == "ACTIVE":
+        is_active = True
+    if is_inactive is None and status_upper == "INACTIVE":
+        is_inactive = True
     item: ItemDict = {
         "product_id": product_id,
         "title": name,
@@ -212,6 +254,10 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
         "thc_unit": thc_unit,
         "cbd": cbd,
         "cbd_unit": cbd_unit,
+        "requestable": requestable,
+        "is_active": is_active,
+        "is_inactive": is_inactive,
+        "status": status,
         "image_url": image_url,
         "brand_logo_url": brand_logo_url,
     }

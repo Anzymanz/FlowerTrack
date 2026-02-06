@@ -24,6 +24,10 @@ class Item:
     thc_unit: Optional[str] = None
     cbd: Optional[float] = None
     cbd_unit: Optional[str] = None
+    requestable: Optional[bool] = None
+    is_active: Optional[bool] = None
+    is_inactive: Optional[bool] = None
+    status: Optional[str] = None
     price_delta: Optional[float] = None
     is_new: bool = False
     is_removed: bool = False
@@ -48,6 +52,10 @@ class ItemDict(TypedDict, total=False):
     thc_unit: Optional[str]
     cbd: Optional[float]
     cbd_unit: Optional[str]
+    requestable: Optional[bool]
+    is_active: Optional[bool]
+    is_inactive: Optional[bool]
+    status: Optional[str]
     price_delta: Optional[float]
     is_new: bool
     is_removed: bool
@@ -97,6 +105,10 @@ def item_from_dict(data: dict) -> Item:
         thc_unit=data.get("thc_unit"),
         cbd=data.get("cbd"),
         cbd_unit=data.get("cbd_unit"),
+        requestable=data.get("requestable"),
+        is_active=data.get("is_active"),
+        is_inactive=data.get("is_inactive"),
+        status=data.get("status"),
         price_delta=data.get("price_delta"),
         is_new=bool(data.get("is_new", False)),
         is_removed=bool(data.get("is_removed", False)),
