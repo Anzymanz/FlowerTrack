@@ -513,14 +513,26 @@ def export_html(data, path, fetch_images=False):
     if history_path and history_path.exists():
         try:
             lines = history_path.read_text(encoding="utf-8").splitlines()
-            for line in lines[-200:]:
+            for line in lines[-50:]:
                 line = line.strip()
                 if not line:
                     continue
                 try:
                     entry = json.loads(line)
                     if isinstance(entry, dict):
-                        history_entries.append(entry)
+                        trimmed = dict(entry)
+                        for key in (
+                            "new_items",
+                            "removed_items",
+                            "price_changes",
+                            "stock_changes",
+                            "out_of_stock_changes",
+                            "restock_changes",
+                        ):
+                            items = trimmed.get(key)
+                            if isinstance(items, list) and len(items) > 50:
+                                trimmed[key] = items[:50]
+                        history_entries.append(trimmed)
                 except Exception:
                     history_entries.append({"_raw": line})
         except Exception:

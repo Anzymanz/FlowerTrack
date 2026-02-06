@@ -347,6 +347,9 @@ let changesData = [];
 try {
     const rawChangesB64 = "__CHANGES_JSON_B64__";
     if (rawChangesB64 && rawChangesB64 !== "__CHANGES_JSON_B64__") {
+        if (rawChangesB64.length > 200000) {
+            throw new Error("History payload too large for inline decode.");
+        }
         const bytes = Uint8Array.from(atob(rawChangesB64), c => c.charCodeAt(0));
         const decoded = new TextDecoder().decode(bytes);
         changesData = JSON.parse(decoded) || [];
