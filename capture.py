@@ -649,7 +649,7 @@ class CaptureWorker:
             # Short wait for form/UI to render.
             time.sleep(3)
             try:
-                self.callbacks["capture_log"]("Auth missing; launching browser to refresh token...")
+                self.callbacks["capture_log"]("Auth bootstrap: attempting login...")
             except Exception:
                 pass
             try:
