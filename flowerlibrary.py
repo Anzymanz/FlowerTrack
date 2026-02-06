@@ -302,7 +302,8 @@ class FlowerLibraryApp:
         self.apply_theme()
         self._prepare_toplevel(window)
         self._set_window_titlebar_dark(window, self.is_dark.get())
-        self.root.after(80, lambda w=window: self._set_window_titlebar_dark(w, self.is_dark.get()))
+        window.after(80, lambda w=window: self._set_window_titlebar_dark(w, self.is_dark.get()))
+        window.bind("<Map>", lambda _evt, w=window: self._set_window_titlebar_dark(w, self.is_dark.get()))
 
         container = ttk.Frame(window, padding=12)
         container.pack(fill="both", expand=True)
@@ -509,6 +510,7 @@ class FlowerLibraryApp:
             window.lift()
             window.update_idletasks()
             self._set_window_titlebar_dark(window, self.is_dark.get())
+            window.after(80, lambda w=window: self._set_window_titlebar_dark(w, self.is_dark.get()))
         except Exception:
             try:
                 self._set_window_titlebar_dark(window, self.is_dark.get())
