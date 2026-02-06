@@ -26,6 +26,9 @@ HTML_TEMPLATE = """
   --muted: #555;
 }
 body{background:var(--bg);color:var(--fg);font-family:Arial;padding:16px;margin:0;transition:background .2s ease,color .2s ease}
+.export-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+.export-header h1{margin:0 0 4px 0}
+.export-pill{padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--panel);color:var(--muted);font-size:12px;white-space:nowrap}
 .controls{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
 .controls-inner{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .controls-right{margin-left:auto;display:flex;gap:8px;align-items:center}
@@ -669,13 +672,19 @@ applyTheme(saved === 'light');
         }
     } catch (e) {}
     const meta = document.getElementById('exportMeta');
-    if (meta) {
+    const pill = document.getElementById('exportPill');
+    if (meta || pill) {
         const ts = document.body.getAttribute('data-exported') || '';
         const count = document.body.getAttribute('data-count') || '';
-        const parts = [];
-        if (count) parts.push(`${count} items`);
-        if (ts) parts.push(`Updated ${ts}`);
-        meta.textContent = parts.join(' • ');
+        if (meta) {
+            const parts = [];
+            if (count) parts.push(`${count} items`);
+            if (ts) parts.push(`Updated ${ts}`);
+            meta.textContent = parts.join(' • ');
+        }
+        if (pill) {
+            pill.textContent = ts ? `Updated ${ts}` : 'Updated —';
+        }
     }
     buildBrandMenu();
     document.addEventListener('click', closeBrandMenu);
@@ -683,8 +692,13 @@ applyTheme(saved === 'light');
 });
 </script>
 </head><body>
-<h1>Available Medical Cannabis</h1>
-<div class="small" id="exportMeta"></div>
+<div class="export-header">
+  <div>
+    <h1>Available Medical Cannabis</h1>
+    <div class="small" id="exportMeta"></div>
+  </div>
+  <div class="export-pill" id="exportPill">Updated —</div>
+</div>
 <div class='controls'>
   <div class='controls-inner'>
     <button class='sort-btn' data-sort="price" onclick="sortCards('price', this)">Price</button>
