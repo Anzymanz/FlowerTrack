@@ -44,6 +44,31 @@ class ConfigTests(unittest.TestCase):
             self.assertEqual(config.decrypt_secret(scraper.get("password")), "secret-pass")
             self.assertEqual(config.decrypt_secret(scraper.get("ha_token")), "ha-token")
 
+    def test_load_unified_migrates_plaintext_secrets(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "config.json"
+            raw = config._default_unified_config()
+            raw["scraper"]["username"] = "plain-user"
+            raw["scraper"]["password"] = "plain-pass"
+            raw["scraper"]["ha_token"] = "plain-token"
+            path.write_text(json.dumps(raw), encoding="utf-8")
+            cfg = config.load_unified_config(
+                path,
+                decrypt_scraper_keys=["username", "password", "ha_token"],
+                write_back=True,
+            )
+            self.assertEqual(cfg["scraper"]["username"], "plain-user")
+            self.assertEqual(cfg["scraper"]["password"], "plain-pass")
+            self.assertEqual(cfg["scraper"]["ha_token"], "plain-token")
+            stored = json.loads(path.read_text(encoding="utf-8"))
+            scraper = stored.get("scraper", {})
+            self.assertNotEqual(scraper.get("username"), "plain-user")
+            self.assertNotEqual(scraper.get("password"), "plain-pass")
+            self.assertNotEqual(scraper.get("ha_token"), "plain-token")
+            self.assertEqual(config.decrypt_secret(scraper.get("username")), "plain-user")
+            self.assertEqual(config.decrypt_secret(scraper.get("password")), "plain-pass")
+            self.assertEqual(config.decrypt_secret(scraper.get("ha_token")), "plain-token")
+
 
 if __name__ == "__main__":
     unittest.main()

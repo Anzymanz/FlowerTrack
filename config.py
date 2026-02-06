@@ -68,6 +68,25 @@ def encrypt_secret(value: str) -> str:
     return str(value)
 
 
+def _is_encrypted_secret(value: str) -> bool:
+    if not value:
+        return False
+    try:
+        raw = base64.b64decode(str(value).encode("utf-8"), validate=True)
+    except Exception:
+        return False
+    try:
+        dec = _dpapi_decrypt(raw)
+    except Exception:
+        return False
+    return dec is not None
+
+
+def _secret_needs_encryption(value: str) -> bool:
+    if not value:
+        return False
+    return not _is_encrypted_secret(value)
+
 def decrypt_secret(value: str) -> str:
     try:
         if not value:
@@ -487,6 +506,13 @@ def load_unified_config(
         for key, value in legacy_tracker.items():
             unified_raw["tracker"].setdefault(key, value)
 
+    secrets_need_migration = False
+    if "scraper" in unified_raw and decrypt_scraper_keys:
+        for key in decrypt_scraper_keys:
+            if _secret_needs_encryption(unified_raw["scraper"].get(key, "")):
+                secrets_need_migration = True
+                break
+
     if "scraper" in unified_raw:
         for key in decrypt_scraper_keys:
             if key in unified_raw["scraper"]:
@@ -495,6 +521,8 @@ def load_unified_config(
     prev_version = raw.get("version") if is_unified else None
     unified = _normalize_unified_config(unified_raw)
     needs_migration = (not is_unified) or (prev_version != SCHEMA_VERSION)
+    if secrets_need_migration:
+        needs_migration = True
     if legacy_tracker or legacy_scraper or legacy_library:
         needs_migration = True
     if write_back and (not path.exists() or needs_migration):
