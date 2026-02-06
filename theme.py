@@ -75,6 +75,7 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
     )
     style.configure("TEntry", fieldbackground=ctrl_bg, foreground=fg, insertcolor=fg)
     style.map("TEntry", fieldbackground=[("readonly", ctrl_bg)], foreground=[("readonly", fg)])
+    style.configure("TSpinbox", fieldbackground=ctrl_bg, foreground=fg, insertcolor=fg)
     style.configure("TNotebook", background=bg, bordercolor=ctrl_bg)
     style.configure(
         "TNotebook.Tab",
@@ -252,7 +253,7 @@ def apply_rounded_buttons(style: ttk.Style, colors: dict, radius: int = 8) -> No
         )
     except Exception:
         pass
-    style.configure("TButton", padding=(4, 2))
+    style.configure("TButton", padding=(0, 0))
     cache = getattr(style, "_rounded_button_images", None)
     if cache is None:
         cache = {}

@@ -300,8 +300,8 @@ class FlowerLibraryApp:
         self.windows.append(window)
         self.apply_theme()
         self._prepare_toplevel(window)
-        set_titlebar_dark(window, self.is_dark.get())
-        window.after(50, lambda w=window: set_titlebar_dark(w, self.is_dark.get()))
+        self._set_window_titlebar_dark(window, self.is_dark.get())
+        self.root.after(80, lambda w=window: self._set_window_titlebar_dark(w, self.is_dark.get()))
 
         container = ttk.Frame(window, padding=12)
         container.pack(fill="both", expand=True)
@@ -492,7 +492,7 @@ class FlowerLibraryApp:
         """Schedule dark title bar for all tracked windows after they are realized."""
         for window in list(self.windows):
             try:
-                set_titlebar_dark(window, self.is_dark.get())
+                self._set_window_titlebar_dark(window, self.is_dark.get())
             except Exception:
                 continue
 
@@ -503,16 +503,39 @@ class FlowerLibraryApp:
             window.configure(bg=getattr(self, "current_base_color", "#121212"))
             window.update_idletasks()
             self._place_window_at_pointer(window)
-            set_titlebar_dark(window, self.is_dark.get())
+            self._set_window_titlebar_dark(window, self.is_dark.get())
             window.deiconify()
             window.lift()
             window.update_idletasks()
-            set_titlebar_dark(window, self.is_dark.get())
+            self._set_window_titlebar_dark(window, self.is_dark.get())
         except Exception:
             try:
-                set_titlebar_dark(window, self.is_dark.get())
+                self._set_window_titlebar_dark(window, self.is_dark.get())
             except Exception:
                 pass
+
+    def _set_window_titlebar_dark(self, window, enable: bool) -> None:
+        """On Windows 10/11, ask DWM for a dark title bar to match the theme."""
+        if os.name != "nt":
+            return
+        try:
+            hwnd = window.winfo_id()
+            get_parent = ctypes.windll.user32.GetParent
+            parent = get_parent(hwnd)
+            while parent:
+                hwnd = parent
+                parent = get_parent(hwnd)
+            value = ctypes.c_int(1 if enable else 0)
+            DWMWA_USE_IMMERSIVE_DARK_MODE = 20
+            DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19
+            if ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)
+            ) != 0:
+                ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                    hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value)
+                )
+        except Exception:
+            pass
 
     def _place_window_at_pointer(self, win: Toplevel) -> None:
         """Place window with its top-left near the current mouse pointer."""
