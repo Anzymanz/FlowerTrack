@@ -103,14 +103,32 @@ def save_last_parse(path: Path, items: list[dict]) -> None:
         _log_storage_error(f"save_last_parse failed: {exc}")
 
 
-def append_change_log(path: Path, record: dict) -> None:
-    """Append a single change record to the ndjson log."""
+def append_change_log(path: Path, record: dict, max_entries: int | None = None) -> None:
+    """Append a single change record to the ndjson log, optionally trimming older entries."""
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(record, ensure_ascii=False) + "\n")
     except Exception as exc:
         _log_storage_error(f"append_change_log failed: {exc}")
+        return
+    if max_entries and max_entries > 0:
+        _trim_change_log(path, max_entries)
+
+
+def _trim_change_log(path: Path, max_entries: int) -> None:
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except Exception as exc:
+        _log_storage_error(f"change log trim read failed for {path}: {exc}")
+        return
+    if len(lines) <= max_entries:
+        return
+    keep = lines[-max_entries:]
+    try:
+        _atomic_write_text(path, "\n".join(keep) + "\n")
+    except Exception as exc:
+        _log_storage_error(f"change log trim write failed for {path}: {exc}")
 
 
 def load_last_change(path: Path) -> str | None:

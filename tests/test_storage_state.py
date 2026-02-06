@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from storage import load_last_parse, save_last_parse, load_last_change, save_last_change, load_last_scrape, save_last_scrape
+from storage import load_last_parse, save_last_parse, load_last_change, save_last_change, load_last_scrape, save_last_scrape, append_change_log
 from scraper_state import read_scraper_state, write_scraper_state, update_scraper_state
 
 
@@ -46,6 +46,15 @@ class StorageStateTests(unittest.TestCase):
             path = Path(tmp) / "last_change.txt"
             save_last_change(path, "change")
             self.assertEqual(load_last_change(path), "change")
+
+    def test_change_log_trim(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "changes.ndjson"
+            for idx in range(5):
+                append_change_log(path, {"timestamp": str(idx)}, max_entries=3)
+            lines = path.read_text(encoding="utf-8").splitlines()
+            self.assertEqual(len(lines), 3)
+            self.assertTrue(lines[0].endswith("\"2\"}"))
 
     def test_last_scrape_roundtrip(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -5,6 +5,7 @@ import json
 import os
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
+from tkinter import simpledialog
 from pathlib import Path
 from datetime import datetime
 from theme import set_titlebar_dark, apply_rounded_buttons
@@ -48,6 +49,8 @@ class HistoryViewer(tk.Toplevel):
         top.pack(fill="x")
         ttk.Label(top, text="changes.ndjson viewer", font=("", 10, "bold")).pack(side="left")
         ttk.Button(top, text="Refresh", command=self._refresh).pack(side="right")
+        ttk.Button(top, text="Clear history", command=self._clear_history).pack(side="right", padx=(6, 0))
+        ttk.Button(top, text="Trim history", command=self._trim_history_prompt).pack(side="right", padx=(6, 0))
 
         filter_frame = ttk.Frame(self, padding=(10, 0, 10, 8))
         filter_frame.pack(fill="x")
@@ -574,6 +577,62 @@ class HistoryViewer(tk.Toplevel):
             os.startfile(str(folder))  # type: ignore[attr-defined]
         except Exception:
             messagebox.showerror("Open Folder", "Could not open log folder.")
+
+    def _clear_history(self) -> None:
+        if not self.log_path.exists():
+            messagebox.showinfo("Clear History", "No history log file found.")
+            return
+        if not messagebox.askyesno(
+            "Clear History",
+            "Delete all change history entries? This cannot be undone.",
+        ):
+            return
+        try:
+            self.log_path.unlink()
+        except Exception:
+            messagebox.showerror("Clear History", "Could not delete the history file.")
+            return
+        self.records = []
+        self.filtered = []
+        self._refresh_tree()
+        self.detail_text.configure(state="normal")
+        self.detail_text.delete("1.0", "end")
+        self.detail_text.configure(state="disabled")
+        messagebox.showinfo("Clear History", "History cleared.")
+
+    def _trim_history_prompt(self) -> None:
+        if not self.log_path.exists():
+            messagebox.showinfo("Trim History", "No history log file found.")
+            return
+        value = simpledialog.askinteger(
+            "Trim History",
+            "Keep the most recent N entries:",
+            minvalue=1,
+            maxvalue=5000,
+            initialvalue=1000,
+        )
+        if value is None:
+            return
+        self._trim_history(value)
+
+    def _trim_history(self, keep: int) -> None:
+        try:
+            lines = self.log_path.read_text(encoding="utf-8").splitlines()
+        except Exception:
+            messagebox.showerror("Trim History", "Could not read the history file.")
+            return
+        if len(lines) <= keep:
+            messagebox.showinfo("Trim History", "History already within the requested size.")
+            return
+        trimmed = lines[-keep:]
+        try:
+            self.log_path.write_text("\n".join(trimmed) + "\n", encoding="utf-8")
+        except Exception:
+            messagebox.showerror("Trim History", "Could not write the trimmed history file.")
+            return
+        self._load_records()
+        self._apply_filter()
+        messagebox.showinfo("Trim History", f"Trimmed history to {keep} entries.")
 
 
 def open_history_window(parent, log_path: Path) -> HistoryViewer:

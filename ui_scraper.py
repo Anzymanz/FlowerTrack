@@ -1147,7 +1147,7 @@ class App(tk.Tk):
                 "out_of_stock_changes": log_out_of_stock_change_compact,
                 "restock_changes": log_restock_change_compact,
             }
-            append_change_log(CHANGES_LOG_FILE, log_record)
+            append_change_log(CHANGES_LOG_FILE, log_record, max_entries=2000)
         except Exception as exc:
             debug_log(f"Suppressed exception: {exc}")
         headers = {
