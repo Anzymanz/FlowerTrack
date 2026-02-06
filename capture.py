@@ -16,6 +16,7 @@ from typing import Callable, Dict, Literal, Optional, TypedDict
 
 from net_utils import make_ssl_context
 from config import encrypt_secret, decrypt_secret
+from storage import save_api_latest
 
 _Playwright = None
 
@@ -700,7 +701,7 @@ class CaptureWorker:
                                 dump_dir.mkdir(parents=True, exist_ok=True)
                                 try:
                                     latest_path = dump_dir / "api_latest.json"
-                                    latest_path.write_text(json.dumps(api_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
+                                    save_api_latest(latest_path, api_payloads)
                                 except Exception as exc:
                                     self.callbacks["capture_log"](f"API latest write failed: {exc}")
                                 if self.cfg.get("dump_api_json"):
@@ -1327,7 +1328,7 @@ class CaptureWorker:
                                         self._persist_auth_cache(api_payloads)
                                         try:
                                             latest_path = dump_dir / "api_latest.json"
-                                            latest_path.write_text(json.dumps(api_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
+                                            save_api_latest(latest_path, api_payloads)
                                         except Exception as exc:
                                             self.callbacks["capture_log"](f"API latest write failed: {exc}")
                                         if endpoint_summaries and stamp:

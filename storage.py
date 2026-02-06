@@ -40,6 +40,14 @@ def _atomic_write_json(path: Path, data) -> None:
     _atomic_write_text(path, json.dumps(data, ensure_ascii=False, indent=2))
 
 
+def save_api_latest(path: Path, payloads: list[dict]) -> None:
+    """Persist latest API payloads atomically."""
+    try:
+        _atomic_write_json(path, payloads)
+    except Exception as exc:
+        _log_storage_error(f"save_api_latest failed: {exc}")
+
+
 def _read_text_with_backup(path: Path) -> str | None:
     try:
         if path.exists():
