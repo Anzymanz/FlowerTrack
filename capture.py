@@ -1689,6 +1689,11 @@ def install_playwright_browsers(app_dir: Path, log: Callable[[str], None]) -> bo
         if getattr(sys, "frozen", False):
             playwright_cmd = shutil.which("playwright")
             if not playwright_cmd:
+                base = Path(sys.executable).resolve().parent
+                candidate = base / "playwright.exe"
+                if candidate.exists():
+                    playwright_cmd = str(candidate)
+            if not playwright_cmd:
                 log("Playwright CLI not found; cannot install browsers in frozen build.")
                 return False
             cmd = [playwright_cmd, "install", "chromium"]
