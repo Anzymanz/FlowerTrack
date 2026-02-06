@@ -109,6 +109,7 @@ class UiScraperTests(unittest.TestCase):
                 self.cap_notify_detail = _Var("full")
                 self.minimize_to_tray = _Var(False)
                 self.close_to_tray = _Var(False)
+                self.scraper_log_hidden_height = 222
                 self.settings_window = None
                 self.scraper_settings_geometry = "560x960"
 
@@ -126,6 +127,7 @@ class UiScraperTests(unittest.TestCase):
             cfg["quiet_hours_interval_seconds"],
             ui_scraper.DEFAULT_CAPTURE_CONFIG["quiet_hours_interval_seconds"],
         )
+        self.assertEqual(cfg["log_window_hidden_height"], 222)
         self.assertTrue(any("Invalid interval_seconds" in msg for msg in logs))
 
 

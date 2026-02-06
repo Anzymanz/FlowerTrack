@@ -11,6 +11,8 @@ class ConfigTests(unittest.TestCase):
         cfg = config._validate_capture_config({})
         self.assertIn("quiet_hours_interval_seconds", cfg)
         self.assertEqual(cfg["quiet_hours_interval_seconds"], config.DEFAULT_CAPTURE_CONFIG["quiet_hours_interval_seconds"])
+        self.assertIn("log_window_hidden_height", cfg)
+        self.assertEqual(cfg["log_window_hidden_height"], config.DEFAULT_CAPTURE_CONFIG["log_window_hidden_height"])
 
     def test_validate_capture_non_dict(self):
         cfg = config._validate_capture_config(None)

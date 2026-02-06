@@ -28,6 +28,9 @@ class ExportTests(unittest.TestCase):
             self.assertTrue(path.exists())
             text = path.read_text(encoding="utf-8")
             self.assertIn("Strain", text)
+            self.assertIn("loadMoreSentinel", text)
+            self.assertIn("const VISIBLE_STEP = 30", text)
+            self.assertIn("loading='lazy'", text)
 
 
 if __name__ == "__main__":
