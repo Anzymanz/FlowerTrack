@@ -348,6 +348,7 @@ const rawChangesJson = __CHANGES_JSON__;
 let changesData = null;
 let changesError = "";
 let historyLoaded = false;
+let historyLoading = false;
 function decodeBase64Utf8(b64) {
     if (!b64) return "";
     const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
@@ -382,17 +383,32 @@ function ensureChangesData() {
     return changesData;
 }
 async function preloadHistory() {
-    if (historyLoaded) return;
-    historyLoaded = true;
-    if (ensureChangesData().length) return;
+    if (historyLoaded || historyLoading) return;
+    historyLoading = true;
+    if (ensureChangesData().length) {
+        historyLoaded = true;
+        historyLoading = false;
+        return;
+    }
     try {
         const resp = await fetch('changes_latest.json', { cache: 'no-store' });
-        if (!resp.ok) return;
+        if (!resp.ok) {
+            changesError = `History fetch failed (${resp.status}).`;
+            historyLoaded = true;
+            historyLoading = false;
+            return;
+        }
         const data = await resp.json();
         if (Array.isArray(data)) {
             changesData = data;
         }
-    } catch (e) {}
+        historyLoaded = true;
+        historyLoading = false;
+    } catch (e) {
+        changesError = e ? String(e) : "History fetch failed.";
+        historyLoaded = true;
+        historyLoading = false;
+    }
 }
 function refreshBasketButtons() {
     document.querySelectorAll('.card').forEach(card => {
@@ -512,6 +528,7 @@ async function toggleHistory() {
         });
         document.body.appendChild(modal);
     }
+    renderHistoryModal();
     await preloadHistory();
     renderHistoryModal();
     modal.style.display = 'flex';
@@ -562,7 +579,9 @@ function renderHistoryModal() {
         const summary = historySummary(rec);
         return `<div class='history-item' data-idx='${idx}'><strong>${ts}</strong><div class='small'>${summary}</div></div>`;
     }).join("");
-    const emptyNote = changesError ? `History unavailable: ${changesError}` : "No history entries found.";
+    const emptyNote = historyLoading
+        ? "Loading history..."
+        : (changesError ? `History unavailable: ${changesError}` : "No history entries found.");
     modal.innerHTML = `
       <div class='history-panel'>
         <div class='history-header'>
