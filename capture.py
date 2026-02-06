@@ -1687,16 +1687,21 @@ def install_playwright_browsers(app_dir: Path, log: Callable[[str], None]) -> bo
         env = os.environ.copy()
         env["PLAYWRIGHT_BROWSERS_PATH"] = env_path
         if getattr(sys, "frozen", False):
-            playwright_cmd = shutil.which("playwright")
-            if not playwright_cmd:
-                base = Path(sys.executable).resolve().parent
-                candidate = base / "playwright.exe"
-                if candidate.exists():
-                    playwright_cmd = str(candidate)
-            if not playwright_cmd:
-                log("Playwright CLI not found; cannot install browsers in frozen build.")
-                return False
-            cmd = [playwright_cmd, "install", "chromium"]
+            # In frozen builds, prefer the Python used to run this EXE (if available) to run playwright install.
+            py_cmd = os.environ.get("PYTHON_EXECUTABLE") or os.environ.get("PYTHON_EXE")
+            if py_cmd and os.path.exists(py_cmd):
+                cmd = [py_cmd, "-m", "playwright", "install", "chromium"]
+            else:
+                playwright_cmd = shutil.which("playwright")
+                if not playwright_cmd:
+                    base = Path(sys.executable).resolve().parent
+                    candidate = base / "playwright.exe"
+                    if candidate.exists():
+                        playwright_cmd = str(candidate)
+                if not playwright_cmd:
+                    log("Playwright CLI not found; cannot install browsers in frozen build.")
+                    return False
+                cmd = [playwright_cmd, "install", "chromium"]
         else:
             cmd = [sys.executable, "-m", "playwright", "install", "chromium"]
         try:
