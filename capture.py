@@ -1690,11 +1690,25 @@ def install_playwright_browsers(app_dir: Path, log: Callable[[str], None]) -> bo
                 log("Installing Playwright browser via embedded installer...")
                 import playwright.__main__ as pw_main  # type: ignore
                 prev_argv = list(sys.argv)
-                sys.argv = ["playwright", "install", "chromium"]
-                try:
-                    pw_main.main()
-                finally:
-                    sys.argv = prev_argv
+                done = {"ok": False, "err": None}
+                def _run_install():
+                    try:
+                        sys.argv = ["playwright", "install", "chromium"]
+                        pw_main.main()
+                        done["ok"] = True
+                    except Exception as exc:
+                        done["err"] = exc
+                    finally:
+                        sys.argv = prev_argv
+                t = threading.Thread(target=_run_install, daemon=True)
+                t.start()
+                t.join(timeout=1200)
+                if t.is_alive():
+                    log("Playwright install timed out.")
+                    return False
+                if done["err"] is not None:
+                    log(f"Playwright install failed: {done['err']}")
+                    return False
                 log(f"Playwright browser installed to {env_path}.")
                 return True
             except Exception as exc:
