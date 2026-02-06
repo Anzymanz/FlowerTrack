@@ -537,12 +537,18 @@ def export_html(data, path, fetch_images=False):
                     history_entries.append({"_raw": line})
         except Exception:
             history_entries = []
+    history_json = "[]"
+    history_b64 = ""
     try:
         history_json = json.dumps(history_entries, ensure_ascii=False)
         history_b64 = base64.b64encode(history_json.encode("utf-8")).decode("ascii")
     except Exception:
+        history_json = "[]"
         history_b64 = ""
+    # Avoid closing the script tag when embedding raw JSON.
+    history_json_safe = history_json.replace("</", "<\\/")
     html_text = html_text.replace("__CHANGES_JSON_B64__", history_b64)
+    html_text = html_text.replace("__CHANGES_JSON__", history_json_safe)
     in_stock = 0
     low_stock = 0
     out_stock = 0

@@ -344,6 +344,7 @@ let basketCount = 0;
 let basket = new Map();
 const DELIVERY_FEE = 4.99;
 const rawChangesB64 = "__CHANGES_JSON_B64__";
+const rawChangesJson = __CHANGES_JSON__;
 let changesData = null;
 let changesError = "";
 function decodeBase64Utf8(b64) {
@@ -373,6 +374,9 @@ function ensureChangesData() {
     } catch (e) {
         changesError = e ? String(e) : "Failed to decode history data.";
         changesData = [];
+    }
+    if ((!changesData || !changesData.length) && rawChangesJson && Array.isArray(rawChangesJson)) {
+        changesData = rawChangesJson;
     }
     return changesData;
 }
