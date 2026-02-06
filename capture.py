@@ -770,7 +770,7 @@ class CaptureWorker:
                             if rtype in ("xhr", "fetch"):
                                 if url and len(xhr_urls) < 50:
                                     xhr_urls.append(url)
-                            wants_data = any(tok in url for tok in ("formulary", "rpc-api", "entity-api", "api"))
+                            wants_data = any(tok in url for tok in ("formulary", "rpc-api", "entity-api", "api", "auth", "oauth", "token"))
                             if not wants_data and "json" not in ctype and rtype not in ("xhr", "fetch"):
                                 return
                             data = None
