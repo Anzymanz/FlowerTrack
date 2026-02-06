@@ -734,6 +734,13 @@ class CaptureWorker:
                                         self.callbacks["capture_log"](f"Saved API dump: {api_path}")
                                     except Exception as exc:
                                         self.callbacks["capture_log"](f"API dump failed: {exc}")
+                                if self.cfg.get("dump_api_full"):
+                                    try:
+                                        full_path = dump_dir / f"api_dump_full_{stamp}.json"
+                                        full_path.write_text(json.dumps(api_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
+                                        self.callbacks["capture_log"](f"Saved full API dump: {full_path}")
+                                    except Exception as exc:
+                                        self.callbacks["capture_log"](f"Full API dump failed: {exc}")
                             self.callbacks["apply_text"]("")
                         except Exception as exc:
                             self._safe_log(f"API capture apply failed: {exc}")
@@ -1348,7 +1355,7 @@ class CaptureWorker:
                                 except Exception:
                                     dump_dir = None
                                     data_dir = None
-                                if self.cfg.get("dump_capture_html") or self.cfg.get("dump_api_json"):
+                                if self.cfg.get("dump_capture_html") or self.cfg.get("dump_api_json") or self.cfg.get("dump_api_full"):
                                     stamp = time.strftime("%Y%m%d_%H%M%S")
                                 if dump_dir:
                                     if not api_payloads:
