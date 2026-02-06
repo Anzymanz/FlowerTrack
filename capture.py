@@ -141,6 +141,19 @@ class CaptureWorker:
         appdata = Path(os.getenv("APPDATA", os.path.expanduser("~")))
         return appdata / "FlowerTrack" / "data" / "api_auth.json"
 
+    def _save_auth_cache(self, auth: dict) -> None:
+        try:
+            data = dict(auth)
+            if data.get("token"):
+                data["token"] = encrypt_secret(str(data["token"]))
+            if data.get("refresh_token"):
+                data["refresh_token"] = encrypt_secret(str(data["refresh_token"]))
+            path = self._auth_cache_path()
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        except Exception as exc:
+            self._safe_log(f"Auth cache write failed: {exc}")
+
     def _decode_jwt_payload(self, token: str) -> dict:
         try:
             raw = token.strip()
@@ -297,6 +310,47 @@ class CaptureWorker:
         except Exception:
             return False
 
+    def _refresh_auth_token(self) -> bool:
+        auth = self._load_auth_cache()
+        if not auth:
+            return False
+        refresh_token = auth.get("refresh_token")
+        rpc_host = auth.get("rpc_host")
+        if not refresh_token or not rpc_host:
+            return False
+        url = f"https://{rpc_host}/auth/initialize"
+        headers = {
+            "authorization": f"Bearer {refresh_token}",
+            "accept": "application/json",
+        }
+        user_agent = auth.get("user_agent")
+        if user_agent:
+            headers["user-agent"] = str(user_agent)
+        ssl_ctx = make_ssl_context()
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=20, context=ssl_ctx) as resp:
+                body = resp.read()
+            data = json.loads(body.decode("utf-8"))
+        except Exception as exc:
+            self._safe_log(f"Refresh token request failed: {exc}")
+            return False
+        if not isinstance(data, dict):
+            return False
+        tokens = data.get("tokens") or {}
+        access = tokens.get("accessToken")
+        refresh = tokens.get("refreshToken") or refresh_token
+        if not access:
+            return False
+        auth["token"] = f"Bearer {access}"
+        auth["refresh_token"] = refresh
+        auth["captured_at"] = datetime.now(timezone.utc).isoformat()
+        try:
+            self._save_auth_cache(auth)
+        except Exception:
+            pass
+        return True
+
     def _auth_cache_valid(self) -> bool:
         auth = self._load_auth_cache()
         if not auth:
@@ -318,7 +372,11 @@ class CaptureWorker:
             return None
         token = auth.get("token")
         if not token or self._auth_is_expired(str(token)):
-            return None
+            if self._refresh_auth_token():
+                auth = self._load_auth_cache() or auth
+                token = auth.get("token")
+            else:
+                return None
         rpc_host = auth.get("rpc_host")
         patient_id = auth.get("patient_id")
         pharmacy_id = auth.get("pharmacy_id")
@@ -751,6 +809,11 @@ class CaptureWorker:
                             self.callbacks["capture_log"]("Auth cache missing/expired; attempting bootstrap.")
                         except Exception:
                             pass
+                        if self._last_auth_error:
+                            if self._refresh_auth_token():
+                                api_payloads = self._direct_api_capture()
+                                if api_payloads:
+                                    pass
                         bootstrap_payloads = self._bootstrap_auth_with_playwright()
                         if bootstrap_payloads:
                             try:
