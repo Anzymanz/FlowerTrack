@@ -47,6 +47,42 @@ class TestParser(unittest.TestCase):
         self.assertAlmostEqual(item.get("cbd") or 0, 1.0)
         self.assertEqual(item.get("cbd_unit"), "%")
 
+    def test_parse_api_payloads_flags_and_type(self):
+        payloads = [
+            {
+                "url": "https://api.example.com/formulary-products?take=1",
+                "data": [
+                    {
+                        "productId": 555,
+                        "name": "Example Cartridge",
+                        "status": "INACTIVE",
+                        "requestable": "true",
+                        "product": {
+                            "brand": {"name": "Brand Co"},
+                            "cannabisSpecification": {
+                                "strainName": "Cartridge Strain",
+                                "strainType": "Sativa",
+                                "format": "Cartridge",
+                                "size": 1,
+                                "volumeUnit": "ML",
+                            },
+                        },
+                        "pricingOptions": {
+                            "STANDARD": {"price": 20.0, "totalAvailability": 0}
+                        },
+                    }
+                ],
+            }
+        ]
+        items = parse_api_payloads(payloads)
+        self.assertEqual(len(items), 1)
+        item = items[0]
+        self.assertEqual(item.get("product_type"), "vape")
+        self.assertEqual(item.get("requestable"), True)
+        self.assertEqual(item.get("is_inactive"), True)
+        self.assertEqual(item.get("stock_status"), "OUT OF STOCK")
+        self.assertAlmostEqual(item.get("ml") or 0, 1.0)
+
     def test_identity_key_ignores_price(self):
         base = {
             "product_id": "ABC123",

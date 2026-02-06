@@ -21,6 +21,20 @@ class NotificationFormatTests(unittest.TestCase):
         body = self.svc.format_windows_body(payload, summary="Summary", detail="summary")
         self.assertEqual(body, "New items detected")
 
+    def test_format_windows_summary_multiple(self):
+        payload = {
+            "new_item_summaries": ["A"],
+            "removed_item_summaries": ["B"],
+            "price_change_summaries": ["C"],
+            "stock_change_summaries": ["D"],
+        }
+        body = self.svc.format_windows_body(payload, summary="Summary", detail="summary")
+        self.assertIn("New items detected", body)
+        self.assertIn("Removed items detected", body)
+        self.assertIn("Price changes detected", body)
+        self.assertIn("Stock changes detected", body)
+        self.assertIn(" | ", body)
+
     def test_format_windows_full(self):
         payload = {
             "new_item_summaries": ["A"],
@@ -37,6 +51,12 @@ class NotificationFormatTests(unittest.TestCase):
         self.assertIn("Stock:", body)
         self.assertIn("Out:", body)
         self.assertIn("Restock:", body)
+
+    def test_join_truncates(self):
+        parts = [f"Item{i}" for i in range(50)]
+        text = self.svc._join(parts, max_len=60)
+        self.assertTrue(len(text) <= 60)
+        self.assertTrue(text.endswith("..."))
 
 
 if __name__ == "__main__":

@@ -35,6 +35,30 @@ class TestExports(unittest.TestCase):
         self.assertEqual(_flag_cdn_url("CAN"), "https://flagcdn.com/24x18/ca.png")
         self.assertIsNone(_flag_cdn_url("ZZZ"))
 
+    def test_export_contains_filter_attributes(self):
+        data = [
+            {
+                "producer": "Prod",
+                "brand": "Brand",
+                "strain": "Strain",
+                "product_type": "flower",
+                "grams": 3.0,
+                "price": 12.0,
+                "requestable": True,
+                "is_active": False,
+                "is_inactive": True,
+                "status": "INACTIVE",
+            }
+        ]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_path = Path(tmpdir) / "out.html"
+            export_html(data, out_path, fetch_images=False)
+            html = out_path.read_text(encoding="utf-8")
+        self.assertIn("data-requestable='1'", html)
+        self.assertIn("data-active='0'", html)
+        self.assertIn("data-inactive='1'", html)
+        self.assertIn("data-status='INACTIVE'", html)
+
 
 if __name__ == "__main__":
     unittest.main()
