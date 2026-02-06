@@ -606,8 +606,23 @@ class CaptureWorker:
             try:
                 browser = p.chromium.launch(headless=self.cfg.get("headless", True))
             except Exception as exc:
-                self._safe_log(f"Auth bootstrap browser launch failed: {exc}")
-                return None
+                attempted_install = False
+                if self.install_fn and not attempted_install:
+                    attempted_install = True
+                    try:
+                        self.callbacks["capture_log"]("Playwright browser missing; attempting download...")
+                    except Exception:
+                        pass
+                    if self.install_fn():
+                        try:
+                            browser = p.chromium.launch(headless=self.cfg.get("headless", True))
+                        except Exception as exc2:
+                            self._safe_log(f"Auth bootstrap browser launch failed after install: {exc2}")
+                    else:
+                        self._safe_log("Playwright install failed; cannot launch browser.")
+                if browser is None:
+                    self._safe_log(f"Auth bootstrap browser launch failed: {exc}")
+                    return None
             try:
                 self.callbacks["capture_log"]("Auth bootstrap: browser launched.")
             except Exception:

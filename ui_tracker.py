@@ -1854,13 +1854,36 @@ class CannabisTracker:
         except Exception as exc:
             messagebox.showerror("Import failed", f"Could not import backup:\n{exc}")
             return
+        self._reload_after_backup()
+        messagebox.showinfo("Import complete", "Backup imported successfully.")
+    def _reload_after_backup(self) -> None:
         self._load_config()
-        self.load_data()
-        self._refresh_stock()
-        self._refresh_log()
+        try:
+            cfg = load_tracker_config(Path(TRACKER_CONFIG_FILE))
+            if isinstance(cfg, dict) and "dark_mode" in cfg:
+                self.dark_var.set(bool(cfg.get("dark_mode", True)))
+        except Exception:
+            pass
+        try:
+            self.load_data()
+        except Exception:
+            pass
+        try:
+            self.apply_theme(self.dark_var.get())
+        except Exception:
+            pass
+        try:
+            self._apply_scraper_controls_visibility()
+            self._apply_roa_visibility()
+        except Exception:
+            pass
+        try:
+            self._refresh_stock()
+            self._refresh_log()
+        except Exception:
+            pass
         self._update_data_path_label()
         self._update_library_path_label()
-        messagebox.showinfo("Import complete", "Backup imported successfully.")
     def _write_backup_zip(self, zip_path: Path) -> int:
         app_dir = Path(APP_DIR)
         data_dir = app_dir / "data"
