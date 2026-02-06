@@ -14,7 +14,7 @@ import threading
 from pathlib import Path
 from datetime import datetime, timezone
 from queue import Queue, Empty
-from capture import ensure_browser_available, install_playwright_browsers, start_capture_worker
+from capture import ensure_browser_available, install_playwright_browsers, start_capture_worker, CaptureWorker
 from exports import export_html_auto, init_exports, set_exports_dir
 from export_server import start_export_server as srv_start_export_server, stop_export_server as srv_stop_export_server
 from ui_settings import open_settings_window
@@ -142,6 +142,7 @@ class App(tk.Tk):
         ttk.Button(btns, text="Open browser", command=self.open_latest_export).pack(side="left", padx=5)
         ttk.Button(btns, text="History", command=self._open_history_window).pack(side="left", padx=5)
         ttk.Button(btns, text="Settings", command=self._open_settings_window).pack(side="left", padx=5)
+        ttk.Button(btns, text="Clear Auth Cache", command=self._clear_auth_cache).pack(side="left", padx=5)
         self.progress = ttk.Progressbar(self, mode="determinate")
         self.progress.pack(fill="x", padx=10, pady=5)
         self.status = ttk.Label(self, text="Idle")
@@ -1632,6 +1633,23 @@ class App(tk.Tk):
         update_scraper_state(SCRAPER_STATE_FILE, last_change=None, last_scrape=None)
         self.status.config(text="Cache cleared")
         messagebox.showinfo("Cleared", "Cache cleared (including previous parse and logs).")
+    def _clear_auth_cache(self) -> None:
+        if self.capture_thread and self.capture_thread.is_alive():
+            messagebox.showwarning("Auth Cache", "Stop auto-capture before clearing auth cache.")
+            return
+        try:
+            worker = CaptureWorker.__new__(CaptureWorker)
+            worker.app_dir = APP_DIR
+            worker.callbacks = {"capture_log": self._log_console}
+            cleared = worker.clear_auth_cache()
+        except Exception as exc:
+            self._log_console(f"Auth cache clear failed: {exc}")
+            cleared = False
+        if cleared:
+            self._log_console("Auth cache cleared; next capture will bootstrap auth.")
+            messagebox.showinfo("Auth Cache", "Auth cache cleared; next capture will re-authenticate.")
+        else:
+            messagebox.showinfo("Auth Cache", "No auth cache found to clear.")
     def _set_busy_ui(self, busy, message=None):
         try:
             if busy:

@@ -141,6 +141,16 @@ class CaptureWorker:
         appdata = Path(os.getenv("APPDATA", os.path.expanduser("~")))
         return appdata / "FlowerTrack" / "data" / "api_auth.json"
 
+    def clear_auth_cache(self) -> bool:
+        path = self._auth_cache_path()
+        try:
+            if path.exists():
+                path.unlink()
+                return True
+        except Exception as exc:
+            self._safe_log(f"Auth cache clear failed: {exc}")
+        return False
+
     def _save_auth_cache(self, auth: dict) -> None:
         try:
             data = dict(auth)

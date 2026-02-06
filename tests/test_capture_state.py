@@ -1,5 +1,6 @@
 import base64
 import json
+import tempfile
 import unittest
 
 from capture import CaptureStateMachine, CaptureWorker
@@ -25,6 +26,19 @@ class CaptureStateTests(unittest.TestCase):
         self.assertEqual(decoded.get("exp"), 123)
         decoded_bearer = worker._decode_jwt_payload(f"Bearer {token}")
         self.assertEqual(decoded_bearer.get("sub"), "user")
+
+    def test_clear_auth_cache_removes_file(self):
+        worker = CaptureWorker.__new__(CaptureWorker)
+        with tempfile.TemporaryDirectory() as tmp:
+            worker.app_dir = tmp
+            worker.callbacks = {"capture_log": lambda _m: None}
+            path = worker._auth_cache_path()
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('{"token":"x"}', encoding="utf-8")
+            self.assertTrue(path.exists())
+            cleared = worker.clear_auth_cache()
+            self.assertTrue(cleared)
+            self.assertFalse(path.exists())
 
 
 if __name__ == "__main__":
