@@ -395,6 +395,9 @@ function renderBasketModal(show) {
         modal = document.createElement('div');
         modal.id = 'basketModal';
         modal.className = 'basket-modal';
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeBasket();
+        });
         document.body.appendChild(modal);
     }
     const rows = [];
