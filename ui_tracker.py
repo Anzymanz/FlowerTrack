@@ -11,6 +11,7 @@ import ctypes
 import subprocess
 import shutil
 import tempfile
+import zipfile
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 import importlib.util
@@ -1799,6 +1800,115 @@ class CannabisTracker:
         self.library_data_path = path
         self._save_config()
         self._update_library_path_label()
+    def _settings_export_backup(self) -> None:
+        backups_dir = Path(APP_DIR) / "backups"
+        try:
+            backups_dir.mkdir(parents=True, exist_ok=True)
+        except Exception as exc:
+            messagebox.showerror("Backup failed", f"Could not create backup folder:\n{exc}")
+            return
+        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        zip_path = backups_dir / f"flowertrack-backup-{stamp}.zip"
+        try:
+            count = self._write_backup_zip(zip_path)
+        except Exception as exc:
+            messagebox.showerror("Backup failed", f"Could not create backup:\n{exc}")
+            return
+        messagebox.showinfo("Backup created", f"Saved {count} files to:\n{zip_path}")
+    def _settings_import_backup(self) -> None:
+        backups_dir = Path(APP_DIR) / "backups"
+        path = filedialog.askopenfilename(
+            title="Import FlowerTrack backup",
+            filetypes=[("Zip files", "*.zip"), ("All files", "*.*")],
+            initialdir=str(backups_dir) if backups_dir.exists() else ".",
+        )
+        if not path:
+            return
+        if not os.path.exists(path):
+            messagebox.showerror("Not found", "Selected backup file does not exist.")
+            return
+        if not messagebox.askyesno(
+            "Import backup",
+            "Importing will overwrite existing settings and data.\n\nContinue?",
+        ):
+            return
+        confirmation = simpledialog.askstring(
+            "Type CONFIRM",
+            "Type CONFIRM to overwrite existing data:",
+        )
+        if confirmation != "CONFIRM":
+            messagebox.showinfo("Import cancelled", "Backup import cancelled.")
+            return
+        try:
+            self._restore_backup_zip(Path(path))
+        except Exception as exc:
+            messagebox.showerror("Import failed", f"Could not import backup:\n{exc}")
+            return
+        self._load_config()
+        self.load_data()
+        self._refresh_stock()
+        self._refresh_log()
+        self._update_data_path_label()
+        self._update_library_path_label()
+        messagebox.showinfo("Import complete", "Backup imported successfully.")
+    def _write_backup_zip(self, zip_path: Path) -> int:
+        app_dir = Path(APP_DIR)
+        data_dir = app_dir / "data"
+        logs_dir = app_dir / "logs"
+        config_path = Path(TRACKER_CONFIG_FILE)
+        changes_path = logs_dir / "changes.ndjson"
+        paths = set()
+        if data_dir.exists():
+            for path in data_dir.rglob("*"):
+                if path.is_file():
+                    paths.add(path)
+        if config_path.exists():
+            paths.add(config_path)
+        if changes_path.exists():
+            paths.add(changes_path)
+        # Include current tracker/library files if they live outside the app data dir.
+        for extra in (Path(self.data_path), Path(self.library_data_path)):
+            try:
+                if extra.exists() and app_dir not in extra.parents:
+                    paths.add(extra)
+            except Exception:
+                pass
+        with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+            for path in sorted(paths):
+                try:
+                    if app_dir in path.parents:
+                        arcname = path.relative_to(app_dir)
+                    else:
+                        arcname = Path("external") / path.name
+                    zf.write(path, arcname.as_posix())
+                except Exception:
+                    pass
+        return len(paths)
+    def _restore_backup_zip(self, zip_path: Path) -> None:
+        app_dir = Path(APP_DIR)
+        data_dir = app_dir / "data"
+        logs_dir = app_dir / "logs"
+        tmp_dir = Path(tempfile.mkdtemp(prefix="ft-backup-"))
+        try:
+            with zipfile.ZipFile(zip_path, "r") as zf:
+                zf.extractall(tmp_dir)
+            src_data = tmp_dir / "data"
+            src_config = tmp_dir / Path(TRACKER_CONFIG_FILE).name
+            src_changes = tmp_dir / "logs" / "changes.ndjson"
+            if src_data.exists():
+                if data_dir.exists():
+                    shutil.rmtree(data_dir, ignore_errors=True)
+                shutil.copytree(src_data, data_dir)
+            if src_config.exists():
+                shutil.copy2(src_config, Path(TRACKER_CONFIG_FILE))
+            if src_changes.exists():
+                logs_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src_changes, logs_dir / "changes.ndjson")
+        finally:
+            try:
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+            except Exception:
+                pass
     def _settings_open_data_folder(self) -> None:
         data_dir = Path(self.data_path).parent if self.data_path else Path(APP_DIR) / "data"
         try:

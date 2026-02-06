@@ -156,26 +156,16 @@ def open_tracker_settings(app) -> None:
     sep_row = roa_row + len(app.roa_options)
     ttk.Separator(frame, orient="horizontal").grid(row=sep_row, column=0, columnspan=4, sticky="ew", pady=(10, 6))
     ttk.Label(frame, text="Data settings", font=app.font_bold_small).grid(row=sep_row + 1, column=0, sticky="w", pady=(0, 6))
-    lbl_data_file = ttk.Label(frame, text="Log data file")
-    lbl_data_file.grid(row=sep_row + 2, column=0, sticky="w")
-    ttk.Button(frame, text="Browse..", command=app._settings_choose_data).grid(
-        row=sep_row + 2, column=1, sticky="w", padx=(4, 0), pady=(2, 6)
-    )
-    ttk.Button(frame, text="Export..", command=app._settings_export_data).grid(
-        row=sep_row + 2, column=2, sticky="w", padx=(4, 0), pady=(2, 6)
-    )
-    lbl_library_file = ttk.Label(frame, text="Library data file")
-    lbl_library_file.grid(row=sep_row + 3, column=0, sticky="w", pady=(6, 0))
-    ttk.Button(frame, text="Browse..", command=app._settings_choose_library).grid(
-        row=sep_row + 3, column=1, sticky="w", padx=(4, 0), pady=(2, 0)
-    )
-    ttk.Button(frame, text="Export..", command=app._settings_export_library).grid(
-        row=sep_row + 3, column=2, sticky="w", padx=(4, 0), pady=(2, 0)
-    )
+    lbl_backup = ttk.Label(frame, text="Backup & restore")
+    lbl_backup.grid(row=sep_row + 2, column=0, sticky="w")
+    btn_backup_export = ttk.Button(frame, text="Export backup..", command=app._settings_export_backup)
+    btn_backup_export.grid(row=sep_row + 2, column=1, sticky="w", padx=(4, 0), pady=(2, 6))
+    btn_backup_import = ttk.Button(frame, text="Import backup..", command=app._settings_import_backup)
+    btn_backup_import.grid(row=sep_row + 2, column=2, sticky="w", padx=(4, 0), pady=(2, 6))
 
     app.open_data_folder_btn = ttk.Button(frame, text="Open data folder", command=app._settings_open_data_folder)
     app.open_data_folder_btn.grid(
-        row=sep_row + 4, column=1, columnspan=2, sticky="w", padx=(4, 0), pady=(6, 0)
+        row=sep_row + 3, column=1, columnspan=2, sticky="w", padx=(4, 0), pady=(2, 0)
     )
 
     ttk.Separator(frame, orient="horizontal").grid(row=sep_row + 6, column=0, columnspan=4, sticky="ew", pady=(10, 6))
@@ -245,8 +235,8 @@ def open_tracker_settings(app) -> None:
     app._bind_tooltip(app.daily_target_cbd_entry, "Daily CBD target in grams used to compute CBD remaining/used today.")
     app._bind_tooltip(lbl_avg_days, "Number of days to average for days-left calculations (0 = all time).")
     app._bind_tooltip(app.avg_usage_days_entry, "Number of days to average for days-left calculations (0 = all time).")
-    app._bind_tooltip(lbl_data_file, "Location of your tracker data file.")
-    app._bind_tooltip(lbl_library_file, "Location of your flower library data file.")
+    app._bind_tooltip(lbl_backup, "Export/import a full backup of settings and data.")
+    app._bind_tooltip(btn_backup_import, "Importing will overwrite existing data after confirmation.")
     app._bind_tooltip(app.open_data_folder_btn, "Open the data folder in File Explorer.")
     app._bind_tooltip(app.scraper_controls_check, "Show the scraper button, browser button, and status dot in the main window.")
     app._bind_tooltip(app.scraper_status_icon_check, "Show the scraper status dot in the main window.")
