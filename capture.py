@@ -9,6 +9,7 @@ import urllib.request
 import urllib.error
 import threading
 import subprocess
+import shutil
 from threading import Event
 import time
 from dataclasses import dataclass
@@ -1685,7 +1686,14 @@ def install_playwright_browsers(app_dir: Path, log: Callable[[str], None]) -> bo
         env_path = os.environ.get("PLAYWRIGHT_BROWSERS_PATH", str(app_dir / "pw-browsers"))
         env = os.environ.copy()
         env["PLAYWRIGHT_BROWSERS_PATH"] = env_path
-        cmd = [sys.executable, "-m", "playwright", "install", "chromium"]
+        if getattr(sys, "frozen", False):
+            playwright_cmd = shutil.which("playwright")
+            if not playwright_cmd:
+                log("Playwright CLI not found; cannot install browsers in frozen build.")
+                return False
+            cmd = [playwright_cmd, "install", "chromium"]
+        else:
+            cmd = [sys.executable, "-m", "playwright", "install", "chromium"]
         try:
             proc = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=1200)
         except subprocess.TimeoutExpired:
