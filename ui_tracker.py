@@ -1865,6 +1865,13 @@ class CannabisTracker:
         except Exception:
             pass
         try:
+            if not self.data_path or not os.path.exists(self.data_path):
+                self.data_path = str(TRACKER_DATA_FILE)
+            if not self.library_data_path or not os.path.exists(self.library_data_path):
+                self.library_data_path = str(TRACKER_LIBRARY_FILE)
+        except Exception:
+            pass
+        try:
             self.load_data()
         except Exception:
             pass
