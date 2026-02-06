@@ -60,8 +60,8 @@ body{background:var(--bg);color:var(--fg);font-family:Arial;padding:16px;margin:
 .range-slider input[type=range]{position:absolute;left:0;right:0;top:50%;transform:translateY(-54%);height:36px;width:100%;margin:0;background:transparent;pointer-events:none;-webkit-appearance:none;appearance:none;z-index:5}
 .range-slider input.range-max{z-index:6}
 .range-slider input.range-min{z-index:7}
-.range-slider input[type=range]::-webkit-slider-thumb{pointer-events:auto;position:relative;z-index:10;margin-top:-6px}
-.range-slider input[type=range]::-moz-range-thumb{pointer-events:auto;position:relative;z-index:10;top:-4px}
+.range-slider input[type=range]::-webkit-slider-thumb{pointer-events:auto;position:relative;z-index:10;margin-top:-5px}
+.range-slider input[type=range]::-moz-range-thumb{pointer-events:auto;position:relative;z-index:10;top:-3px}
 .range-slider input[type=range]::-webkit-slider-runnable-track{height:6px;background:transparent;border-radius:999px}
 .range-slider input[type=range]::-moz-range-track{height:6px;background:transparent;border-radius:999px}
 .range-label{font-size:12px;color:var(--muted)}
