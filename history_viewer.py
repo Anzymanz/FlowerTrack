@@ -50,12 +50,27 @@ class HistoryViewer(tk.Toplevel):
 
         filter_frame = ttk.Frame(self, padding=(10, 0, 10, 8))
         filter_frame.pack(fill="x")
-        ttk.Label(filter_frame, text="Filter").pack(side="left")
+        ttk.Label(filter_frame, text="Quick search (brand/strain)").pack(side="left")
         self.filter_var = tk.StringVar(value="")
         self.filter_entry = ttk.Entry(filter_frame, textvariable=self.filter_var)
         self.filter_entry.pack(side="left", fill="x", expand=True, padx=(6, 6))
         ttk.Button(filter_frame, text="Clear", command=self._clear_filter).pack(side="right")
         self.filter_entry.bind("<KeyRelease>", lambda _e: self._apply_filter())
+
+        date_frame = ttk.Frame(self, padding=(10, 0, 10, 8))
+        date_frame.pack(fill="x")
+        ttk.Label(date_frame, text="Date range (YYYY-MM-DD)").pack(side="left")
+        self.start_date_var = tk.StringVar(value="")
+        self.end_date_var = tk.StringVar(value="")
+        self.start_entry = ttk.Entry(date_frame, textvariable=self.start_date_var, width=12)
+        self.start_entry.pack(side="left", padx=(6, 4))
+        ttk.Label(date_frame, text="to").pack(side="left")
+        self.end_entry = ttk.Entry(date_frame, textvariable=self.end_date_var, width=12)
+        self.end_entry.pack(side="left", padx=(4, 6))
+        ttk.Button(date_frame, text="Apply", command=self._apply_filter).pack(side="left")
+        ttk.Button(date_frame, text="Clear dates", command=self._clear_dates).pack(side="left", padx=(6, 0))
+        self.start_entry.bind("<KeyRelease>", lambda _e: self._apply_filter())
+        self.end_entry.bind("<KeyRelease>", lambda _e: self._apply_filter())
 
         body = ttk.Frame(self, padding=10)
         body.pack(fill="both", expand=True)
@@ -274,6 +289,15 @@ class HistoryViewer(tk.Toplevel):
         except Exception:
             return str(raw)
 
+    def _date_for(self, record: dict):
+        raw = record.get("timestamp") if isinstance(record, dict) else None
+        if not raw:
+            return None
+        try:
+            return datetime.fromisoformat(raw.replace("Z", "+00:00")).date()
+        except Exception:
+            return None
+
     def _format_list(self, title: str, items: list[str]) -> list[str]:
         if not items:
             return []
@@ -338,14 +362,48 @@ class HistoryViewer(tk.Toplevel):
             return f"{label}: stock changed"
         return f"{label}: {before} -> {after}"
 
+    def _search_text_for(self, record: dict) -> str:
+        if "_raw" in record:
+            return str(record.get("_raw", "")).lower()
+        values: list[str] = []
+        for key in (
+            "new_items",
+            "removed_items",
+            "price_changes",
+            "stock_changes",
+            "out_of_stock_changes",
+            "restock_changes",
+        ):
+            entries = record.get(key) or []
+            if not isinstance(entries, list):
+                continue
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                for field in ("brand", "strain", "label", "producer", "product_id"):
+                    val = entry.get(field)
+                    if val:
+                        values.append(str(val))
+                label = self._item_label(entry)
+                if label:
+                    values.append(label)
+        return " ".join(values).lower()
+
     def _apply_filter(self) -> None:
         text = self.filter_var.get().strip().lower()
+        start_date = self._parse_date(self.start_date_var.get().strip())
+        end_date = self._parse_date(self.end_date_var.get().strip())
         self.filtered = []
         for rec in self.records:
+            rec_date = self._date_for(rec)
+            if start_date and (rec_date is None or rec_date < start_date):
+                continue
+            if end_date and (rec_date is None or rec_date > end_date):
+                continue
             if not text:
                 self.filtered.append(rec)
                 continue
-            hay = json.dumps(rec, ensure_ascii=False).lower()
+            hay = self._search_text_for(rec)
             if text in hay:
                 self.filtered.append(rec)
         self._refresh_tree()
@@ -365,6 +423,19 @@ class HistoryViewer(tk.Toplevel):
     def _clear_filter(self) -> None:
         self.filter_var.set("")
         self._apply_filter()
+
+    def _clear_dates(self) -> None:
+        self.start_date_var.set("")
+        self.end_date_var.set("")
+        self._apply_filter()
+
+    def _parse_date(self, value: str):
+        if not value:
+            return None
+        try:
+            return datetime.strptime(value, "%Y-%m-%d").date()
+        except Exception:
+            return None
 
     def _selected_record(self) -> dict | None:
         sel = self.tree.selection()
