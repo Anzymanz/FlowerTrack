@@ -519,7 +519,7 @@ function historyDetails(rec) {
     section("Stock changes", rec.stock_changes, (it) => `${label(it)}: ${it.stock_before} -> ${it.stock_after}`);
     section("Out of stock", rec.out_of_stock_changes, (it) => `${label(it)}: ${it.stock_before} -> ${it.stock_after}`);
     section("Restocks", rec.restock_changes, (it) => `${label(it)}: ${it.stock_before} -> ${it.stock_after}`);
-    return lines.join("\n");
+    return lines.join("\\n");
 }
 function renderHistoryModal() {
     const modal = document.getElementById('historyModal');
