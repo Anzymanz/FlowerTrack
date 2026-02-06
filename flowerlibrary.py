@@ -144,6 +144,13 @@ class FlowerLibraryApp:
             insertcolor=cursor,
         )
         self.style.configure(
+            "TSpinbox",
+            background=entry_bg,
+            foreground=text_color,
+            fieldbackground=entry_bg,
+            insertcolor=cursor,
+        )
+        self.style.configure(
             "Treeview",
             background=base,
             fieldbackground=base,
@@ -294,6 +301,7 @@ class FlowerLibraryApp:
         self.apply_theme()
         self._prepare_toplevel(window)
         set_titlebar_dark(window, self.is_dark.get())
+        window.after(50, lambda w=window: set_titlebar_dark(w, self.is_dark.get()))
 
         container = ttk.Frame(window, padding=12)
         container.pack(fill="both", expand=True)
