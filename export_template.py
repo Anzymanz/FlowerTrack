@@ -54,7 +54,7 @@ body{background:var(--bg);color:var(--fg);font-family:Arial;padding:16px;margin:
 .badge-new{position:absolute;top:6px;right:6px;left:auto;display:inline-block;padding:2px 8px;border-radius:999px;background:var(--accent);color:var(--bg);font-size:11px;font-weight:700;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis}
 .badge-removed{position:absolute;top:6px;right:6px;left:auto;display:inline-block;padding:2px 8px;border-radius:999px;background:#c0392b;color:#fff;font-size:11px;font-weight:700;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis}
 .range-group{display:flex;flex-direction:column;gap:4px;margin:4px 0}
-.range-line{display:flex;align-items:center;gap:3px;min-width:140px;position:relative;padding-top:14px;padding-bottom:6px}
+.range-line{display:flex;align-items:center;gap:3px;min-width:140px;position:relative;padding-top:14px;padding-bottom:0}
 .range-slider{position:relative;flex:1;min-width:120px;height:36px}
 .range-slider::before{content:"";position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:6px;background:var(--border);border-radius:999px;z-index:1}
 .range-slider input[type=range]{position:absolute;left:0;right:0;top:50%;transform:translateY(-54%);height:36px;width:100%;margin:0;background:transparent;pointer-events:none;-webkit-appearance:none;appearance:none;z-index:5}
