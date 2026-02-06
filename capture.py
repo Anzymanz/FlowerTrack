@@ -127,6 +127,7 @@ class CaptureWorker:
         self._backoff_logged_for: int = 0
         self._last_auth_error: bool = False
         self._auth_bootstrap_failures: int = 0
+        self._auth_probe_failures: int = 0
 
     def _safe_log(self, msg: str) -> None:
         try:
@@ -831,6 +832,10 @@ class CaptureWorker:
                     self._set_status("running", "API capture running...")
                     api_payloads = self._direct_api_capture()
                     bootstrap_payloads = None
+                    if not api_payloads and self._auth_cache_valid() and not self._last_auth_error:
+                        self._auth_probe_failures += 1
+                    else:
+                        self._auth_probe_failures = 0
                     if not api_payloads and (self._last_auth_error or not self._auth_cache_valid()):
                         try:
                             self.callbacks["capture_log"]("Auth cache missing/expired; attempting bootstrap.")
@@ -856,6 +861,23 @@ class CaptureWorker:
                                 self.callbacks["capture_log"]("Auth bootstrap failed; retrying later.")
                             except Exception:
                                 pass
+                    if not api_payloads and self._auth_probe_failures:
+                        try:
+                            self.callbacks["capture_log"]("API capture returned no data; forcing auth bootstrap.")
+                        except Exception:
+                            pass
+                        bootstrap_payloads = self._bootstrap_auth_with_playwright()
+                        if bootstrap_payloads:
+                            try:
+                                self._persist_auth_cache(bootstrap_payloads)
+                            except Exception as exc:
+                                self._safe_log(f"Auth bootstrap persist failed: {exc}")
+                            api_payloads = self._direct_api_capture()
+                            if api_payloads:
+                                self._auth_bootstrap_failures = 0
+                                self._auth_probe_failures = 0
+                        else:
+                            self._auth_bootstrap_failures += 1
                     if api_payloads:
                         try:
                             # Persist auth cache and optionally dump data
