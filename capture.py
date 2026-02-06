@@ -6,6 +6,7 @@ import os
 import sys
 import urllib.parse
 import urllib.request
+import urllib.error
 import threading
 from threading import Event
 import time
@@ -123,6 +124,7 @@ class CaptureWorker:
         self.retry_attempts = self.retry_policy.retry_attempts
         self.scheduler = IntervalScheduler(self.callbacks["stop_event"], self.callbacks["responsive_wait"])
         self._backoff_logged_for: int = 0
+        self._last_auth_error: bool = False
 
     def _safe_log(self, msg: str) -> None:
         try:
@@ -279,6 +281,7 @@ class CaptureWorker:
         return True
 
     def _direct_api_capture(self) -> list[dict] | None:
+        self._last_auth_error = False
         auth = self._load_auth_cache()
         if not auth:
             return None
@@ -320,6 +323,14 @@ class CaptureWorker:
                         status = getattr(resp, "status", None) or resp.getcode()
                         body = resp.read()
                     return json.loads(body.decode("utf-8")), status
+                except urllib.error.HTTPError as exc:
+                    status = exc.code
+                    try:
+                        body = exc.read()
+                        data = json.loads(body.decode("utf-8"))
+                    except Exception:
+                        data = None
+                    return data, status
                 except Exception as exc:
                     self.callbacks["capture_log"](
                         f"API fetch failed (attempt {attempt}/{attempts}): {exc}"
@@ -337,6 +348,9 @@ class CaptureWorker:
         if not data_list_resp or not isinstance(data_list_resp[0], list):
             return None
         data_list, base_status = data_list_resp
+        if base_status in (401, 403):
+            self._last_auth_error = True
+            return None
         api_payloads.append({
             "url": base_url,
             "content_type": "application/json",
@@ -360,6 +374,9 @@ class CaptureWorker:
         count_status = None
         if count_resp and isinstance(count_resp[0], dict):
             count_data, count_status = count_resp
+            if count_status in (401, 403):
+                self._last_auth_error = True
+                return None
             total = count_data.get("count") or count_data.get("total")
         if total is None:
             total = len(data_list)
@@ -386,6 +403,9 @@ class CaptureWorker:
                     more_resp = _http_get_json(next_url)
                     if more_resp and isinstance(more_resp[0], list):
                         more, more_status = more_resp
+                        if more_status in (401, 403):
+                            self._last_auth_error = True
+                            return None
                         try:
                             status_txt = f" status={more_status}" if more_status is not None else ""
                             self.callbacks["capture_log"](f"API pagination fetch skip={skip}{status_txt}")
@@ -674,7 +694,7 @@ class CaptureWorker:
                 while not self.callbacks["stop_event"].is_set():
                     self._set_status("running", "API capture running...")
                     api_payloads = self._direct_api_capture()
-                    if not api_payloads and not self._auth_cache_valid():
+                    if not api_payloads and (self._last_auth_error or not self._auth_cache_valid()):
                         try:
                             self.callbacks["capture_log"]("Auth cache missing/expired; attempting bootstrap.")
                         except Exception:
