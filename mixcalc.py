@@ -6,7 +6,7 @@ from pathlib import Path
 from datetime import datetime
 import tkinter as tk
 from tkinter import ttk, messagebox
-from theme import apply_rounded_buttons
+from theme import apply_style_theme, apply_rounded_buttons, compute_colors, set_titlebar_dark
 import ctypes
 from config import load_tracker_config
 from resources import resource_path
@@ -464,35 +464,19 @@ def swap_items():
 
 
 def apply_theme(root, dark: bool):
-    bg = "#111" if dark else "#f7f7f7"
-    fg = "#eee" if dark else "#111"
-    ctrl_bg = "#222" if dark else "#e6e6e6"
-    accent = "#7cc7ff" if dark else "#0b79d0"
+    colors = compute_colors(dark)
+    bg = colors["bg"]
+    fg = colors["fg"]
+    ctrl_bg = colors["ctrl_bg"]
+    accent = colors["accent"]
     border = "#2a2a2a" if dark else "#cccccc"
     entry_bg = "#1a1a1a" if dark else "#ffffff"
     scroll = "#2b2b2b" if dark else "#dcdcdc"
     style = ttk.Style(root)
     try:
-        style.theme_use("clam")
+        apply_style_theme(style, colors)
     except Exception:
         pass
-    style.configure("TFrame", background=bg)
-    style.configure("TLabel", background=bg, foreground=fg)
-    style.configure(
-        "TButton",
-        background=ctrl_bg,
-        foreground=fg,
-        bordercolor=border,
-        focusthickness=1,
-        focuscolor=accent,
-        padding=4,
-    )
-    style.map(
-        "TButton",
-        background=[("active", accent), ("pressed", accent)],
-        foreground=[("active", bg if dark else "#fff"), ("pressed", bg if dark else "#fff")],
-    )
-    apply_rounded_buttons(style, {"bg": bg, "fg": fg, "ctrl_bg": ctrl_bg, "accent": accent})
     root.configure(bg=bg)
     style.configure(
         "TEntry",
@@ -553,7 +537,8 @@ def apply_theme(root, dark: bool):
         background=[("active", accent), ("!active", accent)],
         troughcolor=[("active", scroll), ("!active", scroll)],
     )
-    root.after(50, lambda: _set_window_titlebar_dark(root, dark))
+    apply_rounded_buttons(style, colors)
+    root.after(50, lambda: set_titlebar_dark(root, dark))
     return bg, fg
 
 
