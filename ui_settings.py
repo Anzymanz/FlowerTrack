@@ -32,11 +32,15 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         base_width, base_height = [int(x) for x in base_geometry.split("x", 1)]
     except ValueError:
         base_width, base_height = 560, 600
-    min_height = 720
+    min_height = 620
+    win.update_idletasks()
+    screen_height = max(win.winfo_screenheight() - 80, min_height)
+    max_height = min(screen_height, 1000)
     if base_height < min_height:
         base_height = min_height
-        base_geometry = f"{base_width}x{base_height}"
-        win.geometry(base_geometry)
+    if base_height > max_height:
+        base_height = max_height
+    win.geometry(f"{base_width}x{base_height}")
     try:
         icon_path = assets_dir / "icon.ico"
         if icon_path.exists():
@@ -48,9 +52,39 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         pass
     app.after(50, lambda: app._set_window_titlebar_dark(win, app.dark_mode_var.get()))
 
+    outer = ttk.Frame(win)
+    outer.pack(fill="both", expand=True)
+    canvas = tk.Canvas(outer, highlightthickness=0, borderwidth=0)
+    scroll = ttk.Scrollbar(outer, orient="vertical", command=canvas.yview)
+    canvas.configure(yscrollcommand=scroll.set)
+    scroll.pack(side="right", fill="y")
+    canvas.pack(side="left", fill="both", expand=True)
     # Scraper content (single tab)
-    scraper_tab = ttk.Frame(win, padding=8)
-    scraper_tab.pack(fill="both", expand=True, padx=8, pady=8)
+    scraper_tab = ttk.Frame(canvas, padding=8)
+    tab_window = canvas.create_window((0, 0), window=scraper_tab, anchor="nw")
+
+    def _sync_canvas_width(event=None):
+        try:
+            canvas.itemconfigure(tab_window, width=canvas.winfo_width())
+        except Exception:
+            pass
+
+    def _update_scrollregion(event=None):
+        try:
+            canvas.configure(scrollregion=canvas.bbox("all"))
+        except Exception:
+            pass
+
+    canvas.bind("<Configure>", _sync_canvas_width)
+    scraper_tab.bind("<Configure>", _update_scrollregion)
+
+    def _on_mousewheel(event):
+        try:
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        except Exception:
+            pass
+
+    canvas.bind_all("<MouseWheel>", _on_mousewheel)
     ttk.Label(
         scraper_tab,
         text="Configure how the scraper logs in, waits, and captures the page. "
@@ -179,8 +213,10 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     def _resize_to_content():
         win.update_idletasks()
         width = max(win.winfo_width(), base_width)
-        height = max(win.winfo_reqheight(), base_height)
+        desired = max(scraper_tab.winfo_reqheight() + 24, min_height)
+        height = min(desired, max_height)
         win.geometry(f"{width}x{height}")
+        _update_scrollregion()
 
     def toggle_advanced():
         if app.show_advanced_scraper.get():

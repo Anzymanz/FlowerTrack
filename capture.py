@@ -125,6 +125,7 @@ class CaptureWorker:
         self.scheduler = IntervalScheduler(self.callbacks["stop_event"], self.callbacks["responsive_wait"])
         self._backoff_logged_for: int = 0
         self._last_auth_error: bool = False
+        self._auth_bootstrap_failures: int = 0
 
     def _safe_log(self, msg: str) -> None:
         try:
@@ -846,7 +847,10 @@ class CaptureWorker:
                             except Exception as exc:
                                 self._safe_log(f"Auth bootstrap persist failed: {exc}")
                             api_payloads = self._direct_api_capture()
+                            if api_payloads:
+                                self._auth_bootstrap_failures = 0
                         else:
+                            self._auth_bootstrap_failures += 1
                             try:
                                 self.callbacks["capture_log"]("Auth bootstrap failed; retrying later.")
                             except Exception:
@@ -888,6 +892,14 @@ class CaptureWorker:
                     else:
                         self._set_status("retrying", "API capture failed; waiting before retry.")
                     interval = self.scheduler.next_interval(self.cfg["interval_seconds"], self.cfg)
+                    if self._auth_bootstrap_failures:
+                        backoff = min(300 * self._auth_bootstrap_failures, 900)
+                        if backoff > interval:
+                            interval = backoff
+                            try:
+                                self.callbacks["capture_log"](f"Auth bootstrap backoff: waiting {int(interval)}s.")
+                            except Exception:
+                                pass
                     if self.scheduler.wait(interval, label="Waiting for next capture"):
                         break
                 self._set_status("stopped")
