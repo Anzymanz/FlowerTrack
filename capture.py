@@ -745,6 +745,7 @@ class CaptureWorker:
                 while not self.callbacks["stop_event"].is_set():
                     self._set_status("running", "API capture running...")
                     api_payloads = self._direct_api_capture()
+                    bootstrap_payloads = None
                     if not api_payloads and (self._last_auth_error or not self._auth_cache_valid()):
                         try:
                             self.callbacks["capture_log"]("Auth cache missing/expired; attempting bootstrap.")
@@ -788,7 +789,8 @@ class CaptureWorker:
                                 if self.cfg.get("dump_api_full"):
                                     try:
                                         full_path = dump_dir / f"api_dump_full_{stamp}.json"
-                                        full_path.write_text(json.dumps(api_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
+                                        full_payloads = list(bootstrap_payloads or []) + list(api_payloads or [])
+                                        full_path.write_text(json.dumps(full_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
                                         self.callbacks["capture_log"](f"Saved full API dump: {full_path}")
                                     except Exception as exc:
                                         self.callbacks["capture_log"](f"Full API dump failed: {exc}")
