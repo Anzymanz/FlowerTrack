@@ -1647,16 +1647,22 @@ def install_playwright_browsers(app_dir: Path, log: Callable[[str], None]) -> bo
     """Attempt to download Playwright Chromium browsers."""
     try:
         log("Downloading Playwright browser (this may take a minute)...")
-        import playwright.__main__ as pw_main  # type: ignore
-
         env_path = os.environ.get("PLAYWRIGHT_BROWSERS_PATH", str(app_dir / "pw-browsers"))
-        os.environ["PLAYWRIGHT_BROWSERS_PATH"] = env_path
-        prev_argv = list(sys.argv)
-        sys.argv = ["playwright", "install", "chromium"]
+        env = os.environ.copy()
+        env["PLAYWRIGHT_BROWSERS_PATH"] = env_path
+        cmd = [sys.executable, "-m", "playwright", "install", "chromium"]
         try:
-            pw_main.main()
-        finally:
-            sys.argv = prev_argv
+            proc = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=1200)
+        except subprocess.TimeoutExpired:
+            log("Playwright install timed out.")
+            return False
+        if proc.returncode != 0:
+            tail = (proc.stderr or proc.stdout or "").strip().splitlines()[-6:]
+            if tail:
+                log("Playwright install failed: " + " | ".join(tail))
+            else:
+                log(f"Playwright install failed with code {proc.returncode}.")
+            return False
         log(f"Playwright browser installed to {env_path}.")
         return True
     except Exception as exc:
