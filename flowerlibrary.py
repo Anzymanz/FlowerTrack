@@ -119,6 +119,7 @@ class FlowerLibraryApp:
         entry_bg = colors["ctrl_bg"]
         text_color = colors["fg"]
         accent = colors["accent"]
+        border = colors["ctrl_bg"]
         selected_bg = colors["accent"]
         selected_fg = "#ffffff"
         cursor = text_color
