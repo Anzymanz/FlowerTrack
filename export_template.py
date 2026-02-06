@@ -650,6 +650,15 @@ applyTheme(saved === 'light');
     });
     const smallsBtn = document.querySelector('[data-filter-smalls]');
     if (smallsBtn) smallsBtn.classList.toggle('active', showSmalls);
+    const meta = document.getElementById('exportMeta');
+    if (meta) {
+        const ts = document.body.getAttribute('data-exported') || '';
+        const count = document.body.getAttribute('data-count') || '';
+        const parts = [];
+        if (count) parts.push(`${count} items`);
+        if (ts) parts.push(`Updated ${ts}`);
+        meta.textContent = parts.join(' • ');
+    }
     buildBrandMenu();
     document.addEventListener('click', closeBrandMenu);
     applyFilters();
@@ -657,6 +666,7 @@ applyTheme(saved === 'light');
 </script>
 </head><body>
 <h1>Available Medical Cannabis</h1>
+<div class="small" id="exportMeta"></div>
 <div class='controls'>
   <div class='controls-inner'>
     <button class='sort-btn' data-sort="price" onclick="sortCards('price', this)">Price</button>

@@ -502,6 +502,7 @@ def export_html(data, path, fetch_images=False):
         )
     cards_html = "".join(cards)
     html_text = HTML_TEMPLATE.replace("__CARDS__", cards_html)
+    html_text = html_text.replace("<body>", f"<body data-exported='{esc_attr(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}' data-count='{len(data)}'>")
     html_text = html_text.replace("{price_min_bound}", str(price_min_bound))
     html_text = html_text.replace("{price_max_bound}", str(price_max_bound))
     html_text = html_text.replace("{thc_min_bound}", str(thc_min_bound))
