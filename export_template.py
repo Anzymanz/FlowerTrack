@@ -345,20 +345,33 @@ let basket = new Map();
 const DELIVERY_FEE = 4.99;
 const rawChangesB64 = "__CHANGES_JSON_B64__";
 let changesData = null;
+let changesError = "";
+function decodeBase64Utf8(b64) {
+    if (!b64) return "";
+    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    if (typeof TextDecoder !== 'undefined') {
+        return new TextDecoder().decode(bytes);
+    }
+    let binary = "";
+    bytes.forEach(b => { binary += String.fromCharCode(b); });
+    return decodeURIComponent(escape(binary));
+}
 function ensureChangesData() {
     if (changesData !== null) return changesData;
     changesData = [];
+    changesError = "";
     try {
         if (!rawChangesB64 || rawChangesB64 === "__CHANGES_JSON_B64__") {
             return changesData;
         }
         if (rawChangesB64.length > 200000) {
+            changesError = "History payload too large for inline decode.";
             return changesData;
         }
-        const bytes = Uint8Array.from(atob(rawChangesB64), c => c.charCodeAt(0));
-        const decoded = new TextDecoder().decode(bytes);
+        const decoded = decodeBase64Utf8(rawChangesB64);
         changesData = JSON.parse(decoded) || [];
     } catch (e) {
+        changesError = e ? String(e) : "Failed to decode history data.";
         changesData = [];
     }
     return changesData;
@@ -530,6 +543,7 @@ function renderHistoryModal() {
         const summary = historySummary(rec);
         return `<div class='history-item' data-idx='${idx}'><strong>${ts}</strong><div class='small'>${summary}</div></div>`;
     }).join("");
+    const emptyNote = changesError ? `History unavailable: ${changesError}` : "No history entries found.";
     modal.innerHTML = `
       <div class='history-panel'>
         <div class='history-header'>
@@ -537,7 +551,7 @@ function renderHistoryModal() {
           <button class='btn-basket' onclick='closeHistory()'>Close</button>
         </div>
         <div style='display:flex;gap:10px;min-height:360px;'>
-          <div class='history-list' id='historyList'>${items || "<div class='small' style='padding:10px;'>No history entries found.</div>"}</div>
+          <div class='history-list' id='historyList'>${items || `<div class='small' style='padding:10px;'>${emptyNote}</div>`}</div>
           <div class='history-detail' id='historyDetail'>Select an entry to view details.</div>
         </div>
       </div>
