@@ -252,7 +252,7 @@ def apply_rounded_buttons(style: ttk.Style, colors: dict, radius: int = 8) -> No
         )
     except Exception:
         pass
-    style.configure("TButton", padding=(8, 4))
+    style.configure("TButton", padding=(6, 3))
     cache = getattr(style, "_rounded_button_images", None)
     if cache is None:
         cache = {}
