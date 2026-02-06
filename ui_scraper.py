@@ -190,10 +190,12 @@ class App(tk.Tk):
         self._playwright_available = None
         self.last_change_summary = "none"
         self._notify_throttle_last = {}
+        self._log_window_last_full_height = None
         self._build_capture_controls()
         # Tray behavior
         self.bind("<Unmap>", self._on_unmap)
         self.bind("<Map>", self._on_map)
+        self.bind("<Configure>", self._on_configure)
         self.apply_theme()
         self.after(2000, self._refresh_theme_from_config)
         self._apply_log_window_visibility()
@@ -225,6 +227,10 @@ class App(tk.Tk):
         self.cap_dump_api = tk.BooleanVar(value=bool(cfg.get("dump_api_json", False)))
         self.cap_dump_api_full = tk.BooleanVar(value=bool(cfg.get("dump_api_full", False)))
         self.cap_show_log_window = tk.BooleanVar(value=bool(cfg.get("show_log_window", True)))
+        try:
+            self.scraper_log_hidden_height = float(cfg.get("log_window_hidden_height", 260))
+        except Exception:
+            self.scraper_log_hidden_height = 260.0
         try:
             self.cap_show_log_window.trace_add("write", lambda *_: self._apply_log_window_visibility())
         except Exception:
@@ -305,6 +311,7 @@ class App(tk.Tk):
             "notify_removed_items": bool(self.notify_removed_items.get()),
             "notify_windows": bool(self.notify_windows.get()),
             "notify_throttle_minutes": dict(getattr(self, "notify_throttle_minutes", DEFAULT_CAPTURE_CONFIG["notify_throttle_minutes"])),
+            "log_window_hidden_height": float(getattr(self, "scraper_log_hidden_height", 260.0) or 260.0),
             "quiet_hours_enabled": bool(self.cap_quiet_hours_enabled.get()),
             "quiet_hours_start": self.cap_quiet_start.get(),
             "quiet_hours_end": self.cap_quiet_end.get(),
@@ -651,16 +658,31 @@ class App(tk.Tk):
                 if not self.console_frame.winfo_ismapped():
                     self.console_frame.pack(fill="both", expand=True, padx=10, pady=(0, 8), before=self.last_change_label)
                     self.update_idletasks()
-                    delta = self.console_frame.winfo_height() or self.console_frame.winfo_reqheight()
-                    if delta:
-                        self.geometry(f"{self.winfo_width()}x{current_height + int(delta)}")
+                    target_height = self._log_window_last_full_height
+                    if not target_height:
+                        delta = self.console_frame.winfo_height() or self.console_frame.winfo_reqheight()
+                        if delta:
+                            target_height = current_height + int(delta)
+                    if target_height:
+                        self.geometry(f"{self.winfo_width()}x{int(target_height)}")
             else:
                 if self.console_frame.winfo_ismapped():
-                    delta = self.console_frame.winfo_height() or self.console_frame.winfo_reqheight()
+                    self._log_window_last_full_height = current_height
                     self.console_frame.pack_forget()
                     self.update_idletasks()
-                    new_height = 260
-                    self.geometry(f"{self.winfo_width()}x{new_height}")
+                    hidden_height = int(getattr(self, "scraper_log_hidden_height", 260) or 260)
+                    self.geometry(f"{self.winfo_width()}x{hidden_height}")
+                    self.update_idletasks()
+                    self.scraper_log_hidden_height = self.winfo_height()
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
+
+    def _on_configure(self, _event=None) -> None:
+        try:
+            if hasattr(self, "cap_show_log_window") and not self.cap_show_log_window.get():
+                height = self.winfo_height()
+                if height:
+                    self.scraper_log_hidden_height = float(height)
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
     def _update_last_change(self, summary: str):
@@ -820,6 +842,10 @@ class App(tk.Tk):
         self.notify_new_items.set(cfg.get("notify_new_items", True))
         self.notify_removed_items.set(cfg.get("notify_removed_items", True))
         self.notify_windows.set(cfg.get("notify_windows", True))
+        try:
+            self.scraper_log_hidden_height = float(cfg.get("log_window_hidden_height", 260))
+        except Exception:
+            self.scraper_log_hidden_height = 260.0
         self.cap_quiet_hours_enabled.set(bool(cfg.get("quiet_hours_enabled", False)))
         self.cap_quiet_start.set(cfg.get("quiet_hours_start", "22:00"))
         self.cap_quiet_end.set(cfg.get("quiet_hours_end", "07:00"))

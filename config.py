@@ -103,6 +103,7 @@ DEFAULT_CAPTURE_CONFIG = {
         "out_of_stock": 5.0,
         "restock": 5.0,
     },
+    "log_window_hidden_height": 260.0,
     "quiet_hours_enabled": False,
     "quiet_hours_start": "22:00",
     "quiet_hours_end": "07:00",
@@ -362,6 +363,11 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["notify_throttle_minutes"] = _coerce_notify_throttle(
         raw.get("notify_throttle_minutes"),
         DEFAULT_CAPTURE_CONFIG["notify_throttle_minutes"],
+    )
+    cfg["log_window_hidden_height"] = _coerce_float(
+        raw.get("log_window_hidden_height"),
+        DEFAULT_CAPTURE_CONFIG["log_window_hidden_height"],
+        100.0,
     )
     cfg["quiet_hours_enabled"] = _coerce_bool(raw.get("quiet_hours_enabled"), DEFAULT_CAPTURE_CONFIG["quiet_hours_enabled"])
     cfg["quiet_hours_start"] = str(raw.get("quiet_hours_start") or DEFAULT_CAPTURE_CONFIG["quiet_hours_start"]).strip()
