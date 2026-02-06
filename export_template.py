@@ -345,7 +345,12 @@ let basket = new Map();
 const DELIVERY_FEE = 4.99;
 let changesData = [];
 try {
-    changesData = __CHANGES_JSON__ || [];
+    const rawChangesB64 = "__CHANGES_JSON_B64__";
+    if (rawChangesB64 && rawChangesB64 !== "__CHANGES_JSON_B64__") {
+        const bytes = Uint8Array.from(atob(rawChangesB64), c => c.charCodeAt(0));
+        const decoded = new TextDecoder().decode(bytes);
+        changesData = JSON.parse(decoded) || [];
+    }
 } catch (e) {
     changesData = [];
 }
