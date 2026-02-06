@@ -523,6 +523,10 @@ class FlowerLibraryApp:
             window.deiconify()
             window.lift()
             window.update_idletasks()
+            try:
+                window.update()
+            except Exception:
+                pass
             self._set_window_titlebar_dark(window, self.is_dark.get())
             self.root.after(50, lambda w=window: self._set_window_titlebar_dark(w, self.is_dark.get()))
             self.root.after(200, lambda w=window: self._set_window_titlebar_dark(w, self.is_dark.get()))
@@ -591,9 +595,9 @@ class FlowerLibraryApp:
             pass
 
     def _schedule_titlebar_updates(self, window) -> None:
-        for delay in (60, 200, 500, 900):
+        for delay in (60, 200, 500, 900, 1500):
             try:
-                self.root.after(delay, lambda w=window: self._apply_titlebar_for_window(w))
+                window.after(delay, lambda w=window: self._apply_titlebar_for_window(w))
             except Exception:
                 pass
 
