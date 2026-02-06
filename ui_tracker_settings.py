@@ -159,18 +159,18 @@ def open_tracker_settings(app) -> None:
     lbl_data_file = ttk.Label(frame, text="Log data file")
     lbl_data_file.grid(row=sep_row + 2, column=0, sticky="w")
     ttk.Button(frame, text="Browse..", command=app._settings_choose_data).grid(
-        row=sep_row + 2, column=1, sticky="w", padx=(4, 0)
+        row=sep_row + 2, column=1, sticky="w", padx=(4, 0), pady=(2, 6)
     )
     ttk.Button(frame, text="Export..", command=app._settings_export_data).grid(
-        row=sep_row + 2, column=2, sticky="w", padx=(4, 0)
+        row=sep_row + 2, column=2, sticky="w", padx=(4, 0), pady=(2, 6)
     )
     lbl_library_file = ttk.Label(frame, text="Library data file")
     lbl_library_file.grid(row=sep_row + 3, column=0, sticky="w", pady=(6, 0))
     ttk.Button(frame, text="Browse..", command=app._settings_choose_library).grid(
-        row=sep_row + 3, column=1, sticky="w", padx=(4, 0)
+        row=sep_row + 3, column=1, sticky="w", padx=(4, 0), pady=(2, 0)
     )
     ttk.Button(frame, text="Export..", command=app._settings_export_library).grid(
-        row=sep_row + 3, column=2, sticky="w", padx=(4, 0)
+        row=sep_row + 3, column=2, sticky="w", padx=(4, 0), pady=(2, 0)
     )
 
     app.open_data_folder_btn = ttk.Button(frame, text="Open data folder", command=app._settings_open_data_folder)
