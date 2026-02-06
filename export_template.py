@@ -681,10 +681,6 @@ applyTheme(saved === 'light');
     });
     const smallsBtn = document.querySelector('[data-filter-smalls]');
     if (smallsBtn) smallsBtn.classList.toggle('active', showSmalls);
-    const instockBtn = document.querySelector('[data-filter-instock]');
-    if (instockBtn) instockBtn.classList.toggle('active', showInStock);
-    const lowstockBtn = document.querySelector('[data-filter-lowstock]');
-    if (lowstockBtn) lowstockBtn.classList.toggle('active', showLowStock);
     const outstockBtn = document.querySelector('[data-filter-outstock]');
     if (outstockBtn) outstockBtn.classList.toggle('active', showOutOfStock);
     const meta = document.getElementById('exportMeta');
@@ -718,8 +714,6 @@ applyTheme(saved === 'light');
     <button class='btn-filter active' data-filter-strain="Hybrid" onclick="toggleStrain('Hybrid', this)">Hybrid</button>
     <button class='btn-filter' onclick="toggleFavorites(this)">Favorites</button>
     <button class='btn-filter active' data-filter-smalls="1" onclick="toggleSmalls(this)">Smalls</button>
-    <button class='btn-filter active' data-filter-instock="1" onclick="toggleInStock(this)">In stock</button>
-    <button class='btn-filter active' data-filter-lowstock="1" onclick="toggleLowStock(this)">Low stock</button>
     <button class='btn-filter' data-filter-outstock="1" onclick="toggleOutOfStock(this)">Out of stock</button>
     <div class="brand-filter" id="brandFilter">
       <button class="btn-filter" onclick="toggleBrandMenu()">Brands ▾</button>
