@@ -485,7 +485,7 @@ def apply_theme(root, dark: bool):
         bordercolor=border,
         focusthickness=1,
         focuscolor=accent,
-        padding=6,
+        padding=4,
     )
     style.map(
         "TButton",
