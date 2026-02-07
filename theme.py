@@ -70,8 +70,39 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
     )
     style.map(
         "Dark.Vertical.TScrollbar",
-        background=[("active", accent)],
-        arrowcolor=[("active", fg)],
+        background=[("active", accent), ("disabled", scrollbar_bg)],
+        arrowcolor=[("active", fg), ("disabled", fg)],
+        troughcolor=[("disabled", scrollbar_trough)],
+    )
+    style.configure(
+        "Vertical.TScrollbar",
+        background=scrollbar_bg,
+        troughcolor=scrollbar_trough,
+        arrowcolor=fg,
+        bordercolor=scrollbar_bg,
+        lightcolor=scrollbar_bg,
+        darkcolor=scrollbar_bg,
+    )
+    style.map(
+        "Vertical.TScrollbar",
+        background=[("active", accent), ("disabled", scrollbar_bg)],
+        arrowcolor=[("active", fg), ("disabled", fg)],
+        troughcolor=[("disabled", scrollbar_trough)],
+    )
+    style.configure(
+        "Horizontal.TScrollbar",
+        background=scrollbar_bg,
+        troughcolor=scrollbar_trough,
+        arrowcolor=fg,
+        bordercolor=scrollbar_bg,
+        lightcolor=scrollbar_bg,
+        darkcolor=scrollbar_bg,
+    )
+    style.map(
+        "Horizontal.TScrollbar",
+        background=[("active", accent), ("disabled", scrollbar_bg)],
+        arrowcolor=[("active", fg), ("disabled", fg)],
+        troughcolor=[("disabled", scrollbar_trough)],
     )
     style.configure("TEntry", fieldbackground=ctrl_bg, foreground=fg, insertcolor=fg)
     style.map("TEntry", fieldbackground=[("readonly", ctrl_bg)], foreground=[("readonly", fg)])

@@ -70,7 +70,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     outer = ttk.Frame(win)
     outer.pack(fill="both", expand=True)
     canvas = tk.Canvas(outer, highlightthickness=0, borderwidth=0)
-    scroll = ttk.Scrollbar(outer, orient="vertical", command=canvas.yview)
+    scroll = ttk.Scrollbar(outer, orient="vertical", command=canvas.yview, style="Vertical.TScrollbar")
     canvas.configure(yscrollcommand=scroll.set)
     scroll.pack(side="right", fill="y")
     canvas.pack(side="left", fill="both", expand=True)
