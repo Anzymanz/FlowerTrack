@@ -300,10 +300,11 @@ class CannabisTracker:
         stock_frame.columnconfigure(0, weight=1)
         # Stock controls
         stock_header = ttk.Frame(stock_frame)
-        stock_header.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(2, 2))
-        self.stock_form_toggle = ttk.Button(stock_header, text="˅", width=2, command=self._toggle_stock_form)
+        stock_header.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(0, 2))
+        self.stock_form_toggle = ttk.Label(stock_header, text="˅", cursor="hand2")
         self.stock_form_toggle.pack(side="right")
-        form = ttk.Frame(stock_frame, padding=(0, 6, 0, 0))
+        self.stock_form_toggle.bind("<Button-1>", lambda _e: self._toggle_stock_form())
+        form = ttk.Frame(stock_frame, padding=(0, 2, 0, 0))
         form.grid(row=2, column=0, columnspan=2, sticky="ew")
         self.stock_form_frame = form
         stock_frame.columnconfigure(0, weight=1)
