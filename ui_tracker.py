@@ -2206,7 +2206,7 @@ class CannabisTracker:
         ttk.Button(actions_right, text="Close", command=win.destroy).grid(row=0, column=1)
         win.update_idletasks()
         try:
-            width = max(367, frame.winfo_reqwidth() + 24)
+            width = max(340, frame.winfo_reqwidth() + 12)
             height = frame.winfo_reqheight() + 24
             height = max(260, min(420, height))
             win.geometry(f"{width}x{height}")
