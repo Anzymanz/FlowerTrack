@@ -1595,6 +1595,19 @@ class CannabisTracker:
         if return_title:
             return label, rows
         return body
+    def _copy_stats_to_clipboard(self, period: str) -> None:
+        try:
+            logs_for_period, label, days_count = self._logs_for_period(period)
+            title, stats_list = self._stats_text(logs_for_period, label, days_count, return_title=True)
+            lines = [title, ""]
+            lines.extend(f"{label}: {value}" for label, value in stats_list)
+            text = "\n".join(lines)
+            self.root.clipboard_clear()
+            self.root.clipboard_append(text)
+            self.root.update_idletasks()
+            messagebox.showinfo("Copy stats", "Copied stats to clipboard.")
+        except Exception as exc:
+            messagebox.showerror("Copy stats", f"Could not copy stats:\n{exc}")
     def save_data(self) -> None:
         data = {
             "flowers": [
@@ -2176,7 +2189,15 @@ class CannabisTracker:
         self.stats_frame = ttk.Frame(frame)
         self.stats_frame.grid(row=2, column=0, sticky="ew", padx=(6, 0))
         self._render_stats_rows(stats_list)
-        ttk.Button(frame, text="Close", command=win.destroy).grid(row=3, column=0, sticky="e", pady=(8, 0), padx=(0, 6))
+        actions = ttk.Frame(frame)
+        actions.grid(row=3, column=0, sticky="ew", pady=(8, 0))
+        actions.columnconfigure(0, weight=1)
+        ttk.Button(
+            actions,
+            text="Copy stats",
+            command=lambda: self._copy_stats_to_clipboard(getattr(win, "_stats_period", period)),
+        ).grid(row=0, column=0, sticky="w", padx=(6, 0))
+        ttk.Button(actions, text="Close", command=win.destroy).grid(row=0, column=1, sticky="e", padx=(0, 6))
         win.update_idletasks()
         try:
             width = max(367, frame.winfo_reqwidth() + 24)
