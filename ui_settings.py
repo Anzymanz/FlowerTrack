@@ -32,11 +32,12 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         base_width, base_height = [int(x) for x in base_geometry.split("x", 1)]
     except ValueError:
         base_width, base_height = 560, 600
-    min_height = 620
+    min_height = 700
+    min_height_compact = 740
     win.update_idletasks()
     screen_height = max(win.winfo_screenheight() - 80, min_height)
     max_height = min(screen_height, 1000)
-    max_height = min(max_height, 960)
+    max_height = min(max_height, 860)
     if base_height < min_height:
         base_height = min_height
     if base_height > max_height:
@@ -228,7 +229,8 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     def _resize_to_content():
         win.update_idletasks()
         desired_width = max(520, min(base_width, scraper_tab.winfo_reqwidth() + 24))
-        desired = max(scraper_tab.winfo_reqheight() + 24, min_height)
+        current_min = min_height if app.show_advanced_scraper.get() else min_height_compact
+        desired = max(scraper_tab.winfo_reqheight() + 24, current_min)
         height = min(desired, max_height)
         win.geometry(f"{desired_width}x{height}")
         _update_scrollregion()
