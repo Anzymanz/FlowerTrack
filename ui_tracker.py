@@ -2147,13 +2147,6 @@ class CannabisTracker:
         except Exception:
             pass
         win.resizable(False, False)
-        try:
-            row_count = len(stats_list)
-        except Exception:
-            row_count = 10
-        height = 200 + max(0, row_count) * 16
-        height = max(260, min(420, height))
-        win.geometry(f"367x{height}")
         frame = ttk.Frame(win, padding=12)
         frame.grid(row=0, column=0, sticky="nsew")
         frame.columnconfigure(0, weight=1)
@@ -2174,6 +2167,14 @@ class CannabisTracker:
         self.stats_frame.grid(row=2, column=0, sticky="ew", padx=(6, 0))
         self._render_stats_rows(stats_list)
         ttk.Button(frame, text="Close", command=win.destroy).grid(row=3, column=0, sticky="e", pady=(8, 0), padx=(0, 6))
+        win.update_idletasks()
+        try:
+            width = max(367, frame.winfo_reqwidth() + 24)
+            height = frame.winfo_reqheight() + 24
+            height = max(260, min(420, height))
+            win.geometry(f"{width}x{height}")
+        except Exception:
+            pass
         self._prepare_toplevel(win)
     def _update_stats_display(self, period: str, win: tk.Toplevel) -> None:
         win._stats_period = period
