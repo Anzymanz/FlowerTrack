@@ -1625,7 +1625,8 @@ class CannabisTracker:
         self.target_daily_grams = float(data.get("target_daily_grams", self.target_daily_grams))
         self.avg_usage_days = int(data.get("avg_usage_days", getattr(self, "avg_usage_days", 30)))
         self.target_daily_cbd_grams = float(data.get("target_daily_cbd_grams", getattr(self, "target_daily_cbd_grams", 0.0)))
-        self.track_cbd_usage = bool(data.get("track_cbd_usage", getattr(self, "track_cbd_usage", False)))
+        # Prefer config-driven CBD tracking; tracker data should not override it on startup.
+        self.track_cbd_usage = bool(getattr(self, "track_cbd_usage", False))
         self.enable_stock_coloring = bool(data.get("enable_stock_coloring", self.enable_stock_coloring))
         self.enable_usage_coloring = bool(data.get("enable_usage_coloring", self.enable_usage_coloring))
         self.library_data_path = data.get("library_data_path", self.library_data_path) or self.library_data_path
