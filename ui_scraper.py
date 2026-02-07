@@ -881,7 +881,23 @@ class App(tk.Tk):
             try:
                 exports_dir = Path(EXPORTS_DIR_DEFAULT)
                 exports_dir.mkdir(parents=True, exist_ok=True)
-                self._generate_change_export(self._get_export_items(), silent=True)
+                has_changes = False
+                if diff_snapshot:
+                    has_changes = any(
+                        diff_snapshot.get(key)
+                        for key in (
+                            "new_items",
+                            "removed_items",
+                            "price_changes",
+                            "stock_changes",
+                            "out_of_stock_changes",
+                            "restock_changes",
+                        )
+                    )
+                    if not has_changes:
+                        has_changes = bool(diff_snapshot.get("stock_change_count", 0))
+                if has_changes:
+                    self._generate_change_export(self._get_export_items(), silent=True)
             except Exception as exc:
                 self._capture_log(f"Export preflight failed: {exc}")
             try:
