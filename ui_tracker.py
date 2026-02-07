@@ -396,6 +396,9 @@ class CannabisTracker:
         self.date_label.grid(row=0, column=1)
         next_btn = ttk.Button(nav, text="Next >", width=8, command=lambda: self._change_day(1))
         next_btn.grid(row=0, column=2, padx=(6, 0))
+        self.roa_hidden_label = ttk.Label(nav, text="ROA hidden", font=self.font_body)
+        self.roa_hidden_label.grid(row=0, column=3, sticky="e", padx=(10, 0))
+        self.roa_hidden_label.grid_remove()
         nav.columnconfigure(1, weight=1)
         log_cols = ("time", "flower", "roa", "grams", "thc_mg", "cbd_mg")
         self.log_tree = ttk.Treeview(log_frame, columns=log_cols, show="headings", height=12, style=self.tree_style)
@@ -1319,6 +1322,8 @@ class CannabisTracker:
             self.day_total_label.configure(background=base, foreground=text_color)
         if hasattr(self, "day_total_cbd_label"):
             self.day_total_cbd_label.configure(background=base, foreground=text_color)
+        if hasattr(self, "roa_hidden_label"):
+            self.roa_hidden_label.configure(background=base, foreground=self.muted_color)
         if hasattr(self, "data_path_label") and self.data_path_label.winfo_exists():
             self.data_path_label.configure(background=base, foreground=text_color)
         self.clock_label.configure(background=base, foreground=text_color)
@@ -2546,6 +2551,11 @@ class CannabisTracker:
                     self.roa_label.grid()
                 if hasattr(self, "roa_choice"):
                     self.roa_choice.grid()
+        except Exception:
+            pass
+        try:
+            if hasattr(self, "roa_hidden_label"):
+                (self.roa_hidden_label.grid if hide else self.roa_hidden_label.grid_remove)()
         except Exception:
             pass
         self._apply_mix_button_visibility()
