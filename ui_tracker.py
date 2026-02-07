@@ -340,7 +340,7 @@ class CannabisTracker:
         ttk.Label(dose_frame, text="Flower").grid(row=0, column=0, sticky="w")
         self.flower_choice = ttk.Combobox(dose_frame, state="readonly", width=35, values=[], style=self.combo_style)
         self.flower_choice.grid(row=1, column=0, padx=(0, 12))
-        ttk.Label(dose_frame, text="Dose (grams)").grid(row=0, column=1, sticky="w")
+        ttk.Label(dose_frame, text="Dose (g)").grid(row=0, column=1, sticky="w")
         self.dose_entry = ttk.Entry(dose_frame, width=10)
         self.dose_entry.grid(row=1, column=1, padx=(0, 12))
         self.roa_label = ttk.Label(dose_frame, text="Route")
