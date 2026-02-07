@@ -50,6 +50,9 @@ def main() -> None:
             messagebox.showerror("Not found", "mixcalc.py not found in the app folder.")
             return
         try:
+            mix_dir = os.path.dirname(mix_path)
+            if mix_dir and mix_dir not in sys.path:
+                sys.path.insert(0, mix_dir)
             loader = importlib.machinery.SourceFileLoader("mixcalc_embedded", mix_path)
             spec = importlib.util.spec_from_loader(loader.name, loader)
             module = importlib.util.module_from_spec(spec)

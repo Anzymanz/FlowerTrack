@@ -563,11 +563,25 @@ function historySummary(rec) {
     const restockCount = (rec.restock_changes || []).length;
     return `+${newCount} new, -${removedCount} removed, ${priceCount} price, ${stockCount} stock, ${outCount} out, ${restockCount} restock`;
 }
+function formatHistoryTimestamp(value) {
+    if (!value) return "Unknown time";
+    const raw = String(value);
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return raw;
+    return parsed.toLocaleString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    });
+}
 function historyDetails(rec) {
     if (rec._raw) {
         return `<div class="history-detail-header"><div><strong>Raw entry</strong></div></div><div class="small">${escapeHtml(rec._raw)}</div>`;
     }
-    const ts = rec.timestamp ? escapeHtml(rec.timestamp) : "Unknown time";
+    const ts = escapeHtml(formatHistoryTimestamp(rec.timestamp));
     const summary = escapeHtml(historySummary(rec));
     const sections = [];
     const label = (it) => (it.label || [it.brand, it.producer, it.strain, it.product_id].filter(Boolean).join(" ") || "Unknown");
@@ -602,7 +616,7 @@ function renderHistoryModal() {
     if (!modal) return;
     const list = ensureChangesData().slice().reverse();
     const items = list.map((rec, idx) => {
-        const ts = escapeHtml(rec.timestamp || '');
+        const ts = escapeHtml(formatHistoryTimestamp(rec.timestamp || ''));
         const summary = escapeHtml(historySummary(rec));
         return `<div class='history-item' data-idx='${idx}'><strong>${ts}</strong><div class='small'>${summary}</div></div>`;
     }).join("");
