@@ -1140,6 +1140,10 @@ class CannabisTracker:
         if self.settings_window:
             self.settings_window.destroy()
             self.settings_window = None
+        try:
+            self.root.after(0, self._apply_roa_visibility)
+        except Exception:
+            pass
     def _mark_stock_form_dirty(self, event: tk.Event) -> None:
         # Any user typing marks the form dirty
         self.stock_form_dirty = True
