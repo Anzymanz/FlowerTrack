@@ -2119,8 +2119,8 @@ class CannabisTracker:
             row_count = len(stats_list)
         except Exception:
             row_count = 10
-        height = 260 + max(0, row_count) * 20
-        height = max(300, min(520, height))
+        height = 200 + max(0, row_count) * 16
+        height = max(260, min(420, height))
         win.geometry(f"367x{height}")
         frame = ttk.Frame(win, padding=12)
         frame.grid(row=0, column=0, sticky="nsew")
