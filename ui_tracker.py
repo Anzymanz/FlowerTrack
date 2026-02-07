@@ -326,6 +326,8 @@ class CannabisTracker:
         add_btn.grid(row=1, column=4, padx=(0, 8))
         self.mix_stock_button = ttk.Button(form, text="Mix stock", command=lambda: self.launch_mix_calculator(mode="stock"))
         self.mix_stock_button.grid(row=1, column=6, padx=(0, 8))
+        self._mix_stock_grid = self.mix_stock_button.grid_info()
+        self._mix_stock_grid = self.mix_stock_button.grid_info()
         delete_btn = ttk.Button(form, text="Delete Selected", command=self.delete_stock)
         delete_btn.grid(row=1, column=7)
         totals_frame = ttk.Frame(stock_frame)
@@ -369,6 +371,8 @@ class CannabisTracker:
         log_btn.grid(row=1, column=3)
         self.mixed_dose_button = ttk.Button(dose_frame, text="Mixed dose", command=self.launch_mix_calculator)
         self.mixed_dose_button.grid(row=1, column=4, padx=(8, 0))
+        self._mixed_dose_grid = self.mixed_dose_button.grid_info()
+        self._mixed_dose_grid = self.mixed_dose_button.grid_info()
         self.note_label = None
         self.remaining_today_label = ttk.Label(
             dose_frame, text="Remaining today (THC): 0.00 g", font=self.font_bold_mid
@@ -2526,6 +2530,7 @@ class CannabisTracker:
                     self.roa_choice.grid()
         except Exception:
             pass
+        self._apply_mix_button_visibility()
 
     def _toggle_stock_form(self) -> None:
         self.show_stock_form = not bool(getattr(self, "show_stock_form", True))
@@ -2541,13 +2546,17 @@ class CannabisTracker:
                 btn.configure(text="˅" if self.show_stock_form else "˄")
             except Exception:
                 pass
+        self._apply_mix_button_visibility()
+
+    def _apply_mix_button_visibility(self) -> None:
         try:
             btn = getattr(self, "mixed_dose_button", None)
             if btn:
                 if getattr(self, "hide_mixed_dose", False):
                     btn.grid_remove()
                 else:
-                    btn.grid()
+                    info = getattr(self, "_mixed_dose_grid", None)
+                    btn.grid(**info) if isinstance(info, dict) else btn.grid()
         except Exception:
             pass
         try:
@@ -2556,7 +2565,8 @@ class CannabisTracker:
                 if getattr(self, "hide_mix_stock", False):
                     btn.grid_remove()
                 else:
-                    btn.grid()
+                    info = getattr(self, "_mix_stock_grid", None)
+                    btn.grid(**info) if isinstance(info, dict) else btn.grid()
         except Exception:
             pass
         try:
