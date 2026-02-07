@@ -2115,7 +2115,7 @@ class CannabisTracker:
         except Exception:
             pass
         win.resizable(False, False)
-        win.geometry("470x360")
+        win.geometry("367x350")
         frame = ttk.Frame(win, padding=12)
         frame.grid(row=0, column=0, sticky="nsew")
         frame.columnconfigure(0, weight=1)
