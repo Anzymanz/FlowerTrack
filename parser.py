@@ -112,6 +112,8 @@ def _clean_title(value: str | None) -> str | None:
         return value
     out = str(value).strip()
     out = re.sub(r"\s*-\s*(FLOWER|OIL|VAPE|DEVICE|CARTRIDGE)\b", "", out, flags=re.I)
+    out = re.sub(r"\s*\([^)]*(THC|CBD|%)[^)]*\)\s*$", "", out, flags=re.I)
+    out = re.sub(r"\s*\(\s*$", "", out)
     out = re.sub(r"\s+", " ", out).strip()
     return out
 
@@ -137,9 +139,6 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
     if isinstance(brand_obj, dict):
         brand_logo_url = brand_obj.get("logoUrl") or brand_obj.get("logo_url")
     image_url = entry.get("mainImageUrl") or product.get("mainImageUrl")
-    strain = cannabis.get("strainName") or metadata.get("strain")
-    if not strain or str(strain).strip().upper() in {"N/A", "NA", "NONE", "UNKNOWN"}:
-        strain = name
     strain_type = _normalize_strain_type(cannabis.get("strainType") or metadata.get("classification"))
     irradiation = cannabis.get("irradiationType") or specs.get("irradiationType") or metadata.get("irradiationType")
     origin_country = (
@@ -153,6 +152,13 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
         or _normalize_product_type(product.get("type"))
         or _normalize_product_type(name)
     )
+    if product_type in {"oil", "vape"} and long_name:
+        long_clean = _clean_title(long_name) or long_name
+        if long_clean and (not name or len(str(long_clean)) >= len(str(name))):
+            name = long_clean
+    strain = cannabis.get("strainName") or metadata.get("strain")
+    if not strain or str(strain).strip().upper() in {"N/A", "NA", "NONE", "UNKNOWN"}:
+        strain = name
     grams = None
     ml = None
     size = _coerce_float(cannabis.get("size") or specs.get("size"))
