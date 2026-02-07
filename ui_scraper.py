@@ -531,7 +531,7 @@ class App(tk.Tk):
             return None
         latest = html_files[0]
         if getattr(self, "server_port", None) and _port_ready("127.0.0.1", self.server_port):
-            return f"http://127.0.0.1:{self.server_port}/{latest.name}"
+            return f"http://127.0.0.1:{self.server_port}/flowerbrowser"
         return latest.as_uri()
     # ------------- Tray helpers -------------
     def _tray_supported(self) -> bool:

@@ -201,7 +201,7 @@ class CannabisTracker:
         latest = html_files[0]
         url = latest.as_uri()
         if self._ensure_export_server() and self.export_port:
-            url = f"http://127.0.0.1:{self.export_port}/{latest.name}"
+            url = f"http://127.0.0.1:{self.export_port}/flowerbrowser"
         try:
             webbrowser.open(url)
         except Exception:

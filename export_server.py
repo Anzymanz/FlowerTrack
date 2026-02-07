@@ -26,6 +26,33 @@ def start_export_server(preferred_port: int, exports_dir: Path, log: Callable[[s
         return None, None, preferred_port
 
     class QuietHandler(http.server.SimpleHTTPRequestHandler):
+        def _latest_export_name(self) -> str | None:
+            try:
+                files = sorted(
+                    exports_dir.glob("export-*.html"),
+                    key=lambda p: p.stat().st_mtime,
+                    reverse=True,
+                )
+                if files:
+                    return files[0].name
+            except Exception:
+                pass
+            return None
+
+        def do_GET(self):
+            try:
+                path = self.path.split("?", 1)[0]
+                if path.rstrip("/") == "/flowerbrowser":
+                    latest = self._latest_export_name()
+                    if latest:
+                        self.path = f"/{latest}"
+                        return super().do_GET()
+                    self.send_error(404, "No exports available yet.")
+                    return
+            except Exception as e:
+                log(f"[server] handler exception: {e}")
+            return super().do_GET()
+
         def log_message(self, fmt, *args):
             log("[server] " + fmt % args)
 
