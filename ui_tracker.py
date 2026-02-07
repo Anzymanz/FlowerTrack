@@ -1134,16 +1134,14 @@ class CannabisTracker:
         self._refresh_log()
         try:
             self.root.update_idletasks()
+            self.root.after(0, self._apply_roa_visibility)
+            self.root.after(0, self._refresh_stock)
         except Exception:
             pass
         self.save_data()
         if self.settings_window:
             self.settings_window.destroy()
             self.settings_window = None
-        try:
-            self.root.after(0, self._apply_roa_visibility)
-        except Exception:
-            pass
     def _mark_stock_form_dirty(self, event: tk.Event) -> None:
         # Any user typing marks the form dirty
         self.stock_form_dirty = True
