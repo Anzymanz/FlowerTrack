@@ -36,6 +36,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     win.update_idletasks()
     screen_height = max(win.winfo_screenheight() - 80, min_height)
     max_height = min(screen_height, 1000)
+    max_height = min(max_height, 960)
     if base_height < min_height:
         base_height = min_height
     if base_height > max_height:
