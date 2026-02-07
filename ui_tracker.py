@@ -339,10 +339,10 @@ class CannabisTracker:
         dose_frame.grid(row=0, column=0, sticky="ew")
         ttk.Label(dose_frame, text="Flower").grid(row=0, column=0, sticky="w")
         self.flower_choice = ttk.Combobox(dose_frame, state="readonly", width=35, values=[], style=self.combo_style)
-        self.flower_choice.grid(row=1, column=0, padx=(0, 8))
+        self.flower_choice.grid(row=1, column=0, padx=(0, 12))
         ttk.Label(dose_frame, text="Dose (grams)").grid(row=0, column=1, sticky="w")
         self.dose_entry = ttk.Entry(dose_frame, width=10)
-        self.dose_entry.grid(row=1, column=1, padx=(0, 8))
+        self.dose_entry.grid(row=1, column=1, padx=(0, 12))
         self.roa_label = ttk.Label(dose_frame, text="Route")
         self.roa_label.grid(row=0, column=2, sticky="w")
         self.roa_choice = ttk.Combobox(
@@ -352,7 +352,7 @@ class CannabisTracker:
             values=list(self.roa_options.keys()),
             style=self.combo_style,
         )
-        self.roa_choice.grid(row=1, column=2, padx=(0, 8))
+        self.roa_choice.grid(row=1, column=2, padx=(0, 12))
         # Default order: Vaped, Eaten, Smoked; preselect Vaped
         self.roa_choice.set("Vaped")
         log_btn = ttk.Button(dose_frame, text="Log Dose", command=self.log_dose)
