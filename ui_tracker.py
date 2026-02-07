@@ -99,6 +99,7 @@ class CannabisTracker:
         self.enable_stock_coloring_cbd = True
         self.enable_usage_coloring = True
         self.hide_roa_options = False
+        self.hide_mixed_dose = False
         self.roa_options = {
             "Vaped": 0.60,
             "Eaten": 0.10,
@@ -357,7 +358,8 @@ class CannabisTracker:
         self.roa_choice.set("Vaped")
         log_btn = ttk.Button(dose_frame, text="Log Dose", command=self.log_dose)
         log_btn.grid(row=1, column=3)
-        ttk.Button(dose_frame, text="Mixed dose", command=self.launch_mix_calculator).grid(row=1, column=4, padx=(8, 0))
+        self.mixed_dose_button = ttk.Button(dose_frame, text="Mixed dose", command=self.launch_mix_calculator)
+        self.mixed_dose_button.grid(row=1, column=4, padx=(8, 0))
         self.note_label = None
         self.remaining_today_label = ttk.Label(
             dose_frame, text="Remaining today (THC): 0.00 g", font=self.font_bold_mid
@@ -1091,6 +1093,8 @@ class CannabisTracker:
         self.enable_usage_coloring = enable_usage_coloring
         if hasattr(self, "hide_roa_var"):
             self.hide_roa_options = bool(self.hide_roa_var.get())
+        if hasattr(self, "hide_mixed_dose_var"):
+            self.hide_mixed_dose = bool(self.hide_mixed_dose_var.get())
         self.roa_options = roa_opts
         self.minimize_to_tray = self.minimize_var.get()
         self.close_to_tray = self.close_var.get()
@@ -1703,6 +1707,7 @@ class CannabisTracker:
         self.enable_stock_coloring = bool(cfg.get("enable_stock_coloring", True))
         self.enable_usage_coloring = bool(cfg.get("enable_usage_coloring", True))
         self.hide_roa_options = bool(cfg.get("hide_roa_options", False))
+        self.hide_mixed_dose = bool(cfg.get("hide_mixed_dose", False))
         self.minimize_to_tray = bool(cfg.get("minimize_to_tray", self.minimize_to_tray))
         self.close_to_tray = bool(cfg.get("close_to_tray", self.close_to_tray))
         self.show_scraper_status_icon = bool(cfg.get("show_scraper_status_icon", self.show_scraper_status_icon))
@@ -1770,6 +1775,7 @@ class CannabisTracker:
             "dark_mode": self.dark_var.get(),
             "roa_options": self.roa_options,
             "hide_roa_options": self.hide_roa_options,
+            "hide_mixed_dose": getattr(self, "hide_mixed_dose", False),
             "window_geometry": self.window_geometry,
             "stock_column_widths": self.stock_column_widths,
             "log_column_widths": self.log_column_widths,
@@ -2486,6 +2492,15 @@ class CannabisTracker:
                     self.roa_label.grid()
                 if hasattr(self, "roa_choice"):
                     self.roa_choice.grid()
+        except Exception:
+            pass
+        try:
+            btn = getattr(self, "mixed_dose_button", None)
+            if btn:
+                if getattr(self, "hide_mixed_dose", False):
+                    btn.grid_remove()
+                else:
+                    btn.grid()
         except Exception:
             pass
         try:
