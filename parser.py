@@ -130,11 +130,6 @@ def _refine_oil_vape_title(title: str, brand: str | None) -> str:
         b = str(brand).strip()
         if b and base.upper().startswith(b.upper()):
             base = base[len(b):].strip()
-    # Strip THC/CBD percentages and strength values while keeping ratios.
-    base = re.sub(r"\bTHC\b[^A-Za-z0-9]*[\d./]+%?", "", base, flags=re.I)
-    base = re.sub(r"\bCBD\b[^A-Za-z0-9]*[\d./]+%?", "", base, flags=re.I)
-    base = re.sub(r"\b\d+(?:\.\d+)?\s*(?:MG/ML|MG|ML|G)\b", "", base, flags=re.I)
-    base = re.sub(r"\b\d+(?:\.\d+)?\s*%+\b", "", base, flags=re.I)
     base = re.sub(r"\s+", " ", base).strip()
     # Prefer descriptive oil wording when present.
     core = ""
