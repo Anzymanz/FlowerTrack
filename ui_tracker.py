@@ -2196,12 +2196,14 @@ class CannabisTracker:
         actions = ttk.Frame(frame)
         actions.grid(row=3, column=0, sticky="ew", pady=(8, 0))
         actions.columnconfigure(0, weight=1)
+        actions_right = ttk.Frame(actions)
+        actions_right.grid(row=0, column=1, sticky="e")
         ttk.Button(
-            actions,
+            actions_right,
             text="Copy stats",
             command=lambda: self._copy_stats_to_clipboard(getattr(win, "_stats_period", period)),
-        ).grid(row=0, column=0, sticky="w", padx=(6, 0))
-        ttk.Button(actions, text="Close", command=win.destroy).grid(row=0, column=1, sticky="e", padx=(0, 6))
+        ).grid(row=0, column=0, padx=(0, 6))
+        ttk.Button(actions_right, text="Close", command=win.destroy).grid(row=0, column=1)
         win.update_idletasks()
         try:
             width = max(367, frame.winfo_reqwidth() + 24)
