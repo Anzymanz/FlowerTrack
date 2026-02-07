@@ -301,8 +301,7 @@ class CannabisTracker:
         # Stock controls
         stock_header = ttk.Frame(stock_frame)
         stock_header.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(6, 2))
-        ttk.Label(stock_header, text="Add / Update Stock", font=self.font_bold_small).pack(side="left")
-        self.stock_form_toggle = ttk.Button(stock_header, text="Hide stock entry v", command=self._toggle_stock_form)
+        self.stock_form_toggle = ttk.Button(stock_header, text="˅", width=2, command=self._toggle_stock_form)
         self.stock_form_toggle.pack(side="right")
         form = ttk.Frame(stock_frame, padding=(0, 6, 0, 0))
         form.grid(row=2, column=0, columnspan=2, sticky="ew")
@@ -2521,7 +2520,7 @@ class CannabisTracker:
                 pass
         if btn:
             try:
-                btn.configure(text="Hide stock entry v" if self.show_stock_form else "Show stock entry >")
+                btn.configure(text="˅" if self.show_stock_form else "˃")
             except Exception:
                 pass
         try:
