@@ -32,7 +32,7 @@ from inventory import (
 )
 from storage import load_last_parse
 from inventory import add_stock_entry, log_dose_entry, is_cbd_dominant
-from exports import export_html_auto
+from exports import export_html_auto, export_size_warning
 from export_server import start_export_server as srv_start_export_server, stop_export_server as srv_stop_export_server
 from config import load_tracker_config, save_tracker_config
 from inventory import Flower
@@ -191,6 +191,9 @@ class CannabisTracker:
                     messagebox.showinfo("Flower Browser", "No data available to export yet.")
                     return
                 latest = export_html_auto(data, exports_dir=exports_dir, open_file=False, fetch_images=False)
+                warn = export_size_warning(latest)
+                if warn:
+                    messagebox.showwarning("Export size warning", warn)
                 html_files = [latest]
             except Exception as exc:
                 messagebox.showinfo("Flower Browser", f"Unable to generate export: {exc}")

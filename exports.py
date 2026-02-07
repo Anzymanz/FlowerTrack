@@ -30,6 +30,7 @@ except Exception:
 _ASSET_CACHE: dict[str, str] | None = None
 _ASSETS_DIR: Optional[Path] = None
 _EXPORTS_DIR: Optional[Path] = None
+EXPORT_WARN_MB = 10.0
 
 
 def _ensure_assets_dir(default: Optional[Path] = None) -> None:
@@ -167,6 +168,17 @@ def init_exports(assets_dir: Path, exports_dir: Optional[Path] = None) -> None:
 def set_exports_dir(exports_dir: Path) -> None:
     global _EXPORTS_DIR
     _EXPORTS_DIR = exports_dir
+
+
+def export_size_warning(path: Path, warn_mb: float = EXPORT_WARN_MB) -> str | None:
+    try:
+        size_bytes = path.stat().st_size
+    except Exception:
+        return None
+    size_mb = size_bytes / (1024 * 1024)
+    if size_mb >= warn_mb:
+        return f"Export HTML is {size_mb:.1f} MB; large exports may be slow to open."
+    return None
 
 
 def build_launch_url(producer: str | None, strain: str | None) -> str:

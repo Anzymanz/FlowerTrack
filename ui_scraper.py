@@ -15,7 +15,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 from queue import Queue, Empty
 from capture import ensure_browser_available, install_playwright_browsers, start_capture_worker, CaptureWorker
-from exports import export_html_auto, init_exports, set_exports_dir
+from exports import export_html_auto, export_size_warning, init_exports, set_exports_dir
 from export_server import start_export_server as srv_start_export_server, stop_export_server as srv_stop_export_server
 from ui_settings import open_settings_window
 from app_core import (  # shared globals/imports
@@ -435,6 +435,14 @@ class App(tk.Tk):
             path = export_html_auto(data, exports_dir=EXPORTS_DIR_DEFAULT, open_file=False, fetch_images=False)
             _cleanup_and_record_export(path, max_files=20)
             self._capture_log(f"Exported snapshot: {path.name}")
+            warn = export_size_warning(path)
+            if warn:
+                self._capture_log(warn)
+                if not silent:
+                    try:
+                        messagebox.showwarning("Export size warning", warn)
+                    except Exception as exc:
+                        self._debug_log(f"Suppressed exception: {exc}")
         except Exception as exc:
             if silent:
                 self._capture_log(f"Export generation failed: {exc}")
