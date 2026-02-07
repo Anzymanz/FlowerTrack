@@ -771,24 +771,34 @@ class CannabisTracker:
                     f"{flower.grams_remaining:.3f}",
                 ),
             )
-        self.total_label.config(text=f"Total THC stock: {total_counted:.2f} g")
-        self.total_cbd_label.config(text=f"Total CBD stock: {cbd_total:.2f} g")
+        track_cbd = getattr(self, "track_cbd_usage", False)
+        combined_total = total_all if track_cbd else total_counted
+        if track_cbd:
+            self.total_label.config(text=f"Total flower stock: {combined_total:.2f} g")
+            if self.total_cbd_label.winfo_ismapped():
+                self.total_cbd_label.pack_forget()
+        else:
+            self.total_label.config(text=f"Total THC stock: {total_counted:.2f} g")
+            self.total_cbd_label.config(text=f"Total CBD stock: {cbd_total:.2f} g")
+            if not self.total_cbd_label.winfo_ismapped():
+                self.total_cbd_label.pack(side="left")
         total_color = (
-            self._color_for_value(total_counted, self.total_green_threshold, self.total_red_threshold)
-            if self.enable_stock_coloring
-            else self.text_color
-        )
-        cbd_total_color = (
-            self._color_for_value(
-                cbd_total,
-                getattr(self, "cbd_total_green_threshold", self.total_green_threshold),
-                getattr(self, "cbd_total_red_threshold", self.total_red_threshold),
-            )
+            self._color_for_value(combined_total, self.total_green_threshold, self.total_red_threshold)
             if self.enable_stock_coloring
             else self.text_color
         )
         self.total_label.configure(foreground=total_color)
-        self.total_cbd_label.configure(foreground=cbd_total_color)
+        if not track_cbd:
+            cbd_total_color = (
+                self._color_for_value(
+                    cbd_total,
+                    getattr(self, "cbd_total_green_threshold", self.total_green_threshold),
+                    getattr(self, "cbd_total_red_threshold", self.total_red_threshold),
+                )
+                if self.enable_stock_coloring
+                else self.text_color
+            )
+            self.total_cbd_label.configure(foreground=cbd_total_color)
         used_today = self._grams_used_on_day(self.current_date)
         used_today_cbd = self._grams_used_on_day_cbd(self.current_date) if getattr(self, "track_cbd_usage", False) else 0.0
         if self.target_daily_grams > 0:
@@ -820,7 +830,7 @@ class CannabisTracker:
             self.remaining_today_cbd_label.grid()
         else:
             self.remaining_today_cbd_label.grid_remove()
-        remaining_stock = max(total_counted, 0.0)
+        remaining_stock = max(combined_total, 0.0)
         days_target = "N/A"
         days_target_val: float | None = None
         if self.target_daily_grams > 0:
@@ -832,8 +842,13 @@ class CannabisTracker:
         actual_color = self.text_color
         if self.enable_usage_coloring and days_actual_val is not None and days_target_val is not None:
             actual_color = self.accent_green if days_actual_val >= days_target_val else self.accent_red
-        self.days_label.config(text=f"Days of THC flower left - target: {days_target} | actual: {days_actual}", foreground=actual_color)
-        if getattr(self, "track_cbd_usage", False):
+        if track_cbd:
+            self.days_label.config(text=f"Days of flower left - target: {days_target} | actual: {days_actual}", foreground=actual_color)
+        else:
+            self.days_label.config(text=f"Days of THC flower left - target: {days_target} | actual: {days_actual}", foreground=actual_color)
+        if track_cbd:
+            self.days_label_cbd.grid_remove()
+        elif getattr(self, "track_cbd_usage", False):
             days_target_cbd = "N/A"
             days_target_val_cbd: float | None = None
             if getattr(self, "target_daily_cbd_grams", 0.0) > 0:
