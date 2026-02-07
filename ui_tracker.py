@@ -1899,6 +1899,10 @@ class CannabisTracker:
         if not os.path.exists(path):
             messagebox.showerror("Not found", "Selected backup file does not exist.")
             return
+        summary = self._backup_import_summary(Path(path))
+        if summary:
+            if not messagebox.askokcancel("Import summary", summary):
+                return
         if not messagebox.askyesno(
             "Import backup",
             "Importing will overwrite existing settings and data.\n\nContinue?",
@@ -1918,6 +1922,30 @@ class CannabisTracker:
             return
         self._reload_after_backup()
         messagebox.showinfo("Import complete", "Backup imported successfully.")
+
+    def _backup_import_summary(self, zip_path: Path) -> str:
+        try:
+            with zipfile.ZipFile(zip_path, "r") as zf:
+                names = zf.namelist()
+        except Exception as exc:
+            return f"Could not read backup:\n{exc}"
+        def _has(prefix: str, suffix: str | None = None) -> bool:
+            for name in names:
+                if not name.startswith(prefix):
+                    continue
+                if suffix is None or name.endswith(suffix):
+                    return True
+            return False
+        lines = ["This backup will overwrite the following:"]
+        if _has("data/"):
+            lines.append("- Tracker data (data/)")
+        if _has("logs/", "changes.ndjson"):
+            lines.append("- Change history log (logs/changes.ndjson)")
+        if any(name.endswith(Path(TRACKER_CONFIG_FILE).name) for name in names):
+            lines.append("- Tracker config (flowertrack_config.json)")
+        if len(lines) == 1:
+            lines.append("- (No recognized data files found)")
+        return "\n".join(lines)
     def _reload_after_backup(self) -> None:
         self._load_config()
         try:
