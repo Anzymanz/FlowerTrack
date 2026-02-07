@@ -1716,7 +1716,11 @@ class CannabisTracker:
         self.data_path = cfg.get("data_path", str(TRACKER_DATA_FILE)) or str(TRACKER_DATA_FILE)
         self.library_data_path = cfg.get("library_data_path", str(TRACKER_LIBRARY_FILE)) or str(TRACKER_LIBRARY_FILE)
         self.dark_var.set(bool(cfg.get("dark_mode", True)))
-        self.track_cbd_usage = bool(cfg.get("track_cbd_usage", False))
+        track_cbd_raw = cfg.get("track_cbd_usage", False)
+        if isinstance(track_cbd_raw, bool):
+            self.track_cbd_usage = track_cbd_raw
+        else:
+            self.track_cbd_usage = str(track_cbd_raw).strip().lower() in ("1", "true", "yes", "on")
         self.enable_stock_coloring = bool(cfg.get("enable_stock_coloring", True))
         self.enable_usage_coloring = bool(cfg.get("enable_usage_coloring", True))
         self.hide_roa_options = bool(cfg.get("hide_roa_options", False))
@@ -2551,7 +2555,19 @@ class CannabisTracker:
                 has_prefs = bool(self.log_column_widths)
                 if hide:
                     if has_prefs:
-                        self.log_tree["displaycolumns"] = [c for c in cols if c not in ("roa", "thc_mg", "cbd_mg")]
+                        display = [c for c in cols if c not in ("roa", "thc_mg", "cbd_mg")]
+                        adjusted = dict(widths)
+                        self._suspend_log_width_save = True
+                        self.log_tree["displaycolumns"] = display
+                        for col, width in adjusted.items():
+                            try:
+                                self.log_tree.column(col, width=width)
+                            except Exception:
+                                continue
+                        try:
+                            self.root.after(300, lambda: setattr(self, "_suspend_log_width_save", False))
+                        except Exception:
+                            self._suspend_log_width_save = False
                         return
                     if not hasattr(self, "_log_widths_before_hide"):
                         self._log_widths_before_hide = dict(widths)
