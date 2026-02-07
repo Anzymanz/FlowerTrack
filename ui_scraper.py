@@ -459,7 +459,7 @@ class App(tk.Tk):
             return
         try:
             path = export_html_auto(data, exports_dir=EXPORTS_DIR_DEFAULT, open_file=False, fetch_images=False)
-            _cleanup_and_record_export(path, max_files=20)
+            _cleanup_and_record_export(path, max_files=1)
             self._capture_log(f"Exported snapshot: {path.name}")
             warn = export_size_warning(path)
             if warn:

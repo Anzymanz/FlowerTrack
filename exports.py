@@ -606,7 +606,7 @@ def export_html(data, path, fetch_images=False):
     out_path.write_text(html_text, encoding="utf-8")
     
 def export_html_auto(
-    data, exports_dir: Optional[Path] = None, open_file: bool = False, fetch_images=False, max_files: int = 20
+    data, exports_dir: Optional[Path] = None, open_file: bool = False, fetch_images=False, max_files: int = 1
 ):
 
     _ensure_assets_dir()

@@ -190,7 +190,7 @@ class CannabisTracker:
                 if not data:
                     messagebox.showinfo("Flower Browser", "No data available to export yet.")
                     return
-                latest = export_html_auto(data, exports_dir=exports_dir, open_file=False, fetch_images=False)
+                latest = export_html_auto(data, exports_dir=exports_dir, open_file=False, fetch_images=False, max_files=1)
                 warn = export_size_warning(latest)
                 if warn:
                     messagebox.showwarning("Export size warning", warn)
