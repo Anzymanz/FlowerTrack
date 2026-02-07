@@ -881,9 +881,7 @@ class App(tk.Tk):
             try:
                 exports_dir = Path(EXPORTS_DIR_DEFAULT)
                 exports_dir.mkdir(parents=True, exist_ok=True)
-                has_html = any(exports_dir.glob("export-*.html"))
-                if not has_html:
-                    self._generate_change_export(self._get_export_items(), silent=True)
+                self._generate_change_export(self._get_export_items(), silent=True)
             except Exception as exc:
                 self._capture_log(f"Export preflight failed: {exc}")
             try:
