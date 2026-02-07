@@ -772,23 +772,23 @@ class CannabisTracker:
                 ),
             )
         track_cbd = getattr(self, "track_cbd_usage", False)
-        combined_total = total_all if track_cbd else total_counted
+        combined_total = total_all if not track_cbd else total_counted
         if track_cbd:
-            self.total_label.config(text=f"Total flower stock: {combined_total:.2f} g")
-            if self.total_cbd_label.winfo_ismapped():
-                self.total_cbd_label.pack_forget()
-        else:
             self.total_label.config(text=f"Total THC stock: {total_counted:.2f} g")
             self.total_cbd_label.config(text=f"Total CBD stock: {cbd_total:.2f} g")
             if not self.total_cbd_label.winfo_ismapped():
                 self.total_cbd_label.pack(side="left")
+        else:
+            self.total_label.config(text=f"Total flower stock: {combined_total:.2f} g")
+            if self.total_cbd_label.winfo_ismapped():
+                self.total_cbd_label.pack_forget()
         total_color = (
             self._color_for_value(combined_total, self.total_green_threshold, self.total_red_threshold)
             if self.enable_stock_coloring
             else self.text_color
         )
         self.total_label.configure(foreground=total_color)
-        if not track_cbd:
+        if track_cbd:
             cbd_total_color = (
                 self._color_for_value(
                     cbd_total,
@@ -843,10 +843,10 @@ class CannabisTracker:
         if self.enable_usage_coloring and days_actual_val is not None and days_target_val is not None:
             actual_color = self.accent_green if days_actual_val >= days_target_val else self.accent_red
         if track_cbd:
-            self.days_label.config(text=f"Days of flower left - target: {days_target} | actual: {days_actual}", foreground=actual_color)
-        else:
             self.days_label.config(text=f"Days of THC flower left - target: {days_target} | actual: {days_actual}", foreground=actual_color)
-        if track_cbd:
+        else:
+            self.days_label.config(text=f"Days of flower left - target: {days_target} | actual: {days_actual}", foreground=actual_color)
+        if not track_cbd:
             self.days_label_cbd.grid_remove()
         elif getattr(self, "track_cbd_usage", False):
             days_target_cbd = "N/A"
