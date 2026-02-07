@@ -1132,6 +1132,10 @@ class CannabisTracker:
         self._apply_roa_visibility()
         self._refresh_stock()
         self._refresh_log()
+        try:
+            self.root.update_idletasks()
+        except Exception:
+            pass
         self.save_data()
         if self.settings_window:
             self.settings_window.destroy()
