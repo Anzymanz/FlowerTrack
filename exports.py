@@ -469,7 +469,11 @@ def export_html(data, path, fetch_images=False):
         stock_upper = (it.get("stock_status") or it.get("stock") or '').upper()
         is_out = ("OUT" in stock_upper) or (it.get("stock_remaining") == 0)
         if it.get("stock_remaining") is not None:
-            stock_text = f"{it.get('stock_remaining')} remaining"
+            remaining_val = it.get("stock_remaining")
+            if isinstance(remaining_val, (int, float)) and remaining_val >= 15:
+                stock_text = "15+ remaining"
+            else:
+                stock_text = f"{remaining_val} remaining"
         stock_delta = it.get('stock_delta')
         stock_pill_class = 'pill'
         if isinstance(stock_delta, (int, float)) and stock_delta:
@@ -581,7 +585,7 @@ def export_html(data, path, fetch_images=False):
         if isinstance(remaining, (int, float)):
             if remaining <= 0:
                 out_stock += 1
-            elif remaining <= 10:
+            elif remaining < 15:
                 low_stock += 1
             else:
                 in_stock += 1

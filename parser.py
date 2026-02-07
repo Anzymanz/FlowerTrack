@@ -171,6 +171,13 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
     strain = cannabis.get("strainName") or metadata.get("strain")
     if not strain or str(strain).strip().upper() in {"N/A", "NA", "NONE", "UNKNOWN"}:
         strain = name
+    if product_type == "oil":
+        try:
+            if "BALANCE" in str(raw_name).upper():
+                name = "Balance"
+                strain = "Balance"
+        except Exception:
+            pass
     grams = None
     ml = None
     size = _coerce_float(cannabis.get("size") or specs.get("size"))
@@ -202,7 +209,7 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
     if availability is not None:
         if availability <= 0:
             stock_status = "OUT OF STOCK"
-        elif availability <= 10:
+        elif availability < 15:
             stock_status = "LOW STOCK"
             stock_detail = f"{availability} remaining"
         else:
