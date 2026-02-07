@@ -1922,7 +1922,8 @@ class App(tk.Tk):
                 # Attempt generic background/foreground where supported (covers frames/labels/buttons)
                 for opt, val in (("background", bg), ("foreground", fg)):
                     try:
-                        widget.configure(**{opt: val})
+                        if opt in widget.keys():
+                            widget.configure(**{opt: val})
                     except Exception as exc:
                         self._debug_log(f"Suppressed exception: {exc}")
             for child in widget.winfo_children():
