@@ -268,6 +268,11 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Checkbutton(notify_frame, text="Notify on removed products", variable=app.notify_removed_items).pack(anchor="w", pady=2)
     ttk.Checkbutton(notify_frame, text="Send Windows desktop notifications", variable=app.notify_windows).pack(anchor="w", pady=2)
     ttk.Checkbutton(notify_frame, text="Send Home Assistant notifications", variable=app.cap_auto_notify_ha).pack(anchor="w", pady=2)
+    ttk.Checkbutton(notify_frame, text="Auto-open latest export after capture", variable=app.cap_auto_open_export).pack(anchor="w", pady=2)
+    auto_open_frame = ttk.Frame(notify_frame)
+    auto_open_frame.pack(fill="x", pady=(2, 2))
+    ttk.Label(auto_open_frame, text="Open delay (s)").pack(side="left")
+    ttk.Entry(auto_open_frame, textvariable=app.cap_auto_open_export_delay, width=6).pack(side="left", padx=(8, 0))
 
     quiet_frame = ttk.Frame(notify_frame)
     quiet_frame.pack(fill="x", pady=(6, 2))

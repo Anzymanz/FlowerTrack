@@ -244,6 +244,8 @@ class App(tk.Tk):
         self.notify_new_items = tk.BooleanVar(value=bool(cfg.get("notify_new_items", True)))
         self.notify_removed_items = tk.BooleanVar(value=bool(cfg.get("notify_removed_items", True)))
         self.notify_windows = tk.BooleanVar(value=bool(cfg.get("notify_windows", True)))
+        self.cap_auto_open_export = tk.BooleanVar(value=bool(cfg.get("auto_open_export", False)))
+        self.cap_auto_open_export_delay = tk.StringVar(value=str(cfg.get("auto_open_export_delay", 0.0)))
         self.cap_quiet_hours_enabled = tk.BooleanVar(value=bool(cfg.get("quiet_hours_enabled", False)))
         self.cap_quiet_start = tk.StringVar(value=cfg.get("quiet_hours_start", "22:00"))
         self.cap_quiet_end = tk.StringVar(value=cfg.get("quiet_hours_end", "07:00"))
@@ -308,6 +310,8 @@ class App(tk.Tk):
             "notify_new_items": bool(self.notify_new_items.get()),
             "notify_removed_items": bool(self.notify_removed_items.get()),
             "notify_windows": bool(self.notify_windows.get()),
+            "auto_open_export": bool(self.cap_auto_open_export.get()),
+            "auto_open_export_delay": _parse_float(self.cap_auto_open_export_delay.get(), DEFAULT_CAPTURE_CONFIG["auto_open_export_delay"], "auto_open_export_delay"),
             "log_window_hidden_height": float(getattr(self, "scraper_log_hidden_height", 260.0) or 260.0),
             "quiet_hours_enabled": bool(self.cap_quiet_hours_enabled.get()),
             "quiet_hours_start": self.cap_quiet_start.get(),
@@ -846,6 +850,17 @@ class App(tk.Tk):
                     self._generate_change_export(self._get_export_items(), silent=True)
             except Exception as exc:
                 self._capture_log(f"Export preflight failed: {exc}")
+            try:
+                if bool(self.cap_auto_open_export.get()):
+                    delay = 0.0
+                    try:
+                        delay = float(self.cap_auto_open_export_delay.get() or 0.0)
+                    except Exception:
+                        delay = 0.0
+                    delay_ms = max(0, int(delay * 1000))
+                    self.after(delay_ms, self.open_latest_export)
+            except Exception as exc:
+                self._capture_log(f"Auto-open export failed: {exc}")
             try:
                 if auto_notify:
                     self.send_home_assistant(

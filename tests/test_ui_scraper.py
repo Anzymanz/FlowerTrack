@@ -99,6 +99,8 @@ class UiScraperTests(unittest.TestCase):
                 self.notify_new_items = _Var(True)
                 self.notify_removed_items = _Var(True)
                 self.notify_windows = _Var(True)
+                self.cap_auto_open_export = _Var(False)
+                self.cap_auto_open_export_delay = _Var("0")
                 self.cap_quiet_hours_enabled = _Var(False)
                 self.cap_quiet_start = _Var("22:00")
                 self.cap_quiet_end = _Var("07:00")
