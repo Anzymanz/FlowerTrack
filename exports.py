@@ -411,6 +411,9 @@ def export_html(data, path, fetch_images=False):
             out = re.sub(r"\bT\d+(?::C?\d+)?\b", "", out, flags=re.I)
             out = re.sub(r"THC[:~\s]*[\d./%]+.*$", "", out, flags=re.I)
             out = re.sub(r"CBD[:~\s]*[\d./%]+.*$", "", out, flags=re.I)
+            out = re.sub(r"\s*\([^)]*(THC|CBD|%)[^)]*\)\s*$", "", out, flags=re.I)
+            out = re.sub(r"\s*\([^)]*$", "", out)
+            out = re.sub(r"\s*[\(\[\{]+$", "", out)
             out = re.sub(r"[\s\-_/]+", " ", out).strip()
             return out
 
