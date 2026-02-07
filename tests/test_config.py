@@ -27,6 +27,23 @@ class ConfigTests(unittest.TestCase):
             self.assertIn("scraper", cfg)
             self.assertIn("ui", cfg)
 
+    def test_tracker_persists_roa_and_mix_visibility(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "config.json"
+            tracker_cfg = config.DEFAULT_TRACKER_CONFIG.copy()
+            tracker_cfg["hide_roa_options"] = True
+            tracker_cfg["hide_mixed_dose"] = True
+            tracker_cfg["hide_mix_stock"] = True
+            tracker_cfg["log_column_widths"] = {"time": 80, "flower": 240}
+            tracker_cfg["show_stock_form"] = False
+            config.save_tracker_config(path, tracker_cfg)
+            reloaded = config.load_tracker_config(path)
+            self.assertTrue(reloaded.get("hide_roa_options"))
+            self.assertTrue(reloaded.get("hide_mixed_dose"))
+            self.assertTrue(reloaded.get("hide_mix_stock"))
+            self.assertEqual(reloaded.get("log_column_widths", {}).get("time"), 80)
+            self.assertFalse(reloaded.get("show_stock_form", True))
+
     def test_save_unified_encrypts_scraper_secrets(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "config.json"
