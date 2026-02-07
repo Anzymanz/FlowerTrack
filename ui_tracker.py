@@ -1806,6 +1806,7 @@ class CannabisTracker:
                     self.log_tree.column(col, width=width)
         self._apply_scraper_controls_visibility()
         self._apply_roa_visibility()
+        self._apply_stock_form_visibility()
     def _save_config(self) -> None:
         cfg = {
             "data_path": self.data_path or str(TRACKER_DATA_FILE),
