@@ -101,6 +101,7 @@ class CannabisTracker:
         self.hide_roa_options = False
         self.hide_mixed_dose = False
         self.hide_mix_stock = False
+        self.show_stock_form = True
         self.roa_options = {
             "Vaped": 0.60,
             "Eaten": 0.10,
@@ -298,8 +299,14 @@ class CannabisTracker:
         stock_frame.rowconfigure(0, weight=1)
         stock_frame.columnconfigure(0, weight=1)
         # Stock controls
-        form = ttk.Frame(stock_frame, padding=(0, 8, 0, 0))
-        form.grid(row=1, column=0, columnspan=2, sticky="ew")
+        stock_header = ttk.Frame(stock_frame)
+        stock_header.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(6, 2))
+        ttk.Label(stock_header, text="Add / Update Stock", font=self.font_bold_small).pack(side="left")
+        self.stock_form_toggle = ttk.Button(stock_header, text="Hide stock entry v", command=self._toggle_stock_form)
+        self.stock_form_toggle.pack(side="right")
+        form = ttk.Frame(stock_frame, padding=(0, 6, 0, 0))
+        form.grid(row=2, column=0, columnspan=2, sticky="ew")
+        self.stock_form_frame = form
         stock_frame.columnconfigure(0, weight=1)
         ttk.Label(form, text="Name").grid(row=0, column=0, sticky="w")
         self.name_entry = ttk.Entry(form, width=18)
@@ -322,17 +329,17 @@ class CannabisTracker:
         delete_btn = ttk.Button(form, text="Delete Selected", command=self.delete_stock)
         delete_btn.grid(row=1, column=7)
         totals_frame = ttk.Frame(stock_frame)
-        totals_frame.grid(row=2, column=0, columnspan=2, sticky="w", pady=(8, 0))
+        totals_frame.grid(row=3, column=0, columnspan=2, sticky="w", pady=(8, 0))
         self.total_label = ttk.Label(totals_frame, text="Total THC flower stock: 0.00 g", font=self.font_bold_small)
         self.total_label.pack(side="left", padx=(0, 10))
         self.total_cbd_label = ttk.Label(totals_frame, text="Total CBD flower stock: 0.00 g", font=self.font_bold_small)
         self.total_cbd_label.pack(side="left")
         self.days_label = ttk.Label(stock_frame, text="Days of THC flower usage left - target: N/A | actual: N/A", font=self.font_body)
-        self.days_label.grid(row=3, column=0, columnspan=2, sticky="w", pady=(2, 0))
+        self.days_label.grid(row=4, column=0, columnspan=2, sticky="w", pady=(2, 0))
         self.days_label_cbd = ttk.Label(
         stock_frame, text="Days of CBD flower usage left - target: N/A | actual: N/A", font=self.font_body
         )
-        self.days_label_cbd.grid(row=4, column=0, columnspan=2, sticky="w", pady=(0, 2))
+        self.days_label_cbd.grid(row=5, column=0, columnspan=2, sticky="w", pady=(0, 2))
         self.days_label_cbd.grid_remove()
         # Dose + log area
         right = ttk.Frame(main)
@@ -2500,6 +2507,21 @@ class CannabisTracker:
                     self.roa_choice.grid()
         except Exception:
             pass
+
+    def _toggle_stock_form(self) -> None:
+        self.show_stock_form = not bool(getattr(self, "show_stock_form", True))
+        frame = getattr(self, "stock_form_frame", None)
+        btn = getattr(self, "stock_form_toggle", None)
+        if frame:
+            try:
+                (frame.grid if self.show_stock_form else frame.grid_remove)()
+            except Exception:
+                pass
+        if btn:
+            try:
+                btn.configure(text="Hide stock entry v" if self.show_stock_form else "Show stock entry >")
+            except Exception:
+                pass
         try:
             btn = getattr(self, "mixed_dose_button", None)
             if btn:
