@@ -118,43 +118,6 @@ def _clean_title(value: str | None) -> str | None:
     out = re.sub(r"\s+", " ", out).strip()
     return out
 
-def _refine_oil_vape_title(title: str, brand: str | None) -> str:
-    base = str(title or "").strip()
-    if not base:
-        return base
-    upper = base.upper()
-    if upper in {"NULL", "NONE", "N/A", "NA"}:
-        return ""
-    # Strip leading brand duplication if present.
-    if brand:
-        b = str(brand).strip()
-        if b and base.upper().startswith(b.upper()):
-            base = base[len(b):].strip()
-    base = re.sub(r"\s+", " ", base).strip()
-    # Prefer descriptive oil wording when present.
-    core = ""
-    if re.search(r"\bFULL SPECTRUM OIL\b", base, re.I):
-        core = "Full Spectrum Oil"
-    elif re.search(r"\bSUBLINGUAL OIL\b", base, re.I):
-        core = "Sublingual Oil"
-    elif re.search(r"\bMEDICAL CANNABIS OIL\b", base, re.I):
-        core = "Oil"
-    elif re.search(r"\bCANNABIS OIL\b", base, re.I):
-        core = "Oil"
-    elif re.search(r"\bOIL\b", base, re.I):
-        core = "Oil"
-    elif re.search(r"\bVAPE\b", base, re.I):
-        core = "Vape"
-    ratio = None
-    ratio_match = re.search(r"\bT\d+(?::C?\d+)?\b", base, re.I)
-    if ratio_match:
-        ratio = ratio_match.group(0).upper()
-    balance = "Balance" if re.search(r"\bBALANCE\b", base, re.I) else ""
-    parts = [p for p in (ratio, balance, core) if p]
-    if parts:
-        return " ".join(parts)
-    return base
-
 def _parse_formulary_item(entry: dict) -> ItemDict | None:
     if not isinstance(entry, dict):
         return None
@@ -200,9 +163,8 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
     if product_type in {"oil", "vape"}:
         preferred = product_name or long_name
         long_clean = _clean_title(preferred) if preferred else None
-        refined = _refine_oil_vape_title(long_clean or "", brand)
-        if refined:
-            name = refined
+        if long_clean:
+            name = long_clean
     strain = cannabis.get("strainName") or metadata.get("strain")
     if not strain or str(strain).strip().upper() in {"N/A", "NA", "NONE", "UNKNOWN"}:
         strain = name
