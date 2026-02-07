@@ -1929,6 +1929,16 @@ class CannabisTracker:
                 names = zf.namelist()
         except Exception as exc:
             return f"Could not read backup:\n{exc}"
+        external_hits = [name for name in names if name.startswith("external/")]
+        if external_hits:
+            preview = "\n".join(f"  - {name}" for name in external_hits[:5])
+            more = "" if len(external_hits) <= 5 else f"\n  ...and {len(external_hits) - 5} more"
+            return (
+                "Warning: Backup contains files stored outside the default AppData paths.\n"
+                "These will be imported into your AppData data/logs paths if present.\n\n"
+                "External files detected:\n"
+                f"{preview}{more}\n\nContinue?"
+            )
         def _has(prefix: str, suffix: str | None = None) -> bool:
             for name in names:
                 if not name.startswith(prefix):
