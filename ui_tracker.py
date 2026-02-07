@@ -1507,12 +1507,17 @@ class CannabisTracker:
             return f"{minutes}m {sec}s"
         return f"{sec}s"
     def _render_stats_rows(self, rows: list[tuple[str, str]]) -> None:
+        try:
+            self.stats_frame.columnconfigure(0, weight=1)
+            self.stats_frame.columnconfigure(1, weight=1)
+        except Exception:
+            pass
         for idx, (label, value) in enumerate(rows):
             ttk.Label(self.stats_frame, text=label, font=self.font_body, anchor="w").grid(
                 row=idx, column=0, sticky="w", padx=(0, 12), pady=(0, 2)
             )
             ttk.Label(self.stats_frame, text=value, font=self.font_body, anchor="e").grid(
-                row=idx, column=1, sticky="e", padx=(50, 0), pady=(0, 2)
+                row=idx, column=1, sticky="e", padx=(0, 0), pady=(0, 2)
             )
     def _logs_for_period(self, period: str) -> tuple[list[dict[str, float]], str, int]:
         end_date = self.current_date
