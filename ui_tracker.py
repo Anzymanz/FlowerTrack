@@ -1514,10 +1514,10 @@ class CannabisTracker:
             pass
         for idx, (label, value) in enumerate(rows):
             ttk.Label(self.stats_frame, text=label, font=self.font_body, anchor="w").grid(
-                row=idx, column=0, sticky="w", padx=(0, 12), pady=(0, 2)
+                row=idx, column=0, sticky="w", padx=(8, 12), pady=(0, 2)
             )
             ttk.Label(self.stats_frame, text=value, font=self.font_body, anchor="e").grid(
-                row=idx, column=1, sticky="e", padx=(0, 0), pady=(0, 2)
+                row=idx, column=1, sticky="e", padx=(0, 12), pady=(0, 2)
             )
     def _logs_for_period(self, period: str) -> tuple[list[dict[str, float]], str, int]:
         end_date = self.current_date
@@ -2115,24 +2115,27 @@ class CannabisTracker:
         except Exception:
             pass
         win.resizable(False, False)
+        win.geometry("520x360")
         frame = ttk.Frame(win, padding=12)
         frame.grid(row=0, column=0, sticky="nsew")
+        frame.columnconfigure(0, weight=1)
         btns = ttk.Frame(frame)
-        btns.grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 8))
+        btns.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 8))
+        btns.columnconfigure(5, weight=1)
         for idx, (p, text) in enumerate(
             [("day", "Day"), ("week", "Week"), ("month", "Month"), ("year", "Year")]
         ):
             ttk.Button(btns, text=text, width=7, command=lambda per=p: self._update_stats_display(per, win)).grid(
                 row=0, column=idx, padx=(0 if idx == 0 else 6, 0)
             )
-        ttk.Button(btns, text="Export CSV", command=lambda: self._export_stats_csv(getattr(win, "_stats_period", period))).grid(row=0, column=4, padx=(12, 0))
+        ttk.Button(btns, text="Export CSV", command=lambda: self._export_stats_csv(getattr(win, "_stats_period", period))).grid(row=0, column=4, padx=(12, 0), sticky="e")
         # Title line for period label
         self.stats_title = ttk.Label(frame, text=title, justify="left", font=self.font_bold_small, foreground="#555555")
         self.stats_title.grid(row=1, column=0, sticky="w", pady=(4, 2))
         self.stats_frame = ttk.Frame(frame)
         self.stats_frame.grid(row=2, column=0, sticky="ew", padx=(6, 0))
         self._render_stats_rows(stats_list)
-        ttk.Button(frame, text="Close", command=win.destroy).grid(row=3, column=0, sticky="e", pady=(8, 0))
+        ttk.Button(frame, text="Close", command=win.destroy).grid(row=3, column=0, sticky="e", pady=(8, 0), padx=(0, 6))
         self._prepare_toplevel(win)
     def _update_stats_display(self, period: str, win: tk.Toplevel) -> None:
         win._stats_period = period
