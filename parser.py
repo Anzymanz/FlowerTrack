@@ -158,6 +158,12 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
         or _normalize_product_type(product.get("type"))
         or _normalize_product_type(name)
     )
+    if product_type == "oil":
+        try:
+            if "BALANCE" in str(raw_name).upper():
+                name = "Balance"
+        except Exception:
+            pass
     if product_type in {"oil", "vape"} and long_name:
         long_clean = _clean_title(long_name) or long_name
         if long_clean:
