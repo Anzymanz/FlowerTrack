@@ -372,6 +372,7 @@ class CannabisTracker:
         self.mixed_dose_button = ttk.Button(dose_frame, text="Mixed dose", command=self.launch_mix_calculator)
         self.mixed_dose_button.grid(row=1, column=4, padx=(8, 0))
         self._mixed_dose_grid = self.mixed_dose_button.grid_info()
+        self._apply_stock_form_visibility()
         self._mixed_dose_grid = self.mixed_dose_button.grid_info()
         self.note_label = None
         self.remaining_today_label = ttk.Label(
@@ -1134,6 +1135,7 @@ class CannabisTracker:
         if self.roa_choice.get() not in values and values:
             self.roa_choice.set(values[0])
         self._apply_roa_visibility()
+        self._apply_stock_form_visibility()
         self._refresh_stock()
         self._refresh_log()
         try:
@@ -1741,6 +1743,7 @@ class CannabisTracker:
         self.hide_roa_options = bool(cfg.get("hide_roa_options", False))
         self.hide_mixed_dose = bool(cfg.get("hide_mixed_dose", False))
         self.hide_mix_stock = bool(cfg.get("hide_mix_stock", False))
+        self.show_stock_form = bool(cfg.get("show_stock_form", True))
         self.minimize_to_tray = bool(cfg.get("minimize_to_tray", self.minimize_to_tray))
         self.close_to_tray = bool(cfg.get("close_to_tray", self.close_to_tray))
         self.show_scraper_status_icon = bool(cfg.get("show_scraper_status_icon", self.show_scraper_status_icon))
@@ -1810,6 +1813,7 @@ class CannabisTracker:
             "hide_roa_options": self.hide_roa_options,
             "hide_mixed_dose": getattr(self, "hide_mixed_dose", False),
             "hide_mix_stock": getattr(self, "hide_mix_stock", False),
+            "show_stock_form": getattr(self, "show_stock_form", True),
             "window_geometry": self.window_geometry,
             "stock_column_widths": self.stock_column_widths,
             "log_column_widths": self.log_column_widths,
@@ -2548,6 +2552,13 @@ class CannabisTracker:
 
     def _toggle_stock_form(self) -> None:
         self.show_stock_form = not bool(getattr(self, "show_stock_form", True))
+        self._apply_stock_form_visibility()
+        try:
+            self._save_config()
+        except Exception:
+            pass
+
+    def _apply_stock_form_visibility(self) -> None:
         frame = getattr(self, "stock_form_frame", None)
         btn = getattr(self, "stock_form_toggle", None)
         if frame:
