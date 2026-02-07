@@ -1152,6 +1152,8 @@ class CannabisTracker:
         if key == "stock_column_widths":
             self.stock_column_widths = widths
         else:
+            if getattr(self, "_suspend_log_width_save", False):
+                return
             self.log_column_widths = widths
         self._save_config()
     def _persist_tree_widths(self) -> None:
@@ -2489,11 +2491,33 @@ class CannabisTracker:
         try:
             if hasattr(self, "log_tree"):
                 cols = list(self.log_tree["columns"])
+                widths = self.log_column_widths or {
+                    col: int(self.log_tree.column(col, option="width")) for col in cols
+                }
                 if hide:
                     display = [c for c in cols if c not in ("roa", "thc_mg", "cbd_mg")]
+                    hidden_total = sum(
+                        widths.get(col, int(self.log_tree.column(col, option="width")))
+                        for col in cols
+                        if col not in display
+                    )
+                    flower_width = widths.get("flower", int(self.log_tree.column("flower", option="width")))
+                    adjusted = dict(widths)
+                    adjusted["flower"] = max(50, flower_width + hidden_total)
                 else:
                     display = cols
+                    adjusted = dict(widths)
+                self._suspend_log_width_save = True
                 self.log_tree["displaycolumns"] = display
+                for col, width in adjusted.items():
+                    try:
+                        self.log_tree.column(col, width=width)
+                    except Exception:
+                        continue
+                try:
+                    self.root.after(300, lambda: setattr(self, "_suspend_log_width_save", False))
+                except Exception:
+                    self._suspend_log_width_save = False
         except Exception:
             pass
 
