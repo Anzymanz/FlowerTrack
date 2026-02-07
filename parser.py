@@ -125,11 +125,9 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
     cannabis = product.get("cannabisSpecification") or {}
     specs = entry.get("specifications") or product.get("specifications") or {}
     metadata = product.get("metadata") or {}
-    product_name = product.get("name") or ""
-    raw_name = entry.get("name") or product_name or entry.get("title") or product.get("title") or ""
+    raw_name = entry.get("name") or product.get("name") or entry.get("title") or product.get("title") or ""
     long_name = (
-        product_name
-        or raw_name
+        raw_name
         or (metadata.get("name") if isinstance(metadata, dict) else None)
         or (metadata.get("title") if isinstance(metadata, dict) else None)
         or ""
@@ -160,9 +158,8 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
         or _normalize_product_type(product.get("type"))
         or _normalize_product_type(name)
     )
-    if product_type in {"oil", "vape"}:
-        preferred = product_name or long_name
-        long_clean = _clean_title(preferred) if preferred else None
+    if product_type in {"oil", "vape"} and long_name:
+        long_clean = _clean_title(long_name) or long_name
         if long_clean:
             name = long_clean
     strain = cannabis.get("strainName") or metadata.get("strain")
