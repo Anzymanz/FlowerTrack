@@ -23,6 +23,16 @@ class TrackerRoaTests(unittest.TestCase):
         roa = ui_tracker.CannabisTracker._resolve_roa(dummy)
         self.assertEqual(roa, "Smoked")
 
+    def test_stats_window_height_bounds(self):
+        def _height_for_count(count: int) -> int:
+            height = 200 + max(0, count) * 16
+            return max(260, min(420, height))
+        # CBD tracking adds rows but height stays within bounds.
+        self.assertEqual(_height_for_count(0), 260)
+        self.assertEqual(_height_for_count(5), 280)
+        self.assertEqual(_height_for_count(20), 420)
+        self.assertEqual(_height_for_count(50), 420)
+
 
 if __name__ == "__main__":
     unittest.main()
