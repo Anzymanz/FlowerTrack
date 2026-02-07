@@ -44,6 +44,18 @@ class ConfigTests(unittest.TestCase):
             self.assertEqual(reloaded.get("log_column_widths", {}).get("time"), 80)
             self.assertFalse(reloaded.get("show_stock_form", True))
 
+    def test_tracker_defaults_missing_mix_visibility(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "config.json"
+            raw = config._default_unified_config()
+            raw["tracker"] = {"dark_mode": False}
+            path.write_text(json.dumps(raw), encoding="utf-8")
+            reloaded = config.load_tracker_config(path)
+            self.assertIn("hide_mixed_dose", reloaded)
+            self.assertIn("hide_mix_stock", reloaded)
+            self.assertFalse(reloaded.get("hide_mixed_dose"))
+            self.assertFalse(reloaded.get("hide_mix_stock"))
+
     def test_save_unified_encrypts_scraper_secrets(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "config.json"
