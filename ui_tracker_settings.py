@@ -115,37 +115,40 @@ def open_tracker_settings(app) -> None:
     app.hide_mixed_dose_var = tk.BooleanVar(value=getattr(app, "hide_mixed_dose", False))
     chk_hide_mixed = ttk.Checkbutton(frame, text="Hide mixed dose option", variable=app.hide_mixed_dose_var)
     chk_hide_mixed.grid(row=13, column=0, columnspan=3, sticky="w", pady=(0, 6))
+    app.hide_mix_stock_var = tk.BooleanVar(value=getattr(app, "hide_mix_stock", False))
+    chk_hide_mix_stock = ttk.Checkbutton(frame, text="Hide mix stock option", variable=app.hide_mix_stock_var)
+    chk_hide_mix_stock.grid(row=14, column=0, columnspan=3, sticky="w", pady=(0, 6))
 
     lbl_daily_target = ttk.Label(frame, text="Daily target (THC)")
-    lbl_daily_target.grid(row=14, column=0, sticky="w", pady=(6, 0))
+    lbl_daily_target.grid(row=15, column=0, sticky="w", pady=(6, 0))
     dt_frame = ttk.Frame(frame)
     app.daily_target_entry = ttk.Entry(dt_frame, width=4)
     app.daily_target_entry.pack(side="left", padx=(0, 2))
     ttk.Label(dt_frame, text="g/day").pack(side="left")
-    dt_frame.grid(row=14, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
+    dt_frame.grid(row=15, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
 
     lbl_daily_target_cbd = ttk.Label(frame, text="Daily target (CBD)")
-    lbl_daily_target_cbd.grid(row=15, column=0, sticky="w", pady=(2, 0))
+    lbl_daily_target_cbd.grid(row=16, column=0, sticky="w", pady=(2, 0))
     dtc_frame = ttk.Frame(frame)
     app.daily_target_cbd_entry = ttk.Entry(dtc_frame, width=4)
     app.daily_target_cbd_entry.pack(side="left", padx=(0, 2))
     ttk.Label(dtc_frame, text="g/day").pack(side="left")
-    dtc_frame.grid(row=15, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+    dtc_frame.grid(row=16, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
 
     lbl_avg_days = ttk.Label(frame, text="Average usage window")
-    lbl_avg_days.grid(row=16, column=0, sticky="w", pady=(2, 0))
+    lbl_avg_days.grid(row=17, column=0, sticky="w", pady=(2, 0))
     avg_frame = ttk.Frame(frame)
     app.avg_usage_days_entry = ttk.Entry(avg_frame, width=4)
     app.avg_usage_days_entry.pack(side="left", padx=(0, 2))
     ttk.Label(avg_frame, text="days").pack(side="left")
-    avg_frame.grid(row=16, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+    avg_frame.grid(row=17, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
 
     ttk.Label(frame, text="Route efficiency (%)", font=app.font_bold_small).grid(
-        row=17, column=0, sticky="w", pady=(10, 6)
+        row=18, column=0, sticky="w", pady=(10, 6)
     )
     app.roa_vars: dict[str, tk.StringVar] = {}
     app.roa_entries: dict[str, ttk.Entry] = {}
-    roa_row = 18
+    roa_row = 19
     for idx, (name, eff) in enumerate(app.roa_options.items()):
         ttk.Label(frame, text=name).grid(row=roa_row + idx, column=0, sticky="w", pady=(2, 0))
         var = tk.StringVar(value=f"{eff*100:.0f}")
@@ -234,6 +237,7 @@ def open_tracker_settings(app) -> None:
     app._bind_tooltip(chk_track_cbd, "Enable separate CBD usage targets and daily totals.")
     app._bind_tooltip(chk_hide_roa, "Hide ROA selection and ROA/THC/CBD columns in the usage log.")
     app._bind_tooltip(chk_hide_mixed, "Hide the Mixed dose shortcut in the log dose window.")
+    app._bind_tooltip(chk_hide_mix_stock, "Hide the Mix stock shortcut in the stock entry row.")
     app._bind_tooltip(lbl_daily_target, "Daily THC target in grams used to compute remaining today and target days left.")
     app._bind_tooltip(app.daily_target_entry, "Daily THC target in grams used to compute remaining today and target days left.")
     app._bind_tooltip(lbl_daily_target_cbd, "Daily CBD target in grams used to compute CBD remaining/used today.")
