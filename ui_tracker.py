@@ -2501,6 +2501,13 @@ class CannabisTracker:
     def _apply_roa_visibility(self) -> None:
         hide = bool(getattr(self, "hide_roa_options", False))
         try:
+            if hasattr(self, "log_tree"):
+                cols = list(self.log_tree["columns"])
+                display = tuple(c for c in cols if c not in ("roa", "thc_mg", "cbd_mg")) if hide else cols
+                self.log_tree["displaycolumns"] = display
+        except Exception:
+            pass
+        try:
             if hide:
                 if hasattr(self, "roa_label"):
                     self.roa_label.grid_remove()
@@ -2553,41 +2560,36 @@ class CannabisTracker:
                     col: int(self.log_tree.column(col, option="width")) for col in cols
                 }
                 has_prefs = bool(self.log_column_widths)
+                display = cols
+                if hide:
+                    display = tuple(c for c in cols if c not in ("roa", "thc_mg", "cbd_mg"))
+                try:
+                    self.log_tree["displaycolumns"] = display
+                    self.log_tree.configure(displaycolumns=display)
+                except Exception:
+                    pass
                 if hide:
                     if has_prefs:
-                        display = [c for c in cols if c not in ("roa", "thc_mg", "cbd_mg")]
                         adjusted = dict(widths)
-                        self._suspend_log_width_save = True
-                        self.log_tree["displaycolumns"] = display
-                        for col, width in adjusted.items():
-                            try:
-                                self.log_tree.column(col, width=width)
-                            except Exception:
-                                continue
-                        try:
-                            self.root.after(300, lambda: setattr(self, "_suspend_log_width_save", False))
-                        except Exception:
-                            self._suspend_log_width_save = False
-                        return
-                    if not hasattr(self, "_log_widths_before_hide"):
-                        self._log_widths_before_hide = dict(widths)
-                    display = [c for c in cols if c not in ("roa", "thc_mg", "cbd_mg")]
-                    hidden_total = sum(
-                        widths.get(col, int(self.log_tree.column(col, option="width")))
-                        for col in cols
-                        if col not in display
-                    )
-                    adjusted = dict(widths)
-                    visible = [c for c in display]
-                    base_total = sum(adjusted.get(c, 0) for c in visible) or 1
-                    min_widths = {
-                        "time": 70,
-                        "flower": 160,
-                        "grams": 80,
-                    }
-                    for col in visible:
-                        share = adjusted.get(col, 0) / base_total
-                        adjusted[col] = max(min_widths.get(col, 50), adjusted.get(col, 0) + int(hidden_total * share))
+                    if not has_prefs:
+                        if not hasattr(self, "_log_widths_before_hide"):
+                            self._log_widths_before_hide = dict(widths)
+                        hidden_total = sum(
+                            widths.get(col, int(self.log_tree.column(col, option="width")))
+                            for col in cols
+                            if col not in display
+                        )
+                        adjusted = dict(widths)
+                        visible = [c for c in display]
+                        base_total = sum(adjusted.get(c, 0) for c in visible) or 1
+                        min_widths = {
+                            "time": 70,
+                            "flower": 160,
+                            "grams": 80,
+                        }
+                        for col in visible:
+                            share = adjusted.get(col, 0) / base_total
+                            adjusted[col] = max(min_widths.get(col, 50), adjusted.get(col, 0) + int(hidden_total * share))
                 else:
                     display = cols
                     restore = getattr(self, "_log_widths_before_hide", None)
@@ -2595,16 +2597,32 @@ class CannabisTracker:
                     if hasattr(self, "_log_widths_before_hide"):
                         delattr(self, "_log_widths_before_hide")
                 self._suspend_log_width_save = True
-                self.log_tree["displaycolumns"] = display
                 for col, width in adjusted.items():
                     try:
                         self.log_tree.column(col, width=width)
                     except Exception:
                         continue
                 try:
+                    self.log_tree.update_idletasks()
+                    self.log_tree["displaycolumns"] = display
+                except Exception:
+                    pass
+                try:
                     self.root.after(300, lambda: setattr(self, "_suspend_log_width_save", False))
                 except Exception:
                     self._suspend_log_width_save = False
+        except Exception:
+            pass
+
+        # Final fallback to ensure ROA/THC/CBD columns are hidden when requested.
+        try:
+            if hasattr(self, "log_tree"):
+                cols = list(self.log_tree["columns"])
+                if hide:
+                    display = tuple(c for c in cols if c not in ("roa", "thc_mg", "cbd_mg"))
+                else:
+                    display = cols
+                self.log_tree["displaycolumns"] = display
         except Exception:
             pass
 
