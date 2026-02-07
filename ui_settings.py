@@ -227,10 +227,10 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
 
     def _resize_to_content():
         win.update_idletasks()
-        width = max(win.winfo_width(), base_width)
+        desired_width = max(520, min(base_width, scraper_tab.winfo_reqwidth() + 24))
         desired = max(scraper_tab.winfo_reqheight() + 24, min_height)
         height = min(desired, max_height)
-        win.geometry(f"{width}x{height}")
+        win.geometry(f"{desired_width}x{height}")
         _update_scrollregion()
 
     def toggle_advanced():
@@ -243,6 +243,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     toggle_advanced()
     advanced_toggle.config(command=toggle_advanced)
     row_idx += 1
+    _resize_to_content()
 
     ttk.Separator(form, orient="horizontal").grid(row=row_idx, column=0, columnspan=2, sticky="ew", pady=6)
     row_idx += 1
