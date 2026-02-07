@@ -8,6 +8,19 @@ import time
 from pathlib import Path
 from typing import Callable, Optional, Tuple
 
+_EXPORT_EVENT_LOCK = threading.Lock()
+_EXPORT_EVENT_COND = threading.Condition(_EXPORT_EVENT_LOCK)
+_EXPORT_EVENT_VERSION = 0
+_EXPORT_EVENT_TS = ""
+
+
+def notify_export_updated(stamp: str) -> None:
+    global _EXPORT_EVENT_VERSION, _EXPORT_EVENT_TS
+    with _EXPORT_EVENT_COND:
+        _EXPORT_EVENT_VERSION += 1
+        _EXPORT_EVENT_TS = stamp
+        _EXPORT_EVENT_COND.notify_all()
+
 
 def _port_ready(host: str, port: int, timeout: float = 0.5) -> bool:
     try:
@@ -42,6 +55,33 @@ def start_export_server(preferred_port: int, exports_dir: Path, log: Callable[[s
         def do_GET(self):
             try:
                 path = self.path.split("?", 1)[0]
+                if path.rstrip("/") == "/events":
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/event-stream")
+                    self.send_header("Cache-Control", "no-cache")
+                    self.send_header("Connection", "keep-alive")
+                    self.end_headers()
+                    last_seen = -1
+                    while True:
+                        with _EXPORT_EVENT_COND:
+                            _EXPORT_EVENT_COND.wait(timeout=60.0)
+                            version = _EXPORT_EVENT_VERSION
+                            stamp = _EXPORT_EVENT_TS
+                        if version != last_seen:
+                            last_seen = version
+                            payload = stamp or ""
+                            try:
+                                self.wfile.write(f"event: export\ndata: {payload}\n\n".encode("utf-8"))
+                                self.wfile.flush()
+                            except Exception:
+                                break
+                        else:
+                            try:
+                                self.wfile.write(b": heartbeat\n\n")
+                                self.wfile.flush()
+                            except Exception:
+                                break
+                    return
                 if path.rstrip("/") == "/flowerbrowser":
                     latest = self._latest_export_name()
                     if latest:

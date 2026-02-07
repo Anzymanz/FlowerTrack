@@ -61,6 +61,8 @@ body{background:var(--bg);color:var(--fg);font-family:Arial;padding:16px;margin:
 .history-detail-list{margin:0;padding-left:18px}
 .history-detail-line{margin:4px 0}
 .history-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.update-banner{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:999px;padding:8px 14px;display:none;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,0.25);z-index:10001}
+.update-banner button{padding:6px 10px;border-radius:999px}
 .basket-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
 .basket-row:last-child{border-bottom:none}
 .basket-title{font-weight:700;font-size:16px;margin-bottom:8px}
@@ -357,6 +359,7 @@ let changesData = null;
 let changesError = "";
 let historyLoaded = false;
 let historyLoading = false;
+let latestExportMs = 0;
 function escapeHtml(val) {
     if (val === null || val === undefined) return "";
     return String(val)
@@ -365,6 +368,55 @@ function escapeHtml(val) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
+}
+function initExportTimestamp() {
+    try {
+        const raw = document.body.getAttribute('data-exported') || '';
+        const dt = new Date(raw);
+        if (!Number.isNaN(dt.getTime())) {
+            latestExportMs = dt.getTime();
+        }
+    } catch (e) {}
+}
+function showUpdateBanner() {
+    let banner = document.getElementById('updateBanner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'updateBanner';
+        banner.className = 'update-banner';
+        banner.innerHTML = `<span>New version available — refresh to update.</span><button onclick="location.reload()">Refresh</button>`;
+        document.body.appendChild(banner);
+    }
+    banner.style.display = 'flex';
+}
+function handleExportUpdate(stamp) {
+    const ms = parseInt(stamp, 10);
+    if (Number.isFinite(ms) && ms > latestExportMs) {
+        showUpdateBanner();
+    }
+}
+function startExportUpdates() {
+    if (location.protocol.startsWith('http') && typeof EventSource !== 'undefined') {
+        try {
+            const es = new EventSource('/events');
+            es.addEventListener('export', (ev) => handleExportUpdate(ev.data));
+            es.onerror = () => {};
+        } catch (e) {}
+    }
+    setInterval(() => {
+        try {
+            fetch('changes_latest.json', { method: 'HEAD', cache: 'no-store' })
+                .then((resp) => {
+                    const lm = resp.headers.get('Last-Modified');
+                    if (!lm) return;
+                    const dt = new Date(lm);
+                    if (!Number.isNaN(dt.getTime()) && dt.getTime() > latestExportMs) {
+                        showUpdateBanner();
+                    }
+                })
+                .catch(() => {});
+        } catch (e) {}
+    }, 60000);
 }
 function decodeBase64Utf8(b64) {
     if (!b64) return "";
@@ -858,6 +910,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         saved = localStorage.getItem('ft_theme');
     } catch (e) {}
+    initExportTimestamp();
     applyTheme(saved === 'light');
     loadFilterPrefs();
     loadFavorites();
@@ -985,6 +1038,7 @@ document.addEventListener('DOMContentLoaded', () => {
     observeLoadMore();
     setTimeout(tryAutoFill, 100);
     preloadHistory();
+    startExportUpdates();
 });
 </script>
 </head><body>

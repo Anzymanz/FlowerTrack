@@ -6,6 +6,7 @@ import json
 import math
 import os
 import re
+import time
 import urllib.parse
 import webbrowser
 from datetime import datetime
@@ -604,6 +605,11 @@ def export_html(data, path, fetch_images=False):
     html_text = html_text.replace("{thc_min_bound}", str(thc_min_bound))
     html_text = html_text.replace("{thc_max_bound}", str(thc_max_bound))
     out_path.write_text(html_text, encoding="utf-8")
+    try:
+        from export_server import notify_export_updated
+        notify_export_updated(str(int(time.time() * 1000)))
+    except Exception:
+        pass
     
 def export_html_auto(
     data, exports_dir: Optional[Path] = None, open_file: bool = False, fetch_images=False, max_files: int = 1
