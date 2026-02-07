@@ -146,6 +146,9 @@ class App(tk.Tk):
         self.progress.pack(fill="x", padx=10, pady=5)
         self.status = ttk.Label(self, text="Idle")
         self.status.pack(pady=(2, 2))
+        self.pagination_label = ttk.Label(self, text="", font=("", 9))
+        self.pagination_label.pack()
+        self._pagination_busy = False
         # Capture status bookkeeping
         self.capture_status = "idle"
         self._write_scraper_state("idle")
@@ -371,6 +374,7 @@ class App(tk.Tk):
         if not self.capture_stop.is_set():
             self.capture_stop.set()
         self._capture_log("Auto-capture stopped.")
+        self._set_pagination_busy(False)
         self._update_tray_status()
         self._write_scraper_state("stopped")
 
@@ -419,6 +423,28 @@ class App(tk.Tk):
         # Update status label for capture-related messages
         try:
             self.status.config(text=msg)
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
+        lower = str(msg or "").lower()
+        if "api pagination" in lower or "pagination fetch" in lower:
+            self._set_pagination_busy(True)
+        elif (
+            "api capture fetched" in lower
+            or "api items parsed" in lower
+            or "no api data found" in lower
+            or "api capture failed" in lower
+        ):
+            self._set_pagination_busy(False)
+
+    def _set_pagination_busy(self, busy: bool) -> None:
+        if self._pagination_busy == busy:
+            return
+        self._pagination_busy = busy
+        try:
+            if busy:
+                self.pagination_label.config(text="Fetching pages...")
+            else:
+                self.pagination_label.config(text="")
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
     def _generate_change_export(self, items: list[dict] | None = None, silent: bool = False):
@@ -751,6 +777,8 @@ class App(tk.Tk):
                 self.status.config(text=f"Status: {status}")
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
+        if status in {"idle", "stopped", "faulted", "retrying"}:
+            self._set_pagination_busy(False)
         self._update_tray_status()
     def _write_scraper_state(self, status: str) -> None:
         try:
