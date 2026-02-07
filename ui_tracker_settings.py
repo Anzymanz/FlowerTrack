@@ -166,13 +166,13 @@ def open_tracker_settings(app) -> None:
     lbl_backup = ttk.Label(frame, text="Backup & restore")
     lbl_backup.grid(row=sep_row + 2, column=0, sticky="w")
     btn_backup_export = ttk.Button(frame, text="Export backup..", command=app._settings_export_backup)
-    btn_backup_export.grid(row=sep_row + 2, column=1, sticky="w", padx=(4, 0), pady=(2, 6))
+    btn_backup_export.grid(row=sep_row + 2, column=1, sticky="w", padx=(4, 0), pady=(2, 2))
     btn_backup_import = ttk.Button(frame, text="Import backup..", command=app._settings_import_backup)
-    btn_backup_import.grid(row=sep_row + 2, column=2, sticky="w", padx=(4, 0), pady=(2, 6))
+    btn_backup_import.grid(row=sep_row + 2, column=2, sticky="w", padx=(4, 0), pady=(2, 2))
 
     app.open_data_folder_btn = ttk.Button(frame, text="Open data folder", command=app._settings_open_data_folder)
     app.open_data_folder_btn.grid(
-        row=sep_row + 3, column=1, columnspan=2, sticky="w", padx=(4, 0), pady=(2, 0)
+        row=sep_row + 3, column=1, columnspan=2, sticky="w", padx=(4, 0), pady=(2, 4)
     )
 
     ttk.Separator(frame, orient="horizontal").grid(row=sep_row + 6, column=0, columnspan=4, sticky="ew", pady=(10, 6))
@@ -200,7 +200,7 @@ def open_tracker_settings(app) -> None:
     )
     app.close_var_check = ttk.Checkbutton(frame, text="Minimize to tray when closing", variable=app.close_var)
     app.close_var_check.grid(
-        row=sep_row + 13, column=0, columnspan=2, sticky="w", pady=(2, 0)
+        row=sep_row + 12, column=0, columnspan=2, sticky="w", pady=(2, 0)
     )
 
     app.total_green_entry.insert(0, f"{app.total_green_threshold}")
@@ -305,7 +305,7 @@ def open_tracker_settings(app) -> None:
         _bind_numeric_entry(entry, f"{name} efficiency (%)", min_value=0.0, max_value=100.0)
 
     actions = ttk.Frame(frame)
-    actions.grid(row=sep_row + 14, column=0, columnspan=4, sticky="ew", pady=(8, 0))
+    actions.grid(row=sep_row + 13, column=0, columnspan=4, sticky="ew", pady=(8, 0))
     actions.columnconfigure(0, weight=1)
     ttk.Button(actions, text="Save", command=app._save_settings).grid(
         row=0, column=1, sticky="e", padx=(0, 4)
