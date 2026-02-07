@@ -791,8 +791,10 @@ class CannabisTracker:
                 self.total_cbd_label.pack(side="left")
         else:
             self.total_label.config(text=f"Total flower stock: {combined_total:.2f} g")
-            if self.total_cbd_label.winfo_ismapped():
+            try:
                 self.total_cbd_label.pack_forget()
+            except Exception:
+                pass
         total_color = (
             self._color_for_value(combined_total, self.total_green_threshold, self.total_red_threshold)
             if self.enable_stock_coloring
@@ -2546,7 +2548,11 @@ class CannabisTracker:
                 widths = self.log_column_widths or {
                     col: int(self.log_tree.column(col, option="width")) for col in cols
                 }
+                has_prefs = bool(self.log_column_widths)
                 if hide:
+                    if has_prefs:
+                        self.log_tree["displaycolumns"] = [c for c in cols if c not in ("roa", "thc_mg", "cbd_mg")]
+                        return
                     if not hasattr(self, "_log_widths_before_hide"):
                         self._log_widths_before_hide = dict(widths)
                     display = [c for c in cols if c not in ("roa", "thc_mg", "cbd_mg")]
