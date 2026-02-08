@@ -988,7 +988,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadFavorites();
     loadBasket();
     showOutOfStock = false;
-    const outstockBtn = document.querySelector('[data-filter-outstock]');
+    let outstockBtn = document.querySelector('[data-filter-outstock]');
     if (outstockBtn) outstockBtn.classList.remove('active');
     document.querySelectorAll('.card').forEach(applyFavState);
     updateBasketUI();
@@ -1075,7 +1075,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     const smallsBtn = document.querySelector('[data-filter-smalls]');
     if (smallsBtn) smallsBtn.classList.toggle('active', showSmalls);
-    const outstockBtn = document.querySelector('[data-filter-outstock]');
+    outstockBtn = outstockBtn || document.querySelector('[data-filter-outstock]');
     if (outstockBtn) outstockBtn.classList.toggle('active', showOutOfStock);
     // Purge legacy stock filter preferences (in/low) if present.
     try {
