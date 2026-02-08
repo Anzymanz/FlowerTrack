@@ -523,6 +523,50 @@ function refreshBasketButtons() {
         }
     });
 }
+function loadBasket() {
+    try {
+        const raw = localStorage.getItem('ft_basket');
+        if (!raw) return;
+        const items = JSON.parse(raw);
+        if (!Array.isArray(items)) return;
+        items.forEach((item) => {
+            if (!item || !item.key) return;
+            const qty = parseInt(item.qty, 10);
+            const price = parseFloat(item.price);
+            if (!Number.isFinite(qty) || qty <= 0 || !Number.isFinite(price)) return;
+            basket.set(item.key, {
+                key: item.key,
+                name: item.name || "",
+                brand: item.brand || "",
+                price,
+                qty
+            });
+        });
+    } catch (e) {}
+}
+function saveBasket() {
+    try {
+        const items = [];
+        basket.forEach((item) => {
+            if (!item || !item.key) return;
+            const qty = parseInt(item.qty, 10);
+            const price = parseFloat(item.price);
+            if (!Number.isFinite(qty) || qty <= 0 || !Number.isFinite(price)) return;
+            items.push({
+                key: item.key,
+                name: item.name || "",
+                brand: item.brand || "",
+                price,
+                qty
+            });
+        });
+        if (items.length) {
+            localStorage.setItem('ft_basket', JSON.stringify(items));
+        } else {
+            localStorage.removeItem('ft_basket');
+        }
+    } catch (e) {}
+}
 function updateBasketUI() {
     const c = document.getElementById('basketCount');
     const t = document.getElementById('basketTotal');
@@ -556,6 +600,7 @@ function addToBasket(btn) {
     updateBasketUI();
     renderBasketModal(false);
     refreshBasketButtons();
+    saveBasket();
 }
 function toggleBasket() {
     renderBasketModal(true);
@@ -759,12 +804,14 @@ function updateBasketQty(key, val) {
     updateBasketUI();
     renderBasketModal(false);
     refreshBasketButtons();
+    saveBasket();
 }
 function removeFromBasket(key) {
     if (basket.has(key)) basket.delete(key);
     updateBasketUI();
     renderBasketModal(false);
     refreshBasketButtons();
+    saveBasket();
 }
 function loadFavorites() {
     try {
@@ -943,8 +990,10 @@ document.addEventListener('DOMContentLoaded', () => {
     applyTheme(saved === 'light');
     loadFilterPrefs();
     loadFavorites();
+    loadBasket();
     document.querySelectorAll('.card').forEach(applyFavState);
     updateBasketUI();
+    refreshBasketButtons();
     updateSortButtons();
     sortCards(state.key);
     // Init ranges
