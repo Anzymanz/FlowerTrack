@@ -490,6 +490,12 @@ class CaptureWorker:
         take = int(self.cfg.get("page_size", 50) or 50)
         if take <= 0:
             take = 50
+        if isinstance(data_list, list) and data_list and take > len(data_list):
+            take = len(data_list)
+            try:
+                self.callbacks["capture_log"](f"API pagination: adjusted take to {take} based on page size")
+            except Exception:
+                pass
         try:
             self.callbacks["capture_log"](f"API pagination: base={len(data_list)} total={total} take={take}")
         except Exception:
@@ -1385,6 +1391,12 @@ class CaptureWorker:
                                         take = int(self.cfg.get("page_size", 50) or 50)
                                         if take <= 0:
                                             take = 50
+                                        if isinstance(data_list, list) and data_list and take > len(data_list):
+                                            take = len(data_list)
+                                            try:
+                                                self.callbacks["capture_log"](f"Pagination: adjusted take to {take} based on page size")
+                                            except Exception:
+                                                pass
                                         try:
                                             take = int(urllib.parse.parse_qs(urllib.parse.urlparse(base_url).query).get('take', [take])[0])
                                         except Exception:
