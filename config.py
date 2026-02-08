@@ -131,7 +131,6 @@ DEFAULT_CAPTURE_CONFIG = {
     "retry_attempts": 3,
     "retry_wait_seconds": 30.0,
     "retry_backoff_max": 2.0,
-    "page_size": 50,
     "dump_capture_html": False,
     "dump_api_json": False,
     "dump_api_full": False,
@@ -384,7 +383,6 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["retry_attempts"] = int(_coerce_float(raw.get("retry_attempts"), DEFAULT_CAPTURE_CONFIG["retry_attempts"], 0))
     cfg["retry_wait_seconds"] = _coerce_float(raw.get("retry_wait_seconds"), DEFAULT_CAPTURE_CONFIG["retry_wait_seconds"], 0.0)
     cfg["retry_backoff_max"] = _coerce_float(raw.get("retry_backoff_max"), DEFAULT_CAPTURE_CONFIG["retry_backoff_max"], 1.0)
-    cfg["page_size"] = _coerce_int(raw.get("page_size"), DEFAULT_CAPTURE_CONFIG["page_size"], 1)
     cfg["timeout_ms"] = int(_coerce_float(raw.get("timeout_ms"), DEFAULT_CAPTURE_CONFIG["timeout_ms"], 0))
     cfg["headless"] = _coerce_bool(raw.get("headless"), DEFAULT_CAPTURE_CONFIG["headless"])
     cfg["api_only"] = _coerce_bool(raw.get("api_only"), DEFAULT_CAPTURE_CONFIG["api_only"])

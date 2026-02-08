@@ -218,7 +218,6 @@ class App(tk.Tk):
         self.cap_retry_attempts = tk.StringVar(value=str(cfg.get("retry_attempts", 3)))
         self.cap_retry_wait = tk.StringVar(value=str(cfg.get("retry_wait_seconds", cfg.get("post_nav_wait_seconds", 30))))
         self.cap_retry_backoff = tk.StringVar(value=str(cfg.get("retry_backoff_max", 4)))
-        self.cap_page_size = tk.StringVar(value=str(cfg.get("page_size", 50)))
         self.cap_user = tk.StringVar(value=decrypt_secret(cfg.get("username", "")))
         self.cap_pass = tk.StringVar(value=decrypt_secret(cfg.get("password", "")))
         self.cap_user_sel = tk.StringVar(value=cfg.get("username_selector", ""))
@@ -292,7 +291,6 @@ class App(tk.Tk):
             "retry_attempts": _parse_int(self.cap_retry_attempts.get(), DEFAULT_CAPTURE_CONFIG["retry_attempts"], "retry_attempts"),
             "retry_wait_seconds": _parse_float(self.cap_retry_wait.get(), DEFAULT_CAPTURE_CONFIG["retry_wait_seconds"], "retry_wait_seconds"),
             "retry_backoff_max": _parse_float(self.cap_retry_backoff.get(), DEFAULT_CAPTURE_CONFIG["retry_backoff_max"], "retry_backoff_max"),
-            "page_size": _parse_int(self.cap_page_size.get(), DEFAULT_CAPTURE_CONFIG["page_size"], "page_size"),
             "dump_capture_html": bool(self.cap_dump_html.get()),
             "dump_api_json": bool(self.cap_dump_api.get()),
             "dump_api_full": bool(self.cap_dump_api_full.get()),
@@ -814,7 +812,6 @@ class App(tk.Tk):
         self.cap_retry_attempts.set(int(cfg.get("retry_attempts", 3)))
         self.cap_retry_wait.set(str(cfg.get("retry_wait_seconds", cfg.get("post_nav_wait_seconds", 30))))
         self.cap_retry_backoff.set(str(cfg.get("retry_backoff_max", 4)))
-        self.cap_page_size.set(str(cfg.get("page_size", 50)))
         self.cap_dump_html.set(bool(cfg.get("dump_capture_html", False)))
         self.cap_dump_api.set(bool(cfg.get("dump_api_json", False)))
         self.cap_user.set(decrypt_secret(cfg.get("username", "")))
