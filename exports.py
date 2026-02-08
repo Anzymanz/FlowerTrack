@@ -599,12 +599,15 @@ def export_html(data, path, fetch_images=False):
         else:
             in_stock += 1
     total_products = in_stock + low_stock + out_stock
+    exported_at = datetime.now()
+    exported_ms = int(time.time() * 1000)
     html_text = html_text.replace(
         "<body>",
         (
-            f"<body data-exported='{esc_attr(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}' "
-            f"data-count='{total_products}' data-in-stock='{in_stock}' "
-            f"data-low-stock='{low_stock}' data-out-stock='{out_stock}'>"
+            f"<body data-exported='{esc_attr(exported_at.strftime('%Y-%m-%d %H:%M:%S'))}' "
+            f"data-exported-ms='{exported_ms}' data-count='{total_products}' "
+            f"data-in-stock='{in_stock}' data-low-stock='{low_stock}' "
+            f"data-out-stock='{out_stock}'>"
         ),
     )
     html_text = html_text.replace("{price_min_bound}", str(price_min_bound))
@@ -614,7 +617,7 @@ def export_html(data, path, fetch_images=False):
     out_path.write_text(html_text, encoding="utf-8")
     try:
         from export_server import notify_export_updated
-        notify_export_updated(str(int(time.time() * 1000)))
+        notify_export_updated(str(exported_ms))
     except Exception:
         pass
     

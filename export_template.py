@@ -360,6 +360,8 @@ let changesError = "";
 let historyLoaded = false;
 let historyLoading = false;
 let latestExportMs = 0;
+let updateBaselineSet = false;
+let headBaselineSet = false;
 function escapeHtml(val) {
     if (val === null || val === undefined) return "";
     return String(val)
@@ -371,12 +373,27 @@ function escapeHtml(val) {
 }
 function initExportTimestamp() {
     try {
+        const msAttr = document.body.getAttribute('data-exported-ms');
+        const rawMs = msAttr ? parseInt(msAttr, 10) : NaN;
+        if (Number.isFinite(rawMs)) {
+            latestExportMs = rawMs;
+            updateBaselineSet = true;
+            return;
+        }
         const raw = document.body.getAttribute('data-exported') || '';
         const dt = new Date(raw);
         if (!Number.isNaN(dt.getTime())) {
             latestExportMs = dt.getTime();
+            updateBaselineSet = true;
         }
     } catch (e) {}
+}
+function setExportBaseline(ms) {
+    if (!Number.isFinite(ms)) return;
+    if (!updateBaselineSet || ms > latestExportMs) {
+        latestExportMs = ms;
+    }
+    updateBaselineSet = true;
 }
 function showUpdateBanner() {
     let banner = document.getElementById('updateBanner');
@@ -391,7 +408,12 @@ function showUpdateBanner() {
 }
 function handleExportUpdate(stamp) {
     const ms = parseInt(stamp, 10);
-    if (Number.isFinite(ms) && ms > latestExportMs) {
+    if (!Number.isFinite(ms)) return;
+    if (!updateBaselineSet) {
+        setExportBaseline(ms);
+        return;
+    }
+    if (ms > latestExportMs) {
         showUpdateBanner();
     }
 }
@@ -410,7 +432,14 @@ function startExportUpdates() {
                     const lm = resp.headers.get('Last-Modified');
                     if (!lm) return;
                     const dt = new Date(lm);
-                    if (!Number.isNaN(dt.getTime()) && dt.getTime() > latestExportMs) {
+                    if (Number.isNaN(dt.getTime())) return;
+                    const ms = dt.getTime();
+                    if (!headBaselineSet) {
+                        setExportBaseline(ms);
+                        headBaselineSet = true;
+                        return;
+                    }
+                    if (ms > latestExportMs) {
                         showUpdateBanner();
                     }
                 })
