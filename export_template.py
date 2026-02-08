@@ -840,9 +840,6 @@ function loadFilterPrefs() {
         if (typeof data.smalls === 'boolean') {
             showSmalls = data.smalls;
         }
-        if (typeof data.outstock === 'boolean') {
-            showOutOfStock = data.outstock;
-        }
     } catch (e) {}
 }
 function saveFilterPrefs() {
@@ -851,7 +848,6 @@ function saveFilterPrefs() {
             types: Array.from(activeTypes),
             strains: Array.from(activeStrains),
             smalls: showSmalls,
-            outstock: showOutOfStock,
         };
         localStorage.setItem('ft_filters', JSON.stringify(payload));
     } catch (e) {}
@@ -991,6 +987,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadFilterPrefs();
     loadFavorites();
     loadBasket();
+    showOutOfStock = false;
+    const outstockBtn = document.querySelector('[data-filter-outstock]');
+    if (outstockBtn) outstockBtn.classList.remove('active');
     document.querySelectorAll('.card').forEach(applyFavState);
     updateBasketUI();
     refreshBasketButtons();
