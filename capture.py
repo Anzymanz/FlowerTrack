@@ -487,7 +487,9 @@ class CaptureWorker:
             self.callbacks["capture_log"](f"API count fetch{status_txt} total={total}")
         except Exception:
             pass
-        take = 50
+        take = int(self.cfg.get("page_size", 50) or 50)
+        if take <= 0:
+            take = 50
         try:
             self.callbacks["capture_log"](f"API pagination: base={len(data_list)} total={total} take={take}")
         except Exception:
@@ -1380,7 +1382,9 @@ class CaptureWorker:
                                                 data_list = next((p.get('data') for p in api_payloads if p.get('url') == base_url and isinstance(p.get('data'), list)), data_list)
                                             except Exception:
                                                 pass
-                                        take = 50
+                                        take = int(self.cfg.get("page_size", 50) or 50)
+                                        if take <= 0:
+                                            take = 50
                                         try:
                                             take = int(urllib.parse.parse_qs(urllib.parse.urlparse(base_url).query).get('take', [take])[0])
                                         except Exception:

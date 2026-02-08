@@ -189,6 +189,10 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Entry(advanced_frame, textvariable=app.cap_retry_backoff, width=10).grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
     adv_row += 1
 
+    ttk.Label(advanced_frame, text="API page size (take)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(advanced_frame, textvariable=app.cap_page_size, width=10).grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    adv_row += 1
+
     ttk.Label(advanced_frame, text="Headless").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     ttk.Checkbutton(advanced_frame, variable=app.cap_headless).grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
     adv_row += 1
