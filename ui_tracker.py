@@ -479,7 +479,7 @@ class CannabisTracker:
         nav.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 6))
         prev_btn = ttk.Button(nav, text="< Prev", width=8, command=lambda: self._change_day(-1))
         prev_btn.grid(row=0, column=0, padx=(0, 6))
-        self.date_label = ttk.Label(nav, text="", font=("", 10, "bold"))
+        self.date_label = ttk.Label(nav, text="", font=("", 12, "bold"))
         self.date_label.grid(row=0, column=1)
         next_btn = ttk.Button(nav, text="Next >", width=8, command=lambda: self._change_day(1))
         next_btn.grid(row=0, column=2, padx=(6, 0))
