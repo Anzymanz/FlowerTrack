@@ -1094,7 +1094,13 @@ class CannabisTracker:
                 continue
             for btn in buttons:
                 try:
-                    btn.configure(bg=color, activebackground=color, highlightbackground=color)
+                    border_color = "#ffffff" if self.dark_var.get() else "#000000"
+                    btn.configure(
+                        bg=color,
+                        activebackground=color,
+                        highlightbackground=border_color,
+                        highlightcolor=border_color,
+                    )
                 except Exception:
                     pass
 
@@ -1109,7 +1115,13 @@ class CannabisTracker:
                 continue
             for btn in buttons:
                 try:
-                    btn.configure(bg=color, activebackground=color, highlightbackground=color)
+                    border_color = "#ffffff" if self.dark_var.get() else "#000000"
+                    btn.configure(
+                        bg=color,
+                        activebackground=color,
+                        highlightbackground=border_color,
+                        highlightcolor=border_color,
+                    )
                 except Exception:
                     pass
 

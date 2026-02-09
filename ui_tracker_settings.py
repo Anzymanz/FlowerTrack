@@ -95,6 +95,7 @@ def open_tracker_settings(app) -> None:
         else:
             color = getattr(app, key, "#2ecc71")
             command = lambda: app._choose_threshold_color(key)
+        border_color = "#ffffff" if app.dark_var.get() else "#000000"
         btn = tk.Button(
             parent,
             width=2,
@@ -103,7 +104,8 @@ def open_tracker_settings(app) -> None:
             bg=color,
             activebackground=color,
             highlightthickness=1,
-            highlightbackground=color,
+            highlightbackground=border_color,
+            highlightcolor=border_color,
             command=command,
         )
         if key.startswith("dark:") or key.startswith("light:"):
