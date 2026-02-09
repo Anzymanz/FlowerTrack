@@ -212,6 +212,10 @@ DEFAULT_TRACKER_CONFIG = {
     "days_thc_low_color": "#e74c3c",
     "days_cbd_high_color": "#2ecc71",
     "days_cbd_low_color": "#e74c3c",
+    "used_thc_under_color": "#2ecc71",
+    "used_thc_over_color": "#e74c3c",
+    "used_cbd_under_color": "#2ecc71",
+    "used_cbd_over_color": "#e74c3c",
     "theme_palette_dark": {},
     "theme_palette_light": {},
     "target_daily_grams": 1.0,
@@ -407,6 +411,10 @@ def _validate_tracker_config(raw: dict) -> dict:
             "days_thc_low_color",
             "days_cbd_high_color",
             "days_cbd_low_color",
+            "used_thc_under_color",
+            "used_thc_over_color",
+            "used_cbd_under_color",
+            "used_cbd_over_color",
         ):
             cfg[key] = _coerce_color(value, cfg[key])
         elif key == "roa_options" and isinstance(value, dict):
