@@ -539,7 +539,8 @@ function loadBasket() {
                 name: item.name || "",
                 brand: item.brand || "",
                 price,
-                qty
+                qty,
+                productId: item.productId || ""
             });
         });
     } catch (e) {}
@@ -557,7 +558,8 @@ function saveBasket() {
                 name: item.name || "",
                 brand: item.brand || "",
                 price,
-                qty
+                qty,
+                productId: item.productId || ""
             });
         });
         if (items.length) {
@@ -610,12 +612,16 @@ function addToBasket(btn) {
     const key = card.dataset.key || card.dataset.favkey || card.dataset.productId || card.dataset.strain || String(Math.random());
     const name = (card.dataset.strain || "").trim();
     const brand = (card.dataset.brand || "").trim();
+    const productId = (card.dataset.productId || "").trim();
     const existing = basket.get(key);
     if (existing) {
         existing.qty += 1;
+        if (!existing.productId && productId) {
+            existing.productId = productId;
+        }
         basket.set(key, existing);
     } else {
-        basket.set(key, { key, name, brand, price, qty: 1 });
+        basket.set(key, { key, name, brand, price, qty: 1, productId });
     }
     updateBasketUI();
     renderBasketModal(false);
@@ -660,6 +666,7 @@ function renderBasketModal(show) {
     } else {
         basket.forEach((item) => {
             const safeKey = encodeURIComponent(item.key || "");
+            const safePid = encodeURIComponent(item.productId || "");
             rows.push(`
             <div class='basket-row' data-key='${safeKey}'>
               <div style='flex:1;'>
@@ -667,8 +674,8 @@ function renderBasketModal(show) {
                 <div class='small'>${item.brand || ''}</div>
                 <div class='small'>£${item.price.toFixed(2)}</div>
               </div>
-              <input class='basket-qty' data-basket-qty='1' data-key='${safeKey}' type='number' min='0' value='${item.qty}' />
-              <button class='btn-basket' data-basket-remove='1' data-key='${safeKey}'>Remove</button>
+              <input class='basket-qty' data-basket-qty='1' data-key='${safeKey}' data-pid='${safePid}' type='number' min='0' value='${item.qty}' />
+              <button class='btn-basket' data-basket-remove='1' data-key='${safeKey}' data-pid='${safePid}'>Remove</button>
             </div>
             `);
         });
@@ -690,13 +697,15 @@ function renderBasketModal(show) {
     modal.querySelectorAll('[data-basket-remove]').forEach(btn => {
         btn.addEventListener('click', () => {
             const key = decodeURIComponent(btn.getAttribute('data-key') || "");
-            removeFromBasket(key);
+            const pid = decodeURIComponent(btn.getAttribute('data-pid') || "");
+            removeFromBasket(key, pid);
         });
     });
     modal.querySelectorAll('[data-basket-qty]').forEach(input => {
         input.addEventListener('change', () => {
             const key = decodeURIComponent(input.getAttribute('data-key') || "");
-            updateBasketQty(key, input.value);
+            const pid = decodeURIComponent(input.getAttribute('data-pid') || "");
+            updateBasketQty(key, input.value, pid);
         });
     });
     if (show) {
@@ -840,23 +849,55 @@ function openImageModal(src, altText) {
     modal.innerHTML = `<img src="${src}" alt="${safeAlt}" />`;
     modal.style.display = 'flex';
 }
-function updateBasketQty(key, val) {
+function updateBasketQty(key, val, productId) {
     const qty = parseInt(val, 10);
-    if (!basket.has(key)) return;
+    let targetKey = key;
+    if (!basket.has(targetKey) && productId) {
+        for (const [k, v] of basket.entries()) {
+            if (v && v.productId && String(v.productId) === String(productId)) {
+                targetKey = k;
+                break;
+            }
+        }
+    }
+    if (!basket.has(targetKey)) return;
     if (!Number.isFinite(qty) || qty <= 0) {
-        basket.delete(key);
+        basket.delete(targetKey);
     } else {
-        const item = basket.get(key);
+        const item = basket.get(targetKey);
         item.qty = qty;
-        basket.set(key, item);
+        basket.set(targetKey, item);
     }
     updateBasketUI();
     renderBasketModal(false);
     refreshBasketButtons();
     saveBasket();
 }
-function removeFromBasket(key) {
-    if (basket.has(key)) basket.delete(key);
+function removeFromBasket(key, productId) {
+    let removed = false;
+    if (basket.has(key)) {
+        basket.delete(key);
+        removed = true;
+    }
+    if (!removed && productId) {
+        for (const [k, v] of basket.entries()) {
+            if (v && v.productId && String(v.productId) === String(productId)) {
+                basket.delete(k);
+                removed = true;
+                break;
+            }
+        }
+    }
+    if (!removed && key) {
+        const norm = String(key).toLowerCase();
+        for (const k of basket.keys()) {
+            if (String(k).toLowerCase() === norm) {
+                basket.delete(k);
+                removed = true;
+                break;
+            }
+        }
+    }
     updateBasketUI();
     renderBasketModal(false);
     refreshBasketButtons();
