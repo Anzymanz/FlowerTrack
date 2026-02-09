@@ -63,6 +63,11 @@ def main() -> None:
     if "--scraper" in sys.argv or "--parser" in sys.argv:
         from ui_scraper import App
         app = App()
+        if "--scraper-autostart" in sys.argv:
+            try:
+                app.after(350, app.start_auto_capture)
+            except Exception:
+                pass
         app.mainloop()
         return
     if "--run-library" in sys.argv:

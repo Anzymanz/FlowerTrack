@@ -4,6 +4,7 @@ import csv
 import os
 import sys
 import webbrowser
+import time
 import tkinter as tk
 from datetime import date, datetime, timedelta
 import threading
@@ -3553,10 +3554,25 @@ class CannabisTracker:
         try:
             running, _warn = resolve_scraper_status(getattr(self, "child_procs", []))
             if running:
-                self._stop_scraper_instances()
+                self._send_scraper_command("stop")
             else:
+                self._send_scraper_command("start")
                 self.open_parser()
             self._update_scraper_status_icon()
+        except Exception:
+            pass
+
+    def _send_scraper_command(self, cmd: str) -> None:
+        command = str(cmd or "").strip().lower()
+        if command not in ("start", "stop"):
+            return
+        try:
+            command_path = Path(APP_DIR) / "data" / "scraper_command.json"
+            command_path.parent.mkdir(parents=True, exist_ok=True)
+            payload = {"cmd": command, "ts": time.time()}
+            tmp = command_path.with_suffix(command_path.suffix + ".tmp")
+            tmp.write_text(json.dumps(payload), encoding="utf-8")
+            tmp.replace(command_path)
         except Exception:
             pass
 

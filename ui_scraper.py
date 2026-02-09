@@ -60,6 +60,7 @@ from history_viewer import open_history_window
 
 # Scraper UI constants
 SCRAPER_TITLE = "Medicann Scraper"
+SCRAPER_COMMAND_FILE = Path(APP_DIR) / "data" / "scraper_command.json"
 def _should_stop_on_empty(error_count: int, error_threshold: int) -> bool:
     return error_count >= error_threshold
 def _identity_key_cached(item: dict, cache: dict) -> str:
@@ -192,6 +193,7 @@ class App(tk.Tk):
         self.price_down_count = 0
         self.q = Queue()
         self._polling = False
+        self._last_external_command_ts = 0.0
         # reset capture error state
         self.error_count = 0
         self.error_threshold = 3
@@ -222,6 +224,7 @@ class App(tk.Tk):
             self._debug_log(f"Suppressed exception: {exc}")
         self.after(0, self._show_scraper_window)
         self.after(50, self._apply_log_window_visibility)
+        self.after(500, self._poll_external_commands)
 
     def _show_scraper_window(self) -> None:
         try:
@@ -235,6 +238,56 @@ class App(tk.Tk):
             self._apply_log_window_visibility()
         except Exception:
             pass
+
+    def _poll_external_commands(self) -> None:
+        try:
+            payload = self._read_external_command()
+            if payload:
+                self._apply_external_command(payload)
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
+        try:
+            self.after(800, self._poll_external_commands)
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
+
+    def _read_external_command(self) -> dict | None:
+        path = SCRAPER_COMMAND_FILE
+        if not path.exists():
+            return None
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            return None
+        if not isinstance(data, dict):
+            return None
+        cmd = str(data.get("cmd", "")).strip().lower()
+        ts_raw = data.get("ts", 0)
+        try:
+            ts = float(ts_raw)
+        except Exception:
+            ts = 0.0
+        if cmd not in ("start", "stop"):
+            return None
+        if ts <= float(getattr(self, "_last_external_command_ts", 0.0)):
+            return None
+        self._last_external_command_ts = ts
+        try:
+            path.unlink(missing_ok=True)
+        except Exception:
+            pass
+        return {"cmd": cmd, "ts": ts}
+
+    def _apply_external_command(self, payload: dict) -> None:
+        cmd = str(payload.get("cmd", "")).strip().lower()
+        if cmd == "start":
+            if not self.capture_thread:
+                self._capture_log("External command: start auto-capture.")
+                self.start_auto_capture()
+        elif cmd == "stop":
+            if self.capture_thread:
+                self._capture_log("External command: stop auto-capture.")
+                self.stop_auto_capture()
     def _build_capture_controls(self) -> None:
         cfg = _load_capture_config()
         self.capture_config_path = Path(CONFIG_FILE)
