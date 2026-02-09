@@ -151,7 +151,7 @@ def open_tracker_settings(app) -> None:
     chk_usage_color.grid(row=10, column=0, columnspan=3, sticky="w", pady=(4, 2))
 
     usage_row = 11
-    ttk.Label(frame, text="Remaining today (THC) colors").grid(row=usage_row, column=0, sticky="w", pady=(6, 0))
+    ttk.Label(frame, text="Remaining today (THC) colours").grid(row=usage_row, column=0, sticky="w", pady=(6, 0))
     usage_frame = ttk.Frame(frame)
     ttk.Label(usage_frame, text="High").pack(side="left", padx=(0, 4))
     _color_button(usage_frame, "remaining_thc_high_color").pack(side="left")
@@ -160,7 +160,7 @@ def open_tracker_settings(app) -> None:
     usage_frame.grid(row=usage_row, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
     usage_row += 1
 
-    ttk.Label(frame, text="Remaining today (CBD) colors").grid(row=usage_row, column=0, sticky="w", pady=(2, 0))
+    ttk.Label(frame, text="Remaining today (CBD) colours").grid(row=usage_row, column=0, sticky="w", pady=(2, 0))
     usage_frame = ttk.Frame(frame)
     ttk.Label(usage_frame, text="High").pack(side="left", padx=(0, 4))
     _color_button(usage_frame, "remaining_cbd_high_color").pack(side="left")
@@ -169,7 +169,7 @@ def open_tracker_settings(app) -> None:
     usage_frame.grid(row=usage_row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
     usage_row += 1
 
-    ttk.Label(frame, text="Days left (THC) colors").grid(row=usage_row, column=0, sticky="w", pady=(2, 0))
+    ttk.Label(frame, text="Days left (THC) colours").grid(row=usage_row, column=0, sticky="w", pady=(2, 0))
     usage_frame = ttk.Frame(frame)
     ttk.Label(usage_frame, text="High").pack(side="left", padx=(0, 4))
     _color_button(usage_frame, "days_thc_high_color").pack(side="left")
@@ -178,7 +178,7 @@ def open_tracker_settings(app) -> None:
     usage_frame.grid(row=usage_row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
     usage_row += 1
 
-    ttk.Label(frame, text="Days left (CBD) colors").grid(row=usage_row, column=0, sticky="w", pady=(2, 0))
+    ttk.Label(frame, text="Days left (CBD) colours").grid(row=usage_row, column=0, sticky="w", pady=(2, 0))
     usage_frame = ttk.Frame(frame)
     ttk.Label(usage_frame, text="High").pack(side="left", padx=(0, 4))
     _color_button(usage_frame, "days_cbd_high_color").pack(side="left")

@@ -1095,7 +1095,7 @@ class CannabisTracker:
                 settings_win.focus_force()
         except Exception:
             pass
-        picked = colorchooser.askcolor(color=current, title="Select color")[1]
+        picked = colorchooser.askcolor(color=current, title="Select colour")[1]
         try:
             if settings_win and tk.Toplevel.winfo_exists(settings_win):
                 settings_win.lift()
