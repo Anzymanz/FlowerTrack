@@ -35,8 +35,7 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
     style.configure("TLabel", background=bg, foreground=fg)
     hint_fg = "#c77" if bg == "#111" else "#a33"
     style.configure("Hint.TLabel", background=bg, foreground=hint_fg)
-    labelframe_border = "#262626" if bg == "#111" else ctrl_bg
-    style.configure("TLabelframe", background=bg, foreground=fg, bordercolor=labelframe_border)
+    style.configure("TLabelframe", background=bg, foreground=fg, bordercolor=ctrl_bg)
     style.configure("TLabelframe.Label", background=bg, foreground=fg)
     style.configure(
         "TButton",
@@ -108,13 +107,13 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
     style.configure("TEntry", fieldbackground=ctrl_bg, foreground=fg, insertcolor=fg)
     style.map("TEntry", fieldbackground=[("readonly", ctrl_bg)], foreground=[("readonly", fg)])
     style.configure("TSpinbox", fieldbackground=ctrl_bg, foreground=fg, insertcolor=fg)
-    style.configure("TNotebook", background=bg, bordercolor=labelframe_border)
+    style.configure("TNotebook", background=bg, bordercolor=ctrl_bg)
     style.configure(
         "TNotebook.Tab",
         background=ctrl_bg,
         foreground=fg,
         lightcolor=ctrl_bg,
-        bordercolor=labelframe_border,
+        bordercolor=ctrl_bg,
         focuscolor=ctrl_bg,
     )
     style.configure("Settings.TNotebook.Tab", padding=[10, 4])
@@ -124,7 +123,7 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
         foreground=[("selected", bg), ("!selected", fg)],
     )
     style.configure("TProgressbar", background=accent, troughcolor=ctrl_bg)
-    style.configure("Parser.TLabelframe", borderwidth=1, relief="groove")
+    style.configure("Parser.TLabelframe", borderwidth=2, relief="groove")
     style.configure("Parser.TLabelframe.Label", padding=(6, 0))
     apply_rounded_buttons(style, colors)
 

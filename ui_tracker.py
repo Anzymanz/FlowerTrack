@@ -1229,7 +1229,7 @@ class CannabisTracker:
         panel = colors["ctrl_bg"]
         entry_bg = colors["ctrl_bg"]
         accent = colors["accent"]
-        border = "#262626" if dark else colors["ctrl_bg"]
+        border = "#1e1e1e" if dark else colors["ctrl_bg"]
         scroll = "#242424" if dark else "#e6e6e6"
         cursor_color = text_color
         # Prefer dark title bar when dark mode is on
