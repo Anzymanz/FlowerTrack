@@ -1199,7 +1199,15 @@ class CannabisTracker:
             return colorchooser.askcolor(color=current, title=title, parent=parent)[1]
         picker = TkColorPicker(parent, color=current, title=title)
         self._apply_picker_theme(picker)
+        try:
+            picker.withdraw()
+        except Exception:
+            pass
         self._center_child_window(picker, parent)
+        try:
+            picker.deiconify()
+        except Exception:
+            pass
         picker.wait_window(picker)
         try:
             res = picker.get_color()
