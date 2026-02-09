@@ -602,6 +602,22 @@ function addToBasket(btn) {
     refreshBasketButtons();
     saveBasket();
 }
+function toggleBasketItem(btn) {
+    const card = btn.closest('.card');
+    if (!card) return;
+    const price = parseFloat(card.dataset.price);
+    if (!Number.isFinite(price)) return;
+    const key = card.dataset.key || card.dataset.favkey || card.dataset.productId || card.dataset.strain || String(Math.random());
+    if (basket.has(key)) {
+        basket.delete(key);
+        updateBasketUI();
+        renderBasketModal(false);
+        refreshBasketButtons();
+        saveBasket();
+        return;
+    }
+    addToBasket(btn);
+}
 function toggleBasket() {
     renderBasketModal(true);
     const btn = document.getElementById('basketButton');

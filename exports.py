@@ -262,7 +262,7 @@ def _render_card_html(
     <div class='small'>🌞THC: {esc(disp_thc)}</div>
     <div class='small'>🌙CBD: {esc(disp_cbd)}</div>
     <div class='card-actions'>
-      <button class='btn-basket' onclick='addToBasket(this)' onmouseenter='basketHover(this,true)' onmouseleave='basketHover(this,false)'>Add to basket</button>
+      <button class='btn-basket' onclick='toggleBasketItem(this)' onmouseenter='basketHover(this,true)' onmouseleave='basketHover(this,false)'>Add to basket</button>
     </div>
   </div>
  </div>
