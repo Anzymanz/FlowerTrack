@@ -2213,6 +2213,28 @@ class App(tk.Tk):
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
         try:
+            self.style.configure(
+                "Scraper.TCombobox",
+                fieldbackground=ctrl_bg,
+                background=ctrl_bg,
+                foreground=fg,
+                bordercolor=border,
+                lightcolor=border,
+                darkcolor=border,
+                arrowcolor=fg,
+                focuscolor=ctrl_bg,
+                borderwidth=1,
+            )
+            self.style.map(
+                "Scraper.TCombobox",
+                bordercolor=[("focus", border), ("!focus", border)],
+                lightcolor=[("focus", border), ("!focus", border)],
+                darkcolor=[("focus", border), ("!focus", border)],
+                focuscolor=[("focus", ctrl_bg), ("!focus", ctrl_bg)],
+            )
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
+        try:
             self.option_add("*Entry*selectBackground", muted if dark else "#d6d6d6")
             self.option_add("*Entry*selectForeground", fg)
             self.option_add("*Entry*inactiveselectBackground", muted if dark else "#d6d6d6")
