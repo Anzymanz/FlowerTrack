@@ -226,6 +226,8 @@ DEFAULT_TRACKER_CONFIG = {
     "hide_mix_stock": False,
     "show_stock_form": True,
     "window_geometry": "",
+    "mixcalc_geometry": "",
+    "mixcalc_stock_geometry": "",
     "stock_column_widths": {},
     "log_column_widths": {},
 }
@@ -695,8 +697,14 @@ def load_tracker_config(path: Path) -> dict:
 
 def save_tracker_config(path: Path, cfg: dict) -> None:
     try:
-        tracker_cfg = _validate_tracker_config(cfg or {})
         raw = _read_json(path)
+        if any(k in raw for k in ("tracker", "scraper", "ui")):
+            existing_tracker = raw.get("tracker", {})
+        else:
+            existing_tracker = raw if isinstance(raw, dict) else {}
+        merged_tracker = dict(existing_tracker) if isinstance(existing_tracker, dict) else {}
+        merged_tracker.update(cfg or {})
+        tracker_cfg = _validate_tracker_config(merged_tracker)
         if any(k in raw for k in ("tracker", "scraper", "ui")):
             raw["tracker"] = tracker_cfg
             raw.setdefault("ui", {})["dark_mode"] = tracker_cfg["dark_mode"]
