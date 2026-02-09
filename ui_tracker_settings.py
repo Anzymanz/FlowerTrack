@@ -21,6 +21,10 @@ def open_tracker_settings(app) -> None:
         pass
     app.settings_window = win
     app._set_dark_title_bar(app.dark_var.get(), target=win)
+    try:
+        win.bind("<FocusIn>", lambda _e: app._queue_settings_titlebar(win))
+    except Exception:
+        pass
     win.resizable(False, False)
     # Min size will be set after layout to avoid excess dead space.
     container = ttk.Frame(win, padding=6)

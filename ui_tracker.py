@@ -1173,25 +1173,14 @@ class CannabisTracker:
             return colorchooser.askcolor(color=current, title=title, parent=parent)[1]
         picker = TkColorPicker(parent, color=current, title=title)
         self._apply_picker_theme(picker)
-        try:
-            picker.attributes("-topmost", True)
-        except Exception:
-            pass
         picker.wait_window(picker)
-        try:
-            picker.attributes("-topmost", False)
-        except Exception:
-            pass
         try:
             res = picker.get_color()
         except Exception:
             res = None
         try:
             if parent and tk.Toplevel.winfo_exists(parent):
-                parent.lift()
-                parent.focus_force()
-                self._set_dark_title_bar(self.dark_var.get(), target=parent)
-                parent.after_idle(lambda: self._set_dark_title_bar(self.dark_var.get(), target=parent))
+                self._queue_settings_titlebar(parent)
         except Exception:
             pass
         if res:
@@ -1205,14 +1194,13 @@ class CannabisTracker:
         parent = None
         try:
             if settings_win and tk.Toplevel.winfo_exists(settings_win):
-                self._bring_settings_to_front(settings_win)
                 parent = settings_win
         except Exception:
             parent = None
         picked = self._ask_colour_picker(current=current, title="Select colour", parent=parent)
         try:
             if settings_win and tk.Toplevel.winfo_exists(settings_win):
-                self._bring_settings_to_front(settings_win)
+                self._queue_settings_titlebar(settings_win)
         except Exception:
             pass
         color = self._normalize_hex(picked or "")
@@ -1235,14 +1223,13 @@ class CannabisTracker:
         parent = None
         try:
             if settings_win and tk.Toplevel.winfo_exists(settings_win):
-                self._bring_settings_to_front(settings_win)
                 parent = settings_win
         except Exception:
             parent = None
         picked = self._ask_colour_picker(current=current, title="Select colour", parent=parent)
         try:
             if settings_win and tk.Toplevel.winfo_exists(settings_win):
-                self._bring_settings_to_front(settings_win)
+                self._queue_settings_titlebar(settings_win)
         except Exception:
             pass
         color = self._normalize_hex(picked or "")
@@ -1261,6 +1248,24 @@ class CannabisTracker:
             settings_win.focus_force()
         except Exception:
             pass
+
+    def _queue_settings_titlebar(self, settings_win: tk.Toplevel) -> None:
+        try:
+            if getattr(self, "_settings_titlebar_job", None):
+                return
+            def _apply():
+                self._settings_titlebar_job = None
+                try:
+                    if settings_win and tk.Toplevel.winfo_exists(settings_win):
+                        self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
+                except Exception:
+                    pass
+            self._settings_titlebar_job = self.root.after(1, _apply)
+        except Exception:
+            try:
+                self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
+            except Exception:
+                pass
         try:
             self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
         except Exception:
