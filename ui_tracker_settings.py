@@ -26,13 +26,30 @@ def open_tracker_settings(app) -> None:
         win.minsize(400, 620)
     except Exception:
         pass
-    frame = ttk.Frame(win, padding=6)
-    frame.grid(row=0, column=0, sticky="nsew")
-    frame.columnconfigure(0, weight=0)
-    frame.columnconfigure(1, weight=0)
-    frame.columnconfigure(2, weight=1)
-    frame.columnconfigure(3, weight=1)
-    ttk.Label(frame, text="Colour settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
+    container = ttk.Frame(win, padding=6)
+    container.grid(row=0, column=0, sticky="nsew")
+    container.columnconfigure(0, weight=1)
+    container.rowconfigure(0, weight=1)
+
+    notebook = ttk.Notebook(container)
+    notebook.grid(row=0, column=0, sticky="nsew")
+
+    tab_colors = ttk.Frame(notebook, padding=8)
+    tab_tracker = ttk.Frame(notebook, padding=8)
+    tab_roa = ttk.Frame(notebook, padding=8)
+    tab_data = ttk.Frame(notebook, padding=8)
+    tab_window = ttk.Frame(notebook, padding=8)
+    notebook.add(tab_colors, text="Colour settings")
+    notebook.add(tab_tracker, text="Tracker settings")
+    notebook.add(tab_roa, text="RoA settings")
+    notebook.add(tab_data, text="Data settings")
+    notebook.add(tab_window, text="Window settings")
+
+    for tab in (tab_colors, tab_tracker, tab_roa, tab_data, tab_window):
+        tab.columnconfigure(0, weight=0)
+        tab.columnconfigure(1, weight=0)
+        tab.columnconfigure(2, weight=1)
+        tab.columnconfigure(3, weight=1)
 
     def _color_button(parent: ttk.Frame, key: str) -> tk.Button:
         color = getattr(app, key, "#2ecc71")
@@ -49,6 +66,10 @@ def open_tracker_settings(app) -> None:
         )
         app._register_threshold_color_button(btn, key)
         return btn
+
+    frame = tab_colors
+    ttk.Label(frame, text="Colour settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
+
     lbl_total_green = ttk.Label(frame, text="THC total stock high threshold")
     lbl_total_green.grid(row=1, column=0, sticky="w")
     tg_frame = ttk.Frame(frame)
@@ -164,9 +185,9 @@ def open_tracker_settings(app) -> None:
     _color_button(usage_frame, "days_cbd_low_color").pack(side="left")
     usage_frame.grid(row=usage_row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
 
-    ttk.Separator(frame, orient="horizontal").grid(row=usage_row + 1, column=0, columnspan=4, sticky="ew", pady=(6, 6))
-    ttk.Label(frame, text="Tracker settings", font=app.font_bold_small).grid(row=usage_row + 2, column=0, sticky="w", pady=(0, 6))
-    row = usage_row + 3
+    frame = tab_tracker
+    ttk.Label(frame, text="Tracker settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
+    row = 1
 
     app.track_cbd_flower_var = tk.BooleanVar(value=getattr(app, "track_cbd_flower", False))
     chk_track_cbd = ttk.Checkbutton(frame, text="Track CBD flower", variable=app.track_cbd_flower_var)
@@ -209,10 +230,9 @@ def open_tracker_settings(app) -> None:
     avg_frame.grid(row=row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
     row += 1
 
-    ttk.Separator(frame, orient="horizontal").grid(row=row, column=0, columnspan=4, sticky="ew", pady=(10, 6))
-    row += 1
-    ttk.Label(frame, text="RoA settings", font=app.font_bold_small).grid(row=row, column=0, sticky="w", pady=(0, 6))
-    row += 1
+    frame = tab_roa
+    ttk.Label(frame, text="RoA settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
+    row = 1
 
     app.hide_roa_var = tk.BooleanVar(value=getattr(app, "hide_roa_options", False))
     chk_hide_roa = ttk.Checkbutton(frame, text="Hide ROA options in log", variable=app.hide_roa_var)
@@ -236,26 +256,25 @@ def open_tracker_settings(app) -> None:
         ttk.Label(rf, text="%").pack(side="left")
         rf.grid(row=roa_row + idx, column=1, sticky="w", padx=(12, 0))
 
-    sep_row = roa_row + len(app.roa_options)
-    ttk.Separator(frame, orient="horizontal").grid(row=sep_row, column=0, columnspan=4, sticky="ew", pady=(10, 6))
-    ttk.Label(frame, text="Data settings", font=app.font_bold_small).grid(row=sep_row + 1, column=0, sticky="w", pady=(0, 6))
+    frame = tab_data
+    ttk.Label(frame, text="Data settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
     lbl_backup = ttk.Label(frame, text="Backup & restore")
-    lbl_backup.grid(row=sep_row + 2, column=0, sticky="w")
+    lbl_backup.grid(row=1, column=0, sticky="w")
     btn_backup_export = ttk.Button(frame, text="Export backup..", command=app._settings_export_backup)
-    btn_backup_export.grid(row=sep_row + 2, column=1, sticky="w", padx=(4, 0), pady=(2, 2))
+    btn_backup_export.grid(row=1, column=1, sticky="w", padx=(4, 0), pady=(2, 2))
     btn_backup_import = ttk.Button(frame, text="Import backup..", command=app._settings_import_backup)
-    btn_backup_import.grid(row=sep_row + 2, column=2, sticky="w", padx=(4, 0), pady=(2, 2))
+    btn_backup_import.grid(row=1, column=2, sticky="w", padx=(4, 0), pady=(2, 2))
 
     app.open_data_folder_btn = ttk.Button(frame, text="Open data folder", command=app._settings_open_data_folder)
     app.open_data_folder_btn.grid(
-        row=sep_row + 3, column=1, columnspan=2, sticky="w", padx=(4, 0), pady=(2, 4)
+        row=2, column=1, columnspan=2, sticky="w", padx=(4, 0), pady=(2, 4)
     )
 
-    ttk.Separator(frame, orient="horizontal").grid(row=sep_row + 6, column=0, columnspan=4, sticky="ew", pady=(10, 6))
-    ttk.Label(frame, text="Window settings", font=app.font_bold_small).grid(row=sep_row + 7, column=0, sticky="w", pady=(0, 6))
+    frame = tab_window
+    ttk.Label(frame, text="Window settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
     app.dark_mode_check = ttk.Checkbutton(frame, text="Dark mode", variable=app.dark_var, command=app._toggle_theme)
     app.dark_mode_check.grid(
-        row=sep_row + 8, column=0, columnspan=2, sticky="w", pady=(2, 0)
+        row=1, column=0, columnspan=2, sticky="w", pady=(2, 0)
     )
     app.minimize_var = tk.BooleanVar(value=app.minimize_to_tray)
     app.close_var = tk.BooleanVar(value=app.close_to_tray)
@@ -263,20 +282,20 @@ def open_tracker_settings(app) -> None:
     app.scraper_status_icon_var = tk.BooleanVar(value=getattr(app, 'show_scraper_status_icon', True))
     app.scraper_controls_check = ttk.Checkbutton(frame, text="Show scraper controls", variable=app.scraper_controls_var)
     app.scraper_controls_check.grid(
-        row=sep_row + 9, column=0, columnspan=2, sticky="w", pady=(2, 0)
+        row=2, column=0, columnspan=2, sticky="w", pady=(2, 0)
     )
     app.scraper_status_icon_check = ttk.Checkbutton(frame, text="Show scraper status icon", variable=app.scraper_status_icon_var)
     app.scraper_status_icon_check.grid(
-        row=sep_row + 10, column=0, columnspan=2, sticky="w", pady=(2, 0)
+        row=3, column=0, columnspan=2, sticky="w", pady=(2, 0)
     )
 
     app.minimize_var_check = ttk.Checkbutton(frame, text="Minimize to tray when minimizing", variable=app.minimize_var)
     app.minimize_var_check.grid(
-        row=sep_row + 11, column=0, columnspan=2, sticky="w", pady=(2, 0)
+        row=4, column=0, columnspan=2, sticky="w", pady=(2, 0)
     )
     app.close_var_check = ttk.Checkbutton(frame, text="Minimize to tray when closing", variable=app.close_var)
     app.close_var_check.grid(
-        row=sep_row + 12, column=0, columnspan=2, sticky="w", pady=(2, 0)
+        row=5, column=0, columnspan=2, sticky="w", pady=(2, 0)
     )
 
     app.total_green_entry.insert(0, f"{app.total_green_threshold}")
@@ -380,8 +399,8 @@ def open_tracker_settings(app) -> None:
     for name, entry in app.roa_entries.items():
         _bind_numeric_entry(entry, f"{name} efficiency (%)", min_value=0.0, max_value=100.0)
 
-    actions = ttk.Frame(frame)
-    actions.grid(row=sep_row + 13, column=0, columnspan=4, sticky="ew", pady=(8, 0))
+    actions = ttk.Frame(container)
+    actions.grid(row=1, column=0, sticky="ew", pady=(6, 0))
     actions.columnconfigure(0, weight=1)
     ttk.Button(actions, text="Save", command=app._save_settings).grid(
         row=0, column=1, sticky="e", padx=(0, 4)
