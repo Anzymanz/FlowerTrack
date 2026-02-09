@@ -1174,15 +1174,11 @@ class CannabisTracker:
         picker = TkColorPicker(parent, color=current, title=title)
         self._apply_picker_theme(picker)
         try:
-            if parent and tk.Toplevel.winfo_exists(parent):
-                parent.attributes("-topmost", True)
             picker.attributes("-topmost", True)
         except Exception:
             pass
         picker.wait_window(picker)
         try:
-            if parent and tk.Toplevel.winfo_exists(parent):
-                parent.attributes("-topmost", False)
             picker.attributes("-topmost", False)
         except Exception:
             pass
@@ -1190,6 +1186,14 @@ class CannabisTracker:
             res = picker.get_color()
         except Exception:
             res = None
+        try:
+            if parent and tk.Toplevel.winfo_exists(parent):
+                parent.lift()
+                parent.focus_force()
+                self._set_dark_title_bar(self.dark_var.get(), target=parent)
+                parent.after_idle(lambda: self._set_dark_title_bar(self.dark_var.get(), target=parent))
+        except Exception:
+            pass
         if res:
             return res[2]
         return None
@@ -1202,14 +1206,12 @@ class CannabisTracker:
         try:
             if settings_win and tk.Toplevel.winfo_exists(settings_win):
                 self._bring_settings_to_front(settings_win)
-                settings_win.attributes("-topmost", True)
                 parent = settings_win
         except Exception:
             parent = None
         picked = self._ask_colour_picker(current=current, title="Select colour", parent=parent)
         try:
             if settings_win and tk.Toplevel.winfo_exists(settings_win):
-                settings_win.attributes("-topmost", False)
                 self._bring_settings_to_front(settings_win)
         except Exception:
             pass
@@ -1234,14 +1236,12 @@ class CannabisTracker:
         try:
             if settings_win and tk.Toplevel.winfo_exists(settings_win):
                 self._bring_settings_to_front(settings_win)
-                settings_win.attributes("-topmost", True)
                 parent = settings_win
         except Exception:
             parent = None
         picked = self._ask_colour_picker(current=current, title="Select colour", parent=parent)
         try:
             if settings_win and tk.Toplevel.winfo_exists(settings_win):
-                settings_win.attributes("-topmost", False)
                 self._bring_settings_to_front(settings_win)
         except Exception:
             pass
