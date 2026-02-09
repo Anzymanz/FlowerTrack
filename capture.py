@@ -192,7 +192,7 @@ class CaptureWorker:
 
         for payload in api_payloads:
             url = payload.get("url") or ""
-            if "production-rpc-api" in url:
+            if "production-rpc-api" in url or "rpc-api" in url:
                 try:
                     rpc_host = urllib.parse.urlparse(url).netloc
                 except Exception:
