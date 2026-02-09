@@ -1164,10 +1164,9 @@ class CannabisTracker:
 
         _style_widget(picker)
         try:
-            self._set_dark_title_bar(self.dark_var.get(), target=picker)
-            picker.after_idle(lambda: self._set_dark_title_bar(self.dark_var.get(), target=picker))
-            picker.after(60, lambda: self._set_dark_title_bar(self.dark_var.get(), target=picker))
-            picker.bind("<Map>", lambda _e: self._set_dark_title_bar(self.dark_var.get(), target=picker))
+            self._queue_dark_titlebar(picker)
+            picker.bind("<Map>", lambda _e: self._queue_dark_titlebar(picker))
+            picker.bind("<Visibility>", lambda _e: self._queue_dark_titlebar(picker))
         except Exception:
             pass
 
@@ -1285,15 +1284,30 @@ class CannabisTracker:
                 self._settings_titlebar_job = None
                 try:
                     if settings_win and tk.Toplevel.winfo_exists(settings_win):
-                        self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
+                        self._queue_dark_titlebar(settings_win)
                 except Exception:
                     pass
             self._settings_titlebar_job = self.root.after(1, _apply)
         except Exception:
             try:
-                self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
+                self._queue_dark_titlebar(settings_win)
             except Exception:
                 pass
+
+    def _queue_dark_titlebar(self, win: tk.Toplevel, attempts: int = 5, delay_ms: int = 50) -> None:
+        def _apply(remaining: int) -> None:
+            try:
+                if not win or not tk.Toplevel.winfo_exists(win):
+                    return
+                self._set_dark_title_bar(self.dark_var.get(), target=win)
+            except Exception:
+                pass
+            if remaining > 1:
+                try:
+                    win.after(delay_ms, lambda: _apply(remaining - 1))
+                except Exception:
+                    pass
+        _apply(attempts)
         try:
             self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
         except Exception:
