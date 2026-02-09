@@ -191,6 +191,8 @@ DEFAULT_TRACKER_CONFIG = {
     "cbd_total_red_threshold": 5.0,
     "cbd_single_green_threshold": 10.0,
     "cbd_single_red_threshold": 2.0,
+    "accent_green": "#2ecc71",
+    "accent_red": "#e74c3c",
     "target_daily_grams": 1.0,
     "target_daily_cbd_grams": 0.0,
     "roa_options": {"Vaped": 0.60, "Eaten": 0.10, "Smoked": 0.30},
@@ -297,6 +299,26 @@ def _coerce_int(val: Any, default: int, min_value: int | None = None) -> int:
         return default
 
 
+def _coerce_color(val: Any, default: str) -> str:
+    try:
+        text = str(val or "").strip()
+    except Exception:
+        return default
+    if not text:
+        return default
+    if text.startswith("#"):
+        text = text[1:]
+    if len(text) == 3:
+        text = "".join(ch * 2 for ch in text)
+    if len(text) != 6:
+        return default
+    try:
+        int(text, 16)
+    except Exception:
+        return default
+    return f"#{text.lower()}"
+
+
 
 def _validate_tracker_config(raw: dict) -> dict:
     cfg = dict(DEFAULT_TRACKER_CONFIG)
@@ -336,6 +358,8 @@ def _validate_tracker_config(raw: dict) -> dict:
             cfg[key] = _coerce_bool(value, cfg[key])
         elif key in float_keys:
             cfg[key] = _coerce_float(value, cfg[key], 0.0)
+        elif key in ("accent_green", "accent_red"):
+            cfg[key] = _coerce_color(value, cfg[key])
         elif key == "roa_options" and isinstance(value, dict):
             cfg[key] = {str(k): float(v) for k, v in value.items() if v is not None}
         else:
