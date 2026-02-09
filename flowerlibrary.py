@@ -222,6 +222,7 @@ class FlowerLibraryApp:
             "strength",
             "value",
             "overall",
+            "search",
         )
         self.tree = ttk.Treeview(self.root, columns=columns, show="headings", height=14)
         heading_labels = {
@@ -230,11 +231,14 @@ class FlowerLibraryApp:
             "price": "Price /g",
             "overall": "Overall",
             "origin": "Origin",
+            "search": "",
         }
         for col in columns:
             heading = heading_labels.get(col, col.capitalize())
             self.tree.heading(col, text=heading, command=lambda c=col: self.sort_by(c))
             width = self.settings.get("column_widths", {}).get(col, 90)
+            if col == "search":
+                width = self.settings.get("column_widths", {}).get(col, 40)
             self.tree.column(col, width=width, anchor="center")
         self.tree.pack(fill="both", expand=True, padx=10, pady=10)
         self.tree.bind("<ButtonRelease-1>", self.on_tree_button_release)
@@ -435,7 +439,7 @@ class FlowerLibraryApp:
                 changed = True
             values = [
                 entry.get("brand", ""),
-                f"{entry.get('strain', '')} 🔎".strip(),
+                entry.get("strain", ""),
                 entry.get("origin", ""),
                 entry.get("cultivator", ""),
                 entry.get("packager", ""),
@@ -448,6 +452,7 @@ class FlowerLibraryApp:
                 entry.get("strength", ""),
                 entry.get("value", ""),
                 entry.get("overall", ""),
+                "🔎",
             ]
             self.tree.insert("", "end", values=values)
 
@@ -508,21 +513,13 @@ class FlowerLibraryApp:
             column_id = self.tree.identify_column(event.x)
             col_index = int(column_id.replace("#", "")) - 1
             col_name = self.tree["columns"][col_index] if 0 <= col_index < len(self.tree["columns"]) else ""
-            if col_name == "strain":
+            if col_name == "search":
                 item_id = self.tree.identify_row(event.y)
                 if item_id:
-                    try:
-                        bbox = self.tree.bbox(item_id, column_id)
-                    except Exception:
-                        bbox = None
-                    if bbox:
-                        x, _y, w, _h = bbox
-                        if event.x < x + max(w - 24, 0):
-                            return
                     values = self.tree.item(item_id, "values")
                     try:
                         brand = values[0]
-                        strain = str(values[1]).replace("🔎", "").strip()
+                        strain = str(values[1]).strip()
                     except Exception:
                         brand = ""
                         strain = ""
