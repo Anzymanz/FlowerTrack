@@ -552,12 +552,20 @@ class FlowerLibraryApp:
     def _prepare_toplevel(self, window: Toplevel) -> None:
         """Apply dark title bar and bg to a child window before showing."""
         try:
+            try:
+                window.attributes("-alpha", 0.0)
+            except Exception:
+                pass
             window.withdraw()
             window.configure(bg=getattr(self, "current_base_color", "#121212"))
             window.update_idletasks()
             self._place_window_at_pointer(window)
             self._set_window_titlebar_dark(window, self.is_dark.get())
             window.deiconify()
+            try:
+                window.attributes("-alpha", 1.0)
+            except Exception:
+                pass
             window.lift()
             window.update_idletasks()
             try:

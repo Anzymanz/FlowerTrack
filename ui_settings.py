@@ -20,6 +20,14 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         return app.settings_window
 
     win = tk.Toplevel(app)
+    try:
+        win.attributes("-alpha", 0.0)
+    except Exception:
+        pass
+    try:
+        win.withdraw()
+    except Exception:
+        pass
     app.settings_window = win
     if not hasattr(app, "show_advanced_scraper"):
         app.show_advanced_scraper = tk.BooleanVar(value=False)
@@ -67,6 +75,11 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     except Exception:
         pass
     app.after(50, lambda: app._set_window_titlebar_dark(win, app.dark_mode_var.get()))
+    try:
+        win.deiconify()
+        win.attributes("-alpha", 1.0)
+    except Exception:
+        pass
 
     outer = ttk.Frame(win)
     outer.pack(fill="both", expand=True)

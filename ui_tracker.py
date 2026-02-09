@@ -2591,6 +2591,10 @@ class CannabisTracker:
     def _prepare_toplevel(self, win: tk.Toplevel) -> None:
         """Prevent white flash when opening toplevels by styling before showing."""
         try:
+            try:
+                win.attributes("-alpha", 0.0)
+            except Exception:
+                pass
             win.withdraw()
             win.configure(bg=self.current_base_color)
             win.update_idletasks()
@@ -2598,6 +2602,10 @@ class CannabisTracker:
             # Apply dark title bar before showing to avoid white flash
             self._set_dark_title_bar(self.dark_var.get(), target=win)
             win.deiconify()
+            try:
+                win.attributes("-alpha", 1.0)
+            except Exception:
+                pass
             win.lift()
         except Exception:
             # Fallback to basic placement
