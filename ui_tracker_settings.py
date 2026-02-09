@@ -34,6 +34,11 @@ def open_tracker_settings(app) -> None:
     except Exception:
         pass
     win.resizable(False, False)
+    if getattr(app, "settings_window_geometry", ""):
+        try:
+            win.geometry(app.settings_window_geometry)
+        except Exception:
+            pass
     # Min size will be set after layout to avoid excess dead space.
     container = ttk.Frame(win, padding=6)
     container.grid(row=0, column=0, sticky="nsew")
@@ -516,6 +521,10 @@ def open_tracker_settings(app) -> None:
         pass
     # Place after layout to avoid resize flash
     app._prepare_toplevel(win)
+    try:
+        win.bind("<Configure>", lambda _e: app._schedule_settings_geometry(win))
+    except Exception:
+        pass
     try:
         app._set_dark_title_bar(app.dark_var.get(), target=win)
     except Exception:

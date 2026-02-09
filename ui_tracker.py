@@ -150,6 +150,7 @@ class CannabisTracker:
         self.flowers: dict[str, Flower] = {}
         self.logs: list[dict[str, str | float]] = []
         self.window_geometry = ""
+        self.settings_window_geometry = ""
         self.stock_column_widths: dict[str, int] = {}
         self.log_column_widths: dict[str, int] = {}
         self._geometry_save_job = None
@@ -1581,6 +1582,25 @@ class CannabisTracker:
             self._save_config()
         except Exception:
             pass
+
+    def _schedule_settings_geometry(self, win: tk.Toplevel) -> None:
+        try:
+            if getattr(self, "_settings_geometry_job", None) is not None:
+                try:
+                    self.root.after_cancel(self._settings_geometry_job)
+                except Exception:
+                    pass
+            self._settings_geometry_job = self.root.after(500, lambda: self._persist_settings_geometry(win))
+        except Exception:
+            self._persist_settings_geometry(win)
+
+    def _persist_settings_geometry(self, win: tk.Toplevel) -> None:
+        try:
+            if win and tk.Toplevel.winfo_exists(win):
+                self.settings_window_geometry = win.geometry()
+                self._save_config()
+        except Exception:
+            pass
     def apply_theme(self, dark: bool) -> None:
         colors = compute_colors(dark)
         base = colors["bg"]
@@ -2247,6 +2267,7 @@ class CannabisTracker:
                 pass
         # note_label removed; tooltip now handles THC/CBD estimate messaging
         self.window_geometry = cfg.get("window_geometry", "") or self.window_geometry
+        self.settings_window_geometry = cfg.get("settings_window_geometry", "") or self.settings_window_geometry
         if isinstance(cfg.get("stock_column_widths"), dict):
             self.stock_column_widths = {k: int(v) for k, v in cfg["stock_column_widths"].items()}
         if isinstance(cfg.get("log_column_widths"), dict):
@@ -2316,6 +2337,7 @@ class CannabisTracker:
             "hide_mix_stock": getattr(self, "hide_mix_stock", False),
             "show_stock_form": getattr(self, "show_stock_form", True),
             "window_geometry": self.window_geometry,
+            "settings_window_geometry": self.settings_window_geometry,
             "stock_column_widths": self.stock_column_widths,
             "log_column_widths": self.log_column_widths,
             "minimize_to_tray": self.minimize_to_tray,
