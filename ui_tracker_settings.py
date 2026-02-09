@@ -86,7 +86,7 @@ def open_tracker_settings(app) -> None:
         tab.columnconfigure(2, weight=1)
         tab.columnconfigure(3, weight=1)
 
-    def _color_button(parent: ttk.Frame, key: str) -> tk.Button:
+    def _color_button(parent: ttk.Frame, key: str, tooltip_text: str | None = None) -> tk.Button:
         if key.startswith("dark:") or key.startswith("light:"):
             mode, palette_key = key.split(":", 1)
             palette = app.theme_palette_dark if mode == "dark" else app.theme_palette_light
@@ -114,6 +114,11 @@ def open_tracker_settings(app) -> None:
             app._register_theme_color_button(mode, palette_key, btn)
         else:
             app._register_threshold_color_button(btn, key)
+        if tooltip_text:
+            try:
+                app._bind_tooltip(btn, tooltip_text)
+            except Exception:
+                pass
         return btn
 
     frame = tab_colors
@@ -128,20 +133,25 @@ def open_tracker_settings(app) -> None:
         low_color_key: str,
         pady: tuple[int, int] = (0, 0),
     ) -> None:
-        ttk.Label(frame, text=label_text).grid(row=row, column=0, sticky="w", pady=pady)
+        label_widget = ttk.Label(frame, text=label_text)
+        label_widget.grid(row=row, column=0, sticky="w", pady=pady)
+        try:
+            app._bind_tooltip(label_widget, f"Configure high/low threshold and colours for {label_text.lower()}.")
+        except Exception:
+            pass
         row_frame = ttk.Frame(frame)
         ttk.Label(row_frame, text="High").grid(row=0, column=0, sticky="w", padx=(0, 6))
         high_entry = ttk.Entry(row_frame, width=4)
         setattr(app, high_entry_attr, high_entry)
         high_entry.grid(row=0, column=1, sticky="w")
         ttk.Label(row_frame, text="g").grid(row=0, column=2, sticky="w", padx=(2, 8))
-        _color_button(row_frame, high_color_key).grid(row=0, column=3, sticky="w", padx=(0, 12))
+        _color_button(row_frame, high_color_key, f"Choose the high colour for {label_text.lower()}.").grid(row=0, column=3, sticky="w", padx=(0, 12))
         ttk.Label(row_frame, text="Low").grid(row=0, column=4, sticky="w", padx=(0, 6))
         low_entry = ttk.Entry(row_frame, width=4)
         setattr(app, low_entry_attr, low_entry)
         low_entry.grid(row=0, column=5, sticky="w")
         ttk.Label(row_frame, text="g").grid(row=0, column=6, sticky="w", padx=(2, 8))
-        _color_button(row_frame, low_color_key).grid(row=0, column=7, sticky="w")
+        _color_button(row_frame, low_color_key, f"Choose the low colour for {label_text.lower()}.").grid(row=0, column=7, sticky="w")
         row_frame.grid(row=row, column=1, sticky="w", padx=(12, 0), pady=pady)
 
     _threshold_row(
@@ -198,12 +208,17 @@ def open_tracker_settings(app) -> None:
         low_label: str = "Low",
         pady: tuple[int, int] = (2, 0),
     ) -> None:
-        ttk.Label(frame, text=label).grid(row=row, column=0, sticky="w", pady=pady)
+        label_widget = ttk.Label(frame, text=label)
+        label_widget.grid(row=row, column=0, sticky="w", pady=pady)
+        try:
+            app._bind_tooltip(label_widget, f"Set {high_label.lower()} and {low_label.lower()} colours for {label.lower()}.")
+        except Exception:
+            pass
         usage_frame = ttk.Frame(frame)
         ttk.Label(usage_frame, text=high_label, width=6, anchor="w").grid(row=0, column=0, sticky="w", padx=(0, 6))
-        _color_button(usage_frame, high_key).grid(row=0, column=1, sticky="w", padx=(0, 12))
+        _color_button(usage_frame, high_key, f"Choose the {high_label.lower()} colour for {label.lower()}.").grid(row=0, column=1, sticky="w", padx=(0, 12))
         ttk.Label(usage_frame, text=low_label, width=6, anchor="w").grid(row=0, column=2, sticky="w", padx=(0, 6))
-        _color_button(usage_frame, low_key).grid(row=0, column=3, sticky="w")
+        _color_button(usage_frame, low_key, f"Choose the {low_label.lower()} colour for {label.lower()}.").grid(row=0, column=3, sticky="w")
         usage_frame.grid(row=row, column=1, sticky="w", padx=(12, 0), pady=pady)
 
     _usage_row(usage_row, "Remaining today (THC) colours", "remaining_thc_high_color", "remaining_thc_low_color", pady=(6, 0))
@@ -361,9 +376,14 @@ def open_tracker_settings(app) -> None:
         ("List background", "list_bg"),
         ("Muted", "muted"),
     ):
-        ttk.Label(frame, text=label).grid(row=theme_row, column=0, sticky="w", pady=(2, 0))
+        label_widget = ttk.Label(frame, text=label)
+        label_widget.grid(row=theme_row, column=0, sticky="w", pady=(2, 0))
+        try:
+            app._bind_tooltip(label_widget, f"Dark theme {label.lower()} colour.")
+        except Exception:
+            pass
         row_frame = ttk.Frame(frame)
-        _color_button(row_frame, f"dark:{key}").pack(side="left")
+        _color_button(row_frame, f"dark:{key}", f"Pick dark theme {label.lower()} colour.").pack(side="left")
         row_frame.grid(row=theme_row, column=1, sticky="w", padx=(12, 0))
         theme_row += 1
 
@@ -380,13 +400,19 @@ def open_tracker_settings(app) -> None:
         ("List background", "list_bg"),
         ("Muted", "muted"),
     ):
-        ttk.Label(frame, text=label).grid(row=theme_row, column=0, sticky="w", pady=(2, 0))
+        label_widget = ttk.Label(frame, text=label)
+        label_widget.grid(row=theme_row, column=0, sticky="w", pady=(2, 0))
+        try:
+            app._bind_tooltip(label_widget, f"Light theme {label.lower()} colour.")
+        except Exception:
+            pass
         row_frame = ttk.Frame(frame)
-        _color_button(row_frame, f"light:{key}").pack(side="left")
+        _color_button(row_frame, f"light:{key}", f"Pick light theme {label.lower()} colour.").pack(side="left")
         row_frame.grid(row=theme_row, column=1, sticky="w", padx=(12, 0))
         theme_row += 1
 
-    ttk.Button(frame, text="Reset theme colours", command=app._reset_theme_palettes).grid(
+    reset_theme_btn = ttk.Button(frame, text="Reset theme colours", command=app._reset_theme_palettes)
+    reset_theme_btn.grid(
         row=theme_row, column=0, sticky="w", pady=(10, 0)
     )
 
@@ -424,6 +450,7 @@ def open_tracker_settings(app) -> None:
     app._bind_tooltip(lbl_avg_days, "Number of days to average for days-left calculations (0 = all time).")
     app._bind_tooltip(app.avg_usage_days_entry, "Number of days to average for days-left calculations (0 = all time).")
     app._bind_tooltip(lbl_backup, "Export/import a full backup of settings and data.")
+    app._bind_tooltip(btn_backup_export, "Create a backup archive containing all tracker settings and data.")
     app._bind_tooltip(btn_backup_import, "Importing will overwrite existing data after confirmation.")
     app._bind_tooltip(app.open_data_folder_btn, "Open the data folder in File Explorer.")
     app._bind_tooltip(app.scraper_controls_check, "Show the scraper button, browser button, and status dot in the main window.")
@@ -431,9 +458,10 @@ def open_tracker_settings(app) -> None:
     app._bind_tooltip(app.minimize_var_check, "Hide to system tray when minimizing if enabled.")
     app._bind_tooltip(app.close_var_check, "Hide to system tray when closing if enabled.")
     app._bind_tooltip(app.dark_mode_check, "Toggle the tracker theme between dark and light.")
-    for name, var in app.roa_vars.items():
+    app._bind_tooltip(reset_theme_btn, "Restore all theme palette colours to defaults.")
+    for name, entry in app.roa_entries.items():
         try:
-            app._bind_tooltip(var, f"Efficiency percent used for {name.lower()} dosing.")
+            app._bind_tooltip(entry, f"Efficiency percent used for {name.lower()} dosing.")
         except Exception:
             pass
 
