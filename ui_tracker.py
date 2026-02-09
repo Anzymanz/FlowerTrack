@@ -42,6 +42,10 @@ except ImportError:  # Pillow may not be installed; tray icon will be disabled
     Image = None
     ImageDraw = None
     ImageTk = None
+try:
+    from tkcolorpicker import ColorPicker as TkColorPicker
+except Exception:
+    TkColorPicker = None
 def resolve_scraper_status(child_procs) -> tuple[bool, bool]:
     return resolve_scraper_status_core(child_procs, SCRAPER_STATE_FILE)
 def _build_scraper_status_image(child_procs):
@@ -1112,39 +1116,107 @@ class CannabisTracker:
         self._update_theme_color_buttons()
         self._save_config()
 
+    def _apply_picker_theme(self, picker: tk.Toplevel) -> None:
+        base = getattr(self, "current_base_color", "#111")
+        ctrl_bg = getattr(self, "current_ctrl_bg", "#222")
+        fg = getattr(self, "text_color", "#eee")
+        border = getattr(self, "current_border_color", "#2a2a2a")
+        try:
+            picker.configure(bg=base)
+        except Exception:
+            pass
+        try:
+            style = ttk.Style(picker)
+            style.theme_use("clam")
+            style.configure("TFrame", background=base)
+            style.configure("TLabel", background=base, foreground=fg)
+            style.configure("TButton", background=ctrl_bg, foreground=fg, bordercolor=border, focusthickness=0)
+            style.map("TButton", background=[("active", ctrl_bg)], foreground=[("active", fg)])
+            style.configure("TEntry", fieldbackground=ctrl_bg, foreground=fg, background=ctrl_bg)
+            style.configure("TSpinbox", fieldbackground=ctrl_bg, foreground=fg, background=ctrl_bg)
+        except Exception:
+            pass
+
+        try:
+            default_label_bg = tk.Label(picker).cget("background")
+            default_frame_bg = tk.Frame(picker).cget("background")
+        except Exception:
+            default_label_bg = None
+            default_frame_bg = None
+
+        def _style_widget(widget: tk.Widget) -> None:
+            try:
+                if isinstance(widget, (tk.Frame, tk.Toplevel)):
+                    if default_frame_bg is None or widget.cget("background") == default_frame_bg:
+                        widget.configure(bg=base)
+                elif isinstance(widget, (tk.Label, tk.LabelFrame)):
+                    bg = widget.cget("background")
+                    if default_label_bg is None or bg == default_label_bg:
+                        widget.configure(bg=base, fg=fg)
+                elif isinstance(widget, (tk.Entry, tk.Spinbox)):
+                    widget.configure(bg=ctrl_bg, fg=fg, insertbackground=fg)
+                elif isinstance(widget, tk.Button):
+                    widget.configure(bg=ctrl_bg, fg=fg, activebackground=ctrl_bg, activeforeground=fg)
+            except Exception:
+                pass
+            for child in widget.winfo_children():
+                _style_widget(child)
+
+        _style_widget(picker)
+        try:
+            self._set_dark_title_bar(self.dark_var.get(), target=picker)
+        except Exception:
+            pass
+
+    def _ask_colour_picker(self, current: str, title: str, parent: tk.Toplevel | None) -> str | None:
+        if TkColorPicker is None:
+            return colorchooser.askcolor(color=current, title=title, parent=parent)[1]
+        picker = TkColorPicker(parent, color=current, title=title)
+        self._apply_picker_theme(picker)
+        try:
+            if parent and tk.Toplevel.winfo_exists(parent):
+                parent.attributes("-topmost", True)
+            picker.attributes("-topmost", True)
+        except Exception:
+            pass
+        picker.wait_window(picker)
+        try:
+            if parent and tk.Toplevel.winfo_exists(parent):
+                parent.attributes("-topmost", False)
+            picker.attributes("-topmost", False)
+        except Exception:
+            pass
+        try:
+            res = picker.get_color()
+        except Exception:
+            res = None
+        if res:
+            return res[2]
+        return None
+
     def _choose_theme_color(self, mode: str, key: str) -> None:
         palette = self.theme_palette_dark if mode == "dark" else self.theme_palette_light
         current = palette.get(key, "#ffffff")
         settings_win = getattr(self, "settings_window", None)
+        parent = None
         try:
             if settings_win and tk.Toplevel.winfo_exists(settings_win):
-                settings_win.transient(self.root)
-                settings_win.lift()
-                settings_win.focus_force()
-                self.root.lower()
-                self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
+                self._bring_settings_to_front(settings_win)
+                settings_win.attributes("-topmost", True)
+                parent = settings_win
         except Exception:
-            pass
-        picked = colorchooser.askcolor(color=current, title="Select colour")[1]
+            parent = None
+        picked = self._ask_colour_picker(current=current, title="Select colour", parent=parent)
         try:
             if settings_win and tk.Toplevel.winfo_exists(settings_win):
-                settings_win.lift()
-                settings_win.focus_force()
-                settings_win.after(0, lambda: self._set_dark_title_bar(self.dark_var.get(), target=settings_win))
-                settings_win.after(50, lambda: self._set_dark_title_bar(self.dark_var.get(), target=settings_win))
-                settings_win.after(150, lambda: self._set_dark_title_bar(self.dark_var.get(), target=settings_win))
+                settings_win.attributes("-topmost", False)
+                self._bring_settings_to_front(settings_win)
         except Exception:
             pass
         color = self._normalize_hex(picked or "")
         if not color:
             return
         self._set_palette_color(mode, key, color)
-        try:
-            self.apply_theme(self.dark_var.get())
-            if settings_win and tk.Toplevel.winfo_exists(settings_win):
-                settings_win.after(0, lambda: self._set_dark_title_bar(self.dark_var.get(), target=settings_win))
-        except Exception:
-            pass
 
     def _reset_theme_palettes(self) -> None:
         default_dark, default_light = get_default_palettes()
@@ -1158,23 +1230,19 @@ class CannabisTracker:
     def _choose_threshold_color(self, key: str) -> None:
         current = getattr(self, key, None) or "#2ecc71"
         settings_win = getattr(self, "settings_window", None)
+        parent = None
         try:
             if settings_win and tk.Toplevel.winfo_exists(settings_win):
-                settings_win.transient(self.root)
-                settings_win.lift()
-                settings_win.focus_force()
-                self.root.lower()
-                self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
+                self._bring_settings_to_front(settings_win)
+                settings_win.attributes("-topmost", True)
+                parent = settings_win
         except Exception:
-            pass
-        picked = colorchooser.askcolor(color=current, title="Select colour")[1]
+            parent = None
+        picked = self._ask_colour_picker(current=current, title="Select colour", parent=parent)
         try:
             if settings_win and tk.Toplevel.winfo_exists(settings_win):
-                settings_win.lift()
-                settings_win.focus_force()
-                settings_win.after(0, lambda: self._set_dark_title_bar(self.dark_var.get(), target=settings_win))
-                settings_win.after(50, lambda: self._set_dark_title_bar(self.dark_var.get(), target=settings_win))
-                settings_win.after(150, lambda: self._set_dark_title_bar(self.dark_var.get(), target=settings_win))
+                settings_win.attributes("-topmost", False)
+                self._bring_settings_to_front(settings_win)
         except Exception:
             pass
         color = self._normalize_hex(picked or "")
@@ -1185,12 +1253,19 @@ class CannabisTracker:
         self._refresh_stock()
         self._refresh_log()
         self._save_config()
+
+    def _bring_settings_to_front(self, settings_win: tk.Toplevel) -> None:
         try:
-            self.apply_theme(self.dark_var.get())
-            if settings_win and tk.Toplevel.winfo_exists(settings_win):
-                settings_win.after(0, lambda: self._set_dark_title_bar(self.dark_var.get(), target=settings_win))
+            settings_win.transient(self.root)
+            settings_win.lift()
+            settings_win.focus_force()
         except Exception:
             pass
+        try:
+            self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
+        except Exception:
+            pass
+
     def _toggle_theme(self) -> None:
         self.apply_theme(self.dark_var.get())
         self.save_data()
