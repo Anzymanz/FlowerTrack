@@ -141,8 +141,18 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
         bordercolor=border,
         lightcolor=border,
         darkcolor=border,
+        focuscolor=border,
+        borderwidth=1,
     )
-    style.map("TEntry", fieldbackground=[("readonly", ctrl_bg)], foreground=[("readonly", fg)])
+    style.map(
+        "TEntry",
+        fieldbackground=[("readonly", ctrl_bg)],
+        foreground=[("readonly", fg)],
+        bordercolor=[("focus", border), ("!focus", border)],
+        lightcolor=[("focus", border), ("!focus", border)],
+        darkcolor=[("focus", border), ("!focus", border)],
+        focuscolor=[("focus", border), ("!focus", border)],
+    )
     style.configure(
         "TSpinbox",
         fieldbackground=ctrl_bg,
@@ -151,6 +161,8 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
         bordercolor=border,
         lightcolor=border,
         darkcolor=border,
+        focuscolor=border,
+        borderwidth=1,
     )
     style.configure(
         "TCombobox",
@@ -161,6 +173,8 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
         lightcolor=border,
         darkcolor=border,
         arrowcolor=fg,
+        focuscolor=border,
+        borderwidth=1,
     )
     style.configure(
         "TNotebook",

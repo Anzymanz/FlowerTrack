@@ -131,26 +131,30 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         justify="left",
     ).pack(fill="x", pady=(0, 6))
 
-    account_form = ttk.Frame(tab_account)
-    account_form.pack(fill="x", expand=True)
-    account_form.columnconfigure(1, weight=1)
+    account_grid = ttk.Frame(tab_account)
+    account_grid.pack(fill="x", expand=True)
+    account_grid.columnconfigure(0, weight=1)
+    account_grid.columnconfigure(1, weight=1)
 
+    creds_frame = ttk.Labelframe(account_grid, text="Credentials")
+    creds_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 8), pady=4)
+    creds_frame.columnconfigure(1, weight=1)
     row_idx = 0
-    ttk.Label(account_form, text="Username").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(account_form, textvariable=app.cap_user, width=40).grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
+    ttk.Label(creds_frame, text="Username").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(creds_frame, textvariable=app.cap_user, width=40).grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
     row_idx += 1
+    ttk.Label(creds_frame, text="Password").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(creds_frame, textvariable=app.cap_pass, show="*", width=40).grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
 
-    ttk.Label(account_form, text="Password").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(account_form, textvariable=app.cap_pass, show="*", width=40).grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
-    row_idx += 1
-
-    ttk.Label(account_form, text="Organization").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
+    org_frame = ttk.Labelframe(account_grid, text="Organisation")
+    org_frame.grid(row=0, column=1, sticky="nsew", padx=(8, 0), pady=4)
+    org_frame.columnconfigure(1, weight=1)
+    ttk.Label(org_frame, text="Organisation").grid(row=0, column=0, sticky="w", padx=6, pady=2)
     org_values = ["", "Medicann Isle of Mann", "Medicann Guernsey", "Medicann Jersey", "Medicann UK"]
-    org_combo = ttk.Combobox(account_form, textvariable=app.cap_org, values=org_values, state="readonly", width=38)
-    org_combo.grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
+    org_combo = ttk.Combobox(org_frame, textvariable=app.cap_org, values=org_values, state="readonly", width=38)
+    org_combo.grid(row=0, column=1, sticky="ew", padx=6, pady=2)
     org_combo.bind("<FocusOut>", _clear_combo_selection)
     org_combo.bind("<<ComboboxSelected>>", _clear_combo_selection)
-    row_idx += 1
 
     capture_form = ttk.Frame(tab_capture)
     capture_form.pack(fill="x", expand=True)
@@ -281,15 +285,22 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     detail_combo.bind("<FocusOut>", _clear_combo_selection)
     detail_combo.bind("<<ComboboxSelected>>", _clear_combo_selection)
 
-    filters_frame = ttk.Frame(tab_filters)
-    filters_frame.pack(fill="x", expand=True)
-    ttk.Checkbutton(filters_frame, text="Include inactive products", variable=app.cap_include_inactive).pack(anchor="w", pady=2)
-    ttk.Checkbutton(filters_frame, text="Requestable only", variable=app.cap_requestable_only).pack(anchor="w", pady=2)
-    ttk.Checkbutton(filters_frame, text="In stock only", variable=app.cap_in_stock_only).pack(anchor="w", pady=2)
-    ttk.Label(filters_frame, text="Product type filters (optional)").pack(anchor="w", pady=(10, 2))
-    ttk.Checkbutton(filters_frame, text="Flower only", variable=app.cap_filter_flower).pack(anchor="w", pady=2)
-    ttk.Checkbutton(filters_frame, text="Oil only", variable=app.cap_filter_oil).pack(anchor="w", pady=2)
-    ttk.Checkbutton(filters_frame, text="Vape only", variable=app.cap_filter_vape).pack(anchor="w", pady=2)
+    filters_grid = ttk.Frame(tab_filters)
+    filters_grid.pack(fill="x", expand=True)
+    filters_grid.columnconfigure(0, weight=1)
+    filters_grid.columnconfigure(1, weight=1)
+
+    availability_frame = ttk.Labelframe(filters_grid, text="Availability")
+    availability_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 8), pady=4)
+    ttk.Checkbutton(availability_frame, text="Include inactive products", variable=app.cap_include_inactive).pack(anchor="w", pady=2)
+    ttk.Checkbutton(availability_frame, text="Requestable only", variable=app.cap_requestable_only).pack(anchor="w", pady=2)
+    ttk.Checkbutton(availability_frame, text="In stock only", variable=app.cap_in_stock_only).pack(anchor="w", pady=2)
+
+    type_frame = ttk.Labelframe(filters_grid, text="Product type (optional)")
+    type_frame.grid(row=0, column=1, sticky="nsew", padx=(8, 0), pady=4)
+    ttk.Checkbutton(type_frame, text="Flower only", variable=app.cap_filter_flower).pack(anchor="w", pady=2)
+    ttk.Checkbutton(type_frame, text="Oil only", variable=app.cap_filter_oil).pack(anchor="w", pady=2)
+    ttk.Checkbutton(type_frame, text="Vape only", variable=app.cap_filter_vape).pack(anchor="w", pady=2)
 
     ha_frame = ttk.Frame(tab_notifications)
     ha_frame.pack(fill="x", pady=(0, 6))
@@ -312,13 +323,21 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         except Exception:
             pass
 
-    scraper_btns = ttk.Frame(tab_maintenance)
-    scraper_btns.pack(fill="x", pady=10)
-    ttk.Button(scraper_btns, text="Load config", command=app.load_capture_config).pack(side="left", padx=4)
-    ttk.Button(scraper_btns, text="Export config", command=app.save_capture_config).pack(side="left", padx=4)
-    ttk.Button(scraper_btns, text="Clear cache", command=app.clear_cache).pack(side="right", padx=4)
-    ttk.Button(scraper_btns, text="Clear auth cache", command=app._clear_auth_cache).pack(side="right", padx=4)
-    ttk.Button(scraper_btns, text="Send test notification", command=app.send_test_notification).pack(side="right", padx=4)
+    maintenance_grid = ttk.Frame(tab_maintenance)
+    maintenance_grid.pack(fill="x", expand=True)
+    maintenance_grid.columnconfigure(0, weight=1)
+    maintenance_grid.columnconfigure(1, weight=1)
+
+    config_frame = ttk.Labelframe(maintenance_grid, text="Config")
+    config_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 8), pady=4)
+    ttk.Button(config_frame, text="Load config", command=app.load_capture_config).pack(side="left", padx=4, pady=4)
+    ttk.Button(config_frame, text="Export config", command=app.save_capture_config).pack(side="left", padx=4, pady=4)
+
+    tools_frame = ttk.Labelframe(maintenance_grid, text="Tools")
+    tools_frame.grid(row=0, column=1, sticky="nsew", padx=(8, 0), pady=4)
+    ttk.Button(tools_frame, text="Send test notification", command=app.send_test_notification).pack(side="left", padx=4, pady=4)
+    ttk.Button(tools_frame, text="Clear auth cache", command=app._clear_auth_cache).pack(side="left", padx=4, pady=4)
+    ttk.Button(tools_frame, text="Clear cache", command=app.clear_cache).pack(side="left", padx=4, pady=4)
 
     btn_row = ttk.Frame(win)
     btn_row.pack(fill="x", pady=10, padx=10)
