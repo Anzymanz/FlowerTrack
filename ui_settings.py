@@ -30,9 +30,9 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         pass
     app.settings_window = win
     if not hasattr(app, "show_advanced_scraper"):
-        app.show_advanced_scraper = tk.BooleanVar(value=False)
+        app.show_advanced_scraper = tk.BooleanVar(value=True)
     else:
-        app.show_advanced_scraper.set(False)
+        app.show_advanced_scraper.set(True)
     win.title("Settings")
     base_geometry = getattr(app, "scraper_settings_geometry", "560x820")
     win.geometry(base_geometry)
@@ -125,12 +125,11 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
 
     ttk.Label(
         tab_capture,
-        text="Configure how the scraper logs in, waits, and captures the page. "
-        "Notifications fire only on new/removed items or price/stock changes.",
+        text="Configure how the scraper logs in, waits, and captures the page.",
         wraplength=520,
         anchor="w",
         justify="left",
-    ).pack(fill="x", pady=(0, 10))
+    ).pack(fill="x", pady=(0, 6))
 
     account_form = ttk.Frame(tab_account)
     account_form.pack(fill="x", expand=True)
@@ -157,9 +156,6 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     capture_form.pack(fill="x", expand=True)
     capture_form.columnconfigure(1, weight=1)
     row_idx = 0
-    advanced_toggle = ttk.Checkbutton(capture_form, text="Show advanced scraper settings", variable=app.show_advanced_scraper)
-    advanced_toggle.grid(row=row_idx, column=0, columnspan=2, sticky="w", padx=6, pady=(6, 2))
-    row_idx += 1
 
     advanced_frame = ttk.Frame(capture_form)
     advanced_frame.grid(row=row_idx, column=0, columnspan=2, sticky="ew", padx=0, pady=(0, 6))
@@ -238,20 +234,10 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     def _resize_to_content():
         win.update_idletasks()
         desired_width = max(520, min(base_width, tab_capture.winfo_reqwidth() + 24))
-        current_min = min_height if app.show_advanced_scraper.get() else min_height_compact
-        desired = max(tab_capture.winfo_reqheight() + 24, current_min)
+        desired = max(tab_capture.winfo_reqheight() + 24, min_height)
         height = min(desired, max_height)
         win.geometry(f"{desired_width}x{height}")
 
-    def toggle_advanced():
-        if app.show_advanced_scraper.get():
-            advanced_frame.grid()
-        else:
-            advanced_frame.grid_remove()
-        _resize_to_content()
-
-    toggle_advanced()
-    advanced_toggle.config(command=toggle_advanced)
     _resize_to_content()
 
     def update_scraper_hints(event=None):
