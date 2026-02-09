@@ -229,6 +229,7 @@ def _render_card_html(
       data-active='{1 if it.get("is_active") else 0}'
       data-inactive='{1 if it.get("is_inactive") else 0}'
       data-status='{esc_attr(it.get("status") or '')}'
+      data-irradiation='{esc_attr(it.get("irradiation_type") or '')}'
       data-key='{esc_attr(card_key)}'
       data-favkey='{esc_attr(fav_key)}'
       data-smalls='{1 if it.get("is_smalls") else 0}'

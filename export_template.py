@@ -193,6 +193,8 @@ let activeStrains = new Set(['Indica','Sativa','Hybrid']);
 let favoritesOnly = false;
 let showSmalls = true;
 let showOutOfStock = false;
+let showBetaIrr = true;
+let showGammaIrr = true;
 let brandFilter = new Set();
 let searchTerm = "";
 const VISIBLE_STEP = 30;
@@ -250,7 +252,13 @@ function applyFilters(resetLimit = true) {
         const isOut = c.dataset.out === '1';
         const stockOk = showOutOfStock || !isOut;
         const smallsOk = showSmalls || !isSmalls;
-        if (showType && showStrain && matchesSearch && brandOk && priceOk && thcOk && favOk && smallsOk && stockOk) {
+        const irrRaw = (c.dataset.irradiation || '').toLowerCase();
+        const isFlower = pt === 'flower';
+        const isBetaIrr = irrRaw.includes('beta') || irrRaw.includes('β');
+        const isGammaIrr = irrRaw.includes('gamma') || irrRaw.includes('γ');
+        const betaOk = !isFlower || !isBetaIrr || showBetaIrr;
+        const gammaOk = !isFlower || !isGammaIrr || showGammaIrr;
+        if (showType && showStrain && matchesSearch && brandOk && priceOk && thcOk && favOk && smallsOk && stockOk && betaOk && gammaOk) {
             filteredCards.push(c);
         }
         c.style.display = 'none';
@@ -349,6 +357,17 @@ function toggleSmalls(btn) {
 function toggleOutOfStock(btn) {
     showOutOfStock = !showOutOfStock;
     btn.classList.toggle('active', showOutOfStock);
+    applyFilters();
+}
+function toggleIrradiation(kind, btn) {
+    if (kind === 'beta') {
+        showBetaIrr = !showBetaIrr;
+        btn.classList.toggle('active', showBetaIrr);
+    } else if (kind === 'gamma') {
+        showGammaIrr = !showGammaIrr;
+        btn.classList.toggle('active', showGammaIrr);
+    }
+    saveFilterPrefs();
     applyFilters();
 }
 let favorites = new Set();
@@ -960,6 +979,12 @@ function loadFilterPrefs() {
         if (typeof data.smalls === 'boolean') {
             showSmalls = data.smalls;
         }
+        if (typeof data.irr_beta === 'boolean') {
+            showBetaIrr = data.irr_beta;
+        }
+        if (typeof data.irr_gamma === 'boolean') {
+            showGammaIrr = data.irr_gamma;
+        }
     } catch (e) {}
 }
 function saveFilterPrefs() {
@@ -968,6 +993,8 @@ function saveFilterPrefs() {
             types: Array.from(activeTypes),
             strains: Array.from(activeStrains),
             smalls: showSmalls,
+            irr_beta: showBetaIrr,
+            irr_gamma: showGammaIrr,
         };
         localStorage.setItem('ft_filters', JSON.stringify(payload));
     } catch (e) {}
@@ -1011,9 +1038,12 @@ function resetFilters() {
     document.querySelectorAll('[data-filter-type]').forEach(b => b.classList.add('active'));
     document.querySelectorAll('[data-filter-strain]').forEach(b => b.classList.add('active'));
     document.querySelectorAll('[data-filter-smalls]').forEach(b => b.classList.add('active'));
+    document.querySelectorAll('[data-filter-irr]').forEach(b => b.classList.add('active'));
     favoritesOnly = false;
     showSmalls = true;
     showOutOfStock = false;
+    showBetaIrr = true;
+    showGammaIrr = true;
     brandFilter = new Set();
     saveFilterPrefs();
     // Reset sliders
@@ -1196,6 +1226,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const s = btn.getAttribute('data-filter-strain');
         btn.classList.toggle('active', activeStrains.has(s));
     });
+    document.querySelectorAll('[data-filter-irr]').forEach(btn => {
+        const irr = btn.getAttribute('data-filter-irr');
+        if (irr === 'beta') btn.classList.toggle('active', showBetaIrr);
+        if (irr === 'gamma') btn.classList.toggle('active', showGammaIrr);
+    });
     const smallsBtn = document.querySelector('[data-filter-smalls]');
     if (smallsBtn) smallsBtn.classList.toggle('active', showSmalls);
     outstockBtn = outstockBtn || document.querySelector('[data-filter-outstock]');
@@ -1260,6 +1295,8 @@ document.addEventListener('DOMContentLoaded', () => {
     <button class='btn-filter active' data-filter-strain="Indica" onclick="toggleStrain('Indica', this)">Indica</button>
     <button class='btn-filter active' data-filter-strain="Sativa" onclick="toggleStrain('Sativa', this)">Sativa</button>
     <button class='btn-filter active' data-filter-strain="Hybrid" onclick="toggleStrain('Hybrid', this)">Hybrid</button>
+    <button class='btn-filter active' data-filter-irr="beta" onclick="toggleIrradiation('beta', this)">β</button>
+    <button class='btn-filter active' data-filter-irr="gamma" onclick="toggleIrradiation('gamma', this)">γ</button>
     <button class='btn-filter' onclick="toggleFavorites(this)">Favorites</button>
     <button class='btn-filter active' data-filter-smalls="1" onclick="toggleSmalls(this)">Smalls</button>
     <button class='btn-filter' data-filter-outstock="1" onclick="toggleOutOfStock(this)">Out of stock</button>
