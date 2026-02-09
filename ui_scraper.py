@@ -1833,12 +1833,12 @@ class App(tk.Tk):
         if not cfg.get("url"):
             messagebox.showwarning("Auth Token", "Please set the target URL before bootstrapping.")
             return
-        if not cfg.get("username") or not cfg.get("password"):
+        if not cfg.get("username") or not cfg.get("password") or not cfg.get("organization"):
             cfg = dict(cfg)
             cfg["headless"] = False
             messagebox.showinfo(
                 "Auth Token",
-                "No username/password set. A browser will open for manual login.",
+                "Missing account details. A browser will open for manual login.",
             )
         stop_event = threading.Event()
 
