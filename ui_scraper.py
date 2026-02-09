@@ -1822,6 +1822,10 @@ class App(tk.Tk):
         self.option_add("*TCombobox*Entry*selectForeground", colors["fg"])
         self.option_add("*TCombobox*Entry*inactiveselectBackground", colors["ctrl_bg"])
         self.option_add("*TCombobox*Entry*inactiveselectForeground", colors["fg"])
+        self.option_add("*Entry*selectBackground", colors.get("muted", colors["ctrl_bg"]))
+        self.option_add("*Entry*selectForeground", colors["fg"])
+        self.option_add("*Entry*inactiveselectBackground", colors.get("muted", colors["ctrl_bg"]))
+        self.option_add("*Entry*inactiveselectForeground", colors["fg"])
         # ttk scrollbar styling
         self.style.configure(
             "Vertical.TScrollbar",
@@ -2031,12 +2035,31 @@ class App(tk.Tk):
         fg = colors["fg"]
         ctrl_bg = colors["ctrl_bg"]
         accent = colors["accent"]
+        border = colors.get("border", ctrl_bg)
+        muted = colors.get("muted", fg)
         try:
             window.configure(bg=bg)
             for widget in window.winfo_children():
                 self._apply_theme_recursive(widget, bg, fg, ctrl_bg, accent, dark)
             self._set_window_titlebar_dark(window, dark)
             self._set_win_titlebar_dark(dark)
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
+        try:
+            self.style.map(
+                "TEntry",
+                bordercolor=[("focus", border), ("!focus", border)],
+                lightcolor=[("focus", border), ("!focus", border)],
+                darkcolor=[("focus", border), ("!focus", border)],
+                focuscolor=[("focus", border), ("!focus", border)],
+            )
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
+        try:
+            self.option_add("*Entry*selectBackground", muted if dark else "#d6d6d6")
+            self.option_add("*Entry*selectForeground", fg)
+            self.option_add("*Entry*inactiveselectBackground", muted if dark else "#d6d6d6")
+            self.option_add("*Entry*inactiveselectForeground", fg)
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
 if __name__ == "__main__":
