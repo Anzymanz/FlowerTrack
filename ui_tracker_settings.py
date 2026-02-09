@@ -14,6 +14,14 @@ def open_tracker_settings(app) -> None:
             pass
         return
     win = tk.Toplevel(app.root)
+    try:
+        win.attributes("-alpha", 0.0)
+    except Exception:
+        pass
+    try:
+        win.withdraw()
+    except Exception:
+        pass
     win.title("Settings")
     try:
         win.iconbitmap(app._resource_path('icon.ico'))
