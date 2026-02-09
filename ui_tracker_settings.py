@@ -467,6 +467,7 @@ def open_tracker_settings(app) -> None:
     app._update_threshold_color_buttons()
     app._update_theme_color_buttons()
     try:
+        app.apply_theme(app.dark_var.get())
         notebook.update_idletasks()
         current = notebook.index("current")
         notebook.select(current)

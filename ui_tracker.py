@@ -1139,6 +1139,12 @@ class CannabisTracker:
         if not color:
             return
         self._set_palette_color(mode, key, color)
+        try:
+            self.apply_theme(self.dark_var.get())
+            if settings_win and tk.Toplevel.winfo_exists(settings_win):
+                settings_win.after(0, lambda: self._set_dark_title_bar(self.dark_var.get(), target=settings_win))
+        except Exception:
+            pass
 
     def _reset_theme_palettes(self) -> None:
         default_dark, default_light = get_default_palettes()
@@ -1179,6 +1185,12 @@ class CannabisTracker:
         self._refresh_stock()
         self._refresh_log()
         self._save_config()
+        try:
+            self.apply_theme(self.dark_var.get())
+            if settings_win and tk.Toplevel.winfo_exists(settings_win):
+                settings_win.after(0, lambda: self._set_dark_title_bar(self.dark_var.get(), target=settings_win))
+        except Exception:
+            pass
     def _toggle_theme(self) -> None:
         self.apply_theme(self.dark_var.get())
         self.save_data()
