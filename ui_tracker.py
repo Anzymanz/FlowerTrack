@@ -1106,6 +1106,10 @@ class CannabisTracker:
                     btn.configure(
                         bg=color,
                         activebackground=color,
+                        activeforeground=self.text_color if getattr(self, "text_color", "") else "#eee",
+                        relief="solid",
+                        bd=1,
+                        highlightthickness=1,
                         highlightbackground=border_color,
                         highlightcolor=border_color,
                     )
@@ -1127,6 +1131,10 @@ class CannabisTracker:
                     btn.configure(
                         bg=color,
                         activebackground=color,
+                        activeforeground=self.text_color if getattr(self, "text_color", "") else "#eee",
+                        relief="solid",
+                        bd=1,
+                        highlightthickness=1,
                         highlightbackground=border_color,
                         highlightcolor=border_color,
                     )
