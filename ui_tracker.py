@@ -1165,6 +1165,9 @@ class CannabisTracker:
         _style_widget(picker)
         try:
             self._set_dark_title_bar(self.dark_var.get(), target=picker)
+            picker.after_idle(lambda: self._set_dark_title_bar(self.dark_var.get(), target=picker))
+            picker.after(60, lambda: self._set_dark_title_bar(self.dark_var.get(), target=picker))
+            picker.bind("<Map>", lambda _e: self._set_dark_title_bar(self.dark_var.get(), target=picker))
         except Exception:
             pass
 
