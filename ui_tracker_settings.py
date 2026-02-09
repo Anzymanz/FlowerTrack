@@ -195,12 +195,13 @@ def open_tracker_settings(app) -> None:
         high_label: str = "High",
         low_label: str = "Low",
         pady: tuple[int, int] = (2, 0),
+        label_pad: tuple[int, int] = (0, 6),
     ) -> None:
         ttk.Label(frame, text=label).grid(row=row, column=0, sticky="w", pady=pady)
         usage_frame = ttk.Frame(frame)
-        ttk.Label(usage_frame, text=high_label).grid(row=0, column=0, sticky="w", padx=(0, 6))
+        ttk.Label(usage_frame, text=high_label, width=5, anchor="w").grid(row=0, column=0, sticky="w", padx=label_pad)
         _color_button(usage_frame, high_key).grid(row=0, column=1, sticky="w")
-        ttk.Label(usage_frame, text=low_label).grid(row=0, column=2, sticky="w", padx=(12, 6))
+        ttk.Label(usage_frame, text=low_label, width=5, anchor="w").grid(row=0, column=2, sticky="w", padx=(12, 6))
         _color_button(usage_frame, low_key).grid(row=0, column=3, sticky="w")
         usage_frame.grid(row=row, column=1, sticky="w", padx=(12, 0), pady=pady)
 
@@ -212,9 +213,26 @@ def open_tracker_settings(app) -> None:
     usage_row += 1
     _usage_row(usage_row, "Days left (CBD) colours", "days_cbd_high_color", "days_cbd_low_color")
     usage_row += 1
-    _usage_row(usage_row, "Total used today (THC) colours", "used_thc_under_color", "used_thc_over_color", high_label="Under", low_label="Over", pady=(6, 0))
+    _usage_row(
+        usage_row,
+        "Total used today (THC) colours",
+        "used_thc_under_color",
+        "used_thc_over_color",
+        high_label="Under",
+        low_label="Over",
+        pady=(6, 0),
+        label_pad=(0, 2),
+    )
     usage_row += 1
-    _usage_row(usage_row, "Total used today (CBD) colours", "used_cbd_under_color", "used_cbd_over_color", high_label="Under", low_label="Over")
+    _usage_row(
+        usage_row,
+        "Total used today (CBD) colours",
+        "used_cbd_under_color",
+        "used_cbd_over_color",
+        high_label="Under",
+        low_label="Over",
+        label_pad=(0, 2),
+    )
 
     frame = tab_tracker
     ttk.Label(frame, text="Tracker settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
