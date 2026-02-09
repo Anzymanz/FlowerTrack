@@ -993,7 +993,10 @@ function toggleFavorite(btn) {
 function resetFilters() {
     activeTypes = new Set(['flower','oil','vape']);
     activeStrains = new Set(['Indica','Sativa','Hybrid']);
-    document.querySelectorAll('.btn-filter').forEach(b => b.classList.add('active'));
+    document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('[data-filter-type]').forEach(b => b.classList.add('active'));
+    document.querySelectorAll('[data-filter-strain]').forEach(b => b.classList.add('active'));
+    document.querySelectorAll('[data-filter-smalls]').forEach(b => b.classList.add('active'));
     favoritesOnly = false;
     showSmalls = true;
     showOutOfStock = false;
