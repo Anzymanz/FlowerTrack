@@ -619,12 +619,16 @@ class CannabisTracker:
             style=self.combo_style,
         )
         flower_combo.grid(row=1, column=0, sticky="w", padx=(0, 8))
+        flower_combo.bind("<FocusOut>", self._clear_combo_selection)
+        flower_combo.bind("<<ComboboxSelected>>", self._clear_combo_selection)
         ttk.Label(frame, text="Route").grid(row=0, column=1, sticky="w")
         roa_var = tk.StringVar(value=current_roa if current_roa in self.roa_options else "Vaped")
         roa_combo = ttk.Combobox(
             frame, state="readonly", values=list(self.roa_options.keys()), textvariable=roa_var, width=12, style=self.combo_style
         )
         roa_combo.grid(row=1, column=1, sticky="w", padx=(0, 8))
+        roa_combo.bind("<FocusOut>", self._clear_combo_selection)
+        roa_combo.bind("<<ComboboxSelected>>", self._clear_combo_selection)
         ttk.Label(frame, text="Dose (g)").grid(row=0, column=2, sticky="w")
         grams_var = tk.StringVar(value=f"{current_grams:.3f}")
         grams_entry = ttk.Entry(frame, textvariable=grams_var, width=12)

@@ -70,6 +70,21 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
 
     outer = ttk.Frame(win)
     outer.pack(fill="both", expand=True)
+    def _clear_combo_selection(event: tk.Event | None = None) -> None:
+        widget = getattr(event, "widget", None)
+        if widget is None:
+            return
+        try:
+            widget.selection_clear()
+        except Exception:
+            try:
+                widget.tk.call(widget._w, "selection", "clear")
+            except Exception:
+                pass
+        try:
+            widget.icursor("end")
+        except Exception:
+            pass
     canvas = tk.Canvas(outer, highlightthickness=0, borderwidth=0)
     scroll = ttk.Scrollbar(outer, orient="vertical", command=canvas.yview, style="Vertical.TScrollbar")
     canvas.configure(yscrollcommand=scroll.set)
@@ -127,6 +142,8 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     org_values = ["", "Medicann Isle of Mann", "Medicann Guernsey", "Medicann Jersey", "Medicann UK"]
     org_combo = ttk.Combobox(form, textvariable=app.cap_org, values=org_values, state="readonly", width=38)
     org_combo.grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
+    org_combo.bind("<FocusOut>", _clear_combo_selection)
+    org_combo.bind("<<ComboboxSelected>>", _clear_combo_selection)
     row_idx += 1
 
     ttk.Separator(form, orient="horizontal").grid(row=row_idx, column=0, columnspan=2, sticky="ew", pady=6)
@@ -293,6 +310,8 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Label(detail_frame, text="Notification detail").pack(side="left")
     detail_combo = ttk.Combobox(detail_frame, state="readonly", width=14, values=["full", "summary"], textvariable=app.cap_notify_detail)
     detail_combo.pack(side="left", padx=(8, 0))
+    detail_combo.bind("<FocusOut>", _clear_combo_selection)
+    detail_combo.bind("<<ComboboxSelected>>", _clear_combo_selection)
 
     def save_and_close():
         try:

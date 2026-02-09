@@ -622,6 +622,25 @@ combo_a = ttk.Combobox(lists_frame, values=labels, state="readonly")
 combo_b = ttk.Combobox(lists_frame, values=labels, state="readonly")
 combo_a.grid(row=1, column=0, sticky="we", padx=(0, 6))
 combo_b.grid(row=1, column=1, sticky="we", padx=(6, 0))
+def _clear_combo_selection(event=None):
+    widget = getattr(event, "widget", None)
+    if widget is None:
+        return
+    try:
+        widget.selection_clear()
+    except Exception:
+        try:
+            widget.tk.call(widget._w, "selection", "clear")
+        except Exception:
+            pass
+    try:
+        widget.icursor("end")
+    except Exception:
+        pass
+combo_a.bind("<FocusOut>", _clear_combo_selection)
+combo_a.bind("<<ComboboxSelected>>", _clear_combo_selection)
+combo_b.bind("<FocusOut>", _clear_combo_selection)
+combo_b.bind("<<ComboboxSelected>>", _clear_combo_selection)
 lists_frame.columnconfigure(0, weight=1)
 lists_frame.columnconfigure(1, weight=1)
 
@@ -696,6 +715,8 @@ else:
     roa_combo["values"] = roa_keys
     if roa_keys:
         roa_combo.current(0)
+    roa_combo.bind("<FocusOut>", _clear_combo_selection)
+    roa_combo.bind("<<ComboboxSelected>>", _clear_combo_selection)
     ttk.Button(right_actions, text="Log dose", command=log_dose).grid(row=0, column=2, padx=(10, 0))
 
 result_var = tk.StringVar(value="Select two flowers, set total grams and THC:CBD target ratio, then Calculate.")
