@@ -1189,9 +1189,12 @@ class CannabisTracker:
 
         _style_widget(picker)
         try:
-            self._queue_dark_titlebar(picker, attempts=20, delay_ms=100)
-            picker.bind("<Map>", lambda _e: self._queue_dark_titlebar(picker, attempts=20, delay_ms=100))
-            picker.bind("<Visibility>", lambda _e: self._queue_dark_titlebar(picker, attempts=20, delay_ms=100))
+            top = picker.winfo_toplevel()
+            self._queue_dark_titlebar(top, attempts=20, delay_ms=100)
+            top.bind("<Map>", lambda _e: self._queue_dark_titlebar(top, attempts=20, delay_ms=100))
+            top.bind("<Visibility>", lambda _e: self._queue_dark_titlebar(top, attempts=20, delay_ms=100))
+            top.bind("<FocusIn>", lambda _e: self._queue_dark_titlebar(top, attempts=20, delay_ms=100))
+            top.bind("<Activate>", lambda _e: self._queue_dark_titlebar(top, attempts=20, delay_ms=100))
         except Exception:
             pass
 
@@ -1236,6 +1239,12 @@ class CannabisTracker:
         try:
             picker.deiconify()
             picker.attributes("-alpha", 1.0)
+            picker.update_idletasks()
+        except Exception:
+            pass
+        try:
+            top = picker.winfo_toplevel()
+            self._queue_dark_titlebar(top, attempts=20, delay_ms=100)
         except Exception:
             pass
         picker.wait_window(picker)
