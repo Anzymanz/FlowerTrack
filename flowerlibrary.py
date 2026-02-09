@@ -125,7 +125,7 @@ class FlowerLibraryApp:
         entry_bg = colors["ctrl_bg"]
         text_color = colors["fg"]
         accent = colors["accent"]
-        border = colors["ctrl_bg"]
+        border = colors.get("border", colors["ctrl_bg"])
         selected_bg = colors["accent"]
         selected_fg = "#ffffff"
         cursor = text_color
@@ -186,7 +186,8 @@ class FlowerLibraryApp:
             background=[("active", accent)],
             foreground=[("active", "#ffffff")],
         )
-        self.root.option_add("*TCombobox*Listbox*Background", entry_bg)
+        list_bg = colors.get("list_bg", entry_bg)
+        self.root.option_add("*TCombobox*Listbox*Background", list_bg)
         self.root.option_add("*TCombobox*Listbox*Foreground", text_color)
         self.root.option_add("*TCombobox*Listbox*selectBackground", accent)
         self.root.option_add("*TCombobox*Listbox*selectForeground", "#ffffff")

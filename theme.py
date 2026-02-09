@@ -17,6 +17,7 @@ def compute_colors(dark: bool) -> dict:
     # Dark accent toned to a neutral gray to keep hover/selection subtle in dark mode.
     accent = "#3c3c3c" if dark else "#666666"
     list_bg = "#1e1e1e" if dark else "#ffffff"
+    muted = "#777777" if dark else "#666666"
     return {
         "bg": bg,
         "fg": fg,
@@ -24,6 +25,7 @@ def compute_colors(dark: bool) -> dict:
         "border": border,
         "accent": accent,
         "list_bg": list_bg,
+        "muted": muted,
     }
 
 

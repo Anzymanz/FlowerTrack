@@ -477,9 +477,10 @@ def apply_theme(root, dark: bool):
     fg = colors["fg"]
     ctrl_bg = colors["ctrl_bg"]
     accent = colors["accent"]
-    border = "#2a2a2a" if dark else "#cccccc"
-    entry_bg = "#1a1a1a" if dark else "#ffffff"
-    scroll = "#2b2b2b" if dark else "#dcdcdc"
+    border = colors.get("border", ctrl_bg)
+    entry_bg = ctrl_bg
+    list_bg = colors.get("list_bg", entry_bg)
+    scroll = border
     style = ttk.Style(root)
     try:
         apply_style_theme(style, colors)
@@ -511,9 +512,9 @@ def apply_theme(root, dark: bool):
         bordercolor=[("active", border), ("!active", border)],
     )
     # Combobox dropdown list colors
-    root.option_add("*TCombobox*Listbox*Background", entry_bg)
+    root.option_add("*TCombobox*Listbox*Background", list_bg)
     root.option_add("*TCombobox*Listbox*Foreground", fg)
-    root.option_add("*TCombobox*Listbox*selectBackground", accent if dark else "#0b79d0")
+    root.option_add("*TCombobox*Listbox*selectBackground", accent)
     root.option_add("*TCombobox*Listbox*selectForeground", "#ffffff")
     style.configure(
         "Vertical.TScrollbar",

@@ -120,7 +120,9 @@ class HistoryViewer(tk.Toplevel):
         fg = colors["fg"]
         ctrl_bg = colors["ctrl_bg"]
         accent = colors["accent"]
-        muted = "#9aa0aa" if dark else "#555555"
+        border = colors.get("border", ctrl_bg)
+        list_bg = colors.get("list_bg", ctrl_bg)
+        muted = colors.get("muted", fg)
         try:
             self.configure(bg=bg)
         except Exception as exc:
@@ -132,7 +134,14 @@ class HistoryViewer(tk.Toplevel):
                 elif isinstance(widget, tk.Text):
                     widget.configure(bg=bg, fg=fg, insertbackground=fg, highlightbackground=bg)
                 elif isinstance(widget, tk.Listbox):
-                    widget.configure(bg=bg if dark else "#ffffff", fg=fg, selectbackground=accent, selectforeground="#000" if dark else "#fff", highlightbackground=bg)
+                    widget.configure(
+                        bg=list_bg,
+                        fg=fg,
+                        selectbackground=accent,
+                        selectforeground=fg,
+                        highlightbackground=bg,
+                        highlightcolor=border,
+                    )
                 elif isinstance(widget, ttk.Widget):
                     pass
                 else:
@@ -148,15 +157,38 @@ class HistoryViewer(tk.Toplevel):
         _apply_widget(self)
         try:
             style = ttk.Style(self)
-            style.configure("History.Treeview", background=ctrl_bg, fieldbackground=ctrl_bg, foreground=fg)
+            style.configure(
+                "History.Treeview",
+                background=ctrl_bg,
+                fieldbackground=ctrl_bg,
+                foreground=fg,
+                bordercolor=border,
+                lightcolor=border,
+                darkcolor=border,
+            )
             style.map(
                 "History.Treeview",
                 background=[("selected", accent)],
-                foreground=[("selected", "#000" if dark else "#fff")],
+                foreground=[("selected", fg)],
             )
-            style.configure("History.Treeview.Heading", background=ctrl_bg, foreground=fg)
-            style.map("History.Treeview.Heading", background=[("active", accent)], foreground=[("active", "#000" if dark else "#fff")])
-            style.configure("History.Vertical.TScrollbar", background=ctrl_bg, troughcolor=bg, arrowcolor=fg)
+            style.configure(
+                "History.Treeview.Heading",
+                background=ctrl_bg,
+                foreground=fg,
+                bordercolor=border,
+                lightcolor=border,
+                darkcolor=border,
+            )
+            style.map("History.Treeview.Heading", background=[("active", accent)], foreground=[("active", fg)])
+            style.configure(
+                "History.Vertical.TScrollbar",
+                background=ctrl_bg,
+                troughcolor=bg,
+                arrowcolor=fg,
+                bordercolor=border,
+                lightcolor=border,
+                darkcolor=border,
+            )
             apply_rounded_buttons(style, {"bg": bg, "fg": fg, "ctrl_bg": ctrl_bg, "accent": accent})
         except Exception as exc:
             _log_debug(f"HistoryViewer suppressed exception: {exc}")
