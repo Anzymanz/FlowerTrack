@@ -2123,10 +2123,28 @@ class App(tk.Tk):
         accent = colors["accent"]
         border = colors.get("border", ctrl_bg)
         muted = colors.get("muted", fg)
+        def _clear_entry_selection(widget):
+            try:
+                widget.selection_clear()
+            except Exception:
+                try:
+                    widget.tk.call(widget._w, "selection", "clear")
+                except Exception:
+                    pass
+            try:
+                widget.icursor("end")
+            except Exception:
+                pass
+        def _bind_entry_clear(widget):
+            try:
+                widget.bind("<FocusOut>", lambda _e: _clear_entry_selection(widget))
+            except Exception:
+                pass
         try:
             window.configure(bg=bg)
             for widget in window.winfo_children():
                 self._apply_theme_recursive(widget, bg, fg, ctrl_bg, accent, dark)
+            self._apply_entry_clear_bindings(window)
             self._set_window_titlebar_dark(window, dark)
             self._set_win_titlebar_dark(dark)
         except Exception as exc:
@@ -2169,6 +2187,34 @@ class App(tk.Tk):
             self.option_add("*Entry*selectForeground", fg)
             self.option_add("*Entry*inactiveselectBackground", muted if dark else "#d6d6d6")
             self.option_add("*Entry*inactiveselectForeground", fg)
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
+
+    def _apply_entry_clear_bindings(self, widget):
+        def _clear_entry_selection(entry_widget):
+            try:
+                entry_widget.selection_clear()
+            except Exception:
+                try:
+                    entry_widget.tk.call(entry_widget._w, "selection", "clear")
+                except Exception:
+                    pass
+            try:
+                entry_widget.icursor("end")
+            except Exception:
+                pass
+
+        def _bind_entry_clear(entry_widget):
+            try:
+                entry_widget.bind("<FocusOut>", lambda _e: _clear_entry_selection(entry_widget))
+            except Exception:
+                pass
+
+        try:
+            if isinstance(widget, ttk.Entry):
+                _bind_entry_clear(widget)
+            for child in widget.winfo_children():
+                self._apply_entry_clear_bindings(child)
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
 if __name__ == "__main__":
