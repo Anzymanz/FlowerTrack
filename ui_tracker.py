@@ -265,7 +265,7 @@ class CannabisTracker:
         self._apply_scraper_controls_visibility()
         top_bar.columnconfigure(4, weight=1)
         # Stock list
-        stock_frame = ttk.LabelFrame(main, text="Flower Stock", padding=10)
+        stock_frame = ttk.LabelFrame(main, text="Flower Stock", padding=10, style="Panel.TLabelframe")
         stock_frame.grid(row=1, column=0, sticky="nsew", padx=(0, 8))
         main.columnconfigure(0, weight=3)
         main.rowconfigure(1, weight=1)
@@ -350,7 +350,7 @@ class CannabisTracker:
         right = ttk.Frame(main)
         right.grid(row=1, column=1, sticky="nsew")
         main.columnconfigure(1, weight=4)
-        dose_frame = ttk.LabelFrame(right, text="Log Dose", padding=10)
+        dose_frame = ttk.LabelFrame(right, text="Log Dose", padding=10, style="Panel.TLabelframe")
         dose_frame.grid(row=0, column=0, sticky="ew")
         ttk.Label(dose_frame, text="Flower").grid(row=0, column=0, sticky="w")
         self.flower_choice = ttk.Combobox(dose_frame, state="readonly", width=35, values=[], style=self.combo_style)
@@ -389,7 +389,7 @@ class CannabisTracker:
         )
         self.remaining_today_cbd_label.grid(row=4, column=0, columnspan=3, sticky="w", pady=(2, 0))
         self.remaining_today_cbd_label.grid_remove()
-        log_frame = ttk.LabelFrame(right, text="Usage Log", padding=10)
+        log_frame = ttk.LabelFrame(right, text="Usage Log", padding=10, style="Panel.TLabelframe")
         log_frame.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
         right.rowconfigure(1, weight=1)
         right.columnconfigure(0, weight=1)
@@ -1239,6 +1239,9 @@ class CannabisTracker:
         apply_style_theme(self.style, colors)
         self.style.configure("TCheckbutton", background=base, foreground=text_color)
         self.style.map("TCheckbutton", background=[("active", accent)], foreground=[("active", "#ffffff")])
+        panel_border = "#2a2a2a" if dark else border
+        self.style.configure("Panel.TLabelframe", background=base, foreground=text_color, bordercolor=panel_border)
+        self.style.configure("Panel.TLabelframe.Label", background=base, foreground=text_color)
         self.style.configure("TEntry", fieldbackground=entry_bg, background=entry_bg, foreground=text_color, insertcolor=cursor_color)
         self.style.configure(
             self.combo_style,
