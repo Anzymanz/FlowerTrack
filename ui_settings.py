@@ -96,6 +96,32 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
 
     outer = ttk.Frame(win)
     outer.pack(fill="both", expand=True)
+    tooltip_win: tk.Toplevel | None = None
+    def _show_tooltip(text: str, event: tk.Event | None = None) -> None:
+        nonlocal tooltip_win
+        _hide_tooltip()
+        try:
+            tooltip_win = tk.Toplevel(win)
+            tooltip_win.wm_overrideredirect(True)
+            tooltip_win.attributes("-topmost", True)
+            x = (event.x_root + 12) if event else win.winfo_rootx() + 20
+            y = (event.y_root + 12) if event else win.winfo_rooty() + 20
+            tooltip_win.wm_geometry(f"+{x}+{y}")
+            label = ttk.Label(tooltip_win, text=text, relief="solid", padding=4)
+            label.pack()
+        except Exception:
+            tooltip_win = None
+    def _hide_tooltip() -> None:
+        nonlocal tooltip_win
+        try:
+            if tooltip_win and tk.Toplevel.winfo_exists(tooltip_win):
+                tooltip_win.destroy()
+        except Exception:
+            pass
+        tooltip_win = None
+    def _bind_tooltip(widget: tk.Widget, text: str) -> None:
+        widget.bind("<Enter>", lambda e: _show_tooltip(text, e))
+        widget.bind("<Leave>", lambda _e: _hide_tooltip())
     def _clear_combo_selection(event: tk.Event | None = None) -> None:
         widget = getattr(event, "widget", None)
         if widget is None:
@@ -165,74 +191,71 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     advanced_frame = ttk.Frame(capture_form)
     advanced_frame.grid(row=row_idx, column=0, columnspan=2, sticky="ew", padx=0, pady=(0, 6))
     advanced_frame.columnconfigure(1, weight=1)
-    advanced_frame.columnconfigure(2, weight=1)
-    def _hint(row: int, text: str) -> None:
-        ttk.Label(
-            advanced_frame,
-            text=text,
-            style="Hint.TLabel",
-            wraplength=220,
-            justify="left",
-        ).grid(row=row, column=2, sticky="w", padx=(6, 0), pady=2)
     adv_row = 0
     ttk.Label(advanced_frame, text="Target URL").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     url_entry = ttk.Entry(advanced_frame, textvariable=app.cap_url, width=50, style="Scraper.TEntry")
     url_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
-    _hint(adv_row, "Medicann products page URL.")
+    _bind_tooltip(url_entry, "Medicann products page URL.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Organization selector").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     org_sel_entry = ttk.Entry(advanced_frame, textvariable=app.cap_org_sel, width=40, style="Scraper.TEntry")
     org_sel_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
-    _hint(adv_row, "CSS selector for the organization field.")
+    _bind_tooltip(org_sel_entry, "CSS selector for the organization field.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Username selector").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     user_sel_entry = ttk.Entry(advanced_frame, textvariable=app.cap_user_sel, width=40, style="Scraper.TEntry")
     user_sel_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
-    _hint(adv_row, "CSS selector for the username/email field.")
+    _bind_tooltip(user_sel_entry, "CSS selector for the username/email field.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Password selector").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     pass_sel_entry = ttk.Entry(advanced_frame, textvariable=app.cap_pass_sel, width=40, style="Scraper.TEntry")
     pass_sel_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
-    _hint(adv_row, "CSS selector for the password field.")
+    _bind_tooltip(pass_sel_entry, "CSS selector for the password field.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Login button selector").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     btn_sel_entry = ttk.Entry(advanced_frame, textvariable=app.cap_btn_sel, width=40, style="Scraper.TEntry")
     btn_sel_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
-    _hint(adv_row, "CSS selector for the login/submit button.")
+    _bind_tooltip(btn_sel_entry, "CSS selector for the login/submit button.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Wait after login (s)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(advanced_frame, textvariable=app.cap_login_wait, width=10, style="Scraper.TEntry").grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
-    _hint(adv_row, "Seconds to wait after clicking login.")
+    login_wait_entry = ttk.Entry(advanced_frame, textvariable=app.cap_login_wait, width=10, style="Scraper.TEntry")
+    login_wait_entry.grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    _bind_tooltip(login_wait_entry, "Seconds to wait after clicking login.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Wait after navigation (s, min 5)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(advanced_frame, textvariable=app.cap_post_wait, width=10, style="Scraper.TEntry").grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
-    _hint(adv_row, "Seconds to wait after page load.")
+    post_wait_entry = ttk.Entry(advanced_frame, textvariable=app.cap_post_wait, width=10, style="Scraper.TEntry")
+    post_wait_entry.grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    _bind_tooltip(post_wait_entry, "Seconds to wait after page load.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Interval (seconds)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(advanced_frame, textvariable=app.cap_interval, width=10, style="Scraper.TEntry").grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
-    _hint(adv_row, "Seconds between capture runs.")
+    interval_entry = ttk.Entry(advanced_frame, textvariable=app.cap_interval, width=10, style="Scraper.TEntry")
+    interval_entry.grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    _bind_tooltip(interval_entry, "Seconds between capture runs.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Capture retries on failure").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(advanced_frame, textvariable=app.cap_retry_attempts, width=10, style="Scraper.TEntry").grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
-    _hint(adv_row, "Retries before giving up on a run.")
+    retry_attempts_entry = ttk.Entry(advanced_frame, textvariable=app.cap_retry_attempts, width=10, style="Scraper.TEntry")
+    retry_attempts_entry.grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    _bind_tooltip(retry_attempts_entry, "Retries before giving up on a run.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Retry wait (s, 0 = post-nav)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(advanced_frame, textvariable=app.cap_retry_wait, width=10, style="Scraper.TEntry").grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
-    _hint(adv_row, "Seconds to wait before retry.")
+    retry_wait_entry = ttk.Entry(advanced_frame, textvariable=app.cap_retry_wait, width=10, style="Scraper.TEntry")
+    retry_wait_entry.grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    _bind_tooltip(retry_wait_entry, "Seconds to wait before retry.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Retry backoff max (x)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(advanced_frame, textvariable=app.cap_retry_backoff, width=10, style="Scraper.TEntry").grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
-    _hint(adv_row, "Max multiplier applied to retry wait.")
+    retry_backoff_entry = ttk.Entry(advanced_frame, textvariable=app.cap_retry_backoff, width=10, style="Scraper.TEntry")
+    retry_backoff_entry.grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    _bind_tooltip(retry_backoff_entry, "Max multiplier applied to retry wait.")
     adv_row += 1
 
     ttk.Checkbutton(advanced_frame, text="Headless", variable=app.cap_headless).grid(
