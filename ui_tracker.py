@@ -1190,11 +1190,11 @@ class CannabisTracker:
         _style_widget(picker)
         try:
             top = picker.winfo_toplevel()
-            self._queue_dark_titlebar(top, attempts=20, delay_ms=100)
-            top.bind("<Map>", lambda _e: self._queue_dark_titlebar(top, attempts=20, delay_ms=100))
-            top.bind("<Visibility>", lambda _e: self._queue_dark_titlebar(top, attempts=20, delay_ms=100))
-            top.bind("<FocusIn>", lambda _e: self._queue_dark_titlebar(top, attempts=20, delay_ms=100))
-            top.bind("<Activate>", lambda _e: self._queue_dark_titlebar(top, attempts=20, delay_ms=100))
+            self._queue_dark_titlebar(top, attempts=20, delay_ms=100, allow_parent=False)
+            top.bind("<Map>", lambda _e: self._queue_dark_titlebar(top, attempts=20, delay_ms=100, allow_parent=False))
+            top.bind("<Visibility>", lambda _e: self._queue_dark_titlebar(top, attempts=20, delay_ms=100, allow_parent=False))
+            top.bind("<FocusIn>", lambda _e: self._queue_dark_titlebar(top, attempts=20, delay_ms=100, allow_parent=False))
+            top.bind("<Activate>", lambda _e: self._queue_dark_titlebar(top, attempts=20, delay_ms=100, allow_parent=False))
         except Exception:
             pass
 
@@ -1244,7 +1244,7 @@ class CannabisTracker:
             pass
         try:
             top = picker.winfo_toplevel()
-            self._queue_dark_titlebar(top, attempts=20, delay_ms=100)
+            self._queue_dark_titlebar(top, attempts=20, delay_ms=100, allow_parent=False)
         except Exception:
             pass
         picker.wait_window(picker)
@@ -1341,12 +1341,40 @@ class CannabisTracker:
             except Exception:
                 pass
 
-    def _queue_dark_titlebar(self, win: tk.Toplevel, attempts: int = 20, delay_ms: int = 100) -> None:
+    def _resolve_hwnd(self, win: tk.Tk | tk.Toplevel, allow_parent: bool = True) -> int:
+        hwnd = win.winfo_id()
+        if not allow_parent:
+            return hwnd
+        get_parent = ctypes.windll.user32.GetParent
+        parent = get_parent(hwnd)
+        while parent:
+            hwnd = parent
+            parent = get_parent(hwnd)
+        return hwnd
+
+    def _refresh_window_frame(self, win: tk.Tk | tk.Toplevel, allow_parent: bool = True) -> None:
+        if os.name != "nt":
+            return
+        try:
+            hwnd = self._resolve_hwnd(win, allow_parent=allow_parent)
+            SWP_NOSIZE = 0x0001
+            SWP_NOMOVE = 0x0002
+            SWP_NOZORDER = 0x0004
+            SWP_FRAMECHANGED = 0x0020
+            flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED
+            ctypes.windll.user32.SetWindowPos(hwnd, 0, 0, 0, 0, 0, flags)
+        except Exception:
+            pass
+
+    def _queue_dark_titlebar(
+        self, win: tk.Toplevel, attempts: int = 20, delay_ms: int = 100, allow_parent: bool = True
+    ) -> None:
         def _apply(remaining: int) -> None:
             try:
                 if not win or not tk.Toplevel.winfo_exists(win):
                     return
-                self._set_dark_title_bar(self.dark_var.get(), target=win)
+                self._set_dark_title_bar(self.dark_var.get(), target=win, allow_parent=allow_parent)
+                self._refresh_window_frame(win, allow_parent=allow_parent)
             except Exception:
                 pass
             if remaining > 1:
@@ -1355,10 +1383,6 @@ class CannabisTracker:
                 except Exception:
                     pass
         _apply(attempts)
-        try:
-            self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
-        except Exception:
-            pass
 
     def _toggle_theme(self) -> None:
         self.apply_theme(self.dark_var.get())
@@ -3372,19 +3396,15 @@ class CannabisTracker:
                 pass
     def _resource_path(self, filename: str) -> str:
         return _resource_path(filename)
-    def _set_dark_title_bar(self, enable: bool, target: tk.Tk | tk.Toplevel | None = None) -> None:
+    def _set_dark_title_bar(
+        self, enable: bool, target: tk.Tk | tk.Toplevel | None = None, allow_parent: bool = True
+    ) -> None:
         """On Windows 10/11, ask DWM for a dark title bar to match the theme."""
         if os.name != "nt":
             return
         try:
             widget = target or self.root
-            hwnd = widget.winfo_id()
-            # Walk up to the top-level window; Tk can hand back a child handle
-            get_parent = ctypes.windll.user32.GetParent
-            parent = get_parent(hwnd)
-            while parent:
-                hwnd = parent
-                parent = get_parent(hwnd)
+            hwnd = self._resolve_hwnd(widget, allow_parent=allow_parent)
             DWMWA_USE_IMMERSIVE_DARK_MODE = 20
             DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19
             BOOL = ctypes.c_int
