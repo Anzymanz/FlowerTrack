@@ -165,54 +165,74 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     advanced_frame = ttk.Frame(capture_form)
     advanced_frame.grid(row=row_idx, column=0, columnspan=2, sticky="ew", padx=0, pady=(0, 6))
     advanced_frame.columnconfigure(1, weight=1)
+    advanced_frame.columnconfigure(2, weight=1)
+    def _hint(row: int, text: str) -> None:
+        ttk.Label(
+            advanced_frame,
+            text=text,
+            style="Hint.TLabel",
+            wraplength=220,
+            justify="left",
+        ).grid(row=row, column=2, sticky="w", padx=(6, 0), pady=2)
     adv_row = 0
     ttk.Label(advanced_frame, text="Target URL").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     url_entry = ttk.Entry(advanced_frame, textvariable=app.cap_url, width=50, style="Scraper.TEntry")
     url_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    _hint(adv_row, "Medicann products page URL.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Organization selector").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     org_sel_entry = ttk.Entry(advanced_frame, textvariable=app.cap_org_sel, width=40, style="Scraper.TEntry")
     org_sel_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    _hint(adv_row, "CSS selector for the organization field.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Username selector").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     user_sel_entry = ttk.Entry(advanced_frame, textvariable=app.cap_user_sel, width=40, style="Scraper.TEntry")
     user_sel_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    _hint(adv_row, "CSS selector for the username/email field.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Password selector").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     pass_sel_entry = ttk.Entry(advanced_frame, textvariable=app.cap_pass_sel, width=40, style="Scraper.TEntry")
     pass_sel_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    _hint(adv_row, "CSS selector for the password field.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Login button selector").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     btn_sel_entry = ttk.Entry(advanced_frame, textvariable=app.cap_btn_sel, width=40, style="Scraper.TEntry")
     btn_sel_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    _hint(adv_row, "CSS selector for the login/submit button.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Wait after login (s)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     ttk.Entry(advanced_frame, textvariable=app.cap_login_wait, width=10, style="Scraper.TEntry").grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    _hint(adv_row, "Seconds to wait after clicking login.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Wait after navigation (s, min 5)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     ttk.Entry(advanced_frame, textvariable=app.cap_post_wait, width=10, style="Scraper.TEntry").grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    _hint(adv_row, "Seconds to wait after page load.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Interval (seconds)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     ttk.Entry(advanced_frame, textvariable=app.cap_interval, width=10, style="Scraper.TEntry").grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    _hint(adv_row, "Seconds between capture runs.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Capture retries on failure").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     ttk.Entry(advanced_frame, textvariable=app.cap_retry_attempts, width=10, style="Scraper.TEntry").grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    _hint(adv_row, "Retries before giving up on a run.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Retry wait (s, 0 = post-nav)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     ttk.Entry(advanced_frame, textvariable=app.cap_retry_wait, width=10, style="Scraper.TEntry").grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    _hint(adv_row, "Seconds to wait before retry.")
     adv_row += 1
 
     ttk.Label(advanced_frame, text="Retry backoff max (x)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
     ttk.Entry(advanced_frame, textvariable=app.cap_retry_backoff, width=10, style="Scraper.TEntry").grid(row=adv_row, column=1, sticky="w", padx=6, pady=2)
+    _hint(adv_row, "Max multiplier applied to retry wait.")
     adv_row += 1
 
     ttk.Checkbutton(advanced_frame, text="Headless", variable=app.cap_headless).grid(
