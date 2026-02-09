@@ -32,7 +32,7 @@ Stores strains, notes, and metadata.
 ### Scraper window
 Shows auto-scraper controls, progress, and log output.
 
-<img src="docs/ScraperSS.png?v=20260209a" width="750" />
+<img src="docs/ScraperSS.png?v=20260209b" width="750" />
 
 ### Flower Browser
 Local webpage with filters, badges, and change highlights.
