@@ -44,6 +44,7 @@ def open_tracker_settings(app) -> None:
     notebook.add(tab_data, text="Data settings")
     notebook.add(tab_window, text="Window settings")
     notebook.add(tab_theme, text="Theme")
+    notebook.configure(style="Settings.TNotebook")
 
     for tab in (tab_colors, tab_tracker, tab_roa, tab_data, tab_window, tab_theme):
         tab.columnconfigure(0, weight=0)
@@ -461,6 +462,12 @@ def open_tracker_settings(app) -> None:
     )
     app._update_threshold_color_buttons()
     app._update_theme_color_buttons()
+    try:
+        notebook.update_idletasks()
+        current = notebook.index("current")
+        notebook.select(current)
+    except Exception:
+        pass
     # Place after layout to avoid resize flash
     app._prepare_toplevel(win)
     try:
