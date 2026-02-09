@@ -12,7 +12,7 @@ from logger import log_event
 def compute_colors(dark: bool) -> dict:
     bg = "#111" if dark else "#f4f4f4"
     fg = "#eee" if dark else "#111"
-    ctrl_bg = "#222" if dark else "#e6e6e6"
+    ctrl_bg = "#1b1b1b" if dark else "#e6e6e6"
     # Dark accent toned to a neutral gray to keep hover/selection subtle in dark mode.
     accent = "#3c3c3c" if dark else "#666666"
     list_bg = "#1e1e1e" if dark else "#ffffff"
