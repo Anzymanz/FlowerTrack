@@ -511,6 +511,14 @@ class FlowerLibraryApp:
             if col_name == "strain":
                 item_id = self.tree.identify_row(event.y)
                 if item_id:
+                    try:
+                        bbox = self.tree.bbox(item_id, column_id)
+                    except Exception:
+                        bbox = None
+                    if bbox:
+                        x, _y, w, _h = bbox
+                        if event.x < x + max(w - 24, 0):
+                            return
                     values = self.tree.item(item_id, "values")
                     try:
                         brand = values[0]
