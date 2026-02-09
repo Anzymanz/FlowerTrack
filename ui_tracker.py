@@ -1273,7 +1273,7 @@ class CannabisTracker:
         panel = colors["ctrl_bg"]
         entry_bg = colors["ctrl_bg"]
         accent = colors["accent"]
-        border = colors["ctrl_bg"]
+        border = colors.get("border", colors["ctrl_bg"])
         scroll = "#2a2a2a" if dark else "#e6e6e6"
         cursor_color = text_color
         # Prefer dark title bar when dark mode is on
@@ -1283,7 +1283,7 @@ class CannabisTracker:
         apply_style_theme(self.style, colors)
         self.style.configure("TCheckbutton", background=base, foreground=text_color)
         self.style.map("TCheckbutton", background=[("active", accent)], foreground=[("active", "#ffffff")])
-        panel_border = "#2a2a2a" if dark else border
+        panel_border = border
         self.style.configure(
             "Panel.TLabelframe",
             background=base,
@@ -1299,13 +1299,25 @@ class CannabisTracker:
                     wrap.configure(bg=base, highlightbackground=panel_border, highlightcolor=panel_border)
                 except Exception:
                     pass
-        self.style.configure("TEntry", fieldbackground=entry_bg, background=entry_bg, foreground=text_color, insertcolor=cursor_color)
+        self.style.configure(
+            "TEntry",
+            fieldbackground=entry_bg,
+            background=entry_bg,
+            foreground=text_color,
+            insertcolor=cursor_color,
+            bordercolor=panel_border,
+            lightcolor=panel_border,
+            darkcolor=panel_border,
+        )
         self.style.configure(
             self.combo_style,
             fieldbackground=entry_bg,
             background=entry_bg,
             foreground=text_color,
             arrowcolor=text_color,
+            bordercolor=panel_border,
+            lightcolor=panel_border,
+            darkcolor=panel_border,
         )
         self.style.map(
             self.combo_style,
@@ -1327,12 +1339,12 @@ class CannabisTracker:
             background=panel,
             fieldbackground=panel,
             foreground=text_color,
-            bordercolor=border,
-            lightcolor=border,
-            darkcolor=border,
+            bordercolor=panel_border,
+            lightcolor=panel_border,
+            darkcolor=panel_border,
             font=self.font_body,
         )
-        self.style.configure("Treeview.Heading", background=border, foreground=text_color, font=self.font_body)
+        self.style.configure("Treeview.Heading", background=colors["ctrl_bg"], foreground=text_color, font=self.font_body)
         self.style.map("Treeview.Heading", background=[("active", accent)], foreground=[("active", "#ffffff")])
         self.style.map("Treeview", background=[("selected", accent)], foreground=[("selected", "#ffffff")])
         self.style.configure(

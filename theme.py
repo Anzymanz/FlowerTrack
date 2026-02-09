@@ -13,6 +13,7 @@ def compute_colors(dark: bool) -> dict:
     bg = "#111" if dark else "#f4f4f4"
     fg = "#eee" if dark else "#111"
     ctrl_bg = "#222" if dark else "#e6e6e6"
+    border = "#2a2a2a" if dark else ctrl_bg
     # Dark accent toned to a neutral gray to keep hover/selection subtle in dark mode.
     accent = "#3c3c3c" if dark else "#666666"
     list_bg = "#1e1e1e" if dark else "#ffffff"
@@ -20,6 +21,7 @@ def compute_colors(dark: bool) -> dict:
         "bg": bg,
         "fg": fg,
         "ctrl_bg": ctrl_bg,
+        "border": border,
         "accent": accent,
         "list_bg": list_bg,
     }
@@ -29,6 +31,7 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
     bg = colors["bg"]
     fg = colors["fg"]
     ctrl_bg = colors["ctrl_bg"]
+    border = colors.get("border", ctrl_bg)
     accent = colors["accent"]
     style.theme_use("clam")
     style.configure("TFrame", background=bg)
@@ -104,9 +107,35 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
         arrowcolor=[("active", fg), ("disabled", fg)],
         troughcolor=[("disabled", scrollbar_trough)],
     )
-    style.configure("TEntry", fieldbackground=ctrl_bg, foreground=fg, insertcolor=fg)
+    style.configure(
+        "TEntry",
+        fieldbackground=ctrl_bg,
+        foreground=fg,
+        insertcolor=fg,
+        bordercolor=border,
+        lightcolor=border,
+        darkcolor=border,
+    )
     style.map("TEntry", fieldbackground=[("readonly", ctrl_bg)], foreground=[("readonly", fg)])
-    style.configure("TSpinbox", fieldbackground=ctrl_bg, foreground=fg, insertcolor=fg)
+    style.configure(
+        "TSpinbox",
+        fieldbackground=ctrl_bg,
+        foreground=fg,
+        insertcolor=fg,
+        bordercolor=border,
+        lightcolor=border,
+        darkcolor=border,
+    )
+    style.configure(
+        "TCombobox",
+        fieldbackground=ctrl_bg,
+        background=ctrl_bg,
+        foreground=fg,
+        bordercolor=border,
+        lightcolor=border,
+        darkcolor=border,
+        arrowcolor=fg,
+    )
     style.configure("TNotebook", background=bg, bordercolor=ctrl_bg)
     style.configure(
         "TNotebook.Tab",
