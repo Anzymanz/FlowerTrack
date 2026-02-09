@@ -195,11 +195,10 @@ def open_tracker_settings(app) -> None:
         high_label: str = "High",
         low_label: str = "Low",
         pady: tuple[int, int] = (2, 0),
-        label_pad: tuple[int, int] = (0, 6),
     ) -> None:
         ttk.Label(frame, text=label).grid(row=row, column=0, sticky="w", pady=pady)
         usage_frame = ttk.Frame(frame)
-        ttk.Label(usage_frame, text=high_label, width=6, anchor="w").grid(row=0, column=0, sticky="w", padx=label_pad)
+        ttk.Label(usage_frame, text=high_label, width=6, anchor="w").grid(row=0, column=0, sticky="w", padx=(0, 6))
         _color_button(usage_frame, high_key).grid(row=0, column=1, sticky="w", padx=(0, 12))
         ttk.Label(usage_frame, text=low_label, width=6, anchor="w").grid(row=0, column=2, sticky="w", padx=(0, 6))
         _color_button(usage_frame, low_key).grid(row=0, column=3, sticky="w")
@@ -221,7 +220,6 @@ def open_tracker_settings(app) -> None:
         high_label="Under",
         low_label="Over",
         pady=(6, 0),
-        label_pad=(0, 2),
     )
     usage_row += 1
     _usage_row(
@@ -231,7 +229,6 @@ def open_tracker_settings(app) -> None:
         "used_cbd_over_color",
         high_label="Under",
         low_label="Over",
-        label_pad=(0, 2),
     )
 
     frame = tab_tracker
