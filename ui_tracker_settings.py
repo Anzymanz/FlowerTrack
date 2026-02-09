@@ -98,6 +98,29 @@ def open_tracker_settings(app) -> None:
             except Exception:
                 pass
 
+    def _clear_all_entry_selections(except_widget: tk.Widget | None = None) -> None:
+        try:
+            stack = [win]
+            while stack:
+                w = stack.pop()
+                stack.extend(w.winfo_children())
+                if isinstance(w, (tk.Entry, ttk.Entry)) and w is not except_widget:
+                    try:
+                        w.selection_clear()
+                    except Exception:
+                        try:
+                            w.tk.call(w._w, "selection", "clear")
+                        except Exception:
+                            pass
+        except Exception:
+            pass
+
+    def _on_window_click(event: tk.Event | None = None) -> None:
+        widget = getattr(event, "widget", None)
+        if isinstance(widget, (tk.Entry, ttk.Entry)):
+            return
+        _clear_all_entry_selections()
+
     def _color_button(parent: ttk.Frame, key: str, tooltip_text: str | None = None) -> tk.Button:
         if key.startswith("dark:") or key.startswith("light:"):
             mode, palette_key = key.split(":", 1)
@@ -449,8 +472,13 @@ def open_tracker_settings(app) -> None:
                 stack.extend(w.winfo_children())
                 if isinstance(w, (tk.Entry, ttk.Entry)):
                     w.bind("<FocusOut>", _clear_entry_selection, add="+")
+                    w.bind("<Escape>", lambda _e, _w=w: (_clear_all_entry_selections(_w), "break")[1], add="+")
         except Exception:
             pass
+    try:
+        win.bind("<Button-1>", _on_window_click, add="+")
+    except Exception:
+        pass
 
     # Tooltips for settings
     app._bind_tooltip(app.total_green_entry, "Above this total THC stock, label shows green.")
