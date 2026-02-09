@@ -639,15 +639,16 @@ function renderBasketModal(show) {
         rows.push("<div class='basket-empty'>Basket is empty.</div>");
     } else {
         basket.forEach((item) => {
+            const safeKey = encodeURIComponent(item.key || "");
             rows.push(`
-            <div class='basket-row' data-key='${item.key}'>
+            <div class='basket-row' data-key='${safeKey}'>
               <div style='flex:1;'>
                 <div><strong>${item.name || 'Item'}</strong></div>
                 <div class='small'>${item.brand || ''}</div>
                 <div class='small'>£${item.price.toFixed(2)}</div>
               </div>
-              <input class='basket-qty' type='number' min='0' value='${item.qty}' onchange='updateBasketQty("${item.key}", this.value)' />
-              <button class='btn-basket' onclick='removeFromBasket("${item.key}")'>Remove</button>
+              <input class='basket-qty' data-basket-qty='1' data-key='${safeKey}' type='number' min='0' value='${item.qty}' />
+              <button class='btn-basket' data-basket-remove='1' data-key='${safeKey}'>Remove</button>
             </div>
             `);
         });
@@ -666,6 +667,18 @@ function renderBasketModal(show) {
         </div>
       </div>
     `;
+    modal.querySelectorAll('[data-basket-remove]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const key = decodeURIComponent(btn.getAttribute('data-key') || "");
+            removeFromBasket(key);
+        });
+    });
+    modal.querySelectorAll('[data-basket-qty]').forEach(input => {
+        input.addEventListener('change', () => {
+            const key = decodeURIComponent(input.getAttribute('data-key') || "");
+            updateBasketQty(key, input.value);
+        });
+    });
     if (show) {
         modal.style.display = 'flex';
     }
