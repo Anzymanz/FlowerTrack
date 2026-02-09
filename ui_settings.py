@@ -286,6 +286,10 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Checkbutton(filters_frame, text="Include inactive products", variable=app.cap_include_inactive).pack(anchor="w", pady=2)
     ttk.Checkbutton(filters_frame, text="Requestable only", variable=app.cap_requestable_only).pack(anchor="w", pady=2)
     ttk.Checkbutton(filters_frame, text="In stock only", variable=app.cap_in_stock_only).pack(anchor="w", pady=2)
+    ttk.Label(filters_frame, text="Product type filters (optional)").pack(anchor="w", pady=(10, 2))
+    ttk.Checkbutton(filters_frame, text="Flower only", variable=app.cap_filter_flower).pack(anchor="w", pady=2)
+    ttk.Checkbutton(filters_frame, text="Oil only", variable=app.cap_filter_oil).pack(anchor="w", pady=2)
+    ttk.Checkbutton(filters_frame, text="Vape only", variable=app.cap_filter_vape).pack(anchor="w", pady=2)
 
     ha_frame = ttk.Frame(tab_notifications)
     ha_frame.pack(fill="x", pady=(0, 6))

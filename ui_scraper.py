@@ -257,6 +257,9 @@ class App(tk.Tk):
         self.cap_include_inactive = tk.BooleanVar(value=bool(cfg.get("include_inactive", False)))
         self.cap_requestable_only = tk.BooleanVar(value=bool(cfg.get("requestable_only", True)))
         self.cap_in_stock_only = tk.BooleanVar(value=bool(cfg.get("in_stock_only", False)))
+        self.cap_filter_flower = tk.BooleanVar(value=bool(cfg.get("filter_flower", False)))
+        self.cap_filter_oil = tk.BooleanVar(value=bool(cfg.get("filter_oil", False)))
+        self.cap_filter_vape = tk.BooleanVar(value=bool(cfg.get("filter_vape", False)))
         self.cap_notify_detail = tk.StringVar(value=cfg.get("notification_detail", "full"))
         self.minimize_to_tray = tk.BooleanVar(value=bool(cfg.get("minimize_to_tray", False)))
         self.close_to_tray = tk.BooleanVar(value=bool(cfg.get("close_to_tray", False)))
@@ -284,6 +287,14 @@ class App(tk.Tk):
             except Exception:
                 self._log_console(f"Invalid {label} value '{raw}'; using {default}.")
                 return int(default)
+        def _get_bool_var(name: str, default: bool = False) -> bool:
+            var = getattr(self, name, None)
+            if var is None:
+                return bool(default)
+            try:
+                return bool(var.get())
+            except Exception:
+                return bool(var)
         return {
             "url": self.cap_url.get(),
             "interval_seconds": _parse_float(self.cap_interval.get(), DEFAULT_CAPTURE_CONFIG["interval_seconds"], "interval_seconds"),
@@ -326,6 +337,9 @@ class App(tk.Tk):
             "include_inactive": bool(self.cap_include_inactive.get()),
             "requestable_only": bool(self.cap_requestable_only.get()),
             "in_stock_only": bool(self.cap_in_stock_only.get()),
+            "filter_flower": _get_bool_var("cap_filter_flower", False),
+            "filter_oil": _get_bool_var("cap_filter_oil", False),
+            "filter_vape": _get_bool_var("cap_filter_vape", False),
             "notification_detail": self.cap_notify_detail.get(),
             "minimize_to_tray": bool(self.minimize_to_tray.get()),
             "close_to_tray": bool(self.close_to_tray.get()),
@@ -847,6 +861,9 @@ class App(tk.Tk):
         self.cap_quiet_start.set(cfg.get("quiet_hours_start", "22:00"))
         self.cap_quiet_end.set(cfg.get("quiet_hours_end", "07:00"))
         self.cap_quiet_interval.set(str(cfg.get("quiet_hours_interval_seconds", 3600)))
+        self.cap_filter_flower.set(bool(cfg.get("filter_flower", False)))
+        self.cap_filter_oil.set(bool(cfg.get("filter_oil", False)))
+        self.cap_filter_vape.set(bool(cfg.get("filter_vape", False)))
         self.cap_notify_detail.set(cfg.get("notification_detail", "full"))
         self.minimize_to_tray.set(cfg.get("minimize_to_tray", False))
         self.close_to_tray.set(cfg.get("close_to_tray", False))
@@ -1612,7 +1629,29 @@ class App(tk.Tk):
         self.after(50, self.poll)
     def _stage_parse(self) -> list[dict]:
         """Parse stage (data already collected); returns a stable list snapshot."""
-        return list(self.data)
+        items = list(self.data)
+        try:
+            selected = set()
+            if self.cap_filter_flower.get():
+                selected.add("flower")
+            if self.cap_filter_oil.get():
+                selected.add("oil")
+            if self.cap_filter_vape.get():
+                selected.add("vape")
+            if not selected:
+                return items
+            filtered = []
+            for item in items:
+                raw_type = item.get("product_type") if isinstance(item, dict) else None
+                norm_type = str(raw_type).strip().lower() if raw_type else "flower"
+                if norm_type in selected:
+                    filtered.append(item)
+            if len(filtered) != len(items):
+                self._capture_log(f"Filters applied: {len(filtered)} / {len(items)} items kept.")
+            return filtered
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
+            return items
 
     def _stage_diff(self, items: list[dict]) -> dict:
         """Diff stage: compute changes vs previous parse and update counters."""

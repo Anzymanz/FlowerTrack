@@ -157,6 +157,9 @@ DEFAULT_CAPTURE_CONFIG = {
     "include_inactive": True,
     "requestable_only": False,
     "in_stock_only": False,
+    "filter_flower": False,
+    "filter_oil": False,
+    "filter_vape": False,
     "minimize_to_tray": False,
     "close_to_tray": False,
 }
@@ -487,6 +490,9 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["include_inactive"] = _coerce_bool(raw.get("include_inactive"), DEFAULT_CAPTURE_CONFIG["include_inactive"])
     cfg["requestable_only"] = _coerce_bool(raw.get("requestable_only"), DEFAULT_CAPTURE_CONFIG["requestable_only"])
     cfg["in_stock_only"] = _coerce_bool(raw.get("in_stock_only"), DEFAULT_CAPTURE_CONFIG["in_stock_only"])
+    cfg["filter_flower"] = _coerce_bool(raw.get("filter_flower"), DEFAULT_CAPTURE_CONFIG["filter_flower"])
+    cfg["filter_oil"] = _coerce_bool(raw.get("filter_oil"), DEFAULT_CAPTURE_CONFIG["filter_oil"])
+    cfg["filter_vape"] = _coerce_bool(raw.get("filter_vape"), DEFAULT_CAPTURE_CONFIG["filter_vape"])
     cfg["minimize_to_tray"] = _coerce_bool(raw.get("minimize_to_tray"), DEFAULT_CAPTURE_CONFIG["minimize_to_tray"])
     cfg["close_to_tray"] = _coerce_bool(raw.get("close_to_tray"), DEFAULT_CAPTURE_CONFIG["close_to_tray"])
     return cfg
