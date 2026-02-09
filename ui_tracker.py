@@ -350,7 +350,7 @@ class CannabisTracker:
         right = ttk.Frame(main)
         right.grid(row=1, column=1, sticky="nsew")
         main.columnconfigure(1, weight=4)
-        dose_frame = ttk.LabelFrame(right, text="Log Dose", padding=10)
+        dose_frame = ttk.LabelFrame(right, text="Log Dose", padding=10, style="Strong.TLabelframe")
         dose_frame.grid(row=0, column=0, sticky="ew")
         ttk.Label(dose_frame, text="Flower").grid(row=0, column=0, sticky="w")
         self.flower_choice = ttk.Combobox(dose_frame, state="readonly", width=35, values=[], style=self.combo_style)
@@ -389,7 +389,7 @@ class CannabisTracker:
         )
         self.remaining_today_cbd_label.grid(row=4, column=0, columnspan=3, sticky="w", pady=(2, 0))
         self.remaining_today_cbd_label.grid_remove()
-        log_frame = ttk.LabelFrame(right, text="Usage Log", padding=10)
+        log_frame = ttk.LabelFrame(right, text="Usage Log", padding=10, style="Strong.TLabelframe")
         log_frame.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
         right.rowconfigure(1, weight=1)
         right.columnconfigure(0, weight=1)
@@ -1229,7 +1229,7 @@ class CannabisTracker:
         panel = colors["ctrl_bg"]
         entry_bg = colors["ctrl_bg"]
         accent = colors["accent"]
-        border = "#262626" if dark else colors["ctrl_bg"]
+        border = "#4a4a4a" if dark else colors["ctrl_bg"]
         scroll = "#242424" if dark else "#e6e6e6"
         cursor_color = text_color
         # Prefer dark title bar when dark mode is on
@@ -1239,6 +1239,9 @@ class CannabisTracker:
         apply_style_theme(self.style, colors)
         self.style.configure("TCheckbutton", background=base, foreground=text_color)
         self.style.map("TCheckbutton", background=[("active", accent)], foreground=[("active", "#ffffff")])
+        if dark:
+            self.style.configure("Strong.TLabelframe", bordercolor=border, background=base, foreground=text_color)
+            self.style.configure("Strong.TLabelframe.Label", background=base, foreground=text_color)
         self.style.configure("TEntry", fieldbackground=entry_bg, background=entry_bg, foreground=text_color, insertcolor=cursor_color)
         self.style.configure(
             self.combo_style,
@@ -1276,8 +1279,8 @@ class CannabisTracker:
         self.style.map("Treeview.Heading", background=[("active", accent)], foreground=[("active", "#ffffff")])
         self.style.map("Treeview", background=[("selected", accent)], foreground=[("selected", "#ffffff")])
         if dark:
-            self.style.configure("Treeview", borderwidth=0)
-            self.style.configure("Treeview.Heading", borderwidth=0)
+            self.style.configure("Treeview", borderwidth=1, relief="solid")
+            self.style.configure("Treeview.Heading", borderwidth=1, relief="solid")
         self.style.configure(
             self.vscroll_style,
             troughcolor=panel,
