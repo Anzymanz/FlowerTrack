@@ -8,7 +8,8 @@ from tkinter import filedialog, messagebox, ttk
 from tkinter import simpledialog
 from pathlib import Path
 from datetime import datetime
-from theme import set_titlebar_dark, apply_rounded_buttons
+from theme import set_titlebar_dark, apply_rounded_buttons, compute_colors, set_palette_overrides
+from config import load_tracker_config
 import ctypes
 
 
@@ -49,10 +50,13 @@ class HistoryViewer(tk.Toplevel):
         self.records: list[dict] = []
         self.filtered: list[dict] = []
         self._colors = None
+        self._theme_signature = ""
+        self._last_dark = None
         self._build_ui()
         self._load_records()
         self._apply_filter()
         self._apply_theme()
+        self.after(2000, self._refresh_theme_from_config)
         self._schedule_titlebar_updates()
         self.bind("<Map>", lambda _e: self._schedule_titlebar_updates())
         self.bind("<Visibility>", lambda _e: self._schedule_titlebar_updates())
@@ -126,12 +130,9 @@ class HistoryViewer(tk.Toplevel):
                 dark = bool(self.parent.dark_mode_var.get())
             except Exception:
                 dark = True
-        colors = None
-        try:
-            from theme import compute_colors
-            colors = compute_colors(dark)
-        except Exception:
-            colors = None
+        self._last_dark = dark
+        self._refresh_palette_overrides_from_config()
+        colors = compute_colors(dark)
         if colors is None:
             return
         self._colors = colors
@@ -151,7 +152,14 @@ class HistoryViewer(tk.Toplevel):
                 if isinstance(widget, ttk.Treeview):
                     widget.configure(style="History.Treeview")
                 elif isinstance(widget, tk.Text):
-                    widget.configure(bg=bg, fg=fg, insertbackground=fg, highlightbackground=bg)
+                    widget.configure(
+                        bg=bg,
+                        fg=fg,
+                        insertbackground=fg,
+                        highlightbackground=bg,
+                        selectbackground=accent,
+                        selectforeground="#ffffff",
+                    )
                 elif isinstance(widget, tk.Listbox):
                     widget.configure(
                         bg=list_bg,
@@ -188,7 +196,7 @@ class HistoryViewer(tk.Toplevel):
             style.map(
                 "History.Treeview",
                 background=[("selected", accent)],
-                foreground=[("selected", fg)],
+                foreground=[("selected", "#ffffff")],
             )
             style.configure(
                 "History.Treeview.Heading",
@@ -198,7 +206,7 @@ class HistoryViewer(tk.Toplevel):
                 lightcolor=border,
                 darkcolor=border,
             )
-            style.map("History.Treeview.Heading", background=[("active", accent)], foreground=[("active", fg)])
+            style.map("History.Treeview.Heading", background=[("active", accent)], foreground=[("active", "#ffffff")])
             style.configure(
                 "History.Vertical.TScrollbar",
                 background=ctrl_bg,
@@ -234,6 +242,39 @@ class HistoryViewer(tk.Toplevel):
         except Exception as exc:
             _log_debug(f"HistoryViewer suppressed exception: {exc}")
         self._schedule_titlebar_updates()
+
+    def _refresh_palette_overrides_from_config(self) -> bool:
+        config_path = Path(os.getenv("APPDATA", os.path.expanduser("~"))) / "FlowerTrack" / "flowertrack_config.json"
+        try:
+            cfg = load_tracker_config(config_path)
+        except Exception:
+            return False
+        dark = cfg.get("theme_palette_dark", {}) if isinstance(cfg, dict) else {}
+        light = cfg.get("theme_palette_light", {}) if isinstance(cfg, dict) else {}
+        if not isinstance(dark, dict):
+            dark = {}
+        if not isinstance(light, dict):
+            light = {}
+        sig = json.dumps({"dark": dark, "light": light}, sort_keys=True)
+        if sig == self._theme_signature:
+            return False
+        self._theme_signature = sig
+        set_palette_overrides(dark, light)
+        return True
+
+    def _refresh_theme_from_config(self) -> None:
+        try:
+            dark = bool(self.parent.dark_mode_var.get()) if hasattr(self.parent, "dark_mode_var") else True
+            palette_changed = self._refresh_palette_overrides_from_config()
+            if palette_changed or dark != self._last_dark:
+                self._apply_theme()
+        except Exception:
+            pass
+        finally:
+            try:
+                self.after(2000, self._refresh_theme_from_config)
+            except Exception:
+                pass
 
     def _apply_titlebar(self) -> None:
         dark = True
