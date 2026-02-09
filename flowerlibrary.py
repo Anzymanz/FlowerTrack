@@ -94,7 +94,7 @@ class FlowerLibraryApp:
         self.sort_state: dict[str, bool] = {}
         self._geometry_save_job = None
 
-        self.text_fields = ["brand", "cultivator", "packager", "origin", "strain"]
+        self.text_fields = ["brand", "origin", "cultivator", "packager", "strain"]
         self.float_fields = ["thc", "cbd", "price"]
         self.rating_fields = ["taste", "smell", "strength", "effects", "value"]
 
@@ -210,9 +210,9 @@ class FlowerLibraryApp:
         columns = (
             "brand",
             "strain",
+            "origin",
             "cultivator",
             "packager",
-            "origin",
             "thc",
             "cbd",
             "price",
@@ -326,9 +326,9 @@ class FlowerLibraryApp:
         row = 0
         for label_text, key in [
             ("Brand", "brand"),
+            ("Origin", "origin"),
             ("Cultivator", "cultivator"),
             ("Packager", "packager"),
-            ("Origin", "origin"),
             ("Strain", "strain"),
         ]:
             ttk.Label(container, text=label_text).grid(row=row, column=0, sticky="w", padx=4, pady=3)
@@ -436,9 +436,9 @@ class FlowerLibraryApp:
             values = [
                 entry.get("brand", ""),
                 entry.get("strain", ""),
+                entry.get("origin", ""),
                 entry.get("cultivator", ""),
                 entry.get("packager", ""),
-                entry.get("origin", ""),
                 entry.get("thc", ""),
                 entry.get("cbd", ""),
                 entry.get("price", ""),
