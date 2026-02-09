@@ -109,39 +109,22 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
             widget.icursor("end")
         except Exception:
             pass
-    canvas = tk.Canvas(outer, highlightthickness=0, borderwidth=0)
-    scroll = ttk.Scrollbar(outer, orient="vertical", command=canvas.yview, style="Vertical.TScrollbar")
-    canvas.configure(yscrollcommand=scroll.set)
-    scroll.pack(side="right", fill="y")
-    canvas.pack(side="left", fill="both", expand=True)
-    # Scraper content (single tab)
-    scraper_tab = ttk.Frame(canvas, padding=8)
-    tab_window = canvas.create_window((0, 0), window=scraper_tab, anchor="nw")
+    notebook = ttk.Notebook(outer, style="Settings.TNotebook")
+    notebook.pack(fill="both", expand=True, padx=8, pady=(6, 0))
 
-    def _sync_canvas_width(event=None):
-        try:
-            canvas.itemconfigure(tab_window, width=canvas.winfo_width())
-        except Exception:
-            pass
+    tab_account = ttk.Frame(notebook, padding=8)
+    tab_capture = ttk.Frame(notebook, padding=8)
+    tab_filters = ttk.Frame(notebook, padding=8)
+    tab_notifications = ttk.Frame(notebook, padding=8)
+    tab_maintenance = ttk.Frame(notebook, padding=8)
+    notebook.add(tab_account, text="Account")
+    notebook.add(tab_capture, text="Capture")
+    notebook.add(tab_filters, text="Filters")
+    notebook.add(tab_notifications, text="Notifications")
+    notebook.add(tab_maintenance, text="Maintenance")
 
-    def _update_scrollregion(event=None):
-        try:
-            canvas.configure(scrollregion=canvas.bbox("all"))
-        except Exception:
-            pass
-
-    canvas.bind("<Configure>", _sync_canvas_width)
-    scraper_tab.bind("<Configure>", _update_scrollregion)
-
-    def _on_mousewheel(event):
-        try:
-            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-        except Exception:
-            pass
-
-    canvas.bind_all("<MouseWheel>", _on_mousewheel)
     ttk.Label(
-        scraper_tab,
+        tab_capture,
         text="Configure how the scraper logs in, waits, and captures the page. "
         "Notifications fire only on new/removed items or price/stock changes.",
         wraplength=520,
@@ -149,35 +132,36 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         justify="left",
     ).pack(fill="x", pady=(0, 10))
 
-    form = ttk.Frame(scraper_tab)
-    form.pack(fill="x", expand=True)
-    form.columnconfigure(1, weight=1)
+    account_form = ttk.Frame(tab_account)
+    account_form.pack(fill="x", expand=True)
+    account_form.columnconfigure(1, weight=1)
 
     row_idx = 0
-    ttk.Label(form, text="Username").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(form, textvariable=app.cap_user, width=40).grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
+    ttk.Label(account_form, text="Username").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(account_form, textvariable=app.cap_user, width=40).grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
     row_idx += 1
 
-    ttk.Label(form, text="Password").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(form, textvariable=app.cap_pass, show="*", width=40).grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
+    ttk.Label(account_form, text="Password").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(account_form, textvariable=app.cap_pass, show="*", width=40).grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
     row_idx += 1
 
-    ttk.Label(form, text="Organization").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
+    ttk.Label(account_form, text="Organization").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
     org_values = ["", "Medicann Isle of Mann", "Medicann Guernsey", "Medicann Jersey", "Medicann UK"]
-    org_combo = ttk.Combobox(form, textvariable=app.cap_org, values=org_values, state="readonly", width=38)
+    org_combo = ttk.Combobox(account_form, textvariable=app.cap_org, values=org_values, state="readonly", width=38)
     org_combo.grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
     org_combo.bind("<FocusOut>", _clear_combo_selection)
     org_combo.bind("<<ComboboxSelected>>", _clear_combo_selection)
     row_idx += 1
 
-    ttk.Separator(form, orient="horizontal").grid(row=row_idx, column=0, columnspan=2, sticky="ew", pady=6)
-    row_idx += 1
-
-    advanced_toggle = ttk.Checkbutton(form, text="Show advanced scraper settings", variable=app.show_advanced_scraper)
+    capture_form = ttk.Frame(tab_capture)
+    capture_form.pack(fill="x", expand=True)
+    capture_form.columnconfigure(1, weight=1)
+    row_idx = 0
+    advanced_toggle = ttk.Checkbutton(capture_form, text="Show advanced scraper settings", variable=app.show_advanced_scraper)
     advanced_toggle.grid(row=row_idx, column=0, columnspan=2, sticky="w", padx=6, pady=(6, 2))
     row_idx += 1
 
-    advanced_frame = ttk.Frame(form)
+    advanced_frame = ttk.Frame(capture_form)
     advanced_frame.grid(row=row_idx, column=0, columnspan=2, sticky="ew", padx=0, pady=(0, 6))
     advanced_frame.columnconfigure(1, weight=1)
     adv_row = 0
@@ -247,35 +231,17 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Checkbutton(advanced_frame, text="Show log window", variable=app.cap_show_log_window).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
     adv_row += 1
 
-    ttk.Checkbutton(advanced_frame, text="Include inactive products", variable=app.cap_include_inactive).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
-    adv_row += 1
-
-    ttk.Checkbutton(advanced_frame, text="Requestable only", variable=app.cap_requestable_only).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
-    adv_row += 1
-
-    ttk.Checkbutton(advanced_frame, text="In stock only", variable=app.cap_in_stock_only).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
-    adv_row += 1
-
-    ttk.Label(advanced_frame, text="HA webhook URL").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(advanced_frame, textvariable=app.cap_ha_webhook, width=50).grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
-    adv_row += 1
-
-    ttk.Label(advanced_frame, text="HA token (optional)").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(advanced_frame, textvariable=app.cap_ha_token, show="*", width=50).grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
-    adv_row += 1
-
     selector_hint = ttk.Label(advanced_frame, text="", style="Hint.TLabel")
     selector_hint.grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 6))
     adv_row += 1
 
     def _resize_to_content():
         win.update_idletasks()
-        desired_width = max(520, min(base_width, scraper_tab.winfo_reqwidth() + 24))
+        desired_width = max(520, min(base_width, tab_capture.winfo_reqwidth() + 24))
         current_min = min_height if app.show_advanced_scraper.get() else min_height_compact
-        desired = max(scraper_tab.winfo_reqheight() + 24, current_min)
+        desired = max(tab_capture.winfo_reqheight() + 24, current_min)
         height = min(desired, max_height)
         win.geometry(f"{desired_width}x{height}")
-        _update_scrollregion()
 
     def toggle_advanced():
         if app.show_advanced_scraper.get():
@@ -286,11 +252,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
 
     toggle_advanced()
     advanced_toggle.config(command=toggle_advanced)
-    row_idx += 1
     _resize_to_content()
-
-    ttk.Separator(form, orient="horizontal").grid(row=row_idx, column=0, columnspan=2, sticky="ew", pady=6)
-    row_idx += 1
 
     def update_scraper_hints(event=None):
         selectors = [app.cap_user_sel.get().strip(), app.cap_pass_sel.get().strip(), app.cap_btn_sel.get().strip()]
@@ -304,7 +266,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         entry.bind("<KeyRelease>", update_scraper_hints)
     update_scraper_hints()
 
-    notify_frame = ttk.Labelframe(scraper_tab, text="Notification Settings", padding=8)
+    notify_frame = ttk.Labelframe(tab_notifications, text="Notification Settings", padding=8)
     notify_frame.pack(fill="x", padx=4, pady=(0, 10))
     ttk.Checkbutton(notify_frame, text="Notify on price changes", variable=app.notify_price_changes).pack(anchor="w", pady=2)
     ttk.Checkbutton(notify_frame, text="Notify on stock changes", variable=app.notify_stock_changes).pack(anchor="w", pady=2)
@@ -333,6 +295,20 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     detail_combo.bind("<FocusOut>", _clear_combo_selection)
     detail_combo.bind("<<ComboboxSelected>>", _clear_combo_selection)
 
+    filters_frame = ttk.Frame(tab_filters)
+    filters_frame.pack(fill="x", expand=True)
+    ttk.Checkbutton(filters_frame, text="Include inactive products", variable=app.cap_include_inactive).pack(anchor="w", pady=2)
+    ttk.Checkbutton(filters_frame, text="Requestable only", variable=app.cap_requestable_only).pack(anchor="w", pady=2)
+    ttk.Checkbutton(filters_frame, text="In stock only", variable=app.cap_in_stock_only).pack(anchor="w", pady=2)
+
+    ha_frame = ttk.Frame(tab_notifications)
+    ha_frame.pack(fill="x", pady=(0, 6))
+    ttk.Label(ha_frame, text="HA webhook URL").grid(row=0, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(ha_frame, textvariable=app.cap_ha_webhook, width=50).grid(row=0, column=1, sticky="ew", padx=6, pady=2)
+    ttk.Label(ha_frame, text="HA token (optional)").grid(row=1, column=0, sticky="w", padx=6, pady=2)
+    ttk.Entry(ha_frame, textvariable=app.cap_ha_token, show="*", width=50).grid(row=1, column=1, sticky="ew", padx=6, pady=2)
+    ha_frame.columnconfigure(1, weight=1)
+
     def save_and_close():
         try:
             app._save_capture_window()
@@ -346,7 +322,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         except Exception:
             pass
 
-    scraper_btns = ttk.Frame(scraper_tab)
+    scraper_btns = ttk.Frame(tab_maintenance)
     scraper_btns.pack(fill="x", pady=10)
     ttk.Button(scraper_btns, text="Load config", command=app.load_capture_config).pack(side="left", padx=4)
     ttk.Button(scraper_btns, text="Export config", command=app.save_capture_config).pack(side="left", padx=4)
@@ -358,5 +334,12 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     btn_row.pack(fill="x", pady=10, padx=10)
     ttk.Button(btn_row, text="Save", command=save_and_close).pack(side="right", padx=4)
     app._apply_theme_to_window(win)
+    try:
+        notebook.configure(style="Settings.TNotebook")
+        notebook.update_idletasks()
+        current = notebook.index("current")
+        notebook.select(current)
+    except Exception:
+        pass
     return win
 
