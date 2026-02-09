@@ -34,14 +34,14 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     else:
         app.show_advanced_scraper.set(True)
     win.title("Settings")
-    base_geometry = getattr(app, "scraper_settings_geometry", "560x820")
+    base_geometry = getattr(app, "scraper_settings_geometry", "560x720")
     win.geometry(base_geometry)
     try:
         base_width, base_height = [int(x) for x in base_geometry.split("x", 1)]
     except ValueError:
         base_width, base_height = 560, 600
-    min_height = 700
-    min_height_compact = 740
+    min_height = 620
+    min_height_compact = 660
     win.update_idletasks()
     screen_height = max(win.winfo_screenheight() - 80, min_height)
     max_height = min(screen_height, 1000)
