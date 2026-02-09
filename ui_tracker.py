@@ -1200,12 +1200,17 @@ class CannabisTracker:
         picker = TkColorPicker(parent, color=current, title=title)
         self._apply_picker_theme(picker)
         try:
+            picker.attributes("-alpha", 0.0)
+        except Exception:
+            pass
+        try:
             picker.withdraw()
         except Exception:
             pass
         self._center_child_window(picker, parent)
         try:
             picker.deiconify()
+            picker.attributes("-alpha", 1.0)
         except Exception:
             pass
         picker.wait_window(picker)
