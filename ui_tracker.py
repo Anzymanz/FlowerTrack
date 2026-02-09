@@ -275,9 +275,12 @@ class CannabisTracker:
             style="Panel.TLabelframe",
             borderwidth=0,
             relief="flat",
+            labelanchor="nw",
         )
-        stock_label = ttk.Label(stock_frame, text="Flower Stock", style="Panel.TLabelframe.Label", padding=(6, 2, 0, 0))
-        stock_frame.configure(labelwidget=stock_label)
+        stock_label_wrap = ttk.Frame(stock_frame)
+        stock_label = ttk.Label(stock_label_wrap, text="Flower Stock", style="Panel.TLabelframe.Label")
+        stock_label.grid(padx=(6, 0), pady=(2, 0))
+        stock_frame.configure(labelwidget=stock_label_wrap)
         stock_frame.grid(row=0, column=0, sticky="nsew")
         main.columnconfigure(0, weight=3)
         main.rowconfigure(1, weight=1)
@@ -371,9 +374,12 @@ class CannabisTracker:
             style="Panel.TLabelframe",
             borderwidth=0,
             relief="flat",
+            labelanchor="nw",
         )
-        dose_label = ttk.Label(dose_frame, text="Log Dose", style="Panel.TLabelframe.Label", padding=(6, 2, 0, 0))
-        dose_frame.configure(labelwidget=dose_label)
+        dose_label_wrap = ttk.Frame(dose_frame)
+        dose_label = ttk.Label(dose_label_wrap, text="Log Dose", style="Panel.TLabelframe.Label")
+        dose_label.grid(padx=(6, 0), pady=(2, 0))
+        dose_frame.configure(labelwidget=dose_label_wrap)
         dose_frame.grid(row=0, column=0, sticky="ew")
         ttk.Label(dose_frame, text="Flower").grid(row=0, column=0, sticky="w")
         self.flower_choice = ttk.Combobox(dose_frame, state="readonly", width=35, values=[], style=self.combo_style)
@@ -422,9 +428,12 @@ class CannabisTracker:
             style="Panel.TLabelframe",
             borderwidth=0,
             relief="flat",
+            labelanchor="nw",
         )
-        log_label = ttk.Label(log_frame, text="Usage Log", style="Panel.TLabelframe.Label", padding=(6, 2, 0, 0))
-        log_frame.configure(labelwidget=log_label)
+        log_label_wrap = ttk.Frame(log_frame)
+        log_label = ttk.Label(log_label_wrap, text="Usage Log", style="Panel.TLabelframe.Label")
+        log_label.grid(padx=(6, 0), pady=(2, 0))
+        log_frame.configure(labelwidget=log_label_wrap)
         log_frame.grid(row=0, column=0, sticky="nsew")
         right.rowconfigure(1, weight=1)
         right.columnconfigure(0, weight=1)
