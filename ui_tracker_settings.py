@@ -32,6 +32,7 @@ def open_tracker_settings(app) -> None:
     container.rowconfigure(0, weight=1)
 
     notebook = ttk.Notebook(container)
+    notebook.configure(style="Settings.TNotebook")
     notebook.grid(row=0, column=0, sticky="nsew")
 
     tab_colors = ttk.Frame(notebook, padding=8)

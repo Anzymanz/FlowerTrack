@@ -137,6 +137,7 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
         arrowcolor=fg,
     )
     style.configure("TNotebook", background=bg, bordercolor=ctrl_bg)
+    style.configure("Settings.TNotebook", background=bg, bordercolor=ctrl_bg)
     style.configure(
         "TNotebook.Tab",
         background=ctrl_bg,
@@ -145,11 +146,19 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
         bordercolor=ctrl_bg,
         focuscolor=ctrl_bg,
     )
-    style.configure("Settings.TNotebook.Tab", padding=[10, 4])
+    style.configure(
+        "Settings.TNotebook.Tab",
+        padding=[10, 4],
+        background=ctrl_bg,
+        foreground=fg,
+        lightcolor=ctrl_bg,
+        bordercolor=ctrl_bg,
+        focuscolor=ctrl_bg,
+    )
     style.map(
         "Settings.TNotebook.Tab",
-        background=[("selected", accent), ("!selected", ctrl_bg)],
-        foreground=[("selected", bg), ("!selected", fg)],
+        background=[("selected", "#222222" if bg == "#111" else "#e0e0e0"), ("!selected", ctrl_bg)],
+        foreground=[("selected", fg), ("!selected", fg)],
     )
     style.configure("TProgressbar", background=accent, troughcolor=ctrl_bg)
     style.configure("Parser.TLabelframe", borderwidth=2, relief="groove")
