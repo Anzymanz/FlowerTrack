@@ -2281,7 +2281,7 @@ class CannabisTracker:
                 grams_remaining=float(item.get("grams_remaining", 0.0)),
             )
         self.logs = data.get("logs", [])
-        self.dark_var.set(bool(data.get("dark_mode", False)))
+        self.dark_var.set(bool(data.get("dark_mode", True)))
         self.total_green_threshold = float(data.get("total_green_threshold", self.total_green_threshold))
         self.total_red_threshold = float(data.get("total_red_threshold", self.total_red_threshold))
         self.cbd_total_green_threshold = float(data.get("cbd_total_green_threshold", getattr(self, "cbd_total_green_threshold", self.total_green_threshold)))
