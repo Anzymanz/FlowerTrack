@@ -1752,6 +1752,8 @@ class App(tk.Tk):
         self.option_add("*TCombobox*Listbox*Foreground", colors["fg"])
         self.option_add("*TCombobox*Listbox*selectBackground", select_bg)
         self.option_add("*TCombobox*Listbox*selectForeground", select_fg)
+        self.option_add("*TCombobox*Entry*selectBackground", select_bg)
+        self.option_add("*TCombobox*Entry*selectForeground", select_fg)
         # ttk scrollbar styling
         self.style.configure(
             "Vertical.TScrollbar",
