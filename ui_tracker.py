@@ -1001,15 +1001,14 @@ class CannabisTracker:
         self.current_date += timedelta(days=delta_days)
         self._refresh_log()
         self._refresh_stock()
-    @staticmethod
     def _color_for_value(self, value: float, high: float, low: float) -> str:
         """Return hex color between green (high) and red (low)."""
         green = self._hex_to_rgb(self.accent_green, fallback=(46, 204, 113))
         red = self._hex_to_rgb(self.accent_red, fallback=(231, 76, 60))
         if value >= high:
-            return "#2ecc71"
+            return f"#{green[0]:02x}{green[1]:02x}{green[2]:02x}"
         if value <= low:
-            return "#e74c3c"
+            return f"#{red[0]:02x}{red[1]:02x}{red[2]:02x}"
         ratio = (value - low) / max(high - low, 1e-6)
         r = int(red[0] + (green[0] - red[0]) * ratio)
         g = int(red[1] + (green[1] - red[1]) * ratio)
