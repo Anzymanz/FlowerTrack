@@ -355,6 +355,8 @@ class CannabisTracker:
         ttk.Label(dose_frame, text="Flower").grid(row=0, column=0, sticky="w")
         self.flower_choice = ttk.Combobox(dose_frame, state="readonly", width=35, values=[], style=self.combo_style)
         self.flower_choice.grid(row=1, column=0, padx=(0, 12))
+        self.flower_choice.bind("<FocusOut>", self._clear_combo_selection)
+        self.flower_choice.bind("<<ComboboxSelected>>", self._clear_combo_selection)
         ttk.Label(dose_frame, text="Dose (g)").grid(row=0, column=1, sticky="w")
         self.dose_entry = ttk.Entry(dose_frame, width=10)
         self.dose_entry.grid(row=1, column=1, padx=(0, 12))
@@ -2346,6 +2348,21 @@ class CannabisTracker:
                 pass
         self.log_tree.bind("<Motion>", on_motion)
         self.log_tree.bind("<Leave>", lambda e: self._hide_tooltip())
+    def _clear_combo_selection(self, event: tk.Event | None = None) -> None:
+        widget = getattr(event, "widget", None)
+        if widget is None:
+            return
+        try:
+            widget.selection_clear()
+        except Exception:
+            try:
+                widget.tk.call(widget._w, "selection", "clear")
+            except Exception:
+                pass
+        try:
+            widget.icursor("end")
+        except Exception:
+            pass
     # --- Tray helpers ---
     def _stop_tray_icon(self) -> None:
         try:
