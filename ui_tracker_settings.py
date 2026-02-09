@@ -460,23 +460,25 @@ def open_tracker_settings(app) -> None:
     ttk.Button(actions, text="Save", command=app._save_settings).grid(
         row=0, column=1, sticky="e", padx=(0, 4)
     )
+    try:
+        app.apply_theme(app.dark_var.get())
+    except Exception:
+        pass
     app._update_threshold_color_buttons()
     app._update_theme_color_buttons()
     try:
         notebook.update_idletasks()
         current = notebook.index("current")
         notebook.select(current)
-    except Exception:
-        pass
-    try:
-        app.apply_theme(app.dark_var.get())
-        notebook.update_idletasks()
-        current = notebook.index("current")
-        notebook.select(current)
+        notebook.configure(style="Settings.TNotebook")
     except Exception:
         pass
     # Place after layout to avoid resize flash
     app._prepare_toplevel(win)
+    try:
+        app._set_dark_title_bar(app.dark_var.get(), target=win)
+    except Exception:
+        pass
     try:
         win.update_idletasks()
         width = max(container.winfo_reqwidth(), actions.winfo_reqwidth()) + 8
