@@ -195,10 +195,8 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
 
     ttk.Label(account_form, text="Organization").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
     org_values = ["", "Medicann Isle of Mann", "Medicann Guernsey", "Medicann Jersey", "Medicann UK"]
-    org_combo = ttk.Combobox(account_form, textvariable=app.cap_org, values=org_values, state="readonly", width=38)
-    org_combo.grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
-    org_combo.bind("<FocusOut>", _clear_combo_selection)
-    org_combo.bind("<<ComboboxSelected>>", _clear_combo_selection)
+    org_entry = _make_capture_entry(account_form, app.cap_org, width=40)
+    org_entry.grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
     row_idx += 1
     ttk.Button(account_form, text="Get auth token", command=app._run_auth_bootstrap).grid(
         row=row_idx, column=1, sticky="e", padx=6, pady=(8, 2)
