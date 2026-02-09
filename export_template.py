@@ -3,7 +3,7 @@ from __future__ import annotations
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html><head><meta charset="utf-8">
-<title>Available Medical Cannabis</title>
+<title>Available Products</title>
 <style>
 :root {
   --bg: #0f1115;
@@ -1244,7 +1244,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </head><body>
 <div class="export-header">
   <div>
-    <h1>Available Medical Cannabis</h1>
+    <h1>Available Products</h1>
     <div class="small" id="exportMeta"></div>
   </div>
 </div>
