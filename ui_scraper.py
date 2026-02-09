@@ -2023,6 +2023,10 @@ class App(tk.Tk):
         self.after(50, lambda: set_titlebar_dark(self, dark))
         if self.capture_window and tk.Toplevel.winfo_exists(self.capture_window):
             self._apply_theme_to_window(self.capture_window)
+        if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window):
+            self._apply_theme_to_window(self.settings_window)
+        if self.history_window and tk.Toplevel.winfo_exists(self.history_window):
+            self._apply_theme_to_window(self.history_window)
         # Ensure main titlebar follows theme
         try:
             self._set_window_titlebar_dark(self, dark)

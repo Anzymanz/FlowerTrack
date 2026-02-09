@@ -6,7 +6,7 @@ import sys
 import tkinter as tk
 from pathlib import Path
 from tkinter import Tk, Toplevel, StringVar, BooleanVar, ttk, messagebox, filedialog
-from theme import apply_style_theme, compute_colors, set_titlebar_dark
+from theme import apply_style_theme, compute_colors, set_titlebar_dark, set_palette_overrides
 from logger import log_event
 from config import load_library_config, save_library_config, load_tracker_config, save_tracker_config
 from resources import resource_path
@@ -95,13 +95,16 @@ class FlowerLibraryApp:
         self.sort_state: dict[str, bool] = {}
         self._geometry_save_job = None
         self._force_center_on_start = False
+        self._palette_signature = ""
 
         self.text_fields = ["brand", "origin", "cultivator", "packager", "strain"]
         self.float_fields = ["thc", "cbd", "price"]
         self.rating_fields = ["taste", "smell", "strength", "effects", "value"]
 
         self.style = ttk.Style(self.root)
+        self._refresh_palette_overrides_from_tracker()
         self.apply_theme()
+        self.root.after(2000, self._refresh_theme_from_tracker)
         # Ensure title bar matches theme once window is realized
         self.root.after(50, lambda: self._apply_titlebar_dark())
         self.root.bind("<Map>", lambda _e: self._schedule_titlebar_updates(self.root))
@@ -132,6 +135,38 @@ class FlowerLibraryApp:
             except Exception:
                 pass
         self.root.bind("<Configure>", self._schedule_geometry_save)
+
+    def _refresh_palette_overrides_from_tracker(self) -> bool:
+        try:
+            cfg = load_tracker_config(TRACKER_CONFIG_FILE)
+        except Exception:
+            return False
+        dark = cfg.get("theme_palette_dark", {}) if isinstance(cfg, dict) else {}
+        light = cfg.get("theme_palette_light", {}) if isinstance(cfg, dict) else {}
+        if not isinstance(dark, dict):
+            dark = {}
+        if not isinstance(light, dict):
+            light = {}
+        sig = json.dumps({"dark": dark, "light": light}, sort_keys=True)
+        if sig == self._palette_signature:
+            return False
+        self._palette_signature = sig
+        set_palette_overrides(dark, light)
+        return True
+
+    def _refresh_theme_from_tracker(self) -> None:
+        try:
+            desired_dark = _load_tracker_dark_mode(self.is_dark.get())
+            palette_changed = self._refresh_palette_overrides_from_tracker()
+            if desired_dark != self.is_dark.get() or palette_changed:
+                self.is_dark.set(desired_dark)
+                self.apply_theme()
+        except Exception:
+            pass
+        try:
+            self.root.after(2000, self._refresh_theme_from_tracker)
+        except Exception:
+            pass
 
     def apply_theme(self) -> None:
         colors = compute_colors(self.is_dark.get())
