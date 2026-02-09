@@ -860,6 +860,15 @@ function updateBasketQty(key, val, productId) {
             }
         }
     }
+    if (!basket.has(targetKey) && targetKey) {
+        const norm = normalizeKey(targetKey);
+        for (const k of basket.keys()) {
+            if (normalizeKey(k) === norm) {
+                targetKey = k;
+                break;
+            }
+        }
+    }
     if (!basket.has(targetKey)) return;
     if (!Number.isFinite(qty) || qty <= 0) {
         basket.delete(targetKey);
@@ -872,6 +881,12 @@ function updateBasketQty(key, val, productId) {
     renderBasketModal(false);
     refreshBasketButtons();
     saveBasket();
+}
+function normalizeKey(value) {
+    if (!value) return "";
+    return String(value)
+        .replace(/&#x27;|&#39;|&apos;/gi, "'")
+        .toLowerCase();
 }
 function removeFromBasket(key, productId) {
     let removed = false;
@@ -889,9 +904,9 @@ function removeFromBasket(key, productId) {
         }
     }
     if (!removed && key) {
-        const norm = String(key).toLowerCase();
+        const norm = normalizeKey(key);
         for (const k of basket.keys()) {
-            if (String(k).toLowerCase() === norm) {
+            if (normalizeKey(k) === norm) {
                 basket.delete(k);
                 removed = true;
                 break;
