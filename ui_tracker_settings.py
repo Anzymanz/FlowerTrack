@@ -110,86 +110,76 @@ def open_tracker_settings(app) -> None:
     frame = tab_colors
     ttk.Label(frame, text="Colour settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
 
-    lbl_total_green = ttk.Label(frame, text="THC total stock high threshold")
-    lbl_total_green.grid(row=1, column=0, sticky="w")
-    tg_frame = ttk.Frame(frame)
-    app.total_green_entry = ttk.Entry(tg_frame, width=4)
-    app.total_green_entry.pack(side="left", padx=(0, 2))
-    ttk.Label(tg_frame, text="g").pack(side="left")
-    _color_button(tg_frame, "total_thc_high_color").pack(side="left", padx=(6, 0))
-    tg_frame.grid(row=1, column=1, sticky="w", padx=(12, 0))
+    def _threshold_row(
+        row: int,
+        label_text: str,
+        high_entry_attr: str,
+        high_color_key: str,
+        low_entry_attr: str,
+        low_color_key: str,
+        pady: tuple[int, int] = (0, 0),
+    ) -> None:
+        ttk.Label(frame, text=label_text).grid(row=row, column=0, sticky="w", pady=pady)
+        row_frame = ttk.Frame(frame)
+        ttk.Label(row_frame, text="High").grid(row=0, column=0, sticky="w", padx=(0, 4))
+        high_entry = ttk.Entry(row_frame, width=4)
+        setattr(app, high_entry_attr, high_entry)
+        high_entry.grid(row=0, column=1, sticky="w")
+        ttk.Label(row_frame, text="g").grid(row=0, column=2, sticky="w", padx=(2, 6))
+        _color_button(row_frame, high_color_key).grid(row=0, column=3, sticky="w")
+        ttk.Label(row_frame, text="Low").grid(row=0, column=4, sticky="w", padx=(10, 4))
+        low_entry = ttk.Entry(row_frame, width=4)
+        setattr(app, low_entry_attr, low_entry)
+        low_entry.grid(row=0, column=5, sticky="w")
+        ttk.Label(row_frame, text="g").grid(row=0, column=6, sticky="w", padx=(2, 6))
+        _color_button(row_frame, low_color_key).grid(row=0, column=7, sticky="w")
+        row_frame.grid(row=row, column=1, sticky="w", padx=(12, 0), pady=pady)
 
-    lbl_total_red = ttk.Label(frame, text="THC total stock low threshold")
-    lbl_total_red.grid(row=2, column=0, sticky="w", pady=(6, 0))
-    tr_frame = ttk.Frame(frame)
-    app.total_red_entry = ttk.Entry(tr_frame, width=4)
-    app.total_red_entry.pack(side="left", padx=(0, 2))
-    ttk.Label(tr_frame, text="g").pack(side="left")
-    _color_button(tr_frame, "total_thc_low_color").pack(side="left", padx=(6, 0))
-    tr_frame.grid(row=2, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
-
-    lbl_cbd_total_green = ttk.Label(frame, text="CBD total stock high threshold")
-    lbl_cbd_total_green.grid(row=3, column=0, sticky="w", pady=(6, 0))
-    ctg_frame = ttk.Frame(frame)
-    app.cbd_total_green_entry = ttk.Entry(ctg_frame, width=4)
-    app.cbd_total_green_entry.pack(side="left", padx=(0, 2))
-    ttk.Label(ctg_frame, text="g").pack(side="left")
-    _color_button(ctg_frame, "total_cbd_high_color").pack(side="left", padx=(6, 0))
-    ctg_frame.grid(row=3, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
-
-    lbl_cbd_total_red = ttk.Label(frame, text="CBD total stock low threshold")
-    lbl_cbd_total_red.grid(row=4, column=0, sticky="w", pady=(6, 0))
-    ctr_frame = ttk.Frame(frame)
-    app.cbd_total_red_entry = ttk.Entry(ctr_frame, width=4)
-    app.cbd_total_red_entry.pack(side="left", padx=(0, 2))
-    ttk.Label(ctr_frame, text="g").pack(side="left")
-    _color_button(ctr_frame, "total_cbd_low_color").pack(side="left", padx=(6, 0))
-    ctr_frame.grid(row=4, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
-
-    lbl_single_green = ttk.Label(frame, text="THC individual flower stock high threshold")
-    lbl_single_green.grid(row=5, column=0, sticky="w", pady=(6, 0))
-    sg_frame = ttk.Frame(frame)
-    app.single_green_entry = ttk.Entry(sg_frame, width=4)
-    app.single_green_entry.pack(side="left", padx=(0, 2))
-    ttk.Label(sg_frame, text="g").pack(side="left")
-    _color_button(sg_frame, "single_thc_high_color").pack(side="left", padx=(6, 0))
-    sg_frame.grid(row=5, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
-
-    lbl_single_red = ttk.Label(frame, text="THC individual flower stock low threshold")
-    lbl_single_red.grid(row=6, column=0, sticky="w", pady=(6, 0))
-    sr_frame = ttk.Frame(frame)
-    app.single_red_entry = ttk.Entry(sr_frame, width=4)
-    app.single_red_entry.pack(side="left", padx=(0, 2))
-    ttk.Label(sr_frame, text="g").pack(side="left")
-    _color_button(sr_frame, "single_thc_low_color").pack(side="left", padx=(6, 0))
-    sr_frame.grid(row=6, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
-
-    lbl_cbd_single_green = ttk.Label(frame, text="CBD individual flower stock high threshold")
-    lbl_cbd_single_green.grid(row=7, column=0, sticky="w", pady=(6, 0))
-    csg_frame = ttk.Frame(frame)
-    app.cbd_single_green_entry = ttk.Entry(csg_frame, width=4)
-    app.cbd_single_green_entry.pack(side="left", padx=(0, 2))
-    ttk.Label(csg_frame, text="g").pack(side="left")
-    _color_button(csg_frame, "single_cbd_high_color").pack(side="left", padx=(6, 0))
-    csg_frame.grid(row=7, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
-
-    lbl_cbd_single_red = ttk.Label(frame, text="CBD individual flower stock low threshold")
-    lbl_cbd_single_red.grid(row=8, column=0, sticky="w", pady=(6, 0))
-    csr_frame = ttk.Frame(frame)
-    app.cbd_single_red_entry = ttk.Entry(csr_frame, width=4)
-    app.cbd_single_red_entry.pack(side="left", padx=(0, 2))
-    ttk.Label(csr_frame, text="g").pack(side="left")
-    _color_button(csr_frame, "single_cbd_low_color").pack(side="left", padx=(6, 0))
-    csr_frame.grid(row=8, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
+    _threshold_row(
+        1,
+        "THC total stock threshold",
+        "total_green_entry",
+        "total_thc_high_color",
+        "total_red_entry",
+        "total_thc_low_color",
+        pady=(0, 0),
+    )
+    _threshold_row(
+        2,
+        "CBD total stock threshold",
+        "cbd_total_green_entry",
+        "total_cbd_high_color",
+        "cbd_total_red_entry",
+        "total_cbd_low_color",
+        pady=(6, 0),
+    )
+    _threshold_row(
+        3,
+        "THC individual flower stock threshold",
+        "single_green_entry",
+        "single_thc_high_color",
+        "single_red_entry",
+        "single_thc_low_color",
+        pady=(6, 0),
+    )
+    _threshold_row(
+        4,
+        "CBD individual flower stock threshold",
+        "cbd_single_green_entry",
+        "single_cbd_high_color",
+        "cbd_single_red_entry",
+        "single_cbd_low_color",
+        pady=(6, 0),
+    )
 
     app.enable_stock_color_var = tk.BooleanVar(value=getattr(app, "enable_stock_coloring", True))
     chk_stock_color = ttk.Checkbutton(frame, text="Enable colouring based on stock", variable=app.enable_stock_color_var)
-    chk_stock_color.grid(row=9, column=0, columnspan=3, sticky="w", pady=(6, 0))
+    chk_stock_color.grid(row=5, column=0, columnspan=3, sticky="w", pady=(6, 0))
     app.enable_usage_color_var = tk.BooleanVar(value=getattr(app, "enable_usage_coloring", True))
     chk_usage_color = ttk.Checkbutton(frame, text="Enable colouring based on usage", variable=app.enable_usage_color_var)
-    chk_usage_color.grid(row=10, column=0, columnspan=3, sticky="w", pady=(4, 2))
+    chk_usage_color.grid(row=6, column=0, columnspan=3, sticky="w", pady=(4, 2))
 
-    usage_row = 11
+    usage_row = 7
     ttk.Label(frame, text="Remaining today (THC) colours").grid(row=usage_row, column=0, sticky="w", pady=(6, 0))
     usage_frame = ttk.Frame(frame)
     ttk.Label(usage_frame, text="High").pack(side="left", padx=(0, 4))
