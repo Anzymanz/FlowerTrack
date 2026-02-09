@@ -299,7 +299,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
 
     capture_actions = ttk.Frame(tab_capture)
     capture_actions.pack(fill="x", pady=(4, 0))
-    ttk.Button(capture_actions, text="Reset tab", command=reset_capture_tab).pack(side="right")
+    ttk.Button(capture_actions, text="Reset", command=reset_capture_tab).pack(side="right")
 
     notify_frame = ttk.Frame(tab_notifications)
     notify_frame.pack(fill="x", padx=4, pady=(0, 10))
