@@ -1732,8 +1732,6 @@ class App(tk.Tk):
     def apply_theme(self):
         dark = self.dark_mode_var.get()
         colors = compute_colors(dark)
-        select_bg = colors.get("select_bg", colors["accent"])
-        select_fg = colors.get("select_fg", colors["fg"])
         apply_style_theme(self.style, colors)
         self.configure(bg=colors["bg"])
         self.status.configure(background=colors["bg"], foreground=colors["fg"])
@@ -1746,20 +1744,16 @@ class App(tk.Tk):
         self.option_add("*TScrollbar*arrowcolor", colors["fg"])
         self.option_add("*Menu*Background", colors["ctrl_bg"])
         self.option_add("*Menu*Foreground", colors["fg"])
-        self.option_add("*Menu*ActiveBackground", select_bg)
-        self.option_add("*Menu*ActiveForeground", select_fg)
+        self.option_add("*Menu*ActiveBackground", colors["accent"])
+        self.option_add("*Menu*ActiveForeground", colors["bg"])
         self.option_add("*TCombobox*Listbox*Background", colors["ctrl_bg"])
         self.option_add("*TCombobox*Listbox*Foreground", colors["fg"])
-        self.option_add("*TCombobox*Listbox*selectBackground", select_bg)
-        self.option_add("*TCombobox*Listbox*selectForeground", select_fg)
-        self.option_add("*TCombobox*Entry*selectBackground", select_bg)
-        self.option_add("*TCombobox*Entry*selectForeground", select_fg)
-        self.option_add("*Entry*selectBackground", select_bg)
-        self.option_add("*Entry*selectForeground", select_fg)
-        self.option_add("*Entry*inactiveselectBackground", select_bg)
-        self.option_add("*TEntry*selectBackground", select_bg)
-        self.option_add("*TEntry*selectForeground", select_fg)
-        self.option_add("*TEntry*inactiveselectBackground", select_bg)
+        self.option_add("*TCombobox*Listbox*selectBackground", colors["accent"])
+        self.option_add("*TCombobox*Listbox*selectForeground", colors["bg"])
+        self.option_add("*TCombobox*Entry*selectBackground", colors["accent"])
+        self.option_add("*TCombobox*Entry*selectForeground", colors["bg"])
+        self.option_add("*TCombobox*Entry*inactiveselectBackground", colors["ctrl_bg"])
+        self.option_add("*TCombobox*Entry*inactiveselectForeground", colors["fg"])
         # ttk scrollbar styling
         self.style.configure(
             "Vertical.TScrollbar",
@@ -1801,8 +1795,8 @@ class App(tk.Tk):
                     bg=colors["ctrl_bg"],
                     fg=colors["fg"],
                     insertbackground=colors["fg"],
-                    selectbackground=select_bg,
-                    selectforeground=select_fg,
+                    selectbackground=colors["accent"],
+                    selectforeground=colors["bg"],
                     highlightthickness=0,
                     borderwidth=0,
                 )
@@ -1942,8 +1936,8 @@ class App(tk.Tk):
                 widget.configure(
                     bg=bg if dark else "#ffffff",
                     fg=fg,
-                    selectbackground=select_bg,
-                    selectforeground=select_fg,
+                    selectbackground=accent,
+                    selectforeground="#000" if dark else "#fff",
                     highlightbackground=bg,
                 )
             elif isinstance(widget, tk.Text):
