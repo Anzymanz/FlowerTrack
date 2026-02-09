@@ -1115,7 +1115,24 @@ class CannabisTracker:
     def _choose_theme_color(self, mode: str, key: str) -> None:
         palette = self.theme_palette_dark if mode == "dark" else self.theme_palette_light
         current = palette.get(key, "#ffffff")
+        settings_win = getattr(self, "settings_window", None)
+        try:
+            if settings_win and tk.Toplevel.winfo_exists(settings_win):
+                settings_win.transient(self.root)
+                settings_win.lift()
+                settings_win.focus_force()
+                self.root.lower()
+                self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
+        except Exception:
+            pass
         picked = colorchooser.askcolor(color=current, title="Select colour")[1]
+        try:
+            if settings_win and tk.Toplevel.winfo_exists(settings_win):
+                settings_win.lift()
+                settings_win.focus_force()
+                self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
+        except Exception:
+            pass
         color = self._normalize_hex(picked or "")
         if not color:
             return
@@ -1138,6 +1155,8 @@ class CannabisTracker:
                 settings_win.transient(self.root)
                 settings_win.lift()
                 settings_win.focus_force()
+                self.root.lower()
+                self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
         except Exception:
             pass
         picked = colorchooser.askcolor(color=current, title="Select colour")[1]
@@ -1145,6 +1164,7 @@ class CannabisTracker:
             if settings_win and tk.Toplevel.winfo_exists(settings_win):
                 settings_win.lift()
                 settings_win.focus_force()
+                self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
         except Exception:
             pass
         color = self._normalize_hex(picked or "")
