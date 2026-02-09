@@ -1813,6 +1813,14 @@ class CannabisTracker:
         self.root.option_add("*TCombobox*Entry*selectForeground", text_color)
         self.root.option_add("*TCombobox*Entry*inactiveselectBackground", entry_bg)
         self.root.option_add("*TCombobox*Entry*inactiveselectForeground", text_color)
+        self.root.option_add("*Entry*selectBackground", entry_bg)
+        self.root.option_add("*Entry*selectForeground", text_color)
+        self.root.option_add("*Entry*inactiveselectBackground", entry_bg)
+        self.root.option_add("*Entry*inactiveselectForeground", text_color)
+        self.root.option_add("*TEntry*selectBackground", entry_bg)
+        self.root.option_add("*TEntry*selectForeground", text_color)
+        self.root.option_add("*TEntry*inactiveselectBackground", entry_bg)
+        self.root.option_add("*TEntry*inactiveselectForeground", text_color)
         self.style.configure(
             "Treeview",
             background=panel,

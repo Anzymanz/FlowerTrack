@@ -86,6 +86,18 @@ def open_tracker_settings(app) -> None:
         tab.columnconfigure(2, weight=1)
         tab.columnconfigure(3, weight=1)
 
+    def _clear_entry_selection(event: tk.Event | None = None) -> None:
+        widget = getattr(event, "widget", None)
+        if widget is None:
+            return
+        try:
+            widget.selection_clear()
+        except Exception:
+            try:
+                widget.tk.call(widget._w, "selection", "clear")
+            except Exception:
+                pass
+
     def _color_button(parent: ttk.Frame, key: str, tooltip_text: str | None = None) -> tk.Button:
         if key.startswith("dark:") or key.startswith("light:"):
             mode, palette_key = key.split(":", 1)
@@ -427,6 +439,18 @@ def open_tracker_settings(app) -> None:
     app.daily_target_entry.insert(0, f"{app.target_daily_grams}")
     app.daily_target_cbd_entry.insert(0, f"{getattr(app, 'target_daily_cbd_grams', 0.0)}")
     app.avg_usage_days_entry.insert(0, f"{getattr(app, 'avg_usage_days', 30)}")
+
+    # Prevent stale inactive text selection highlight on themed settings entries.
+    for widget in win.winfo_children():
+        try:
+            stack = [widget]
+            while stack:
+                w = stack.pop()
+                stack.extend(w.winfo_children())
+                if isinstance(w, (tk.Entry, ttk.Entry)):
+                    w.bind("<FocusOut>", _clear_entry_selection, add="+")
+        except Exception:
+            pass
 
     # Tooltips for settings
     app._bind_tooltip(app.total_green_entry, "Above this total THC stock, label shows green.")
