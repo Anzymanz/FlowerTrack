@@ -1242,6 +1242,8 @@ class CannabisTracker:
             background=entry_bg,
             foreground=text_color,
             arrowcolor=text_color,
+            selectbackground=select_bg,
+            selectforeground=select_fg,
         )
         self.style.map(
             self.combo_style,
@@ -1256,6 +1258,12 @@ class CannabisTracker:
         self.root.option_add("*TCombobox*Listbox*selectForeground", select_fg)
         self.root.option_add("*TCombobox*Entry*selectBackground", select_bg)
         self.root.option_add("*TCombobox*Entry*selectForeground", select_fg)
+        self.root.option_add("*Entry*selectBackground", select_bg)
+        self.root.option_add("*Entry*selectForeground", select_fg)
+        self.root.option_add("*Entry*inactiveselectBackground", select_bg)
+        self.root.option_add("*TEntry*selectBackground", select_bg)
+        self.root.option_add("*TEntry*selectForeground", select_fg)
+        self.root.option_add("*TEntry*inactiveselectBackground", select_bg)
         self.style.configure(
             "Treeview",
             background=panel,

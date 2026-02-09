@@ -16,7 +16,7 @@ def compute_colors(dark: bool) -> dict:
     # Dark accent toned to a neutral gray to keep hover/selection subtle in dark mode.
     accent = "#3c3c3c" if dark else "#666666"
     list_bg = "#1e1e1e" if dark else "#ffffff"
-    select_bg = "#151515" if dark else "#d9d9d9"
+    select_bg = "#121212" if dark else "#d9d9d9"
     select_fg = fg
     return {
         "bg": bg,
@@ -108,9 +108,23 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
         arrowcolor=[("active", fg), ("disabled", fg)],
         troughcolor=[("disabled", scrollbar_trough)],
     )
-    style.configure("TEntry", fieldbackground=ctrl_bg, foreground=fg, insertcolor=fg)
+    style.configure(
+        "TEntry",
+        fieldbackground=ctrl_bg,
+        foreground=fg,
+        insertcolor=fg,
+        selectbackground=colors["select_bg"],
+        selectforeground=colors["select_fg"],
+    )
     style.map("TEntry", fieldbackground=[("readonly", ctrl_bg)], foreground=[("readonly", fg)])
-    style.configure("TSpinbox", fieldbackground=ctrl_bg, foreground=fg, insertcolor=fg)
+    style.configure(
+        "TSpinbox",
+        fieldbackground=ctrl_bg,
+        foreground=fg,
+        insertcolor=fg,
+        selectbackground=colors["select_bg"],
+        selectforeground=colors["select_fg"],
+    )
     style.configure("TNotebook", background=bg, bordercolor=ctrl_bg)
     style.configure(
         "TNotebook.Tab",
