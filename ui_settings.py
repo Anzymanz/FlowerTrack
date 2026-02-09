@@ -252,7 +252,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         entry.bind("<KeyRelease>", update_scraper_hints)
     update_scraper_hints()
 
-    notify_frame = ttk.Labelframe(tab_notifications, text="Notification Settings", padding=8)
+    notify_frame = ttk.Frame(tab_notifications)
     notify_frame.pack(fill="x", padx=4, pady=(0, 10))
     ttk.Checkbutton(notify_frame, text="Notify on price changes", variable=app.notify_price_changes).pack(anchor="w", pady=2)
     ttk.Checkbutton(notify_frame, text="Notify on stock changes", variable=app.notify_stock_changes).pack(anchor="w", pady=2)
