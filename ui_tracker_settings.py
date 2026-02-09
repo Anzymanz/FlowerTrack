@@ -34,8 +34,8 @@ def open_tracker_settings(app) -> None:
     frame.columnconfigure(3, weight=1)
     ttk.Label(frame, text="Colour settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
 
-    def _color_button(parent: ttk.Frame, kind: str) -> tk.Button:
-        color = app.accent_green if kind == "high" else app.accent_red
+    def _color_button(parent: ttk.Frame, key: str) -> tk.Button:
+        color = getattr(app, key, "#2ecc71")
         btn = tk.Button(
             parent,
             width=2,
@@ -45,9 +45,9 @@ def open_tracker_settings(app) -> None:
             activebackground=color,
             highlightthickness=1,
             highlightbackground=color,
-            command=lambda: app._choose_threshold_color(kind),
+            command=lambda: app._choose_threshold_color(key),
         )
-        app._register_threshold_color_button(btn, kind)
+        app._register_threshold_color_button(btn, key)
         return btn
     lbl_total_green = ttk.Label(frame, text="THC total stock high threshold")
     lbl_total_green.grid(row=1, column=0, sticky="w")
@@ -55,7 +55,7 @@ def open_tracker_settings(app) -> None:
     app.total_green_entry = ttk.Entry(tg_frame, width=4)
     app.total_green_entry.pack(side="left", padx=(0, 2))
     ttk.Label(tg_frame, text="g").pack(side="left")
-    _color_button(tg_frame, "high").pack(side="left", padx=(6, 0))
+    _color_button(tg_frame, "total_thc_high_color").pack(side="left", padx=(6, 0))
     tg_frame.grid(row=1, column=1, sticky="w", padx=(12, 0))
 
     lbl_total_red = ttk.Label(frame, text="THC total stock low threshold")
@@ -64,7 +64,7 @@ def open_tracker_settings(app) -> None:
     app.total_red_entry = ttk.Entry(tr_frame, width=4)
     app.total_red_entry.pack(side="left", padx=(0, 2))
     ttk.Label(tr_frame, text="g").pack(side="left")
-    _color_button(tr_frame, "low").pack(side="left", padx=(6, 0))
+    _color_button(tr_frame, "total_thc_low_color").pack(side="left", padx=(6, 0))
     tr_frame.grid(row=2, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
 
     lbl_cbd_total_green = ttk.Label(frame, text="CBD total stock high threshold")
@@ -73,7 +73,7 @@ def open_tracker_settings(app) -> None:
     app.cbd_total_green_entry = ttk.Entry(ctg_frame, width=4)
     app.cbd_total_green_entry.pack(side="left", padx=(0, 2))
     ttk.Label(ctg_frame, text="g").pack(side="left")
-    _color_button(ctg_frame, "high").pack(side="left", padx=(6, 0))
+    _color_button(ctg_frame, "total_cbd_high_color").pack(side="left", padx=(6, 0))
     ctg_frame.grid(row=3, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
 
     lbl_cbd_total_red = ttk.Label(frame, text="CBD total stock low threshold")
@@ -82,7 +82,7 @@ def open_tracker_settings(app) -> None:
     app.cbd_total_red_entry = ttk.Entry(ctr_frame, width=4)
     app.cbd_total_red_entry.pack(side="left", padx=(0, 2))
     ttk.Label(ctr_frame, text="g").pack(side="left")
-    _color_button(ctr_frame, "low").pack(side="left", padx=(6, 0))
+    _color_button(ctr_frame, "total_cbd_low_color").pack(side="left", padx=(6, 0))
     ctr_frame.grid(row=4, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
 
     lbl_single_green = ttk.Label(frame, text="THC individual flower stock high threshold")
@@ -91,7 +91,7 @@ def open_tracker_settings(app) -> None:
     app.single_green_entry = ttk.Entry(sg_frame, width=4)
     app.single_green_entry.pack(side="left", padx=(0, 2))
     ttk.Label(sg_frame, text="g").pack(side="left")
-    _color_button(sg_frame, "high").pack(side="left", padx=(6, 0))
+    _color_button(sg_frame, "single_thc_high_color").pack(side="left", padx=(6, 0))
     sg_frame.grid(row=5, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
 
     lbl_single_red = ttk.Label(frame, text="THC individual flower stock low threshold")
@@ -100,7 +100,7 @@ def open_tracker_settings(app) -> None:
     app.single_red_entry = ttk.Entry(sr_frame, width=4)
     app.single_red_entry.pack(side="left", padx=(0, 2))
     ttk.Label(sr_frame, text="g").pack(side="left")
-    _color_button(sr_frame, "low").pack(side="left", padx=(6, 0))
+    _color_button(sr_frame, "single_thc_low_color").pack(side="left", padx=(6, 0))
     sr_frame.grid(row=6, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
 
     lbl_cbd_single_green = ttk.Label(frame, text="CBD individual flower stock high threshold")
@@ -109,7 +109,7 @@ def open_tracker_settings(app) -> None:
     app.cbd_single_green_entry = ttk.Entry(csg_frame, width=4)
     app.cbd_single_green_entry.pack(side="left", padx=(0, 2))
     ttk.Label(csg_frame, text="g").pack(side="left")
-    _color_button(csg_frame, "high").pack(side="left", padx=(6, 0))
+    _color_button(csg_frame, "single_cbd_high_color").pack(side="left", padx=(6, 0))
     csg_frame.grid(row=7, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
 
     lbl_cbd_single_red = ttk.Label(frame, text="CBD individual flower stock low threshold")
@@ -118,7 +118,7 @@ def open_tracker_settings(app) -> None:
     app.cbd_single_red_entry = ttk.Entry(csr_frame, width=4)
     app.cbd_single_red_entry.pack(side="left", padx=(0, 2))
     ttk.Label(csr_frame, text="g").pack(side="left")
-    _color_button(csr_frame, "low").pack(side="left", padx=(6, 0))
+    _color_button(csr_frame, "single_cbd_low_color").pack(side="left", padx=(6, 0))
     csr_frame.grid(row=8, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
 
     app.enable_stock_color_var = tk.BooleanVar(value=getattr(app, "enable_stock_coloring", True))
@@ -350,6 +350,7 @@ def open_tracker_settings(app) -> None:
     ttk.Button(actions, text="Save", command=app._save_settings).grid(
         row=0, column=1, sticky="e", padx=(0, 4)
     )
+    app._update_threshold_color_buttons()
     # Place after layout to avoid resize flash
     app._prepare_toplevel(win)
 

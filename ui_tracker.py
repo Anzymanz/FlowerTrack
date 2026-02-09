@@ -82,8 +82,17 @@ class CannabisTracker:
         self.stock_sort_reverse = True
         self.text_color = "#111111"
         self.muted_color = "#666666"
-        # Keep user-configured accent colors when changing theme.
-        self._threshold_color_buttons: dict[str, list[tk.Button]] = {"high": [], "low": []}
+        self.accent_green = "#2ecc71"
+        self.accent_red = "#e74c3c"
+        self.total_thc_high_color = "#2ecc71"
+        self.total_thc_low_color = "#e74c3c"
+        self.total_cbd_high_color = "#2ecc71"
+        self.total_cbd_low_color = "#e74c3c"
+        self.single_thc_high_color = "#2ecc71"
+        self.single_thc_low_color = "#e74c3c"
+        self.single_cbd_high_color = "#2ecc71"
+        self.single_cbd_low_color = "#e74c3c"
+        self._threshold_color_buttons: dict[str, list[tk.Button]] = {}
         self.stock_form_source: str | None = None
         self.stock_form_dirty = False
         self.current_base_color = "#f5f5f5"
@@ -819,10 +828,14 @@ class CannabisTracker:
                 if self._is_cbd_dominant(flower):
                     green_thr = getattr(self, "cbd_single_green_threshold", self.single_green_threshold)
                     red_thr = getattr(self, "cbd_single_red_threshold", self.single_red_threshold)
+                    high_color = self.single_cbd_high_color
+                    low_color = self.single_cbd_low_color
                 else:
                     green_thr = self.single_green_threshold
                     red_thr = self.single_red_threshold
-                row_color = self._color_for_value(flower.grams_remaining, green_thr, red_thr)
+                    high_color = self.single_thc_high_color
+                    low_color = self.single_thc_low_color
+                row_color = self._color_for_value(flower.grams_remaining, green_thr, red_thr, high_color, low_color)
             else:
                 row_color = self.text_color
             if flower.grams_remaining <= 1e-6:
@@ -854,7 +867,13 @@ class CannabisTracker:
             except Exception:
                 pass
         total_color = (
-            self._color_for_value(combined_total, self.total_green_threshold, self.total_red_threshold)
+            self._color_for_value(
+                combined_total,
+                self.total_green_threshold,
+                self.total_red_threshold,
+                self.total_thc_high_color,
+                self.total_thc_low_color,
+            )
             if self.enable_stock_coloring
             else self.text_color
         )
@@ -865,6 +884,8 @@ class CannabisTracker:
                     cbd_total,
                     getattr(self, "cbd_total_green_threshold", self.total_green_threshold),
                     getattr(self, "cbd_total_red_threshold", self.total_red_threshold),
+                    self.total_cbd_high_color,
+                    self.total_cbd_low_color,
                 )
                 if self.enable_stock_coloring
                 else self.text_color
@@ -1001,10 +1022,10 @@ class CannabisTracker:
         self.current_date += timedelta(days=delta_days)
         self._refresh_log()
         self._refresh_stock()
-    def _color_for_value(self, value: float, high: float, low: float) -> str:
-        """Return hex color between green (high) and red (low)."""
-        green = self._hex_to_rgb(self.accent_green, fallback=(46, 204, 113))
-        red = self._hex_to_rgb(self.accent_red, fallback=(231, 76, 60))
+    def _color_for_value(self, value: float, high: float, low: float, high_color: str, low_color: str) -> str:
+        """Return hex color between high_color and low_color based on thresholds."""
+        green = self._hex_to_rgb(high_color, fallback=(46, 204, 113))
+        red = self._hex_to_rgb(low_color, fallback=(231, 76, 60))
         if value >= high:
             return f"#{green[0]:02x}{green[1]:02x}{green[2]:02x}"
         if value <= low:
@@ -1040,30 +1061,41 @@ class CannabisTracker:
             return None
         return f"#{text.lower()}"
 
-    def _register_threshold_color_button(self, button: tk.Button, kind: str) -> None:
-        if kind not in self._threshold_color_buttons:
-            self._threshold_color_buttons[kind] = []
-        self._threshold_color_buttons[kind].append(button)
+    def _register_threshold_color_button(self, button: tk.Button, key: str) -> None:
+        self._threshold_color_buttons.setdefault(key, []).append(button)
 
     def _update_threshold_color_buttons(self) -> None:
-        for kind, buttons in self._threshold_color_buttons.items():
-            color = self.accent_green if kind == "high" else self.accent_red
+        for key, buttons in self._threshold_color_buttons.items():
+            color = getattr(self, key, None)
+            if not color:
+                continue
             for btn in buttons:
                 try:
                     btn.configure(bg=color, activebackground=color, highlightbackground=color)
                 except Exception:
                     pass
 
-    def _choose_threshold_color(self, kind: str) -> None:
-        current = self.accent_green if kind == "high" else self.accent_red
+    def _choose_threshold_color(self, key: str) -> None:
+        current = getattr(self, key, None) or "#2ecc71"
+        settings_win = getattr(self, "settings_window", None)
+        try:
+            if settings_win and tk.Toplevel.winfo_exists(settings_win):
+                settings_win.transient(self.root)
+                settings_win.lift()
+                settings_win.focus_force()
+        except Exception:
+            pass
         picked = colorchooser.askcolor(color=current, title="Select color")[1]
+        try:
+            if settings_win and tk.Toplevel.winfo_exists(settings_win):
+                settings_win.lift()
+                settings_win.focus_force()
+        except Exception:
+            pass
         color = self._normalize_hex(picked or "")
         if not color:
             return
-        if kind == "high":
-            self.accent_green = color
-        else:
-            self.accent_red = color
+        setattr(self, key, color)
         self._update_threshold_color_buttons()
         self._refresh_stock()
         self._refresh_log()
@@ -1451,8 +1483,6 @@ class CannabisTracker:
                 pass
         self.text_color = text_color
         self.muted_color = "#777777" if dark else "#666666"
-        self.accent_green = "#2ecc71"
-        self.accent_red = "#e74c3c"
         if self.note_label:
             self.note_label.configure(foreground=colors["fg"], background=base)
         self.date_label.configure(background=base, foreground=text_color)
@@ -1771,6 +1801,14 @@ class CannabisTracker:
             "single_red_threshold": self.single_red_threshold,
             "cbd_single_green_threshold": getattr(self, "cbd_single_green_threshold", self.single_green_threshold),
             "cbd_single_red_threshold": getattr(self, "cbd_single_red_threshold", self.single_red_threshold),
+            "total_thc_high_color": self.total_thc_high_color,
+            "total_thc_low_color": self.total_thc_low_color,
+            "total_cbd_high_color": self.total_cbd_high_color,
+            "total_cbd_low_color": self.total_cbd_low_color,
+            "single_thc_high_color": self.single_thc_high_color,
+            "single_thc_low_color": self.single_thc_low_color,
+            "single_cbd_high_color": self.single_cbd_high_color,
+            "single_cbd_low_color": self.single_cbd_low_color,
             "target_daily_grams": self.target_daily_grams,
             "avg_usage_days": self.avg_usage_days,
             "target_daily_cbd_grams": getattr(self, "target_daily_cbd_grams", 0.0),
@@ -1813,6 +1851,14 @@ class CannabisTracker:
         self.cbd_single_red_threshold = float(
             data.get("cbd_single_red_threshold", getattr(self, "cbd_single_red_threshold", self.single_red_threshold))
         )
+        self.total_thc_high_color = str(data.get("total_thc_high_color", self.total_thc_high_color))
+        self.total_thc_low_color = str(data.get("total_thc_low_color", self.total_thc_low_color))
+        self.total_cbd_high_color = str(data.get("total_cbd_high_color", self.total_cbd_high_color))
+        self.total_cbd_low_color = str(data.get("total_cbd_low_color", self.total_cbd_low_color))
+        self.single_thc_high_color = str(data.get("single_thc_high_color", self.single_thc_high_color))
+        self.single_thc_low_color = str(data.get("single_thc_low_color", self.single_thc_low_color))
+        self.single_cbd_high_color = str(data.get("single_cbd_high_color", self.single_cbd_high_color))
+        self.single_cbd_low_color = str(data.get("single_cbd_low_color", self.single_cbd_low_color))
         self.target_daily_grams = float(data.get("target_daily_grams", self.target_daily_grams))
         self.avg_usage_days = int(data.get("avg_usage_days", getattr(self, "avg_usage_days", 30)))
         self.target_daily_cbd_grams = float(data.get("target_daily_cbd_grams", getattr(self, "target_daily_cbd_grams", 0.0)))
@@ -1918,6 +1964,14 @@ class CannabisTracker:
         self.cbd_single_red_threshold = float(cfg.get("cbd_single_red_threshold", self.single_red_threshold))
         self.accent_green = str(cfg.get("accent_green", self.accent_green))
         self.accent_red = str(cfg.get("accent_red", self.accent_red))
+        self.total_thc_high_color = str(cfg.get("total_thc_high_color", self.total_thc_high_color))
+        self.total_thc_low_color = str(cfg.get("total_thc_low_color", self.total_thc_low_color))
+        self.total_cbd_high_color = str(cfg.get("total_cbd_high_color", self.total_cbd_high_color))
+        self.total_cbd_low_color = str(cfg.get("total_cbd_low_color", self.total_cbd_low_color))
+        self.single_thc_high_color = str(cfg.get("single_thc_high_color", self.single_thc_high_color))
+        self.single_thc_low_color = str(cfg.get("single_thc_low_color", self.single_thc_low_color))
+        self.single_cbd_high_color = str(cfg.get("single_cbd_high_color", self.single_cbd_high_color))
+        self.single_cbd_low_color = str(cfg.get("single_cbd_low_color", self.single_cbd_low_color))
         self.target_daily_grams = float(cfg.get("target_daily_grams", self.target_daily_grams))
         self.avg_usage_days = int(cfg.get("avg_usage_days", getattr(self, "avg_usage_days", 30)))
         self.target_daily_cbd_grams = float(cfg.get("target_daily_cbd_grams", 0.0))
@@ -1965,6 +2019,14 @@ class CannabisTracker:
             "cbd_single_red_threshold": self.cbd_single_red_threshold,
             "accent_green": self.accent_green,
             "accent_red": self.accent_red,
+            "total_thc_high_color": self.total_thc_high_color,
+            "total_thc_low_color": self.total_thc_low_color,
+            "total_cbd_high_color": self.total_cbd_high_color,
+            "total_cbd_low_color": self.total_cbd_low_color,
+            "single_thc_high_color": self.single_thc_high_color,
+            "single_thc_low_color": self.single_thc_low_color,
+            "single_cbd_high_color": self.single_cbd_high_color,
+            "single_cbd_low_color": self.single_cbd_low_color,
             "target_daily_grams": self.target_daily_grams,
             "avg_usage_days": self.avg_usage_days,
             "target_daily_cbd_grams": self.target_daily_cbd_grams,

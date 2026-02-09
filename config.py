@@ -193,6 +193,14 @@ DEFAULT_TRACKER_CONFIG = {
     "cbd_single_red_threshold": 2.0,
     "accent_green": "#2ecc71",
     "accent_red": "#e74c3c",
+    "total_thc_high_color": "#2ecc71",
+    "total_thc_low_color": "#e74c3c",
+    "total_cbd_high_color": "#2ecc71",
+    "total_cbd_low_color": "#e74c3c",
+    "single_thc_high_color": "#2ecc71",
+    "single_thc_low_color": "#e74c3c",
+    "single_cbd_high_color": "#2ecc71",
+    "single_cbd_low_color": "#e74c3c",
     "target_daily_grams": 1.0,
     "target_daily_cbd_grams": 0.0,
     "roa_options": {"Vaped": 0.60, "Eaten": 0.10, "Smoked": 0.30},
@@ -358,7 +366,18 @@ def _validate_tracker_config(raw: dict) -> dict:
             cfg[key] = _coerce_bool(value, cfg[key])
         elif key in float_keys:
             cfg[key] = _coerce_float(value, cfg[key], 0.0)
-        elif key in ("accent_green", "accent_red"):
+        elif key in (
+            "accent_green",
+            "accent_red",
+            "total_thc_high_color",
+            "total_thc_low_color",
+            "total_cbd_high_color",
+            "total_cbd_low_color",
+            "single_thc_high_color",
+            "single_thc_low_color",
+            "single_cbd_high_color",
+            "single_cbd_low_color",
+        ):
             cfg[key] = _coerce_color(value, cfg[key])
         elif key == "roa_options" and isinstance(value, dict):
             cfg[key] = {str(k): float(v) for k, v in value.items() if v is not None}
