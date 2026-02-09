@@ -1280,7 +1280,12 @@ class CannabisTracker:
             borderwidth=0,
             relief="flat",
         )
-        self.style.configure("Panel.TLabelframe.Label", background=base, foreground=text_color)
+        self.style.configure(
+            "Panel.TLabelframe.Label",
+            background=base,
+            foreground=text_color,
+            padding=(6, 2, 0, 0),
+        )
         for wrap in (getattr(self, "stock_wrap", None), getattr(self, "dose_wrap", None), getattr(self, "log_wrap", None)):
             if wrap:
                 try:
