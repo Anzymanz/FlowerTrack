@@ -1130,7 +1130,7 @@ class CannabisTracker:
             if settings_win and tk.Toplevel.winfo_exists(settings_win):
                 settings_win.lift()
                 settings_win.focus_force()
-                self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
+                settings_win.after(0, lambda: self._set_dark_title_bar(self.dark_var.get(), target=settings_win))
         except Exception:
             pass
         color = self._normalize_hex(picked or "")
@@ -1164,7 +1164,7 @@ class CannabisTracker:
             if settings_win and tk.Toplevel.winfo_exists(settings_win):
                 settings_win.lift()
                 settings_win.focus_force()
-                self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
+                settings_win.after(0, lambda: self._set_dark_title_bar(self.dark_var.get(), target=settings_win))
         except Exception:
             pass
         color = self._normalize_hex(picked or "")
