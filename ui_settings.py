@@ -101,6 +101,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
 
     outer = ttk.Frame(win)
     outer.pack(fill="both", expand=True)
+    outer.pack_propagate(False)
     tooltip_win: tk.Toplevel | None = None
     def _show_tooltip(text: str, event: tk.Event | None = None) -> None:
         nonlocal tooltip_win
@@ -160,8 +161,11 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
             widget.icursor("end")
         except Exception:
             pass
-    notebook = ttk.Notebook(outer, style="Settings.TNotebook")
-    notebook.pack(fill="both", expand=True, padx=8, pady=(6, 0))
+    content = ttk.Frame(outer)
+    content.pack(fill="both", expand=True, padx=8, pady=(6, 0))
+    content.pack_propagate(False)
+    notebook = ttk.Notebook(content, style="Settings.TNotebook")
+    notebook.pack(fill="both", expand=True)
 
     tab_account = ttk.Frame(notebook, padding=8)
     tab_capture = ttk.Frame(notebook, padding=8)
@@ -430,7 +434,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Button(scraper_btns, text="Clear auth cache", command=app._clear_auth_cache).pack(side="right", padx=4)
     ttk.Button(scraper_btns, text="Send test notification", command=app.send_test_notification).pack(side="right", padx=4)
 
-    btn_row = ttk.Frame(win)
+    btn_row = ttk.Frame(outer)
     btn_row.pack(fill="x", pady=10, padx=10)
     ttk.Button(btn_row, text="Save", command=save_and_close).pack(side="right", padx=4)
     app._apply_theme_to_window(win)
