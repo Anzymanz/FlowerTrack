@@ -104,6 +104,10 @@ class CannabisTracker:
         self.days_thc_low_color = "#e74c3c"
         self.days_cbd_high_color = "#2ecc71"
         self.days_cbd_low_color = "#e74c3c"
+        self.used_thc_under_color = "#2ecc71"
+        self.used_thc_over_color = "#e74c3c"
+        self.used_cbd_under_color = "#2ecc71"
+        self.used_cbd_over_color = "#e74c3c"
         default_dark, default_light = get_default_palettes()
         self.theme_palette_dark = dict(default_dark)
         self.theme_palette_light = dict(default_light)
@@ -990,9 +994,9 @@ class CannabisTracker:
                 remaining = self.target_daily_grams - day_total if self.target_daily_grams > 0 else None
                 color = self.text_color
                 if self.enable_usage_coloring:
-                    color = self.accent_green
+                    color = self.used_thc_under_color
                     if remaining is not None and remaining < 0:
-                        color = self.accent_red
+                        color = self.used_thc_over_color
                 self.day_total_label.config(
                     text=f"Total used this day (THC): {day_total:.3f} g", foreground=color
                 )
@@ -1001,7 +1005,7 @@ class CannabisTracker:
                     color_cbd = self.text_color
                     target_cbd = getattr(self, "target_daily_cbd_grams", 0.0)
                     if self.enable_usage_coloring and target_cbd > 0:
-                        color_cbd = self.accent_green if (target_cbd - day_total_cbd) >= 0 else self.accent_red
+                        color_cbd = self.used_cbd_under_color if (target_cbd - day_total_cbd) >= 0 else self.used_cbd_over_color
                     self.day_total_cbd_label.config(
                         text=f"Total used this day (CBD): {day_total_cbd:.3f} g", foreground=color_cbd
                     )
@@ -2224,6 +2228,10 @@ class CannabisTracker:
         self.days_thc_low_color = str(cfg.get("days_thc_low_color", self.days_thc_low_color))
         self.days_cbd_high_color = str(cfg.get("days_cbd_high_color", self.days_cbd_high_color))
         self.days_cbd_low_color = str(cfg.get("days_cbd_low_color", self.days_cbd_low_color))
+        self.used_thc_under_color = str(cfg.get("used_thc_under_color", self.used_thc_under_color))
+        self.used_thc_over_color = str(cfg.get("used_thc_over_color", self.used_thc_over_color))
+        self.used_cbd_under_color = str(cfg.get("used_cbd_under_color", self.used_cbd_under_color))
+        self.used_cbd_over_color = str(cfg.get("used_cbd_over_color", self.used_cbd_over_color))
         if isinstance(cfg.get("theme_palette_dark"), dict):
             self.theme_palette_dark.update(cfg.get("theme_palette_dark", {}))
         if isinstance(cfg.get("theme_palette_light"), dict):
@@ -2292,6 +2300,10 @@ class CannabisTracker:
             "days_thc_low_color": self.days_thc_low_color,
             "days_cbd_high_color": self.days_cbd_high_color,
             "days_cbd_low_color": self.days_cbd_low_color,
+            "used_thc_under_color": self.used_thc_under_color,
+            "used_thc_over_color": self.used_thc_over_color,
+            "used_cbd_under_color": self.used_cbd_under_color,
+            "used_cbd_over_color": self.used_cbd_over_color,
             "theme_palette_dark": self.theme_palette_dark,
             "theme_palette_light": self.theme_palette_light,
             "target_daily_grams": self.target_daily_grams,

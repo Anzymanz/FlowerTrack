@@ -216,6 +216,24 @@ def open_tracker_settings(app) -> None:
     ttk.Label(usage_frame, text="Low").pack(side="left", padx=(8, 4))
     _color_button(usage_frame, "days_cbd_low_color").pack(side="left")
     usage_frame.grid(row=usage_row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+    usage_row += 1
+
+    ttk.Label(frame, text="Total used today (THC) colours").grid(row=usage_row, column=0, sticky="w", pady=(6, 0))
+    usage_frame = ttk.Frame(frame)
+    ttk.Label(usage_frame, text="Under").pack(side="left", padx=(0, 4))
+    _color_button(usage_frame, "used_thc_under_color").pack(side="left")
+    ttk.Label(usage_frame, text="Over").pack(side="left", padx=(8, 4))
+    _color_button(usage_frame, "used_thc_over_color").pack(side="left")
+    usage_frame.grid(row=usage_row, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
+    usage_row += 1
+
+    ttk.Label(frame, text="Total used today (CBD) colours").grid(row=usage_row, column=0, sticky="w", pady=(2, 0))
+    usage_frame = ttk.Frame(frame)
+    ttk.Label(usage_frame, text="Under").pack(side="left", padx=(0, 4))
+    _color_button(usage_frame, "used_cbd_under_color").pack(side="left")
+    ttk.Label(usage_frame, text="Over").pack(side="left", padx=(8, 4))
+    _color_button(usage_frame, "used_cbd_over_color").pack(side="left")
+    usage_frame.grid(row=usage_row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
 
     frame = tab_tracker
     ttk.Label(frame, text="Tracker settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
