@@ -1164,9 +1164,9 @@ class CannabisTracker:
 
         _style_widget(picker)
         try:
-            self._queue_dark_titlebar(picker)
-            picker.bind("<Map>", lambda _e: self._queue_dark_titlebar(picker))
-            picker.bind("<Visibility>", lambda _e: self._queue_dark_titlebar(picker))
+            self._queue_dark_titlebar(picker, attempts=20, delay_ms=100)
+            picker.bind("<Map>", lambda _e: self._queue_dark_titlebar(picker, attempts=20, delay_ms=100))
+            picker.bind("<Visibility>", lambda _e: self._queue_dark_titlebar(picker, attempts=20, delay_ms=100))
         except Exception:
             pass
 
@@ -1302,7 +1302,7 @@ class CannabisTracker:
             except Exception:
                 pass
 
-    def _queue_dark_titlebar(self, win: tk.Toplevel, attempts: int = 5, delay_ms: int = 50) -> None:
+    def _queue_dark_titlebar(self, win: tk.Toplevel, attempts: int = 20, delay_ms: int = 100) -> None:
         def _apply(remaining: int) -> None:
             try:
                 if not win or not tk.Toplevel.winfo_exists(win):
