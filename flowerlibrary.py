@@ -222,6 +222,7 @@ class FlowerLibraryApp:
             "strength",
             "value",
             "overall",
+            "search",
         )
         self.tree = ttk.Treeview(self.root, columns=columns, show="headings", height=14)
         heading_labels = {
@@ -230,11 +231,14 @@ class FlowerLibraryApp:
             "price": "Price /g",
             "overall": "Overall",
             "origin": "Origin",
+            "search": "",
         }
         for col in columns:
             heading = heading_labels.get(col, col.capitalize())
             self.tree.heading(col, text=heading, command=lambda c=col: self.sort_by(c))
             width = self.settings.get("column_widths", {}).get(col, 90)
+            if col == "search":
+                width = self.settings.get("column_widths", {}).get(col, 40)
             self.tree.column(col, width=width, anchor="center")
         self.tree.pack(fill="both", expand=True, padx=10, pady=10)
         self.tree.bind("<ButtonRelease-1>", self.on_tree_button_release)
@@ -448,6 +452,7 @@ class FlowerLibraryApp:
                 entry.get("strength", ""),
                 entry.get("value", ""),
                 entry.get("overall", ""),
+                "🔎",
             ]
             self.tree.insert("", "end", values=values)
 
@@ -478,6 +483,8 @@ class FlowerLibraryApp:
 
     def sort_by(self, column: str) -> None:
         ascending = self.sort_state.get(column, True)
+        if column == "search":
+            return
         numeric_cols = {"thc", "cbd", "price", "smell", "taste", "effects", "strength", "value", "overall"}
 
         def sort_key(item: dict):
@@ -501,7 +508,31 @@ class FlowerLibraryApp:
         self._apply_titlebar_dark()
 
     def on_tree_button_release(self, event) -> None:
-        if self.tree.identify_region(event.x, event.y) in {"separator", "heading"}:
+        region = self.tree.identify_region(event.x, event.y)
+        if region == "cell":
+            column_id = self.tree.identify_column(event.x)
+            col_index = int(column_id.replace("#", "")) - 1
+            col_name = self.tree["columns"][col_index] if 0 <= col_index < len(self.tree["columns"]) else ""
+            if col_name == "search":
+                item_id = self.tree.identify_row(event.y)
+                if item_id:
+                    values = self.tree.item(item_id, "values")
+                    try:
+                        brand = values[0]
+                        strain = values[1]
+                    except Exception:
+                        brand = ""
+                        strain = ""
+                    query = " ".join(part for part in (brand, strain, "medbud.wiki") if part)
+                    if query:
+                        try:
+                            import webbrowser
+                            from urllib.parse import quote_plus
+                            webbrowser.open(f"https://www.google.com/search?q={quote_plus(query)}")
+                        except Exception:
+                            pass
+                return
+        if region in {"separator", "heading"}:
             widths = {col: self.tree.column(col, option="width") for col in self.tree["columns"]}
             if widths != self.settings.get("column_widths", {}):
                 self.settings["column_widths"] = widths
