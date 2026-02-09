@@ -1344,7 +1344,15 @@ class CannabisTracker:
             darkcolor=panel_border,
             font=self.font_body,
         )
-        self.style.configure("Treeview.Heading", background=colors["ctrl_bg"], foreground=text_color, font=self.font_body)
+        self.style.configure(
+            "Treeview.Heading",
+            background=colors["ctrl_bg"],
+            foreground=text_color,
+            bordercolor=panel_border,
+            lightcolor=panel_border,
+            darkcolor=panel_border,
+            font=self.font_body,
+        )
         self.style.map("Treeview.Heading", background=[("active", accent)], foreground=[("active", "#ffffff")])
         self.style.map("Treeview", background=[("selected", accent)], foreground=[("selected", "#ffffff")])
         self.style.configure(
