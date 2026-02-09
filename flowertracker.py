@@ -62,7 +62,7 @@ def main() -> None:
         return
     if "--scraper" in sys.argv or "--parser" in sys.argv:
         from ui_scraper import App
-        app = App()
+        app = App(start_hidden="--scraper-hidden" in sys.argv)
         if "--scraper-autostart" in sys.argv:
             try:
                 app.after(350, app.start_auto_capture)

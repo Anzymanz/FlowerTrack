@@ -80,9 +80,10 @@ class App(tk.Tk):
     @classmethod
     def instance(cls):
         return cls._instance
-    def __init__(self):
+    def __init__(self, start_hidden: bool = False):
         super().__init__()
         App._instance = self
+        self._start_hidden = bool(start_hidden)
         self._ui_thread = threading.current_thread()
         try:
             self.attributes("-alpha", 0.0)
@@ -222,7 +223,11 @@ class App(tk.Tk):
             self.after(150, lambda: self._set_win_titlebar_dark(self.dark_mode_var.get()))
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
-        self.after(0, self._show_scraper_window)
+        if self._start_hidden:
+            self.after(0, lambda: self.attributes("-alpha", 0.0))
+            self.after(0, self.withdraw)
+        else:
+            self.after(0, self._show_scraper_window)
         self.after(50, self._apply_log_window_visibility)
         self.after(500, self._poll_external_commands)
 
@@ -267,7 +272,7 @@ class App(tk.Tk):
             ts = float(ts_raw)
         except Exception:
             ts = 0.0
-        if cmd not in ("start", "stop"):
+        if cmd not in ("start", "stop", "show"):
             return None
         if ts <= float(getattr(self, "_last_external_command_ts", 0.0)):
             return None
@@ -288,6 +293,9 @@ class App(tk.Tk):
             if self.capture_thread:
                 self._capture_log("External command: stop auto-capture.")
                 self.stop_auto_capture()
+        elif cmd == "show":
+            self._capture_log("External command: show scraper window.")
+            self._show_scraper_window()
     def _build_capture_controls(self) -> None:
         cfg = _load_capture_config()
         self.capture_config_path = Path(CONFIG_FILE)

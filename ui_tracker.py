@@ -20,7 +20,7 @@ import importlib.machinery
 import traceback
 from app_core import APP_DIR, EXPORTS_DIR_DEFAULT, LAST_PARSE_FILE, _load_capture_config, _save_capture_config, SCRAPER_STATE_FILE  # use shared app data root
 from tray import tray_supported, update_tray_icon, stop_tray_icon, make_tray_image, create_tray_icon
-from scraper_state import resolve_scraper_status as resolve_scraper_status_core
+from scraper_state import resolve_scraper_status as resolve_scraper_status_core, read_scraper_state
 from theme import apply_style_theme, compute_colors, set_titlebar_dark, set_palette_overrides, get_default_palettes
 from ui_tracker_settings import open_tracker_settings
 from resources import resource_path as _resource_path
@@ -195,7 +195,28 @@ class CannabisTracker:
         self._refresh_stock()
         self._refresh_log()
         self._update_scraper_status_icon()
-    def open_parser(self) -> None:
+    def _scraper_process_alive_from_state(self) -> bool:
+        try:
+            state = read_scraper_state(SCRAPER_STATE_FILE)
+            pid = int(state.get("pid") or 0)
+            if pid <= 0:
+                return False
+            if os.name == "nt":
+                PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+                handle = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
+                if not handle:
+                    return False
+                ctypes.windll.kernel32.CloseHandle(handle)
+                return True
+            try:
+                os.kill(pid, 0)
+                return True
+            except Exception:
+                return False
+        except Exception:
+            return False
+
+    def open_parser(self, show_window: bool = True) -> None:
         """Launch the scraper UI in a separate process."""
         def focus_existing() -> bool:
             try:
@@ -224,14 +245,24 @@ class CannabisTracker:
             return False
         try:
             # First try to focus an existing scraper window
+            if show_window:
+                self._send_scraper_command("show")
             if focus_existing():
                 return
+            if self._scraper_process_alive_from_state():
+                return
             if getattr(sys, "frozen", False):
-                proc = subprocess.Popen([sys.executable, "--scraper"])
+                args = [sys.executable, "--scraper"]
+                if not show_window:
+                    args.append("--scraper-hidden")
+                proc = subprocess.Popen(args)
             else:
                 exe = sys.executable
                 target = Path(__file__).resolve().parent / "flowertracker.py"
-                proc = subprocess.Popen([exe, str(target), "--scraper"])
+                args = [exe, str(target), "--scraper"]
+                if not show_window:
+                    args.append("--scraper-hidden")
+                proc = subprocess.Popen(args)
             try:
                 self.child_procs.append(proc)
                 self._update_scraper_status_icon()
@@ -3566,14 +3597,14 @@ class CannabisTracker:
                 self._send_scraper_command("stop")
             else:
                 self._send_scraper_command("start")
-                self.open_parser()
+                self.open_parser(show_window=False)
             self._update_scraper_status_icon()
         except Exception:
             pass
 
     def _send_scraper_command(self, cmd: str) -> None:
         command = str(cmd or "").strip().lower()
-        if command not in ("start", "stop"):
+        if command not in ("start", "stop", "show"):
             return
         try:
             command_path = Path(APP_DIR) / "data" / "scraper_command.json"
