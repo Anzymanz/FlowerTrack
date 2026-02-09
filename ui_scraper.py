@@ -83,6 +83,11 @@ class App(tk.Tk):
         super().__init__()
         App._instance = self
         self._ui_thread = threading.current_thread()
+        try:
+            self.attributes("-alpha", 0.0)
+            self.withdraw()
+        except Exception:
+            pass
         self.title(SCRAPER_TITLE)
         cfg = _load_capture_config()
         self.scraper_window_geometry = cfg.get("window_geometry", "900x720") or "900x720"
@@ -208,6 +213,16 @@ class App(tk.Tk):
         try:
             self.after(120, lambda: self._set_window_titlebar_dark(self, self.dark_mode_var.get()))
             self.after(150, lambda: self._set_win_titlebar_dark(self.dark_mode_var.get()))
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
+        self.after(0, self._show_scraper_window)
+
+    def _show_scraper_window(self) -> None:
+        try:
+            self.update_idletasks()
+            self.deiconify()
+            self.attributes("-alpha", 1.0)
+            self.lift()
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
     def _build_capture_controls(self) -> None:
