@@ -1895,6 +1895,55 @@ class CannabisTracker:
         except Exception:
             pass
         self._apply_caret_color(cursor_color)
+        self._refresh_settings_notebook_style(dark)
+
+    def _refresh_settings_notebook_style(self, dark: bool) -> None:
+        win = getattr(self, "settings_window", None)
+        if not (win and tk.Toplevel.winfo_exists(win)):
+            return
+        notebook = getattr(self, "settings_notebook", None)
+        style_name = getattr(self, "settings_tab_style", None)
+        if notebook is None or not style_name:
+            return
+        tab_style = "SettingsLocal.TNotebook.Tab"
+        colors = compute_colors(dark)
+        bg = colors["bg"]
+        fg = colors["fg"]
+        ctrl_bg = colors["ctrl_bg"]
+        border = colors.get("border", ctrl_bg)
+        selected_bg = "#222222" if dark else "#e0e0e0"
+        local_style = ttk.Style(win)
+        local_style.theme_use("clam")
+        local_style.configure(
+            style_name,
+            background=bg,
+            bordercolor=border,
+            lightcolor=border,
+            darkcolor=border,
+            relief="solid",
+            borderwidth=1,
+        )
+        local_style.configure(
+            tab_style,
+            background=ctrl_bg,
+            foreground=fg,
+            lightcolor=border,
+            bordercolor=border,
+            focuscolor=border,
+            padding=[10, 4],
+        )
+        local_style.map(
+            tab_style,
+            background=[("selected", selected_bg), ("!selected", ctrl_bg)],
+            foreground=[("selected", fg), ("!selected", fg)],
+        )
+        try:
+            notebook.configure(style=style_name)
+            current = notebook.index("current")
+            notebook.select(current)
+        except Exception:
+            pass
+
     def _apply_caret_color(self, color: str) -> None:
         """Force insert cursor color on text/entry-like widgets."""
         try:
