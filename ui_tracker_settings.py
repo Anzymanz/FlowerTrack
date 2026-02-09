@@ -498,6 +498,11 @@ def open_tracker_settings(app) -> None:
     except Exception:
         pass
     try:
+        win.bind("<FocusIn>", lambda _e: app._set_dark_title_bar(app.dark_var.get(), target=win))
+        win.bind("<Map>", lambda _e: win.after(0, lambda: app._set_dark_title_bar(app.dark_var.get(), target=win)))
+    except Exception:
+        pass
+    try:
         win.update_idletasks()
         width = max(container.winfo_reqwidth(), actions.winfo_reqwidth()) + 8
         height = container.winfo_reqheight() + actions.winfo_reqheight() - 10
