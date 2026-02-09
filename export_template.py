@@ -582,6 +582,26 @@ function updateBasketUI() {
     if (c) c.textContent = basketCount;
     if (t) t.textContent = basketTotal.toFixed(2);
 }
+function basketHover(btn, entering) {
+    if (!btn) return;
+    if (!entering) {
+        refreshBasketButtons();
+        return;
+    }
+    const card = btn.closest('.card');
+    if (!card) return;
+    const key = card.dataset.key || card.dataset.favkey || card.dataset.productId || card.dataset.strain;
+    if (!key) return;
+    if (basket.has(key)) {
+        const item = basket.get(key);
+        const qty = item ? item.qty : 0;
+        btn.classList.add('added');
+        btn.textContent = qty > 0 ? `Remove (${qty})` : 'Remove from basket';
+    } else {
+        btn.classList.remove('added');
+        btn.textContent = 'Add to basket';
+    }
+}
 function addToBasket(btn) {
     const card = btn.closest('.card');
     if (!card) return;
