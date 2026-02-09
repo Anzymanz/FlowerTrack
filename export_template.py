@@ -26,6 +26,7 @@ HTML_TEMPLATE = """
   --muted: #555;
 }
 body{background:var(--bg);color:var(--fg);font-family:Arial;padding:16px;margin:0;transition:background .2s ease,color .2s ease}
+body.modal-open{overflow:hidden}
 .export-header{display:flex;align-items:flex-start;justify-content:flex-start;gap:12px;margin-bottom:8px}
 .export-header h1{margin:0 0 4px 0}
 .export-pill{padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--panel);color:var(--muted);font-size:12px;white-space:nowrap}
@@ -48,12 +49,12 @@ body{background:var(--bg);color:var(--fg);font-family:Arial;padding:16px;margin:
 .history-modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:9999}
 .history-panel{background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:12px;min-width:520px;width:1300px;max-width:calc(100vw - 80px);max-height:80vh;overflow:hidden;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,0.3);display:flex;flex-direction:column;gap:10px}
 .history-columns{display:flex;gap:12px;min-height:420px}
-.history-list{flex:0 0 38%;overflow:auto;border:1px solid var(--border);border-radius:8px}
+.history-list{flex:0 0 38%;overflow:auto;border:1px solid var(--border);border-radius:8px;overscroll-behavior:contain}
 .history-item{padding:8px 10px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s ease, box-shadow .15s ease}
 .history-item:last-child{border-bottom:none}
 .history-item:hover{background:var(--hover)}
 .history-item.active{background:var(--pill);box-shadow:inset 0 0 0 1px var(--border)}
-.history-detail{flex:1;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--panel);min-width:0}
+.history-detail{flex:1;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--panel);min-width:0;overscroll-behavior:contain}
 .history-detail-header{display:flex;flex-direction:column;gap:4px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
 .history-detail-header .meta{color:var(--muted);font-size:12px}
 .history-detail-section{margin-top:10px}
@@ -710,6 +711,7 @@ function renderBasketModal(show) {
     });
     if (show) {
         modal.style.display = 'flex';
+        document.body.classList.add('modal-open');
     }
 }
 function closeBasket() {
@@ -717,6 +719,7 @@ function closeBasket() {
     if (modal) modal.style.display = 'none';
     const btn = document.getElementById('basketButton');
     if (btn) btn.classList.remove('active');
+    document.body.classList.remove('modal-open');
 }
 async function toggleHistory() {
     let modal = document.getElementById('historyModal');
@@ -724,6 +727,9 @@ async function toggleHistory() {
         modal = document.createElement('div');
         modal.id = 'historyModal';
         modal.className = 'history-modal';
+        modal.addEventListener('wheel', (e) => {
+            if (e.target === modal) e.preventDefault();
+        }, { passive: false });
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeHistory();
         });
@@ -733,10 +739,12 @@ async function toggleHistory() {
     await preloadHistory();
     renderHistoryModal();
     modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
 }
 function closeHistory() {
     const modal = document.getElementById('historyModal');
     if (modal) modal.style.display = 'none';
+    document.body.classList.remove('modal-open');
 }
 function historySummary(rec) {
     const newCount = (rec.new_items || []).length;
