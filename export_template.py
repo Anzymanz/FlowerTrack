@@ -29,6 +29,8 @@ body{background:var(--bg);color:var(--fg);font-family:Arial;padding:16px;margin:
 html.modal-open, body.modal-open{overflow:hidden;height:100%}
 .export-header{display:flex;align-items:flex-start;justify-content:flex-start;gap:12px;margin-bottom:8px}
 .export-header h1{margin:0 0 4px 0}
+.header-logo-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.header-logo{height:40px;max-width:180px;object-fit:contain;display:block}
 .export-pill{padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--panel);color:var(--muted);font-size:12px;white-space:nowrap}
 .controls{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
 .controls-inner{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -1282,6 +1284,9 @@ document.addEventListener('DOMContentLoaded', () => {
     <h1>Available Products</h1>
     <div class="small" id="exportMeta"></div>
   </div>
+  <a class="header-logo-link" href="https://medicann-patient.scriptassist.co.uk/products" target="_blank" rel="noopener noreferrer" title="Open Medicann products">
+    <img class="header-logo" src="https://storage.googleapis.com/scriptassist-public/logo/Medicann.png" alt="Medicann" loading="lazy" decoding="async" />
+  </a>
 </div>
 <div class='controls'>
   <div class='controls-inner'>
