@@ -2097,13 +2097,19 @@ class App(tk.Tk):
         try:
             self.style.configure(
                 "Scraper.TEntry",
+                fieldbackground=ctrl_bg,
+                foreground=fg,
+                insertcolor=fg,
                 bordercolor=border,
                 lightcolor=border,
                 darkcolor=border,
                 focuscolor=border,
+                borderwidth=1,
             )
             self.style.map(
                 "Scraper.TEntry",
+                fieldbackground=[("readonly", ctrl_bg)],
+                foreground=[("readonly", fg)],
                 bordercolor=[("focus", border), ("!focus", border)],
                 lightcolor=[("focus", border), ("!focus", border)],
                 darkcolor=[("focus", border), ("!focus", border)],
