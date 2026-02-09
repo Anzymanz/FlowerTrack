@@ -466,7 +466,7 @@ def open_tracker_settings(app) -> None:
     try:
         win.update_idletasks()
         width = max(container.winfo_reqwidth(), actions.winfo_reqwidth()) + 8
-        height = container.winfo_reqheight() + actions.winfo_reqheight() + 12
+        height = container.winfo_reqheight() + actions.winfo_reqheight() - 10
         win.minsize(width, height)
         win.geometry(f"{width}x{height}")
     except Exception:
