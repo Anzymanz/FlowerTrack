@@ -274,6 +274,12 @@ class CannabisTracker:
         exports_dir = Path(EXPORTS_DIR_DEFAULT)
         exports_dir.mkdir(parents=True, exist_ok=True)
         html_files = sorted(exports_dir.glob("export-*.html"), key=lambda p: p.stat().st_mtime, reverse=True)
+        def _needs_template_refresh(path: Path) -> bool:
+            try:
+                text = path.read_text(encoding="utf-8", errors="ignore")
+            except Exception:
+                return False
+            return ("header-logo-link" not in text) or ("Medicann.png" not in text)
         if not html_files:
             try:
                 data = load_last_parse(LAST_PARSE_FILE) or []
@@ -289,6 +295,14 @@ class CannabisTracker:
                 messagebox.showinfo("Flower Browser", f"Unable to generate export: {exc}")
                 return
         latest = html_files[0]
+        if _needs_template_refresh(latest):
+            try:
+                data = load_last_parse(LAST_PARSE_FILE) or []
+                if data:
+                    latest = export_html_auto(data, exports_dir=exports_dir, open_file=False, fetch_images=False, max_files=1)
+                    html_files = [latest]
+            except Exception:
+                pass
         url = latest.as_uri()
         if self._ensure_export_server() and self.export_port:
             url = f"http://127.0.0.1:{self.export_port}/flowerbrowser"
