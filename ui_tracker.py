@@ -1252,8 +1252,8 @@ class CannabisTracker:
         self.root.option_add("*TCombobox*Listbox*Foreground", text_color)
         self.root.option_add("*TCombobox*Listbox*selectBackground", accent)
         self.root.option_add("*TCombobox*Listbox*selectForeground", "#ffffff")
-        self.root.option_add("*TCombobox*Entry*selectBackground", accent)
-        self.root.option_add("*TCombobox*Entry*selectForeground", "#ffffff")
+        self.root.option_add("*TCombobox*Entry*selectBackground", entry_bg)
+        self.root.option_add("*TCombobox*Entry*selectForeground", text_color)
         self.root.option_add("*TCombobox*Entry*inactiveselectBackground", entry_bg)
         self.root.option_add("*TCombobox*Entry*inactiveselectForeground", text_color)
         self.style.configure(

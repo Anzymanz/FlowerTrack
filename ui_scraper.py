@@ -1750,8 +1750,8 @@ class App(tk.Tk):
         self.option_add("*TCombobox*Listbox*Foreground", colors["fg"])
         self.option_add("*TCombobox*Listbox*selectBackground", colors["accent"])
         self.option_add("*TCombobox*Listbox*selectForeground", colors["bg"])
-        self.option_add("*TCombobox*Entry*selectBackground", colors["accent"])
-        self.option_add("*TCombobox*Entry*selectForeground", colors["bg"])
+        self.option_add("*TCombobox*Entry*selectBackground", colors["ctrl_bg"])
+        self.option_add("*TCombobox*Entry*selectForeground", colors["fg"])
         self.option_add("*TCombobox*Entry*inactiveselectBackground", colors["ctrl_bg"])
         self.option_add("*TCombobox*Entry*inactiveselectForeground", colors["fg"])
         # ttk scrollbar styling
