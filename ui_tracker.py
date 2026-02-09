@@ -2634,7 +2634,7 @@ class CannabisTracker:
             win.geometry(f"+{x_pos}+{y_pos}")
         except Exception:
             pass
-    def _prepare_toplevel(self, win: tk.Toplevel) -> None:
+    def _prepare_toplevel(self, win: tk.Toplevel, keep_geometry: bool = False) -> None:
         """Prevent white flash when opening toplevels by styling before showing."""
         try:
             try:
@@ -2644,7 +2644,8 @@ class CannabisTracker:
             win.withdraw()
             win.configure(bg=self.current_base_color)
             win.update_idletasks()
-            self._place_window_at_pointer(win)
+            if not keep_geometry:
+                self._place_window_at_pointer(win)
             # Apply dark title bar before showing to avoid white flash
             self._set_dark_title_bar(self.dark_var.get(), target=win)
             win.deiconify()
@@ -2655,7 +2656,8 @@ class CannabisTracker:
             win.lift()
         except Exception:
             # Fallback to basic placement
-            self._place_window_at_pointer(win)
+            if not keep_geometry:
+                self._place_window_at_pointer(win)
             self._set_dark_title_bar(self.dark_var.get(), target=win)
     def _export_stats_csv(self, period: str) -> None:
         logs_subset, label, _ = self._logs_for_period(period)
