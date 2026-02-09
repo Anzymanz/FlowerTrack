@@ -40,7 +40,7 @@ from app_core import (  # shared globals/imports
     _port_ready,
     SCRAPER_STATE_FILE,
 )
-from config import decrypt_secret, encrypt_secret, load_capture_config, save_capture_config
+from config import decrypt_secret, encrypt_secret, load_capture_config, save_capture_config, load_tracker_config
 from scraper_state import write_scraper_state, get_last_change, get_last_scrape, update_scraper_state
 from parser import (
     parse_api_payloads,
@@ -54,7 +54,7 @@ from notifications import _maybe_send_windows_notification
 from tray import create_tray_icon, stop_tray_icon, tray_supported, update_tray_icon, compute_tray_state
 from logger import UILogger
 from notifications import NotificationService
-from theme import apply_style_theme, set_titlebar_dark, compute_colors
+from theme import apply_style_theme, set_titlebar_dark, compute_colors, set_palette_overrides
 from resources import resource_path
 from history_viewer import open_history_window
 
@@ -99,6 +99,7 @@ class App(tk.Tk):
         self.assets_dir = ASSETS_DIR
         _log_debug("App init: launching scraper UI")
         self._config_dark = self._load_dark_mode()
+        self._palette_signature = ""
         self.removed_data = []
         self.httpd = None
         self.http_thread = None
@@ -206,6 +207,10 @@ class App(tk.Tk):
         self.bind("<Unmap>", self._on_unmap)
         self.bind("<Map>", self._on_map)
         self.bind("<Configure>", self._on_configure)
+        try:
+            self._refresh_palette_overrides_from_config()
+        except Exception:
+            pass
         self.apply_theme()
         self.after(2000, self._refresh_theme_from_config)
         self._apply_log_window_visibility()
@@ -2026,7 +2031,8 @@ class App(tk.Tk):
     def _refresh_theme_from_config(self):
         try:
             desired = bool(self._load_dark_mode())
-            if desired != bool(self.dark_mode_var.get()):
+            palette_changed = self._refresh_palette_overrides_from_config()
+            if desired != bool(self.dark_mode_var.get()) or palette_changed:
                 self.dark_mode_var.set(desired)
                 self.apply_theme()
         except Exception as exc:
@@ -2035,6 +2041,27 @@ class App(tk.Tk):
             self.after(2000, self._refresh_theme_from_config)
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
+
+    def _refresh_palette_overrides_from_config(self) -> bool:
+        try:
+            cfg = load_tracker_config(Path(CONFIG_FILE))
+        except Exception:
+            return False
+        dark = cfg.get("theme_palette_dark", {})
+        light = cfg.get("theme_palette_light", {})
+        if not isinstance(dark, dict):
+            dark = {}
+        if not isinstance(light, dict):
+            light = {}
+        sig = json.dumps({"dark": dark, "light": light}, sort_keys=True)
+        if sig == getattr(self, "_palette_signature", ""):
+            return False
+        self._palette_signature = sig
+        try:
+            set_palette_overrides(dark, light)
+        except Exception:
+            return False
+        return True
     def toggle_theme(self):
         self.apply_theme()
         _save_tracker_dark_mode(self.dark_mode_var.get())
