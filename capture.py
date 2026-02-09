@@ -474,17 +474,29 @@ class CaptureWorker:
             count_resp = None
         total = None
         count_status = None
+        count_available = False
         if count_resp and isinstance(count_resp[0], dict):
             count_data, count_status = count_resp
             if count_status in (401, 403):
                 self._last_auth_error = True
                 return None
             total = count_data.get("count") or count_data.get("total")
+            count_available = total is not None
         if total is None:
-            total = len(data_list)
+            if len(data_list) < 50:
+                total = len(data_list)
+            else:
+                try:
+                    self.callbacks["capture_log"](
+                        "API count unavailable and first page is full; skipping parse to avoid partial capture."
+                    )
+                except Exception:
+                    pass
+                return None
         try:
             status_txt = f" status={count_status}" if count_status is not None else ""
-            self.callbacks["capture_log"](f"API count fetch{status_txt} total={total}")
+            count_hint = "" if count_available else " (fallback)"
+            self.callbacks["capture_log"](f"API count fetch{status_txt} total={total}{count_hint}")
         except Exception:
             pass
         take = 50
@@ -492,9 +504,12 @@ class CaptureWorker:
             self.callbacks["capture_log"](f"API pagination: base={len(data_list)} total={total} take={take}")
         except Exception:
             pass
+        pagination_interrupted = False
+        pagination_failed = False
         if total and len(data_list) < total:
             for skip in range(take, int(total), take):
                 if self.callbacks["stop_event"].is_set():
+                    pagination_interrupted = True
                     break
                 try:
                     parsed = urllib.parse.urlparse(base_url)
@@ -522,12 +537,39 @@ class CaptureWorker:
                             "request_headers": headers,
                         })
                     else:
+                        pagination_failed = True
                         try:
                             self.callbacks["capture_log"](f"API pagination fetch skip={skip} status=error")
                         except Exception:
                             pass
                 except Exception:
+                    pagination_failed = True
                     break
+        if pagination_interrupted:
+            try:
+                self.callbacks["capture_log"]("API pagination interrupted by stop request; skipping parse.")
+            except Exception:
+                pass
+            return None
+        if pagination_failed:
+            try:
+                self.callbacks["capture_log"]("API pagination failed; skipping parse to avoid partial capture.")
+            except Exception:
+                pass
+            return None
+        fetched_total = 0
+        for payload in api_payloads:
+            data = payload.get("data")
+            if isinstance(data, list):
+                fetched_total += len(data)
+        if total and fetched_total < int(total):
+            try:
+                self.callbacks["capture_log"](
+                    f"API pagination incomplete ({fetched_total}/{int(total)}); skipping parse."
+                )
+            except Exception:
+                pass
+            return None
         try:
             elapsed = time.time() - start_ts
             self.callbacks["capture_log"](f"API capture fetched {len(api_payloads)} payloads in {elapsed:.1f}s")
