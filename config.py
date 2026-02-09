@@ -184,7 +184,7 @@ DEFAULT_TRACKER_CONFIG = {
     "show_scraper_status_icon": True,
     "enable_stock_coloring": True,
     "enable_usage_coloring": True,
-    "track_cbd_usage": False,
+    "track_cbd_flower": False,
     "total_green_threshold": 30.0,
     "total_red_threshold": 5.0,
     "single_green_threshold": 10.0,
@@ -261,6 +261,7 @@ def _looks_like_tracker(raw: dict) -> bool:
             "dark_mode",
             "roa_options",
             "target_daily_grams",
+            "track_cbd_flower",
             "track_cbd_usage",
         "minimize_to_tray",
         "close_to_tray",
@@ -303,11 +304,13 @@ def _validate_tracker_config(raw: dict) -> dict:
     cfg = dict(DEFAULT_TRACKER_CONFIG)
     if not isinstance(raw, dict):
         return cfg
+    if "track_cbd_flower" not in raw and "track_cbd_usage" in raw:
+        cfg["track_cbd_flower"] = _coerce_bool(raw.get("track_cbd_usage"), cfg["track_cbd_flower"])
     bool_keys = {
         "dark_mode",
         "enable_stock_coloring",
         "enable_usage_coloring",
-        "track_cbd_usage",
+        "track_cbd_flower",
         "hide_roa_options",
         "hide_mixed_dose",
         "hide_mix_stock",

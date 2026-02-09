@@ -104,8 +104,8 @@ def open_tracker_settings(app) -> None:
     chk_usage_color = ttk.Checkbutton(frame, text="Enable colouring based on usage", variable=app.enable_usage_color_var)
     chk_usage_color.grid(row=10, column=0, columnspan=3, sticky="w", pady=(4, 2))
 
-    app.track_cbd_usage_var = tk.BooleanVar(value=getattr(app, "track_cbd_usage", False))
-    chk_track_cbd = ttk.Checkbutton(frame, text="Track CBD usage separately", variable=app.track_cbd_usage_var)
+    app.track_cbd_flower_var = tk.BooleanVar(value=getattr(app, "track_cbd_flower", False))
+    chk_track_cbd = ttk.Checkbutton(frame, text="Track CBD flower", variable=app.track_cbd_flower_var)
     chk_track_cbd.grid(row=11, column=0, columnspan=3, sticky="w", pady=(2, 4))
 
     app.hide_roa_var = tk.BooleanVar(value=getattr(app, "hide_roa_options", False))

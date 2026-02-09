@@ -68,7 +68,7 @@ class CannabisTracker:
         self.cbd_total_red_threshold = self.total_red_threshold
         self.cbd_single_green_threshold = self.single_green_threshold
         self.cbd_single_red_threshold = self.single_red_threshold
-        self.track_cbd_usage = False
+        self.track_cbd_flower = False
         self.target_daily_cbd_grams = 0.0
         self.target_daily_grams = 1.0
         self.avg_usage_days = 30
@@ -790,8 +790,8 @@ class CannabisTracker:
                     f"{flower.grams_remaining:.3f}",
                 ),
             )
-        track_cbd = getattr(self, "track_cbd_usage", False)
-        combined_total = total_all if not track_cbd else total_counted
+        track_cbd = getattr(self, "track_cbd_flower", False)
+        combined_total = total_counted
         if track_cbd:
             self.total_label.config(text=f"Total THC stock: {total_counted:.2f} g")
             self.total_cbd_label.config(text=f"Total CBD stock: {cbd_total:.2f} g")
@@ -821,7 +821,7 @@ class CannabisTracker:
             )
             self.total_cbd_label.configure(foreground=cbd_total_color)
         used_today = self._grams_used_on_day(self.current_date)
-        used_today_cbd = self._grams_used_on_day_cbd(self.current_date) if getattr(self, "track_cbd_usage", False) else 0.0
+        used_today_cbd = self._grams_used_on_day_cbd(self.current_date) if getattr(self, "track_cbd_flower", False) else 0.0
         if self.target_daily_grams > 0:
             remaining_today = self.target_daily_grams - used_today
             self.remaining_today_label.config(
@@ -834,7 +834,7 @@ class CannabisTracker:
             )
         else:
             self.remaining_today_label.config(text="Remaining today (THC): N/A", foreground=self.text_color)
-        if getattr(self, "track_cbd_usage", False):
+        if getattr(self, "track_cbd_flower", False):
             target_cbd = getattr(self, "target_daily_cbd_grams", 0.0)
             if target_cbd > 0:
                 remaining_cbd = target_cbd - used_today_cbd
@@ -869,7 +869,7 @@ class CannabisTracker:
             self.days_label.config(text=f"Days of flower left - target: {days_target} | actual: {days_actual}", foreground=actual_color)
         if not track_cbd:
             self.days_label_cbd.grid_remove()
-        elif getattr(self, "track_cbd_usage", False):
+        elif getattr(self, "track_cbd_flower", False):
             days_target_cbd = "N/A"
             days_target_val_cbd: float | None = None
             if getattr(self, "target_daily_cbd_grams", 0.0) > 0:
@@ -908,7 +908,7 @@ class CannabisTracker:
                     text=f"Total used this day (THC): {day_total:.3f} g", foreground=color
                 )
                 self.day_total_label.grid()
-                if getattr(self, "track_cbd_usage", False):
+                if getattr(self, "track_cbd_flower", False):
                     color_cbd = self.text_color
                     target_cbd = getattr(self, "target_daily_cbd_grams", 0.0)
                     if self.enable_usage_coloring and target_cbd > 0:
@@ -1059,7 +1059,7 @@ class CannabisTracker:
                 allow_empty=True,
                 default=0,
             )
-            track_cbd_usage = bool(self.track_cbd_usage_var.get())
+            track_cbd_flower = bool(self.track_cbd_flower_var.get())
             enable_stock_coloring = bool(self.enable_stock_color_var.get())
             enable_usage_coloring = bool(self.enable_usage_color_var.get())
             roa_opts = {}
@@ -1087,7 +1087,7 @@ class CannabisTracker:
             or target_daily < 0
             or target_daily_cbd < 0
             or avg_usage_days < 0
-            or (track_cbd_usage and target_daily_cbd <= 0)
+            or (track_cbd_flower and target_daily_cbd <= 0)
         ):
             messagebox.showerror(
                 "Invalid thresholds", "Use positive numbers with red thresholds below green thresholds."
@@ -1107,7 +1107,7 @@ class CannabisTracker:
         self.target_daily_grams = target_daily
         self.target_daily_cbd_grams = target_daily_cbd
         self.avg_usage_days = avg_usage_days
-        self.track_cbd_usage = track_cbd_usage
+        self.track_cbd_flower = track_cbd_flower
         self.enable_stock_coloring = enable_stock_coloring
         self.enable_usage_coloring = enable_usage_coloring
         if hasattr(self, "hide_roa_var"):
@@ -1559,16 +1559,12 @@ class CannabisTracker:
         return_title: bool = False,
     ) -> str | tuple[str, list[tuple[str, str]]]:
         stats = self._compute_stats(logs_subset)
-        total_dose = sum(float(log.get("grams_used", 0.0)) for log in logs_subset)
-        avg_daily = total_dose / max(days_count, 1)
-        if getattr(self, "track_cbd_usage", False):
-            thc_total = sum(
-                float(log.get("grams_used", 0.0))
-                for log in logs_subset
-                if not self._log_counts_for_cbd(log)
-            )
-        else:
-            thc_total = total_dose
+        thc_total = sum(
+            float(log.get("grams_used", 0.0))
+            for log in logs_subset
+            if not self._log_counts_for_cbd(log)
+        )
+        avg_daily = thc_total / max(days_count, 1)
         rows = [
             ("First dose", stats["first_time"]),
             ("Last dose", stats["last_time"]),
@@ -1581,7 +1577,7 @@ class CannabisTracker:
             ("Total THC usage", f"{thc_total:.3f} g"),
             ("Average daily THC usage", f"{avg_daily:.3f} g"),
         ]
-        if getattr(self, "track_cbd_usage", False):
+        if getattr(self, "track_cbd_flower", False):
             cbd_total = sum(
                 float(log.get("grams_used", 0.0))
                 for log in logs_subset
@@ -1635,7 +1631,7 @@ class CannabisTracker:
             "target_daily_grams": self.target_daily_grams,
             "avg_usage_days": self.avg_usage_days,
             "target_daily_cbd_grams": getattr(self, "target_daily_cbd_grams", 0.0),
-            "track_cbd_usage": getattr(self, "track_cbd_usage", False),
+            "track_cbd_flower": getattr(self, "track_cbd_flower", False),
             "enable_stock_coloring": self.enable_stock_coloring,
             "enable_usage_coloring": self.enable_usage_coloring,
         }
@@ -1678,7 +1674,7 @@ class CannabisTracker:
         self.avg_usage_days = int(data.get("avg_usage_days", getattr(self, "avg_usage_days", 30)))
         self.target_daily_cbd_grams = float(data.get("target_daily_cbd_grams", getattr(self, "target_daily_cbd_grams", 0.0)))
         # Prefer config-driven CBD tracking; tracker data should not override it on startup.
-        self.track_cbd_usage = bool(getattr(self, "track_cbd_usage", False))
+        self.track_cbd_flower = bool(getattr(self, "track_cbd_flower", False))
         self.enable_stock_coloring = bool(data.get("enable_stock_coloring", self.enable_stock_coloring))
         self.enable_usage_coloring = bool(data.get("enable_usage_coloring", self.enable_usage_coloring))
         self.library_data_path = data.get("library_data_path", self.library_data_path) or self.library_data_path
@@ -1749,11 +1745,11 @@ class CannabisTracker:
         self.data_path = cfg.get("data_path", str(TRACKER_DATA_FILE)) or str(TRACKER_DATA_FILE)
         self.library_data_path = cfg.get("library_data_path", str(TRACKER_LIBRARY_FILE)) or str(TRACKER_LIBRARY_FILE)
         self.dark_var.set(bool(cfg.get("dark_mode", True)))
-        track_cbd_raw = cfg.get("track_cbd_usage", False)
+        track_cbd_raw = cfg.get("track_cbd_flower", cfg.get("track_cbd_usage", False))
         if isinstance(track_cbd_raw, bool):
-            self.track_cbd_usage = track_cbd_raw
+            self.track_cbd_flower = track_cbd_raw
         else:
-            self.track_cbd_usage = str(track_cbd_raw).strip().lower() in ("1", "true", "yes", "on")
+            self.track_cbd_flower = str(track_cbd_raw).strip().lower() in ("1", "true", "yes", "on")
         self.enable_stock_coloring = bool(cfg.get("enable_stock_coloring", True))
         self.enable_usage_coloring = bool(cfg.get("enable_usage_coloring", True))
         self.hide_roa_options = bool(cfg.get("hide_roa_options", False))
@@ -1813,7 +1809,7 @@ class CannabisTracker:
             "library_data_path": self.library_data_path or str(TRACKER_LIBRARY_FILE),
             "enable_stock_coloring": self.enable_stock_coloring,
             "enable_usage_coloring": self.enable_usage_coloring,
-            "track_cbd_usage": getattr(self, "track_cbd_usage", False),
+            "track_cbd_flower": getattr(self, "track_cbd_flower", False),
             "total_green_threshold": self.total_green_threshold,
             "total_red_threshold": self.total_red_threshold,
             "single_green_threshold": self.single_green_threshold,
@@ -2279,7 +2275,7 @@ class CannabisTracker:
             return True
         return not self._is_cbd_dominant(flower)
     def _log_counts_for_totals(self, log: dict) -> bool:
-        if getattr(self, "track_cbd_usage", False) and self._log_is_cbd_dominant(log):
+        if self._log_is_cbd_dominant(log):
             return False
         name = str(log.get('flower', '')).strip()
         flower = self.flowers.get(name)
