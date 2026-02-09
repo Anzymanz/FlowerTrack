@@ -22,10 +22,7 @@ def open_tracker_settings(app) -> None:
     app.settings_window = win
     app._set_dark_title_bar(app.dark_var.get(), target=win)
     win.resizable(False, False)
-    try:
-        win.minsize(400, 620)
-    except Exception:
-        pass
+    # Min size will be set after layout to avoid excess dead space.
     container = ttk.Frame(win, padding=6)
     container.grid(row=0, column=0, sticky="nsew")
     container.columnconfigure(0, weight=1)
@@ -407,13 +404,14 @@ def open_tracker_settings(app) -> None:
         row=0, column=1, sticky="e", padx=(0, 4)
     )
     app._update_threshold_color_buttons()
+    # Place after layout to avoid resize flash
+    app._prepare_toplevel(win)
     try:
         win.update_idletasks()
         width = max(container.winfo_reqwidth(), actions.winfo_reqwidth()) + 8
         height = container.winfo_reqheight() + actions.winfo_reqheight() + 12
+        win.minsize(width, height)
         win.geometry(f"{width}x{height}")
     except Exception:
         pass
-    # Place after layout to avoid resize flash
-    app._prepare_toplevel(win)
 
