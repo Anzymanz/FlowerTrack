@@ -25,7 +25,8 @@ class HistoryViewer(tk.Toplevel):
         self.parent = parent
         self.log_path = Path(log_path)
         self.title("Change History")
-        self.geometry("900x600")
+        default_geometry = "900x600"
+        self.geometry(getattr(parent, "history_window_geometry", default_geometry) or default_geometry)
         self.resizable(True, True)
         try:
             if hasattr(parent, "_resource_path"):
@@ -43,6 +44,11 @@ class HistoryViewer(tk.Toplevel):
         self.bind("<Map>", lambda _e: self._schedule_titlebar_updates())
         self.bind("<Visibility>", lambda _e: self._schedule_titlebar_updates())
         self.bind("<FocusIn>", lambda _e: self._schedule_titlebar_updates())
+        try:
+            if hasattr(parent, "_schedule_history_geometry"):
+                self.bind("<Configure>", lambda _e: parent._schedule_history_geometry(self))
+        except Exception:
+            pass
 
     def _build_ui(self) -> None:
         top = ttk.Frame(self, padding=10)

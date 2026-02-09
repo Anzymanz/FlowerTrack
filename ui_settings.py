@@ -50,21 +50,28 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         base_height = min_height
     if base_height > max_height:
         base_height = max_height
+    has_position = "+" in base_geometry
     win.geometry(f"{base_width}x{base_height}")
-    try:
-        app.update_idletasks()
-        win.update_idletasks()
-        parent_x = app.winfo_rootx()
-        parent_y = app.winfo_rooty()
-        parent_w = app.winfo_width()
-        parent_h = app.winfo_height()
-        win_w = win.winfo_reqwidth()
-        win_h = win.winfo_reqheight()
-        x = max(parent_x, parent_x + (parent_w - win_w) // 2)
-        y = max(parent_y, parent_y + (parent_h - win_h) // 2)
-        win.geometry(f"+{x}+{y}")
-    except Exception:
-        pass
+    if has_position:
+        try:
+            win.geometry(base_geometry)
+        except Exception:
+            pass
+    else:
+        try:
+            app.update_idletasks()
+            win.update_idletasks()
+            parent_x = app.winfo_rootx()
+            parent_y = app.winfo_rooty()
+            parent_w = app.winfo_width()
+            parent_h = app.winfo_height()
+            win_w = win.winfo_reqwidth()
+            win_h = win.winfo_reqheight()
+            x = max(parent_x, parent_x + (parent_w - win_w) // 2)
+            y = max(parent_y, parent_y + (parent_h - win_h) // 2)
+            win.geometry(f"+{x}+{y}")
+        except Exception:
+            pass
     try:
         icon_path = assets_dir / "icon.ico"
         if icon_path.exists():
@@ -78,6 +85,10 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     try:
         win.deiconify()
         win.attributes("-alpha", 1.0)
+    except Exception:
+        pass
+    try:
+        win.bind("<Configure>", lambda _e: app._schedule_settings_geometry(win))
     except Exception:
         pass
 

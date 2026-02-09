@@ -87,6 +87,7 @@ class App(tk.Tk):
         cfg = _load_capture_config()
         self.scraper_window_geometry = cfg.get("window_geometry", "900x720") or "900x720"
         self.scraper_settings_geometry = cfg.get("settings_geometry", "560x960") or "560x960"
+        self.history_window_geometry = cfg.get("history_window_geometry", "900x600") or "900x600"
         self.geometry(self.scraper_window_geometry)
         self.assets_dir = ASSETS_DIR
         _log_debug("App init: launching scraper UI")
@@ -328,6 +329,11 @@ class App(tk.Tk):
             "close_to_tray": bool(self.close_to_tray.get()),
             "window_geometry": self.geometry(),
             "settings_geometry": (self.settings_window.geometry() if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window) else self.scraper_settings_geometry),
+            "history_window_geometry": (
+                self.history_window.geometry()
+                if getattr(self, "history_window", None) and tk.Toplevel.winfo_exists(self.history_window)
+                else getattr(self, "history_window_geometry", "900x600")
+            ),
         }
 
     def start_auto_capture(self):
@@ -866,6 +872,44 @@ class App(tk.Tk):
             self._log_console(f"Saved config to {target}")
         except Exception as exc:
             self._log_console(f"Failed to save config: {exc}")
+
+    def _schedule_settings_geometry(self, win: tk.Toplevel) -> None:
+        try:
+            if getattr(self, "_settings_geometry_job", None) is not None:
+                try:
+                    self.after_cancel(self._settings_geometry_job)
+                except Exception:
+                    pass
+            self._settings_geometry_job = self.after(500, lambda: self._persist_settings_geometry(win))
+        except Exception:
+            self._persist_settings_geometry(win)
+
+    def _persist_settings_geometry(self, win: tk.Toplevel) -> None:
+        try:
+            if win and tk.Toplevel.winfo_exists(win):
+                self.scraper_settings_geometry = win.geometry()
+                self._save_capture_window()
+        except Exception:
+            pass
+
+    def _schedule_history_geometry(self, win: tk.Toplevel) -> None:
+        try:
+            if getattr(self, "_history_geometry_job", None) is not None:
+                try:
+                    self.after_cancel(self._history_geometry_job)
+                except Exception:
+                    pass
+            self._history_geometry_job = self.after(500, lambda: self._persist_history_geometry(win))
+        except Exception:
+            self._persist_history_geometry(win)
+
+    def _persist_history_geometry(self, win: tk.Toplevel) -> None:
+        try:
+            if win and tk.Toplevel.winfo_exists(win):
+                self.history_window_geometry = win.geometry()
+                self._save_capture_window()
+        except Exception:
+            pass
     def _post_process_actions(self, diff: dict | None = None, items: list[dict] | None = None):
         # Called after poll completes processing
         items = list(items if items is not None else getattr(self, "data", []))
