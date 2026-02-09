@@ -271,12 +271,13 @@ class CannabisTracker:
         self.stock_wrap.rowconfigure(0, weight=1)
         stock_frame = ttk.LabelFrame(
             self.stock_wrap,
-            text="Flower Stock",
             padding=10,
             style="Panel.TLabelframe",
             borderwidth=0,
             relief="flat",
         )
+        stock_label = ttk.Label(stock_frame, text="Flower Stock", style="Panel.TLabelframe.Label", padding=(6, 2, 0, 0))
+        stock_frame.configure(labelwidget=stock_label)
         stock_frame.grid(row=0, column=0, sticky="nsew")
         main.columnconfigure(0, weight=3)
         main.rowconfigure(1, weight=1)
@@ -366,12 +367,13 @@ class CannabisTracker:
         self.dose_wrap.columnconfigure(0, weight=1)
         dose_frame = ttk.LabelFrame(
             self.dose_wrap,
-            text="Log Dose",
             padding=10,
             style="Panel.TLabelframe",
             borderwidth=0,
             relief="flat",
         )
+        dose_label = ttk.Label(dose_frame, text="Log Dose", style="Panel.TLabelframe.Label", padding=(6, 2, 0, 0))
+        dose_frame.configure(labelwidget=dose_label)
         dose_frame.grid(row=0, column=0, sticky="ew")
         ttk.Label(dose_frame, text="Flower").grid(row=0, column=0, sticky="w")
         self.flower_choice = ttk.Combobox(dose_frame, state="readonly", width=35, values=[], style=self.combo_style)
@@ -416,12 +418,13 @@ class CannabisTracker:
         self.log_wrap.rowconfigure(0, weight=1)
         log_frame = ttk.LabelFrame(
             self.log_wrap,
-            text="Usage Log",
             padding=10,
             style="Panel.TLabelframe",
             borderwidth=0,
             relief="flat",
         )
+        log_label = ttk.Label(log_frame, text="Usage Log", style="Panel.TLabelframe.Label", padding=(6, 2, 0, 0))
+        log_frame.configure(labelwidget=log_label)
         log_frame.grid(row=0, column=0, sticky="nsew")
         right.rowconfigure(1, weight=1)
         right.columnconfigure(0, weight=1)
@@ -1280,12 +1283,7 @@ class CannabisTracker:
             borderwidth=0,
             relief="flat",
         )
-        self.style.configure(
-            "Panel.TLabelframe.Label",
-            background=base,
-            foreground=text_color,
-            padding=(6, 2, 0, 0),
-        )
+        self.style.configure("Panel.TLabelframe.Label", background=base, foreground=text_color)
         for wrap in (getattr(self, "stock_wrap", None), getattr(self, "dose_wrap", None), getattr(self, "log_wrap", None)):
             if wrap:
                 try:
