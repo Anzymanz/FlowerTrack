@@ -308,12 +308,12 @@ def open_tracker_settings(app) -> None:
     ttk.Label(frame, text="Data settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
     lbl_backup = ttk.Label(frame, text="Backup & restore")
     lbl_backup.grid(row=1, column=0, sticky="w")
-    btn_backup_export = ttk.Button(frame, text="Export backup..", command=app._settings_export_backup)
+    btn_backup_export = ttk.Button(frame, text="Export backup..", width=16, command=app._settings_export_backup)
     btn_backup_export.grid(row=1, column=1, sticky="w", padx=(4, 0), pady=(2, 2))
-    btn_backup_import = ttk.Button(frame, text="Import backup..", command=app._settings_import_backup)
+    btn_backup_import = ttk.Button(frame, text="Import backup..", width=16, command=app._settings_import_backup)
     btn_backup_import.grid(row=1, column=2, sticky="w", padx=(4, 0), pady=(2, 2))
 
-    app.open_data_folder_btn = ttk.Button(frame, text="Open data folder", command=app._settings_open_data_folder)
+    app.open_data_folder_btn = ttk.Button(frame, text="Open data folder", width=16, command=app._settings_open_data_folder)
     app.open_data_folder_btn.grid(
         row=2, column=1, columnspan=2, sticky="w", padx=(4, 0), pady=(2, 4)
     )
@@ -486,7 +486,7 @@ def open_tracker_settings(app) -> None:
     actions = ttk.Frame(container)
     actions.grid(row=1, column=0, sticky="ew", pady=(6, 0))
     actions.columnconfigure(0, weight=1)
-    ttk.Button(actions, text="Save", command=app._save_settings).grid(
+    ttk.Button(actions, text="Save", width=14, command=app._save_settings).grid(
         row=0, column=1, sticky="e", padx=(0, 4)
     )
     try:
