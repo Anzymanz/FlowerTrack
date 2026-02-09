@@ -5,6 +5,8 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
+from config import DEFAULT_CAPTURE_CONFIG
+
 def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     """
     Build and show the settings window for the given app instance.
@@ -151,6 +153,9 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     org_combo.bind("<FocusOut>", _clear_combo_selection)
     org_combo.bind("<<ComboboxSelected>>", _clear_combo_selection)
     row_idx += 1
+    ttk.Button(account_form, text="Get auth token", command=app._run_auth_bootstrap).grid(
+        row=row_idx, column=1, sticky="e", padx=6, pady=(8, 2)
+    )
 
     capture_form = ttk.Frame(tab_capture)
     capture_form.pack(fill="x", expand=True)
@@ -251,6 +256,30 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         entry.bind("<FocusOut>", update_scraper_hints)
         entry.bind("<KeyRelease>", update_scraper_hints)
     update_scraper_hints()
+
+    def reset_capture_tab() -> None:
+        defaults = DEFAULT_CAPTURE_CONFIG
+        app.cap_url.set(defaults.get("url", ""))
+        app.cap_org_sel.set(defaults.get("organization_selector", ""))
+        app.cap_user_sel.set(defaults.get("username_selector", ""))
+        app.cap_pass_sel.set(defaults.get("password_selector", ""))
+        app.cap_btn_sel.set(defaults.get("login_button_selector", ""))
+        app.cap_login_wait.set(str(defaults.get("login_wait_seconds", "")))
+        app.cap_post_wait.set(str(defaults.get("post_nav_wait_seconds", "")))
+        app.cap_interval.set(str(defaults.get("interval_seconds", "")))
+        app.cap_retry_attempts.set(str(defaults.get("retry_attempts", "")))
+        app.cap_retry_wait.set(str(defaults.get("retry_wait_seconds", "")))
+        app.cap_retry_backoff.set(str(defaults.get("retry_backoff_max", "")))
+        app.cap_headless.set(bool(defaults.get("headless", True)))
+        app.cap_dump_html.set(bool(defaults.get("dump_capture_html", False)))
+        app.cap_dump_api.set(bool(defaults.get("dump_api_json", False)))
+        app.cap_dump_api_full.set(bool(defaults.get("dump_api_full", False)))
+        app.cap_show_log_window.set(bool(defaults.get("show_log_window", True)))
+        update_scraper_hints()
+
+    capture_actions = ttk.Frame(tab_capture)
+    capture_actions.pack(fill="x", pady=(4, 0))
+    ttk.Button(capture_actions, text="Reset tab", command=reset_capture_tab).pack(side="right")
 
     notify_frame = ttk.Frame(tab_notifications)
     notify_frame.pack(fill="x", padx=4, pady=(0, 10))

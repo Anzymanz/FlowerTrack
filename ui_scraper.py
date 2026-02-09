@@ -1821,6 +1821,53 @@ class App(tk.Tk):
             messagebox.showinfo("Auth Cache", "Auth cache cleared; next capture will re-authenticate.")
         else:
             messagebox.showinfo("Auth Cache", "No auth cache found to clear.")
+    def _run_auth_bootstrap(self) -> None:
+        if self.capture_thread and self.capture_thread.is_alive():
+            messagebox.showwarning("Auth Token", "Stop auto-capture before bootstrapping auth.")
+            return
+        try:
+            self._save_capture_window()
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
+        cfg = self._collect_capture_cfg()
+        if not cfg.get("url"):
+            messagebox.showwarning("Auth Token", "Please set the target URL before bootstrapping.")
+            return
+        stop_event = threading.Event()
+
+        def install_cb():
+            return install_playwright_browsers(Path(APP_DIR), self._capture_log)
+
+        def worker():
+            try:
+                self._capture_log("Auth bootstrap starting...")
+                cw = CaptureWorker.__new__(CaptureWorker)
+                cw.cfg = cfg
+                cw.app_dir = APP_DIR
+                cw.install_fn = install_cb
+                cw.callbacks = {
+                    "capture_log": self._capture_log,
+                    "responsive_wait": self._responsive_wait,
+                    "stop_event": stop_event,
+                }
+                cw._auth_bootstrap_failures = 0
+                payloads = cw._bootstrap_auth_with_playwright()
+                if payloads:
+                    try:
+                        cw._persist_auth_cache(payloads)
+                        self._capture_log("Auth bootstrap complete; token cached.")
+                        messagebox.showinfo("Auth Token", "Auth token captured and cached.")
+                    except Exception as exc:
+                        self._capture_log(f"Auth cache write failed: {exc}")
+                        messagebox.showwarning("Auth Token", f"Token captured but cache write failed:\n{exc}")
+                else:
+                    self._capture_log("Auth bootstrap did not capture a token.")
+                    messagebox.showwarning("Auth Token", "Auth bootstrap did not capture a token.")
+            except Exception as exc:
+                self._capture_log(f"Auth bootstrap failed: {exc}")
+                messagebox.showerror("Auth Token", f"Auth bootstrap failed:\n{exc}")
+
+        threading.Thread(target=worker, daemon=True).start()
     def _set_busy_ui(self, busy, message=None):
         try:
             if busy:
