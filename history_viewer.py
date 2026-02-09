@@ -87,7 +87,7 @@ class HistoryViewer(tk.Toplevel):
         detail_frame.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=(8, 0))
         detail_frame.rowconfigure(0, weight=1)
         detail_frame.columnconfigure(0, weight=1)
-        self.detail_text = tk.Text(detail_frame, wrap="word", height=10, state="disabled")
+        self.detail_text = tk.Text(detail_frame, wrap="word", height=10, state="disabled", padx=8, pady=6)
         self.detail_text.grid(row=0, column=0, sticky="nsew")
         self.detail_scroll = ttk.Scrollbar(detail_frame, orient="vertical", command=self.detail_text.yview)
         self.detail_text.configure(yscrollcommand=self.detail_scroll.set)
@@ -120,6 +120,7 @@ class HistoryViewer(tk.Toplevel):
         fg = colors["fg"]
         ctrl_bg = colors["ctrl_bg"]
         accent = colors["accent"]
+        muted = "#9aa0aa" if dark else "#555555"
         try:
             self.configure(bg=bg)
         except Exception as exc:
@@ -163,6 +164,14 @@ class HistoryViewer(tk.Toplevel):
             self.tree.configure(style="History.Treeview")
             self.tree_scroll.configure(style="History.Vertical.TScrollbar")
             self.detail_scroll.configure(style="History.Vertical.TScrollbar")
+        except Exception as exc:
+            _log_debug(f"HistoryViewer suppressed exception: {exc}")
+        try:
+            self.detail_text.tag_configure("header", foreground=fg, font=("", 10, "bold"))
+            self.detail_text.tag_configure("meta", foreground=muted, font=("", 9))
+            self.detail_text.tag_configure("section", foreground=accent, font=("", 9, "bold"))
+            self.detail_text.tag_configure("item", foreground=fg, font=("", 9))
+            self.detail_text.tag_configure("muted", foreground=muted, font=("", 9, "italic"))
         except Exception as exc:
             _log_debug(f"HistoryViewer suppressed exception: {exc}")
         try:
@@ -284,37 +293,73 @@ class HistoryViewer(tk.Toplevel):
         except Exception:
             return str(raw)
 
-    def _format_list(self, title: str, items: list[str]) -> list[str]:
-        if not items:
-            return []
-        out = [f"{title} ({len(items)}):"]
-        out.extend([f"  - {item}" for item in items])
-        return out
+    def _render_details(self, record: dict) -> None:
+        self.detail_text.configure(state="normal")
+        self.detail_text.delete("1.0", "end")
+        if "_raw" in record:
+            self.detail_text.insert("end", "Raw entry\n", "section")
+            raw = record.get("_raw", "")
+            self.detail_text.insert("end", f"{raw}\n", "item")
+            self.detail_text.configure(state="disabled")
+            return
+        ts = self._timestamp_for(record)
+        summary = self._summary_for(record)
+        if ts:
+            self.detail_text.insert("end", f"{ts}\n", "header")
+        if summary:
+            self.detail_text.insert("end", f"{summary}\n", "meta")
+        self.detail_text.insert("end", "\n")
+        sections = [
+            ("New items", [self._item_label(it) for it in (record.get("new_items") or [])]),
+            ("Removed items", [self._item_label(it) for it in (record.get("removed_items") or [])]),
+            ("Price changes", [self._price_label(it) for it in (record.get("price_changes") or [])]),
+            ("Stock changes", [self._stock_label(it) for it in (record.get("stock_changes") or [])]),
+            ("Out of stock", [self._stock_label(it) for it in (record.get("out_of_stock_changes") or [])]),
+            ("Restocks", [self._stock_label(it) for it in (record.get("restock_changes") or [])]),
+        ]
+        any_lines = False
+        for title, items in sections:
+            if not items:
+                continue
+            any_lines = True
+            self.detail_text.insert("end", f"{title} ({len(items)})\n", "section")
+            for item in items:
+                self.detail_text.insert("end", f"  - {item}\n", "item")
+            self.detail_text.insert("end", "\n")
+        if not any_lines:
+            self.detail_text.insert("end", "No change details recorded.\n", "muted")
+        self.detail_text.configure(state="disabled")
 
     def _format_details(self, record: dict) -> str:
         if "_raw" in record:
-            return record.get("_raw", "")
+            return str(record.get("_raw", ""))
         lines: list[str] = []
         ts = self._timestamp_for(record)
+        summary = self._summary_for(record)
         if ts:
             lines.append(f"Timestamp: {ts}")
-        summary = self._summary_for(record)
         if summary:
             lines.append(f"Summary: {summary}")
         lines.append("")
-        new_items = [self._item_label(it) for it in (record.get("new_items") or [])]
-        removed_items = [self._item_label(it) for it in (record.get("removed_items") or [])]
-        price_changes = [self._price_label(it) for it in (record.get("price_changes") or [])]
-        stock_changes = [self._stock_label(it) for it in (record.get("stock_changes") or [])]
-        out_of_stock = [self._stock_label(it) for it in (record.get("out_of_stock_changes") or [])]
-        restocks = [self._stock_label(it) for it in (record.get("restock_changes") or [])]
-        lines.extend(self._format_list("New items", new_items))
-        lines.extend(self._format_list("Removed items", removed_items))
-        lines.extend(self._format_list("Price changes", price_changes))
-        lines.extend(self._format_list("Stock changes", stock_changes))
-        lines.extend(self._format_list("Out of stock", out_of_stock))
-        lines.extend(self._format_list("Restocks", restocks))
-        return "\n".join(lines)
+        sections = [
+            ("New items", [self._item_label(it) for it in (record.get("new_items") or [])]),
+            ("Removed items", [self._item_label(it) for it in (record.get("removed_items") or [])]),
+            ("Price changes", [self._price_label(it) for it in (record.get("price_changes") or [])]),
+            ("Stock changes", [self._stock_label(it) for it in (record.get("stock_changes") or [])]),
+            ("Out of stock", [self._stock_label(it) for it in (record.get("out_of_stock_changes") or [])]),
+            ("Restocks", [self._stock_label(it) for it in (record.get("restock_changes") or [])]),
+        ]
+        any_lines = False
+        for title, items in sections:
+            if not items:
+                continue
+            any_lines = True
+            lines.append(f"{title} ({len(items)})")
+            lines.extend([f"  - {item}" for item in items])
+            lines.append("")
+        if not any_lines:
+            lines.append("No change details recorded.")
+        return "\n".join(lines).rstrip() + "\n"
 
     def _item_label(self, entry: dict) -> str:
         if entry.get("label"):
@@ -436,11 +481,7 @@ class HistoryViewer(tk.Toplevel):
         rec = self._selected_record()
         if rec is None:
             return
-        text = self._format_details(rec)
-        self.detail_text.configure(state="normal")
-        self.detail_text.delete("1.0", "end")
-        self.detail_text.insert("1.0", text)
-        self.detail_text.configure(state="disabled")
+        self._render_details(rec)
 
     def _copy_json(self) -> None:
         rec = self._selected_record()
