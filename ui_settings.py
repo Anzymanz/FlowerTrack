@@ -184,11 +184,13 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
 
     row_idx = 0
     ttk.Label(account_form, text="Username").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(account_form, textvariable=app.cap_user, width=40, style="Scraper.TEntry").grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
+    user_entry = _make_capture_entry(account_form, app.cap_user, width=40)
+    user_entry.grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
     row_idx += 1
 
     ttk.Label(account_form, text="Password").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(account_form, textvariable=app.cap_pass, show="*", width=40, style="Scraper.TEntry").grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
+    pass_entry = _make_capture_entry(account_form, app.cap_pass, width=40, show="*")
+    pass_entry.grid(row=row_idx, column=1, sticky="ew", padx=6, pady=2)
     row_idx += 1
 
     ttk.Label(account_form, text="Organization").grid(row=row_idx, column=0, sticky="w", padx=6, pady=2)
@@ -358,11 +360,14 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     quiet_frame.pack(fill="x", pady=(6, 2))
     ttk.Checkbutton(quiet_frame, text="Quiet hours", variable=app.cap_quiet_hours_enabled).pack(side="left")
     ttk.Label(quiet_frame, text="From").pack(side="left", padx=(8, 2))
-    ttk.Entry(quiet_frame, textvariable=app.cap_quiet_start, width=6, style="Scraper.TEntry").pack(side="left")
+    quiet_start_entry = _make_capture_entry(quiet_frame, app.cap_quiet_start, width=6)
+    quiet_start_entry.pack(side="left")
     ttk.Label(quiet_frame, text="To").pack(side="left", padx=(8, 2))
-    ttk.Entry(quiet_frame, textvariable=app.cap_quiet_end, width=6, style="Scraper.TEntry").pack(side="left")
+    quiet_end_entry = _make_capture_entry(quiet_frame, app.cap_quiet_end, width=6)
+    quiet_end_entry.pack(side="left")
     ttk.Label(quiet_frame, text="Interval (s)").pack(side="left", padx=(8, 2))
-    ttk.Entry(quiet_frame, textvariable=app.cap_quiet_interval, width=7, style="Scraper.TEntry").pack(side="left")
+    quiet_interval_entry = _make_capture_entry(quiet_frame, app.cap_quiet_interval, width=7)
+    quiet_interval_entry.pack(side="left")
 
     detail_frame = ttk.Frame(notify_frame)
     detail_frame.pack(fill="x", pady=(2, 2))
@@ -385,9 +390,11 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ha_frame = ttk.Frame(tab_notifications)
     ha_frame.pack(fill="x", pady=(0, 6))
     ttk.Label(ha_frame, text="HA webhook URL").grid(row=0, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(ha_frame, textvariable=app.cap_ha_webhook, width=50, style="Scraper.TEntry").grid(row=0, column=1, sticky="ew", padx=6, pady=2)
+    ha_webhook_entry = _make_capture_entry(ha_frame, app.cap_ha_webhook, width=50)
+    ha_webhook_entry.grid(row=0, column=1, sticky="ew", padx=6, pady=2)
     ttk.Label(ha_frame, text="HA token (optional)").grid(row=1, column=0, sticky="w", padx=6, pady=2)
-    ttk.Entry(ha_frame, textvariable=app.cap_ha_token, show="*", width=50, style="Scraper.TEntry").grid(row=1, column=1, sticky="ew", padx=6, pady=2)
+    ha_token_entry = _make_capture_entry(ha_frame, app.cap_ha_token, width=50, show="*")
+    ha_token_entry.grid(row=1, column=1, sticky="ew", padx=6, pady=2)
     ha_frame.columnconfigure(1, weight=1)
 
     def save_and_close():
