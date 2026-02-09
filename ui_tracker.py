@@ -1229,8 +1229,8 @@ class CannabisTracker:
         panel = colors["ctrl_bg"]
         entry_bg = colors["ctrl_bg"]
         accent = colors["accent"]
-        border = colors["ctrl_bg"]
-        scroll = "#2a2a2a" if dark else "#e6e6e6"
+        border = "#1e1e1e" if dark else colors["ctrl_bg"]
+        scroll = "#242424" if dark else "#e6e6e6"
         cursor_color = text_color
         # Prefer dark title bar when dark mode is on
         self.root.after(0, lambda: self._set_dark_title_bar(dark))
@@ -1275,6 +1275,9 @@ class CannabisTracker:
         self.style.configure("Treeview.Heading", background=border, foreground=text_color, font=self.font_body)
         self.style.map("Treeview.Heading", background=[("active", accent)], foreground=[("active", "#ffffff")])
         self.style.map("Treeview", background=[("selected", accent)], foreground=[("selected", "#ffffff")])
+        if dark:
+            self.style.configure("Treeview", borderwidth=0)
+            self.style.configure("Treeview.Heading", borderwidth=0)
         self.style.configure(
             self.vscroll_style,
             troughcolor=panel,

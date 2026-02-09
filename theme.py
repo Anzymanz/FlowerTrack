@@ -58,7 +58,7 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
     )
     style.configure("TCheckbutton", background=bg, foreground=fg)
     scrollbar_bg = "#1a1a1a" if colors["bg"] == "#111" else "#dcdcdc"
-    scrollbar_trough = "#0d0d0d" if colors["bg"] == "#111" else "#cfcfcf"
+    scrollbar_trough = "#141414" if colors["bg"] == "#111" else "#cfcfcf"
     style.configure(
         "Dark.Vertical.TScrollbar",
         background=scrollbar_bg,
