@@ -265,7 +265,7 @@ class CannabisTracker:
         self._apply_scraper_controls_visibility()
         top_bar.columnconfigure(4, weight=1)
         # Stock list
-        self.stock_wrap = tk.Frame(main, highlightthickness=1)
+        self.stock_wrap = tk.Frame(main, highlightthickness=2)
         self.stock_wrap.grid(row=1, column=0, sticky="nsew", padx=(0, 8))
         self.stock_wrap.columnconfigure(0, weight=1)
         self.stock_wrap.rowconfigure(0, weight=1)
@@ -365,7 +365,7 @@ class CannabisTracker:
         right = ttk.Frame(main)
         right.grid(row=1, column=1, sticky="nsew")
         main.columnconfigure(1, weight=4)
-        self.dose_wrap = tk.Frame(right, highlightthickness=1)
+        self.dose_wrap = tk.Frame(right, highlightthickness=2)
         self.dose_wrap.grid(row=0, column=0, sticky="ew")
         self.dose_wrap.columnconfigure(0, weight=1)
         dose_frame = ttk.LabelFrame(
@@ -418,7 +418,7 @@ class CannabisTracker:
         )
         self.remaining_today_cbd_label.grid(row=4, column=0, columnspan=3, sticky="w", pady=(2, 0))
         self.remaining_today_cbd_label.grid_remove()
-        self.log_wrap = tk.Frame(right, highlightthickness=1)
+        self.log_wrap = tk.Frame(right, highlightthickness=2)
         self.log_wrap.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
         self.log_wrap.columnconfigure(0, weight=1)
         self.log_wrap.rowconfigure(0, weight=1)
