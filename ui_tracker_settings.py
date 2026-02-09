@@ -104,51 +104,67 @@ def open_tracker_settings(app) -> None:
     chk_usage_color = ttk.Checkbutton(frame, text="Enable colouring based on usage", variable=app.enable_usage_color_var)
     chk_usage_color.grid(row=10, column=0, columnspan=3, sticky="w", pady=(4, 2))
 
+    ttk.Separator(frame, orient="horizontal").grid(row=11, column=0, columnspan=4, sticky="ew", pady=(6, 6))
+    ttk.Label(frame, text="Tracker settings", font=app.font_bold_small).grid(row=12, column=0, sticky="w", pady=(0, 6))
+    row = 13
+
     app.track_cbd_flower_var = tk.BooleanVar(value=getattr(app, "track_cbd_flower", False))
     chk_track_cbd = ttk.Checkbutton(frame, text="Track CBD flower", variable=app.track_cbd_flower_var)
-    chk_track_cbd.grid(row=11, column=0, columnspan=3, sticky="w", pady=(2, 4))
-
-    app.hide_roa_var = tk.BooleanVar(value=getattr(app, "hide_roa_options", False))
-    chk_hide_roa = ttk.Checkbutton(frame, text="Hide ROA options in log", variable=app.hide_roa_var)
-    chk_hide_roa.grid(row=12, column=0, columnspan=3, sticky="w", pady=(2, 6))
+    chk_track_cbd.grid(row=row, column=0, columnspan=3, sticky="w", pady=(2, 4))
+    row += 1
 
     app.hide_mixed_dose_var = tk.BooleanVar(value=getattr(app, "hide_mixed_dose", False))
     chk_hide_mixed = ttk.Checkbutton(frame, text="Hide mixed dose option", variable=app.hide_mixed_dose_var)
-    chk_hide_mixed.grid(row=13, column=0, columnspan=3, sticky="w", pady=(0, 6))
+    chk_hide_mixed.grid(row=row, column=0, columnspan=3, sticky="w", pady=(0, 6))
+    row += 1
     app.hide_mix_stock_var = tk.BooleanVar(value=getattr(app, "hide_mix_stock", False))
     chk_hide_mix_stock = ttk.Checkbutton(frame, text="Hide mix stock option", variable=app.hide_mix_stock_var)
-    chk_hide_mix_stock.grid(row=14, column=0, columnspan=3, sticky="w", pady=(0, 6))
+    chk_hide_mix_stock.grid(row=row, column=0, columnspan=3, sticky="w", pady=(0, 6))
+    row += 1
 
     lbl_daily_target = ttk.Label(frame, text="Daily target (THC)")
-    lbl_daily_target.grid(row=15, column=0, sticky="w", pady=(6, 0))
+    lbl_daily_target.grid(row=row, column=0, sticky="w", pady=(6, 0))
     dt_frame = ttk.Frame(frame)
     app.daily_target_entry = ttk.Entry(dt_frame, width=4)
     app.daily_target_entry.pack(side="left", padx=(0, 2))
     ttk.Label(dt_frame, text="g/day").pack(side="left")
-    dt_frame.grid(row=15, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
+    dt_frame.grid(row=row, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
+    row += 1
 
     lbl_daily_target_cbd = ttk.Label(frame, text="Daily target (CBD)")
-    lbl_daily_target_cbd.grid(row=16, column=0, sticky="w", pady=(2, 0))
+    lbl_daily_target_cbd.grid(row=row, column=0, sticky="w", pady=(2, 0))
     dtc_frame = ttk.Frame(frame)
     app.daily_target_cbd_entry = ttk.Entry(dtc_frame, width=4)
     app.daily_target_cbd_entry.pack(side="left", padx=(0, 2))
     ttk.Label(dtc_frame, text="g/day").pack(side="left")
-    dtc_frame.grid(row=16, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+    dtc_frame.grid(row=row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+    row += 1
 
     lbl_avg_days = ttk.Label(frame, text="Average usage window")
-    lbl_avg_days.grid(row=17, column=0, sticky="w", pady=(2, 0))
+    lbl_avg_days.grid(row=row, column=0, sticky="w", pady=(2, 0))
     avg_frame = ttk.Frame(frame)
     app.avg_usage_days_entry = ttk.Entry(avg_frame, width=4)
     app.avg_usage_days_entry.pack(side="left", padx=(0, 2))
     ttk.Label(avg_frame, text="days").pack(side="left")
-    avg_frame.grid(row=17, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+    avg_frame.grid(row=row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+    row += 1
+
+    ttk.Separator(frame, orient="horizontal").grid(row=row, column=0, columnspan=4, sticky="ew", pady=(10, 6))
+    row += 1
+    ttk.Label(frame, text="RoA settings", font=app.font_bold_small).grid(row=row, column=0, sticky="w", pady=(0, 6))
+    row += 1
+
+    app.hide_roa_var = tk.BooleanVar(value=getattr(app, "hide_roa_options", False))
+    chk_hide_roa = ttk.Checkbutton(frame, text="Hide ROA options in log", variable=app.hide_roa_var)
+    chk_hide_roa.grid(row=row, column=0, columnspan=3, sticky="w", pady=(2, 6))
+    row += 1
 
     ttk.Label(frame, text="Route efficiency (%)", font=app.font_bold_small).grid(
-        row=18, column=0, sticky="w", pady=(10, 6)
+        row=row, column=0, sticky="w", pady=(6, 6)
     )
     app.roa_vars: dict[str, tk.StringVar] = {}
     app.roa_entries: dict[str, ttk.Entry] = {}
-    roa_row = 19
+    roa_row = row + 1
     for idx, (name, eff) in enumerate(app.roa_options.items()):
         ttk.Label(frame, text=name).grid(row=roa_row + idx, column=0, sticky="w", pady=(2, 0))
         var = tk.StringVar(value=f"{eff*100:.0f}")
