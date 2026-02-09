@@ -128,17 +128,17 @@ def open_tracker_settings(app) -> None:
     ) -> None:
         ttk.Label(frame, text=label_text).grid(row=row, column=0, sticky="w", pady=pady)
         row_frame = ttk.Frame(frame)
-        ttk.Label(row_frame, text="High").grid(row=0, column=0, sticky="w", padx=(0, 4))
+        ttk.Label(row_frame, text="High").grid(row=0, column=0, sticky="w", padx=(0, 6))
         high_entry = ttk.Entry(row_frame, width=4)
         setattr(app, high_entry_attr, high_entry)
         high_entry.grid(row=0, column=1, sticky="w")
-        ttk.Label(row_frame, text="g").grid(row=0, column=2, sticky="w", padx=(2, 6))
-        _color_button(row_frame, high_color_key).grid(row=0, column=3, sticky="w")
-        ttk.Label(row_frame, text="Low").grid(row=0, column=4, sticky="w", padx=(10, 4))
+        ttk.Label(row_frame, text="g").grid(row=0, column=2, sticky="w", padx=(2, 8))
+        _color_button(row_frame, high_color_key).grid(row=0, column=3, sticky="w", padx=(0, 12))
+        ttk.Label(row_frame, text="Low").grid(row=0, column=4, sticky="w", padx=(0, 6))
         low_entry = ttk.Entry(row_frame, width=4)
         setattr(app, low_entry_attr, low_entry)
         low_entry.grid(row=0, column=5, sticky="w")
-        ttk.Label(row_frame, text="g").grid(row=0, column=6, sticky="w", padx=(2, 6))
+        ttk.Label(row_frame, text="g").grid(row=0, column=6, sticky="w", padx=(2, 8))
         _color_button(row_frame, low_color_key).grid(row=0, column=7, sticky="w")
         row_frame.grid(row=row, column=1, sticky="w", padx=(12, 0), pady=pady)
 
@@ -187,58 +187,34 @@ def open_tracker_settings(app) -> None:
     chk_usage_color.grid(row=6, column=0, columnspan=3, sticky="w", pady=(4, 2))
 
     usage_row = 7
-    ttk.Label(frame, text="Remaining today (THC) colours").grid(row=usage_row, column=0, sticky="w", pady=(6, 0))
-    usage_frame = ttk.Frame(frame)
-    ttk.Label(usage_frame, text="High").pack(side="left", padx=(0, 4))
-    _color_button(usage_frame, "remaining_thc_high_color").pack(side="left")
-    ttk.Label(usage_frame, text="Low").pack(side="left", padx=(8, 4))
-    _color_button(usage_frame, "remaining_thc_low_color").pack(side="left")
-    usage_frame.grid(row=usage_row, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
-    usage_row += 1
+    def _usage_row(
+        row: int,
+        label: str,
+        high_key: str,
+        low_key: str,
+        high_label: str = "High",
+        low_label: str = "Low",
+        pady: tuple[int, int] = (2, 0),
+    ) -> None:
+        ttk.Label(frame, text=label).grid(row=row, column=0, sticky="w", pady=pady)
+        usage_frame = ttk.Frame(frame)
+        ttk.Label(usage_frame, text=high_label).grid(row=0, column=0, sticky="w", padx=(0, 6))
+        _color_button(usage_frame, high_key).grid(row=0, column=1, sticky="w")
+        ttk.Label(usage_frame, text=low_label).grid(row=0, column=2, sticky="w", padx=(12, 6))
+        _color_button(usage_frame, low_key).grid(row=0, column=3, sticky="w")
+        usage_frame.grid(row=row, column=1, sticky="w", padx=(12, 0), pady=pady)
 
-    ttk.Label(frame, text="Remaining today (CBD) colours").grid(row=usage_row, column=0, sticky="w", pady=(2, 0))
-    usage_frame = ttk.Frame(frame)
-    ttk.Label(usage_frame, text="High").pack(side="left", padx=(0, 4))
-    _color_button(usage_frame, "remaining_cbd_high_color").pack(side="left")
-    ttk.Label(usage_frame, text="Low").pack(side="left", padx=(8, 4))
-    _color_button(usage_frame, "remaining_cbd_low_color").pack(side="left")
-    usage_frame.grid(row=usage_row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+    _usage_row(usage_row, "Remaining today (THC) colours", "remaining_thc_high_color", "remaining_thc_low_color", pady=(6, 0))
     usage_row += 1
-
-    ttk.Label(frame, text="Days left (THC) colours").grid(row=usage_row, column=0, sticky="w", pady=(2, 0))
-    usage_frame = ttk.Frame(frame)
-    ttk.Label(usage_frame, text="High").pack(side="left", padx=(0, 4))
-    _color_button(usage_frame, "days_thc_high_color").pack(side="left")
-    ttk.Label(usage_frame, text="Low").pack(side="left", padx=(8, 4))
-    _color_button(usage_frame, "days_thc_low_color").pack(side="left")
-    usage_frame.grid(row=usage_row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+    _usage_row(usage_row, "Remaining today (CBD) colours", "remaining_cbd_high_color", "remaining_cbd_low_color")
     usage_row += 1
-
-    ttk.Label(frame, text="Days left (CBD) colours").grid(row=usage_row, column=0, sticky="w", pady=(2, 0))
-    usage_frame = ttk.Frame(frame)
-    ttk.Label(usage_frame, text="High").pack(side="left", padx=(0, 4))
-    _color_button(usage_frame, "days_cbd_high_color").pack(side="left")
-    ttk.Label(usage_frame, text="Low").pack(side="left", padx=(8, 4))
-    _color_button(usage_frame, "days_cbd_low_color").pack(side="left")
-    usage_frame.grid(row=usage_row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+    _usage_row(usage_row, "Days left (THC) colours", "days_thc_high_color", "days_thc_low_color")
     usage_row += 1
-
-    ttk.Label(frame, text="Total used today (THC) colours").grid(row=usage_row, column=0, sticky="w", pady=(6, 0))
-    usage_frame = ttk.Frame(frame)
-    ttk.Label(usage_frame, text="Under").pack(side="left", padx=(0, 4))
-    _color_button(usage_frame, "used_thc_under_color").pack(side="left")
-    ttk.Label(usage_frame, text="Over").pack(side="left", padx=(8, 4))
-    _color_button(usage_frame, "used_thc_over_color").pack(side="left")
-    usage_frame.grid(row=usage_row, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
+    _usage_row(usage_row, "Days left (CBD) colours", "days_cbd_high_color", "days_cbd_low_color")
     usage_row += 1
-
-    ttk.Label(frame, text="Total used today (CBD) colours").grid(row=usage_row, column=0, sticky="w", pady=(2, 0))
-    usage_frame = ttk.Frame(frame)
-    ttk.Label(usage_frame, text="Under").pack(side="left", padx=(0, 4))
-    _color_button(usage_frame, "used_cbd_under_color").pack(side="left")
-    ttk.Label(usage_frame, text="Over").pack(side="left", padx=(8, 4))
-    _color_button(usage_frame, "used_cbd_over_color").pack(side="left")
-    usage_frame.grid(row=usage_row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+    _usage_row(usage_row, "Total used today (THC) colours", "used_thc_under_color", "used_thc_over_color", high_label="Under", low_label="Over", pady=(6, 0))
+    usage_row += 1
+    _usage_row(usage_row, "Total used today (CBD) colours", "used_cbd_under_color", "used_cbd_over_color", high_label="Under", low_label="Over")
 
     frame = tab_tracker
     ttk.Label(frame, text="Tracker settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
