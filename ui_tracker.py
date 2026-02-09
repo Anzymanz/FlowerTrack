@@ -92,6 +92,14 @@ class CannabisTracker:
         self.single_thc_low_color = "#e74c3c"
         self.single_cbd_high_color = "#2ecc71"
         self.single_cbd_low_color = "#e74c3c"
+        self.remaining_thc_high_color = "#2ecc71"
+        self.remaining_thc_low_color = "#e74c3c"
+        self.remaining_cbd_high_color = "#2ecc71"
+        self.remaining_cbd_low_color = "#e74c3c"
+        self.days_thc_high_color = "#2ecc71"
+        self.days_thc_low_color = "#e74c3c"
+        self.days_cbd_high_color = "#2ecc71"
+        self.days_cbd_low_color = "#e74c3c"
         self._threshold_color_buttons: dict[str, list[tk.Button]] = {}
         self.stock_form_source: str | None = None
         self.stock_form_dirty = False
@@ -898,7 +906,9 @@ class CannabisTracker:
             self.remaining_today_label.config(
                 text=f"Remaining today (THC): {remaining_today:.2f} g / {self.target_daily_grams:.2f} g",
                 foreground=(
-                    self.accent_green if (self.target_daily_grams - used_today) >= 0 else self.accent_red
+                    self.remaining_thc_high_color
+                    if (self.target_daily_grams - used_today) >= 0
+                    else self.remaining_thc_low_color
                 )
                 if self.enable_usage_coloring
                 else self.text_color,
@@ -912,7 +922,7 @@ class CannabisTracker:
                 self.remaining_today_cbd_label.config(
                     text=f"Remaining today (CBD): {remaining_cbd:.2f} g / {target_cbd:.2f} g",
                     foreground=(
-                        self.accent_green if remaining_cbd >= 0 else self.accent_red
+                        self.remaining_cbd_high_color if remaining_cbd >= 0 else self.remaining_cbd_low_color
                     )
                     if self.enable_usage_coloring
                     else self.text_color,
@@ -933,7 +943,7 @@ class CannabisTracker:
         days_actual = "N/A" if days_actual_val is None else f"{days_actual_val:.1f}"
         actual_color = self.text_color
         if self.enable_usage_coloring and days_actual_val is not None and days_target_val is not None:
-            actual_color = self.accent_green if days_actual_val >= days_target_val else self.accent_red
+            actual_color = self.days_thc_high_color if days_actual_val >= days_target_val else self.days_thc_low_color
         if track_cbd:
             self.days_label.config(text=f"Days of THC flower left - target: {days_target} | actual: {days_actual}", foreground=actual_color)
         else:
@@ -951,7 +961,7 @@ class CannabisTracker:
             days_actual_cbd = "N/A" if days_actual_val_cbd is None else f"{days_actual_val_cbd:.1f}"
             color_cbd = self.text_color
             if self.enable_usage_coloring and days_actual_val_cbd is not None and days_target_val_cbd is not None:
-                color_cbd = self.accent_green if days_actual_val_cbd >= days_target_val_cbd else self.accent_red
+                color_cbd = self.days_cbd_high_color if days_actual_val_cbd >= days_target_val_cbd else self.days_cbd_low_color
             self.days_label_cbd.config(
                 text=f"Days of CBD flower left - target: {days_target_cbd} | actual: {days_actual_cbd}", foreground=color_cbd
             )
@@ -1809,6 +1819,14 @@ class CannabisTracker:
             "single_thc_low_color": self.single_thc_low_color,
             "single_cbd_high_color": self.single_cbd_high_color,
             "single_cbd_low_color": self.single_cbd_low_color,
+            "remaining_thc_high_color": self.remaining_thc_high_color,
+            "remaining_thc_low_color": self.remaining_thc_low_color,
+            "remaining_cbd_high_color": self.remaining_cbd_high_color,
+            "remaining_cbd_low_color": self.remaining_cbd_low_color,
+            "days_thc_high_color": self.days_thc_high_color,
+            "days_thc_low_color": self.days_thc_low_color,
+            "days_cbd_high_color": self.days_cbd_high_color,
+            "days_cbd_low_color": self.days_cbd_low_color,
             "target_daily_grams": self.target_daily_grams,
             "avg_usage_days": self.avg_usage_days,
             "target_daily_cbd_grams": getattr(self, "target_daily_cbd_grams", 0.0),
@@ -1862,6 +1880,14 @@ class CannabisTracker:
         self.target_daily_grams = float(data.get("target_daily_grams", self.target_daily_grams))
         self.avg_usage_days = int(data.get("avg_usage_days", getattr(self, "avg_usage_days", 30)))
         self.target_daily_cbd_grams = float(data.get("target_daily_cbd_grams", getattr(self, "target_daily_cbd_grams", 0.0)))
+        self.remaining_thc_high_color = str(data.get("remaining_thc_high_color", self.remaining_thc_high_color))
+        self.remaining_thc_low_color = str(data.get("remaining_thc_low_color", self.remaining_thc_low_color))
+        self.remaining_cbd_high_color = str(data.get("remaining_cbd_high_color", self.remaining_cbd_high_color))
+        self.remaining_cbd_low_color = str(data.get("remaining_cbd_low_color", self.remaining_cbd_low_color))
+        self.days_thc_high_color = str(data.get("days_thc_high_color", self.days_thc_high_color))
+        self.days_thc_low_color = str(data.get("days_thc_low_color", self.days_thc_low_color))
+        self.days_cbd_high_color = str(data.get("days_cbd_high_color", self.days_cbd_high_color))
+        self.days_cbd_low_color = str(data.get("days_cbd_low_color", self.days_cbd_low_color))
         # Prefer config-driven CBD tracking; tracker data should not override it on startup.
         self.track_cbd_flower = bool(getattr(self, "track_cbd_flower", False))
         self.enable_stock_coloring = bool(data.get("enable_stock_coloring", self.enable_stock_coloring))
@@ -1972,6 +1998,14 @@ class CannabisTracker:
         self.single_thc_low_color = str(cfg.get("single_thc_low_color", self.single_thc_low_color))
         self.single_cbd_high_color = str(cfg.get("single_cbd_high_color", self.single_cbd_high_color))
         self.single_cbd_low_color = str(cfg.get("single_cbd_low_color", self.single_cbd_low_color))
+        self.remaining_thc_high_color = str(cfg.get("remaining_thc_high_color", self.remaining_thc_high_color))
+        self.remaining_thc_low_color = str(cfg.get("remaining_thc_low_color", self.remaining_thc_low_color))
+        self.remaining_cbd_high_color = str(cfg.get("remaining_cbd_high_color", self.remaining_cbd_high_color))
+        self.remaining_cbd_low_color = str(cfg.get("remaining_cbd_low_color", self.remaining_cbd_low_color))
+        self.days_thc_high_color = str(cfg.get("days_thc_high_color", self.days_thc_high_color))
+        self.days_thc_low_color = str(cfg.get("days_thc_low_color", self.days_thc_low_color))
+        self.days_cbd_high_color = str(cfg.get("days_cbd_high_color", self.days_cbd_high_color))
+        self.days_cbd_low_color = str(cfg.get("days_cbd_low_color", self.days_cbd_low_color))
         self.target_daily_grams = float(cfg.get("target_daily_grams", self.target_daily_grams))
         self.avg_usage_days = int(cfg.get("avg_usage_days", getattr(self, "avg_usage_days", 30)))
         self.target_daily_cbd_grams = float(cfg.get("target_daily_cbd_grams", 0.0))
@@ -2027,6 +2061,14 @@ class CannabisTracker:
             "single_thc_low_color": self.single_thc_low_color,
             "single_cbd_high_color": self.single_cbd_high_color,
             "single_cbd_low_color": self.single_cbd_low_color,
+            "remaining_thc_high_color": self.remaining_thc_high_color,
+            "remaining_thc_low_color": self.remaining_thc_low_color,
+            "remaining_cbd_high_color": self.remaining_cbd_high_color,
+            "remaining_cbd_low_color": self.remaining_cbd_low_color,
+            "days_thc_high_color": self.days_thc_high_color,
+            "days_thc_low_color": self.days_thc_low_color,
+            "days_cbd_high_color": self.days_cbd_high_color,
+            "days_cbd_low_color": self.days_cbd_low_color,
             "target_daily_grams": self.target_daily_grams,
             "avg_usage_days": self.avg_usage_days,
             "target_daily_cbd_grams": self.target_daily_cbd_grams,

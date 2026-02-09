@@ -128,9 +128,45 @@ def open_tracker_settings(app) -> None:
     chk_usage_color = ttk.Checkbutton(frame, text="Enable colouring based on usage", variable=app.enable_usage_color_var)
     chk_usage_color.grid(row=10, column=0, columnspan=3, sticky="w", pady=(4, 2))
 
-    ttk.Separator(frame, orient="horizontal").grid(row=11, column=0, columnspan=4, sticky="ew", pady=(6, 6))
-    ttk.Label(frame, text="Tracker settings", font=app.font_bold_small).grid(row=12, column=0, sticky="w", pady=(0, 6))
-    row = 13
+    usage_row = 11
+    ttk.Label(frame, text="Remaining today (THC) colors").grid(row=usage_row, column=0, sticky="w", pady=(6, 0))
+    usage_frame = ttk.Frame(frame)
+    ttk.Label(usage_frame, text="High").pack(side="left", padx=(0, 4))
+    _color_button(usage_frame, "remaining_thc_high_color").pack(side="left")
+    ttk.Label(usage_frame, text="Low").pack(side="left", padx=(8, 4))
+    _color_button(usage_frame, "remaining_thc_low_color").pack(side="left")
+    usage_frame.grid(row=usage_row, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
+    usage_row += 1
+
+    ttk.Label(frame, text="Remaining today (CBD) colors").grid(row=usage_row, column=0, sticky="w", pady=(2, 0))
+    usage_frame = ttk.Frame(frame)
+    ttk.Label(usage_frame, text="High").pack(side="left", padx=(0, 4))
+    _color_button(usage_frame, "remaining_cbd_high_color").pack(side="left")
+    ttk.Label(usage_frame, text="Low").pack(side="left", padx=(8, 4))
+    _color_button(usage_frame, "remaining_cbd_low_color").pack(side="left")
+    usage_frame.grid(row=usage_row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+    usage_row += 1
+
+    ttk.Label(frame, text="Days left (THC) colors").grid(row=usage_row, column=0, sticky="w", pady=(2, 0))
+    usage_frame = ttk.Frame(frame)
+    ttk.Label(usage_frame, text="High").pack(side="left", padx=(0, 4))
+    _color_button(usage_frame, "days_thc_high_color").pack(side="left")
+    ttk.Label(usage_frame, text="Low").pack(side="left", padx=(8, 4))
+    _color_button(usage_frame, "days_thc_low_color").pack(side="left")
+    usage_frame.grid(row=usage_row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+    usage_row += 1
+
+    ttk.Label(frame, text="Days left (CBD) colors").grid(row=usage_row, column=0, sticky="w", pady=(2, 0))
+    usage_frame = ttk.Frame(frame)
+    ttk.Label(usage_frame, text="High").pack(side="left", padx=(0, 4))
+    _color_button(usage_frame, "days_cbd_high_color").pack(side="left")
+    ttk.Label(usage_frame, text="Low").pack(side="left", padx=(8, 4))
+    _color_button(usage_frame, "days_cbd_low_color").pack(side="left")
+    usage_frame.grid(row=usage_row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+
+    ttk.Separator(frame, orient="horizontal").grid(row=usage_row + 1, column=0, columnspan=4, sticky="ew", pady=(6, 6))
+    ttk.Label(frame, text="Tracker settings", font=app.font_bold_small).grid(row=usage_row + 2, column=0, sticky="w", pady=(0, 6))
+    row = usage_row + 3
 
     app.track_cbd_flower_var = tk.BooleanVar(value=getattr(app, "track_cbd_flower", False))
     chk_track_cbd = ttk.Checkbutton(frame, text="Track CBD flower", variable=app.track_cbd_flower_var)
