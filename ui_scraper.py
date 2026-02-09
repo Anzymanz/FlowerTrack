@@ -2095,6 +2095,23 @@ class App(tk.Tk):
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
         try:
+            self.style.configure(
+                "Scraper.TEntry",
+                bordercolor=border,
+                lightcolor=border,
+                darkcolor=border,
+                focuscolor=border,
+            )
+            self.style.map(
+                "Scraper.TEntry",
+                bordercolor=[("focus", border), ("!focus", border)],
+                lightcolor=[("focus", border), ("!focus", border)],
+                darkcolor=[("focus", border), ("!focus", border)],
+                focuscolor=[("focus", border), ("!focus", border)],
+            )
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
+        try:
             self.option_add("*Entry*selectBackground", muted if dark else "#d6d6d6")
             self.option_add("*Entry*selectForeground", fg)
             self.option_add("*Entry*inactiveselectBackground", muted if dark else "#d6d6d6")
