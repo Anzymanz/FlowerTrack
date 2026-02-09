@@ -1171,11 +1171,36 @@ class CannabisTracker:
         except Exception:
             pass
 
+    def _center_child_window(self, child: tk.Toplevel, parent: tk.Toplevel | None) -> None:
+        try:
+            child.update_idletasks()
+            width = child.winfo_reqwidth()
+            height = child.winfo_reqheight()
+            if parent and tk.Toplevel.winfo_exists(parent):
+                parent.update_idletasks()
+                px = parent.winfo_rootx()
+                py = parent.winfo_rooty()
+                pw = parent.winfo_width()
+                ph = parent.winfo_height()
+                x = px + (pw - width) // 2
+                y = py + (ph - height) // 2
+            else:
+                sw = child.winfo_screenwidth()
+                sh = child.winfo_screenheight()
+                x = (sw - width) // 2
+                y = (sh - height) // 2
+            x = max(0, x)
+            y = max(0, y)
+            child.geometry(f"+{x}+{y}")
+        except Exception:
+            pass
+
     def _ask_colour_picker(self, current: str, title: str, parent: tk.Toplevel | None) -> str | None:
         if TkColorPicker is None:
             return colorchooser.askcolor(color=current, title=title, parent=parent)[1]
         picker = TkColorPicker(parent, color=current, title=title)
         self._apply_picker_theme(picker)
+        self._center_child_window(picker, parent)
         picker.wait_window(picker)
         try:
             res = picker.get_color()
