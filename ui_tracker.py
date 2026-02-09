@@ -1455,6 +1455,8 @@ class CannabisTracker:
         # Prefer dark title bar when dark mode is on
         self.root.after(0, lambda: self._set_dark_title_bar(dark))
         self.current_base_color = base
+        self.current_ctrl_bg = panel
+        self.current_border_color = border
         self.root.configure(bg=base)
         apply_style_theme(self.style, colors)
         self.style.configure("TCheckbutton", background=base, foreground=text_color)

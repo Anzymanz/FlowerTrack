@@ -28,8 +28,19 @@ def open_tracker_settings(app) -> None:
     container.columnconfigure(0, weight=1)
     container.rowconfigure(0, weight=1)
 
-    notebook = ttk.Notebook(container)
-    notebook.configure(style="Settings.TNotebook")
+    local_style = ttk.Style(win)
+    local_style.theme_use("clam")
+    tab_style = "SettingsLocal.TNotebook"
+    tab_style_tab = "SettingsLocal.TNotebook.Tab"
+    border = getattr(app, "current_border_color", None) or "#2a2a2a"
+    ctrl_bg = getattr(app, "current_ctrl_bg", None) or "#222"
+    fg = getattr(app, "text_color", "#eee")
+    selected_bg = "#222222" if app.dark_var.get() else "#e0e0e0"
+    local_style.configure(tab_style, background=getattr(app, "current_base_color", "#111"), bordercolor=border, lightcolor=border, darkcolor=border, relief="solid", borderwidth=1)
+    local_style.configure(tab_style_tab, background=ctrl_bg, foreground=fg, lightcolor=border, bordercolor=border, focuscolor=border, padding=[10, 4])
+    local_style.map(tab_style_tab, background=[("selected", selected_bg), ("!selected", ctrl_bg)], foreground=[("selected", fg), ("!selected", fg)])
+
+    notebook = ttk.Notebook(container, style=tab_style)
     try:
         win.tk.call("ttk::style", "theme", "use", "clam")
     except Exception:
@@ -48,7 +59,7 @@ def open_tracker_settings(app) -> None:
     notebook.add(tab_data, text="Data settings")
     notebook.add(tab_window, text="Window settings")
     notebook.add(tab_theme, text="Theme")
-    notebook.configure(style="Settings.TNotebook")
+    notebook.configure(style=tab_style)
 
     for tab in (tab_colors, tab_tracker, tab_roa, tab_data, tab_window, tab_theme):
         tab.columnconfigure(0, weight=0)
@@ -472,7 +483,7 @@ def open_tracker_settings(app) -> None:
     app._update_theme_color_buttons()
     try:
         app.apply_theme(app.dark_var.get())
-        notebook.configure(style="Settings.TNotebook")
+        notebook.configure(style=tab_style)
         notebook.update_idletasks()
         current = notebook.index("current")
         notebook.select(current)
