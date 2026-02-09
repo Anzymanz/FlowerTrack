@@ -148,8 +148,6 @@ DEFAULT_CAPTURE_CONFIG = {
     "notify_new_items": True,
     "notify_removed_items": True,
     "notify_windows": True,
-    "auto_open_export": False,
-    "auto_open_export_delay": 0.0,
     "log_window_hidden_height": 260.0,
     "quiet_hours_enabled": False,
     "quiet_hours_start": "22:00",
@@ -400,8 +398,6 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["notify_new_items"] = _coerce_bool(raw.get("notify_new_items"), DEFAULT_CAPTURE_CONFIG["notify_new_items"])
     cfg["notify_removed_items"] = _coerce_bool(raw.get("notify_removed_items"), DEFAULT_CAPTURE_CONFIG["notify_removed_items"])
     cfg["notify_windows"] = _coerce_bool(raw.get("notify_windows"), DEFAULT_CAPTURE_CONFIG["notify_windows"])
-    cfg["auto_open_export"] = _coerce_bool(raw.get("auto_open_export"), DEFAULT_CAPTURE_CONFIG["auto_open_export"])
-    cfg["auto_open_export_delay"] = _coerce_float(raw.get("auto_open_export_delay"), DEFAULT_CAPTURE_CONFIG["auto_open_export_delay"], 0.0)
     cfg["log_window_hidden_height"] = _coerce_float(
         raw.get("log_window_hidden_height"),
         DEFAULT_CAPTURE_CONFIG["log_window_hidden_height"],
