@@ -3538,8 +3538,17 @@ class CannabisTracker:
     def _status_tooltip_text(self) -> str:
         muted = bool(getattr(self, "scraper_notifications_muted", False))
         muted_txt = "Muted" if muted else "Unmuted"
+        state_txt = "Stopped"
+        try:
+            running, warn = resolve_scraper_status(getattr(self, "child_procs", []))
+            if running:
+                state_txt = "Running"
+            elif warn:
+                state_txt = "Errored"
+        except Exception:
+            pass
         return (
-            f"Scraper status: {muted_txt}\n"
+            f"Scraper: {state_txt} | Notifications: {muted_txt}\n"
             "Double-click: Start/Stop scraper\n"
             "Right-click: Mute/Unmute notifications"
         )
