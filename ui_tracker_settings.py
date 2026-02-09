@@ -407,6 +407,13 @@ def open_tracker_settings(app) -> None:
         row=0, column=1, sticky="e", padx=(0, 4)
     )
     app._update_threshold_color_buttons()
+    try:
+        win.update_idletasks()
+        width = max(container.winfo_reqwidth(), actions.winfo_reqwidth()) + 8
+        height = container.winfo_reqheight() + actions.winfo_reqheight() + 12
+        win.geometry(f"{width}x{height}")
+    except Exception:
+        pass
     # Place after layout to avoid resize flash
     app._prepare_toplevel(win)
 

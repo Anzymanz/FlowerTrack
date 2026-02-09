@@ -136,8 +136,8 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
         darkcolor=border,
         arrowcolor=fg,
     )
-    style.configure("TNotebook", background=bg, bordercolor=ctrl_bg)
-    style.configure("Settings.TNotebook", background=bg, bordercolor=ctrl_bg)
+    style.configure("TNotebook", background=bg, bordercolor=border)
+    style.configure("Settings.TNotebook", background=bg, bordercolor=border)
     style.configure(
         "TNotebook.Tab",
         background=ctrl_bg,
@@ -151,9 +151,9 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
         padding=[10, 4],
         background=ctrl_bg,
         foreground=fg,
-        lightcolor=ctrl_bg,
-        bordercolor=ctrl_bg,
-        focuscolor=ctrl_bg,
+        lightcolor=border,
+        bordercolor=border,
+        focuscolor=border,
     )
     style.map(
         "Settings.TNotebook.Tab",
