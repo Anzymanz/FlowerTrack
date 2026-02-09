@@ -30,6 +30,10 @@ def open_tracker_settings(app) -> None:
 
     notebook = ttk.Notebook(container)
     notebook.configure(style="Settings.TNotebook")
+    try:
+        win.tk.call("ttk::style", "theme", "use", "clam")
+    except Exception:
+        pass
     notebook.grid(row=0, column=0, sticky="nsew")
 
     tab_colors = ttk.Frame(notebook, padding=8)
@@ -468,16 +472,18 @@ def open_tracker_settings(app) -> None:
     app._update_theme_color_buttons()
     try:
         app.apply_theme(app.dark_var.get())
+        notebook.configure(style="Settings.TNotebook")
         notebook.update_idletasks()
         current = notebook.index("current")
         notebook.select(current)
-        notebook.configure(style="Settings.TNotebook")
     except Exception:
         pass
     # Place after layout to avoid resize flash
     app._prepare_toplevel(win)
     try:
         app._set_dark_title_bar(app.dark_var.get(), target=win)
+        win.after(0, lambda: app._set_dark_title_bar(app.dark_var.get(), target=win))
+        win.after(100, lambda: app._set_dark_title_bar(app.dark_var.get(), target=win))
     except Exception:
         pass
     try:
