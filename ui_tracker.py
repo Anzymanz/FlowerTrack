@@ -20,7 +20,7 @@ import traceback
 from app_core import APP_DIR, EXPORTS_DIR_DEFAULT, LAST_PARSE_FILE, _load_capture_config, _save_capture_config, SCRAPER_STATE_FILE  # use shared app data root
 from tray import tray_supported, update_tray_icon, stop_tray_icon, make_tray_image, create_tray_icon
 from scraper_state import resolve_scraper_status as resolve_scraper_status_core
-from theme import apply_style_theme, compute_colors, set_titlebar_dark
+from theme import apply_style_theme, compute_colors, set_titlebar_dark, set_palette_overrides, get_default_palettes
 from ui_tracker_settings import open_tracker_settings
 from resources import resource_path as _resource_path
 from inventory import (
@@ -100,6 +100,10 @@ class CannabisTracker:
         self.days_thc_low_color = "#e74c3c"
         self.days_cbd_high_color = "#2ecc71"
         self.days_cbd_low_color = "#e74c3c"
+        default_dark, default_light = get_default_palettes()
+        self.theme_palette_dark = dict(default_dark)
+        self.theme_palette_light = dict(default_light)
+        self._theme_color_buttons: dict[tuple[str, str], list[tk.Button]] = {}
         self._threshold_color_buttons: dict[str, list[tk.Button]] = {}
         self.stock_form_source: str | None = None
         self.stock_form_dirty = False
@@ -1085,6 +1089,47 @@ class CannabisTracker:
                 except Exception:
                     pass
 
+    def _register_theme_color_button(self, mode: str, key: str, button: tk.Button) -> None:
+        self._theme_color_buttons.setdefault((mode, key), []).append(button)
+
+    def _update_theme_color_buttons(self) -> None:
+        for (mode, key), buttons in self._theme_color_buttons.items():
+            palette = self.theme_palette_dark if mode == "dark" else self.theme_palette_light
+            color = palette.get(key)
+            if not color:
+                continue
+            for btn in buttons:
+                try:
+                    btn.configure(bg=color, activebackground=color, highlightbackground=color)
+                except Exception:
+                    pass
+
+    def _set_palette_color(self, mode: str, key: str, color: str) -> None:
+        palette = self.theme_palette_dark if mode == "dark" else self.theme_palette_light
+        palette[key] = color
+        set_palette_overrides(self.theme_palette_dark, self.theme_palette_light)
+        self.apply_theme(self.dark_var.get())
+        self._update_theme_color_buttons()
+        self._save_config()
+
+    def _choose_theme_color(self, mode: str, key: str) -> None:
+        palette = self.theme_palette_dark if mode == "dark" else self.theme_palette_light
+        current = palette.get(key, "#ffffff")
+        picked = colorchooser.askcolor(color=current, title="Select colour")[1]
+        color = self._normalize_hex(picked or "")
+        if not color:
+            return
+        self._set_palette_color(mode, key, color)
+
+    def _reset_theme_palettes(self) -> None:
+        default_dark, default_light = get_default_palettes()
+        self.theme_palette_dark = dict(default_dark)
+        self.theme_palette_light = dict(default_light)
+        set_palette_overrides(self.theme_palette_dark, self.theme_palette_light)
+        self.apply_theme(self.dark_var.get())
+        self._update_theme_color_buttons()
+        self._save_config()
+
     def _choose_threshold_color(self, key: str) -> None:
         current = getattr(self, key, None) or "#2ecc71"
         settings_win = getattr(self, "settings_window", None)
@@ -2006,6 +2051,11 @@ class CannabisTracker:
         self.days_thc_low_color = str(cfg.get("days_thc_low_color", self.days_thc_low_color))
         self.days_cbd_high_color = str(cfg.get("days_cbd_high_color", self.days_cbd_high_color))
         self.days_cbd_low_color = str(cfg.get("days_cbd_low_color", self.days_cbd_low_color))
+        if isinstance(cfg.get("theme_palette_dark"), dict):
+            self.theme_palette_dark.update(cfg.get("theme_palette_dark", {}))
+        if isinstance(cfg.get("theme_palette_light"), dict):
+            self.theme_palette_light.update(cfg.get("theme_palette_light", {}))
+        set_palette_overrides(self.theme_palette_dark, self.theme_palette_light)
         self.target_daily_grams = float(cfg.get("target_daily_grams", self.target_daily_grams))
         self.avg_usage_days = int(cfg.get("avg_usage_days", getattr(self, "avg_usage_days", 30)))
         self.target_daily_cbd_grams = float(cfg.get("target_daily_cbd_grams", 0.0))
@@ -2069,6 +2119,8 @@ class CannabisTracker:
             "days_thc_low_color": self.days_thc_low_color,
             "days_cbd_high_color": self.days_cbd_high_color,
             "days_cbd_low_color": self.days_cbd_low_color,
+            "theme_palette_dark": self.theme_palette_dark,
+            "theme_palette_light": self.theme_palette_light,
             "target_daily_grams": self.target_daily_grams,
             "avg_usage_days": self.avg_usage_days,
             "target_daily_cbd_grams": self.target_daily_cbd_grams,

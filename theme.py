@@ -9,24 +9,48 @@ import tkinter as tk
 from logger import log_event
 
 
-def compute_colors(dark: bool) -> dict:
-    bg = "#111" if dark else "#f4f4f4"
-    fg = "#eee" if dark else "#111"
-    ctrl_bg = "#222" if dark else "#e6e6e6"
-    border = "#2a2a2a" if dark else ctrl_bg
-    # Dark accent toned to a neutral gray to keep hover/selection subtle in dark mode.
-    accent = "#3c3c3c" if dark else "#666666"
-    list_bg = "#1e1e1e" if dark else "#ffffff"
-    muted = "#777777" if dark else "#666666"
-    return {
-        "bg": bg,
-        "fg": fg,
-        "ctrl_bg": ctrl_bg,
-        "border": border,
-        "accent": accent,
-        "list_bg": list_bg,
-        "muted": muted,
+PALETTE_KEYS = ("bg", "fg", "ctrl_bg", "border", "accent", "list_bg", "muted")
+_PALETTE_OVERRIDES = {"dark": {}, "light": {}}
+
+
+def get_default_palettes() -> tuple[dict, dict]:
+    dark = {
+        "bg": "#111",
+        "fg": "#eee",
+        "ctrl_bg": "#222",
+        "border": "#2a2a2a",
+        "accent": "#3c3c3c",
+        "list_bg": "#1e1e1e",
+        "muted": "#777777",
     }
+    light = {
+        "bg": "#f4f4f4",
+        "fg": "#111",
+        "ctrl_bg": "#e6e6e6",
+        "border": "#e6e6e6",
+        "accent": "#666666",
+        "list_bg": "#ffffff",
+        "muted": "#666666",
+    }
+    return dark, light
+
+
+def set_palette_overrides(dark: dict | None = None, light: dict | None = None) -> None:
+    if isinstance(dark, dict):
+        _PALETTE_OVERRIDES["dark"] = {k: dark.get(k) for k in PALETTE_KEYS if dark.get(k)}
+    if isinstance(light, dict):
+        _PALETTE_OVERRIDES["light"] = {k: light.get(k) for k in PALETTE_KEYS if light.get(k)}
+
+
+def compute_colors(dark: bool) -> dict:
+    default_dark, default_light = get_default_palettes()
+    base = default_dark if dark else default_light
+    overrides = _PALETTE_OVERRIDES["dark" if dark else "light"]
+    colors = dict(base)
+    for key in PALETTE_KEYS:
+        if key in overrides and overrides[key]:
+            colors[key] = overrides[key]
+    return colors
 
 
 def apply_style_theme(style: ttk.Style, colors: dict) -> None:

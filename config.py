@@ -209,6 +209,8 @@ DEFAULT_TRACKER_CONFIG = {
     "days_thc_low_color": "#e74c3c",
     "days_cbd_high_color": "#2ecc71",
     "days_cbd_low_color": "#e74c3c",
+    "theme_palette_dark": {},
+    "theme_palette_light": {},
     "target_daily_grams": 1.0,
     "target_daily_cbd_grams": 0.0,
     "roa_options": {"Vaped": 0.60, "Eaten": 0.10, "Smoked": 0.30},
@@ -367,6 +369,15 @@ def _validate_tracker_config(raw: dict) -> dict:
         "target_daily_grams",
         "target_daily_cbd_grams",
     }
+    palette_keys = {
+        "bg",
+        "fg",
+        "ctrl_bg",
+        "border",
+        "accent",
+        "list_bg",
+        "muted",
+    }
     for key, value in raw.items():
         if key not in cfg:
             continue
@@ -397,6 +408,12 @@ def _validate_tracker_config(raw: dict) -> dict:
             cfg[key] = _coerce_color(value, cfg[key])
         elif key == "roa_options" and isinstance(value, dict):
             cfg[key] = {str(k): float(v) for k, v in value.items() if v is not None}
+        elif key in ("theme_palette_dark", "theme_palette_light") and isinstance(value, dict):
+            cleaned = {}
+            for palette_key, palette_val in value.items():
+                if palette_key in palette_keys:
+                    cleaned[palette_key] = _coerce_color(palette_val, cfg[key].get(palette_key, ""))
+            cfg[key] = cleaned
         else:
             cfg[key] = value
     if not cfg.get("data_path"):

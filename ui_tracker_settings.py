@@ -37,20 +37,29 @@ def open_tracker_settings(app) -> None:
     tab_roa = ttk.Frame(notebook, padding=8)
     tab_data = ttk.Frame(notebook, padding=8)
     tab_window = ttk.Frame(notebook, padding=8)
+    tab_theme = ttk.Frame(notebook, padding=8)
     notebook.add(tab_colors, text="Colour settings")
     notebook.add(tab_tracker, text="Tracker settings")
     notebook.add(tab_roa, text="RoA settings")
     notebook.add(tab_data, text="Data settings")
     notebook.add(tab_window, text="Window settings")
+    notebook.add(tab_theme, text="Theme")
 
-    for tab in (tab_colors, tab_tracker, tab_roa, tab_data, tab_window):
+    for tab in (tab_colors, tab_tracker, tab_roa, tab_data, tab_window, tab_theme):
         tab.columnconfigure(0, weight=0)
         tab.columnconfigure(1, weight=0)
         tab.columnconfigure(2, weight=1)
         tab.columnconfigure(3, weight=1)
 
     def _color_button(parent: ttk.Frame, key: str) -> tk.Button:
-        color = getattr(app, key, "#2ecc71")
+        if key.startswith("dark:") or key.startswith("light:"):
+            mode, palette_key = key.split(":", 1)
+            palette = app.theme_palette_dark if mode == "dark" else app.theme_palette_light
+            color = palette.get(palette_key, "#2ecc71")
+            command = lambda: app._choose_theme_color(mode, palette_key)
+        else:
+            color = getattr(app, key, "#2ecc71")
+            command = lambda: app._choose_threshold_color(key)
         btn = tk.Button(
             parent,
             width=2,
@@ -60,9 +69,12 @@ def open_tracker_settings(app) -> None:
             activebackground=color,
             highlightthickness=1,
             highlightbackground=color,
-            command=lambda: app._choose_threshold_color(key),
+            command=command,
         )
-        app._register_threshold_color_button(btn, key)
+        if key.startswith("dark:") or key.startswith("light:"):
+            app._register_theme_color_button(mode, palette_key, btn)
+        else:
+            app._register_threshold_color_button(btn, key)
         return btn
 
     frame = tab_colors
@@ -296,6 +308,50 @@ def open_tracker_settings(app) -> None:
         row=5, column=0, columnspan=2, sticky="w", pady=(2, 0)
     )
 
+    frame = tab_theme
+    ttk.Label(frame, text="Theme", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
+
+    theme_row = 1
+    ttk.Label(frame, text="Dark palette", font=app.font_bold_small).grid(row=theme_row, column=0, sticky="w", pady=(0, 6))
+    theme_row += 1
+    for label, key in (
+        ("Background", "bg"),
+        ("Foreground", "fg"),
+        ("Control background", "ctrl_bg"),
+        ("Border", "border"),
+        ("Accent", "accent"),
+        ("List background", "list_bg"),
+        ("Muted", "muted"),
+    ):
+        ttk.Label(frame, text=label).grid(row=theme_row, column=0, sticky="w", pady=(2, 0))
+        row_frame = ttk.Frame(frame)
+        _color_button(row_frame, f"dark:{key}").pack(side="left")
+        row_frame.grid(row=theme_row, column=1, sticky="w", padx=(12, 0))
+        theme_row += 1
+
+    ttk.Separator(frame, orient="horizontal").grid(row=theme_row, column=0, columnspan=4, sticky="ew", pady=(8, 8))
+    theme_row += 1
+    ttk.Label(frame, text="Light palette", font=app.font_bold_small).grid(row=theme_row, column=0, sticky="w", pady=(0, 6))
+    theme_row += 1
+    for label, key in (
+        ("Background", "bg"),
+        ("Foreground", "fg"),
+        ("Control background", "ctrl_bg"),
+        ("Border", "border"),
+        ("Accent", "accent"),
+        ("List background", "list_bg"),
+        ("Muted", "muted"),
+    ):
+        ttk.Label(frame, text=label).grid(row=theme_row, column=0, sticky="w", pady=(2, 0))
+        row_frame = ttk.Frame(frame)
+        _color_button(row_frame, f"light:{key}").pack(side="left")
+        row_frame.grid(row=theme_row, column=1, sticky="w", padx=(12, 0))
+        theme_row += 1
+
+    ttk.Button(frame, text="Reset theme colours", command=app._reset_theme_palettes).grid(
+        row=theme_row, column=0, sticky="w", pady=(10, 0)
+    )
+
     app.total_green_entry.insert(0, f"{app.total_green_threshold}")
     app.total_red_entry.insert(0, f"{app.total_red_threshold}")
     app.cbd_total_green_entry.insert(0, f"{app.cbd_total_green_threshold}")
@@ -404,6 +460,7 @@ def open_tracker_settings(app) -> None:
         row=0, column=1, sticky="e", padx=(0, 4)
     )
     app._update_threshold_color_buttons()
+    app._update_theme_color_buttons()
     # Place after layout to avoid resize flash
     app._prepare_toplevel(win)
     try:
