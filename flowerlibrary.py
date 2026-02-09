@@ -88,11 +88,13 @@ class FlowerLibraryApp:
         self.entries: list[dict] = load_entries()
         self.settings = load_settings()
         self.window_geometry = self.settings.get("window_geometry", "")
+        self.screen_resolution = str(self.settings.get("screen_resolution", "")).strip()
         shared_dark = _load_tracker_dark_mode(self.settings.get("dark_mode", True))
         self.is_dark = BooleanVar(value=shared_dark)
         self.windows: list = [self.root]
         self.sort_state: dict[str, bool] = {}
         self._geometry_save_job = None
+        self._force_center_on_start = False
 
         self.text_fields = ["brand", "origin", "cultivator", "packager", "strain"]
         self.float_fields = ["thc", "cbd", "price"]
@@ -111,9 +113,22 @@ class FlowerLibraryApp:
         self._build_table()
         self._build_buttons()
         self.refresh_table()
+        self._apply_resolution_safety()
         if self.window_geometry:
             try:
                 self.root.geometry(self.window_geometry)
+            except Exception:
+                pass
+        elif self._force_center_on_start:
+            try:
+                self.root.update_idletasks()
+                sw = self.root.winfo_screenwidth()
+                sh = self.root.winfo_screenheight()
+                w = self.root.winfo_reqwidth()
+                h = self.root.winfo_reqheight()
+                x = max(0, (sw - w) // 2)
+                y = max(0, (sh - h) // 2)
+                self.root.geometry(f"+{x}+{y}")
             except Exception:
                 pass
         self.root.bind("<Configure>", self._schedule_geometry_save)
@@ -478,9 +493,46 @@ class FlowerLibraryApp:
     def _persist_geometry(self) -> None:
         try:
             self.settings["window_geometry"] = self.root.geometry()
+            self.settings["screen_resolution"] = self._current_screen_resolution()
             self._persist_settings()
         finally:
             self._geometry_save_job = None
+
+    def _current_screen_resolution(self) -> str:
+        try:
+            return f"{self.root.winfo_screenwidth()}x{self.root.winfo_screenheight()}"
+        except Exception:
+            return ""
+
+    @staticmethod
+    def _parse_resolution(value: str) -> tuple[int, int] | None:
+        if not value:
+            return None
+        text = str(value).lower().replace(" ", "")
+        if "x" not in text:
+            return None
+        try:
+            w_str, h_str = text.split("x", 1)
+            return int(float(w_str)), int(float(h_str))
+        except Exception:
+            return None
+
+    def _apply_resolution_safety(self) -> None:
+        try:
+            current = self._parse_resolution(self._current_screen_resolution())
+            saved = self._parse_resolution(self.screen_resolution)
+            if not current or not saved:
+                self.screen_resolution = self._current_screen_resolution()
+                return
+            if current[0] < saved[0] or current[1] < saved[1]:
+                self.window_geometry = ""
+                self._force_center_on_start = True
+                self.screen_resolution = self._current_screen_resolution()
+                self.settings["window_geometry"] = ""
+                self.settings["screen_resolution"] = self.screen_resolution
+                self._persist_settings()
+        except Exception:
+            pass
 
     def sort_by(self, column: str) -> None:
         ascending = self.sort_state.get(column, True)

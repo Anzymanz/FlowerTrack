@@ -26,7 +26,20 @@ class HistoryViewer(tk.Toplevel):
         self.log_path = Path(log_path)
         self.title("Change History")
         default_geometry = "900x600"
-        self.geometry(getattr(parent, "history_window_geometry", default_geometry) or default_geometry)
+        geometry = getattr(parent, "history_window_geometry", default_geometry) or default_geometry
+        self.geometry(geometry)
+        if "+" not in str(geometry):
+            try:
+                self.update_idletasks()
+                sw = self.winfo_screenwidth()
+                sh = self.winfo_screenheight()
+                w = self.winfo_reqwidth()
+                h = self.winfo_reqheight()
+                x = max(0, (sw - w) // 2)
+                y = max(0, (sh - h) // 2)
+                self.geometry(f"+{x}+{y}")
+            except Exception:
+                pass
         self.resizable(True, True)
         try:
             if hasattr(parent, "_resource_path"):

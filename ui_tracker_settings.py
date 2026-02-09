@@ -514,7 +514,10 @@ def open_tracker_settings(app) -> None:
     except Exception:
         pass
     # Place after layout to avoid resize flash
-    app._prepare_toplevel(win, keep_geometry=bool(getattr(app, "settings_window_geometry", "")))
+    keep_geometry = bool(getattr(app, "settings_window_geometry", ""))
+    placement = "center" if getattr(app, "_force_center_settings", False) or not keep_geometry else "pointer"
+    app._prepare_toplevel(win, keep_geometry=keep_geometry, placement=placement)
+    app._force_center_settings = False
     try:
         win.bind("<Configure>", lambda _e: app._schedule_settings_geometry(win))
     except Exception:

@@ -88,6 +88,8 @@ class App(tk.Tk):
         self.scraper_window_geometry = cfg.get("window_geometry", "900x720") or "900x720"
         self.scraper_settings_geometry = cfg.get("settings_geometry", "560x960") or "560x960"
         self.history_window_geometry = cfg.get("history_window_geometry", "900x600") or "900x600"
+        self.screen_resolution = str(cfg.get("screen_resolution", "")).strip()
+        self._apply_resolution_safety()
         self.geometry(self.scraper_window_geometry)
         self.assets_dir = ASSETS_DIR
         _log_debug("App init: launching scraper UI")
@@ -333,6 +335,9 @@ class App(tk.Tk):
                 self.history_window.geometry()
                 if getattr(self, "history_window", None) and tk.Toplevel.winfo_exists(self.history_window)
                 else getattr(self, "history_window_geometry", "900x600")
+            ),
+            "screen_resolution": (
+                self._current_screen_resolution() if hasattr(self, "_current_screen_resolution") else ""
             ),
         }
 
@@ -872,6 +877,40 @@ class App(tk.Tk):
             self._log_console(f"Saved config to {target}")
         except Exception as exc:
             self._log_console(f"Failed to save config: {exc}")
+
+    def _current_screen_resolution(self) -> str:
+        try:
+            return f"{self.winfo_screenwidth()}x{self.winfo_screenheight()}"
+        except Exception:
+            return ""
+
+    @staticmethod
+    def _parse_resolution(value: str) -> tuple[int, int] | None:
+        if not value:
+            return None
+        text = str(value).lower().replace(" ", "")
+        if "x" not in text:
+            return None
+        try:
+            w_str, h_str = text.split("x", 1)
+            return int(float(w_str)), int(float(h_str))
+        except Exception:
+            return None
+
+    def _apply_resolution_safety(self) -> None:
+        try:
+            current = self._parse_resolution(self._current_screen_resolution())
+            saved = self._parse_resolution(self.screen_resolution)
+            if not current or not saved:
+                self.screen_resolution = self._current_screen_resolution()
+                return
+            if current[0] < saved[0] or current[1] < saved[1]:
+                self.scraper_window_geometry = "900x720"
+                self.scraper_settings_geometry = "560x960"
+                self.history_window_geometry = "900x600"
+                self.screen_resolution = self._current_screen_resolution()
+        except Exception:
+            pass
 
     def _schedule_settings_geometry(self, win: tk.Toplevel) -> None:
         try:

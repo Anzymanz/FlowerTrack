@@ -151,6 +151,9 @@ class CannabisTracker:
         self.logs: list[dict[str, str | float]] = []
         self.window_geometry = ""
         self.settings_window_geometry = ""
+        self.screen_resolution = ""
+        self._force_center_on_start = False
+        self._force_center_settings = False
         self.stock_column_widths: dict[str, int] = {}
         self.log_column_widths: dict[str, int] = {}
         self._geometry_save_job = None
@@ -163,6 +166,11 @@ class CannabisTracker:
         self.load_data()
         self.root.after(50, lambda: self._set_dark_title_bar(self.dark_var.get()))
         self.apply_theme(self.dark_var.get())
+        if self._force_center_on_start:
+            try:
+                self._center_window_on_screen(self.root)
+            except Exception:
+                pass
         self._refresh_stock()
         self._refresh_log()
         self._update_scraper_status_icon()
@@ -1613,6 +1621,41 @@ class CannabisTracker:
                 self._save_config()
         except Exception:
             pass
+
+    def _current_screen_resolution(self) -> str:
+        try:
+            return f"{self.root.winfo_screenwidth()}x{self.root.winfo_screenheight()}"
+        except Exception:
+            return ""
+
+    @staticmethod
+    def _parse_resolution(value: str) -> tuple[int, int] | None:
+        if not value:
+            return None
+        text = str(value).lower().replace(" ", "")
+        if "x" not in text:
+            return None
+        try:
+            w_str, h_str = text.split("x", 1)
+            return int(float(w_str)), int(float(h_str))
+        except Exception:
+            return None
+
+    def _apply_resolution_safety(self) -> None:
+        try:
+            current = self._parse_resolution(self._current_screen_resolution())
+            saved = self._parse_resolution(self.screen_resolution)
+            if not current or not saved:
+                self.screen_resolution = self._current_screen_resolution()
+                return
+            if current[0] < saved[0] or current[1] < saved[1]:
+                self.window_geometry = ""
+                self.settings_window_geometry = ""
+                self._force_center_on_start = True
+                self._force_center_settings = True
+                self.screen_resolution = self._current_screen_resolution()
+        except Exception:
+            pass
     def apply_theme(self, dark: bool) -> None:
         colors = compute_colors(dark)
         base = colors["bg"]
@@ -2280,6 +2323,13 @@ class CannabisTracker:
         # note_label removed; tooltip now handles THC/CBD estimate messaging
         self.window_geometry = cfg.get("window_geometry", "") or self.window_geometry
         self.settings_window_geometry = cfg.get("settings_window_geometry", "") or self.settings_window_geometry
+        self.screen_resolution = str(cfg.get("screen_resolution", self.screen_resolution or "")).strip()
+        self._apply_resolution_safety()
+        if self._force_center_on_start:
+            try:
+                self._save_config()
+            except Exception:
+                pass
         if isinstance(cfg.get("stock_column_widths"), dict):
             self.stock_column_widths = {k: int(v) for k, v in cfg["stock_column_widths"].items()}
         if isinstance(cfg.get("log_column_widths"), dict):
@@ -2301,6 +2351,7 @@ class CannabisTracker:
         self._apply_roa_visibility()
         self._apply_stock_form_visibility()
     def _save_config(self) -> None:
+        self.screen_resolution = self._current_screen_resolution()
         cfg = {
             "data_path": self.data_path or str(TRACKER_DATA_FILE),
             "library_data_path": self.library_data_path or str(TRACKER_LIBRARY_FILE),
@@ -2350,6 +2401,7 @@ class CannabisTracker:
             "show_stock_form": getattr(self, "show_stock_form", True),
             "window_geometry": self.window_geometry,
             "settings_window_geometry": self.settings_window_geometry,
+            "screen_resolution": self.screen_resolution,
             "stock_column_widths": self.stock_column_widths,
             "log_column_widths": self.log_column_widths,
             "minimize_to_tray": self.minimize_to_tray,
@@ -2634,7 +2686,20 @@ class CannabisTracker:
             win.geometry(f"+{x_pos}+{y_pos}")
         except Exception:
             pass
-    def _prepare_toplevel(self, win: tk.Toplevel, keep_geometry: bool = False) -> None:
+
+    def _center_window_on_screen(self, win: tk.Toplevel) -> None:
+        try:
+            win.update_idletasks()
+            width = win.winfo_reqwidth()
+            height = win.winfo_reqheight()
+            sw = self.root.winfo_screenwidth()
+            sh = self.root.winfo_screenheight()
+            x_pos = max(0, (sw - width) // 2)
+            y_pos = max(0, (sh - height) // 2)
+            win.geometry(f"+{x_pos}+{y_pos}")
+        except Exception:
+            pass
+    def _prepare_toplevel(self, win: tk.Toplevel, keep_geometry: bool = False, placement: str = "pointer") -> None:
         """Prevent white flash when opening toplevels by styling before showing."""
         try:
             try:
@@ -2645,7 +2710,10 @@ class CannabisTracker:
             win.configure(bg=self.current_base_color)
             win.update_idletasks()
             if not keep_geometry:
-                self._place_window_at_pointer(win)
+                if placement == "center":
+                    self._center_window_on_screen(win)
+                else:
+                    self._place_window_at_pointer(win)
             # Apply dark title bar before showing to avoid white flash
             self._set_dark_title_bar(self.dark_var.get(), target=win)
             win.deiconify()
@@ -2657,7 +2725,10 @@ class CannabisTracker:
         except Exception:
             # Fallback to basic placement
             if not keep_geometry:
-                self._place_window_at_pointer(win)
+                if placement == "center":
+                    self._center_window_on_screen(win)
+                else:
+                    self._place_window_at_pointer(win)
             self._set_dark_title_bar(self.dark_var.get(), target=win)
     def _export_stats_csv(self, period: str) -> None:
         logs_subset, label, _ = self._logs_for_period(period)
