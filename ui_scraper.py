@@ -2175,7 +2175,7 @@ class App(tk.Tk):
                 bordercolor=border,
                 lightcolor=border,
                 darkcolor=border,
-                focuscolor=border,
+                focuscolor=ctrl_bg,
                 borderwidth=1,
             )
             self.style.map(
@@ -2185,7 +2185,30 @@ class App(tk.Tk):
                 bordercolor=[("focus", border), ("!focus", border)],
                 lightcolor=[("focus", border), ("!focus", border)],
                 darkcolor=[("focus", border), ("!focus", border)],
-                focuscolor=[("focus", border), ("!focus", border)],
+                focuscolor=[("focus", ctrl_bg), ("!focus", ctrl_bg)],
+            )
+            self.style.layout(
+                "Scraper.TEntry",
+                [
+                    (
+                        "Entry.field",
+                        {
+                            "sticky": "nswe",
+                            "border": "1",
+                            "children": [
+                                (
+                                    "Entry.padding",
+                                    {
+                                        "sticky": "nswe",
+                                        "children": [
+                                            ("Entry.textarea", {"sticky": "nswe"})
+                                        ],
+                                    },
+                                )
+                            ],
+                        },
+                    )
+                ],
             )
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
