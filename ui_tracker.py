@@ -2486,6 +2486,9 @@ class CannabisTracker:
         try:
             cap_cfg = _load_capture_config()
             self.scraper_notify_windows = bool(cap_cfg.get("notify_windows", self.scraper_notify_windows))
+            self.scraper_notifications_muted = bool(cap_cfg.get("notifications_muted", False))
+            snap = cap_cfg.get("notification_restore_snapshot", {})
+            self._scraper_notify_restore = snap if isinstance(snap, dict) else None
         except Exception:
             pass
         self.total_green_threshold = float(cfg.get("total_green_threshold", self.total_green_threshold))
@@ -3688,16 +3691,24 @@ class CannabisTracker:
         )
         try:
             if not self.scraper_notifications_muted:
-                self._scraper_notify_restore = {k: bool(cfg.get(k, False)) for k in keys}
+                snapshot = {k: bool(cfg.get(k, False)) for k in keys}
+                self._scraper_notify_restore = dict(snapshot)
                 for key in keys:
                     cfg[key] = False
+                cfg["notification_restore_snapshot"] = dict(snapshot)
+                cfg["notifications_muted"] = True
                 self.scraper_notifications_muted = True
             else:
-                restore = self._scraper_notify_restore or {}
+                restore = cfg.get("notification_restore_snapshot")
+                if not isinstance(restore, dict) or not restore:
+                    restore = self._scraper_notify_restore or {}
                 for key in keys:
                     cfg[key] = bool(restore.get(key, cfg.get(key, False)))
+                cfg["notification_restore_snapshot"] = {}
+                cfg["notifications_muted"] = False
                 self.scraper_notifications_muted = False
                 self._scraper_notify_restore = None
+            self.scraper_notify_windows = bool(cfg.get("notify_windows", self.scraper_notify_windows))
             _save_capture_config(cfg)
         except Exception:
             pass

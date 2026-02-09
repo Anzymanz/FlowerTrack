@@ -148,6 +148,8 @@ DEFAULT_CAPTURE_CONFIG = {
     "notify_new_items": True,
     "notify_removed_items": True,
     "notify_windows": True,
+    "notifications_muted": False,
+    "notification_restore_snapshot": {},
     "log_window_hidden_height": 260.0,
     "quiet_hours_enabled": False,
     "quiet_hours_start": "22:00",
@@ -487,6 +489,15 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["notify_new_items"] = _coerce_bool(raw.get("notify_new_items"), DEFAULT_CAPTURE_CONFIG["notify_new_items"])
     cfg["notify_removed_items"] = _coerce_bool(raw.get("notify_removed_items"), DEFAULT_CAPTURE_CONFIG["notify_removed_items"])
     cfg["notify_windows"] = _coerce_bool(raw.get("notify_windows"), DEFAULT_CAPTURE_CONFIG["notify_windows"])
+    cfg["notifications_muted"] = _coerce_bool(raw.get("notifications_muted"), DEFAULT_CAPTURE_CONFIG["notifications_muted"])
+    snapshot = raw.get("notification_restore_snapshot", DEFAULT_CAPTURE_CONFIG["notification_restore_snapshot"])
+    if isinstance(snapshot, dict):
+        cfg["notification_restore_snapshot"] = {
+            str(k): _coerce_bool(v, False)
+            for k, v in snapshot.items()
+        }
+    else:
+        cfg["notification_restore_snapshot"] = {}
     cfg["log_window_hidden_height"] = _coerce_float(
         raw.get("log_window_hidden_height"),
         DEFAULT_CAPTURE_CONFIG["log_window_hidden_height"],
