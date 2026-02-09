@@ -1223,6 +1223,8 @@ class CannabisTracker:
         panel = colors["ctrl_bg"]
         entry_bg = colors["ctrl_bg"]
         accent = colors["accent"]
+        select_bg = colors.get("select_bg", accent)
+        select_fg = colors.get("select_fg", text_color)
         border = colors["ctrl_bg"]
         scroll = "#2a2a2a" if dark else "#e6e6e6"
         cursor_color = text_color
@@ -1250,8 +1252,8 @@ class CannabisTracker:
         # Try to align dropdown list colors with the combobox button/field
         self.root.option_add("*TCombobox*Listbox*Background", entry_bg)
         self.root.option_add("*TCombobox*Listbox*Foreground", text_color)
-        self.root.option_add("*TCombobox*Listbox*selectBackground", accent)
-        self.root.option_add("*TCombobox*Listbox*selectForeground", "#ffffff")
+        self.root.option_add("*TCombobox*Listbox*selectBackground", select_bg)
+        self.root.option_add("*TCombobox*Listbox*selectForeground", select_fg)
         self.style.configure(
             "Treeview",
             background=panel,
@@ -1263,8 +1265,8 @@ class CannabisTracker:
             font=self.font_body,
         )
         self.style.configure("Treeview.Heading", background=border, foreground=text_color, font=self.font_body)
-        self.style.map("Treeview.Heading", background=[("active", accent)], foreground=[("active", "#ffffff")])
-        self.style.map("Treeview", background=[("selected", accent)], foreground=[("selected", "#ffffff")])
+        self.style.map("Treeview.Heading", background=[("active", accent)], foreground=[("active", text_color)])
+        self.style.map("Treeview", background=[("selected", select_bg)], foreground=[("selected", select_fg)])
         self.style.configure(
             self.vscroll_style,
             troughcolor=panel,

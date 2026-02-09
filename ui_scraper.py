@@ -1732,6 +1732,8 @@ class App(tk.Tk):
     def apply_theme(self):
         dark = self.dark_mode_var.get()
         colors = compute_colors(dark)
+        select_bg = colors.get("select_bg", colors["accent"])
+        select_fg = colors.get("select_fg", colors["fg"])
         apply_style_theme(self.style, colors)
         self.configure(bg=colors["bg"])
         self.status.configure(background=colors["bg"], foreground=colors["fg"])
@@ -1744,10 +1746,12 @@ class App(tk.Tk):
         self.option_add("*TScrollbar*arrowcolor", colors["fg"])
         self.option_add("*Menu*Background", colors["ctrl_bg"])
         self.option_add("*Menu*Foreground", colors["fg"])
-        self.option_add("*Menu*ActiveBackground", colors["accent"])
-        self.option_add("*Menu*ActiveForeground", colors["bg"])
+        self.option_add("*Menu*ActiveBackground", select_bg)
+        self.option_add("*Menu*ActiveForeground", select_fg)
         self.option_add("*TCombobox*Listbox*Background", colors["ctrl_bg"])
         self.option_add("*TCombobox*Listbox*Foreground", colors["fg"])
+        self.option_add("*TCombobox*Listbox*selectBackground", select_bg)
+        self.option_add("*TCombobox*Listbox*selectForeground", select_fg)
         # ttk scrollbar styling
         self.style.configure(
             "Vertical.TScrollbar",
@@ -1789,8 +1793,8 @@ class App(tk.Tk):
                     bg=colors["ctrl_bg"],
                     fg=colors["fg"],
                     insertbackground=colors["fg"],
-                    selectbackground=colors["accent"],
-                    selectforeground=colors["bg"],
+                    selectbackground=select_bg,
+                    selectforeground=select_fg,
                     highlightthickness=0,
                     borderwidth=0,
                 )
@@ -1927,7 +1931,13 @@ class App(tk.Tk):
                 except Exception as exc:
                     self._debug_log(f"Suppressed exception: {exc}")
             if isinstance(widget, tk.Listbox):
-                widget.configure(bg=bg if dark else "#ffffff", fg=fg, selectbackground=accent, selectforeground="#000" if dark else "#fff", highlightbackground=bg)
+                widget.configure(
+                    bg=bg if dark else "#ffffff",
+                    fg=fg,
+                    selectbackground=select_bg,
+                    selectforeground=select_fg,
+                    highlightbackground=bg,
+                )
             elif isinstance(widget, tk.Text):
                 widget.configure(bg=bg, fg=fg, insertbackground=fg, highlightbackground=bg)
             elif isinstance(widget, ttk.Widget):
