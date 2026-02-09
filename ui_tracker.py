@@ -265,8 +265,19 @@ class CannabisTracker:
         self._apply_scraper_controls_visibility()
         top_bar.columnconfigure(4, weight=1)
         # Stock list
-        stock_frame = ttk.LabelFrame(main, text="Flower Stock", padding=10, style="Panel.TLabelframe")
-        stock_frame.grid(row=1, column=0, sticky="nsew", padx=(0, 8))
+        self.stock_wrap = tk.Frame(main, highlightthickness=1)
+        self.stock_wrap.grid(row=1, column=0, sticky="nsew", padx=(0, 8))
+        self.stock_wrap.columnconfigure(0, weight=1)
+        self.stock_wrap.rowconfigure(0, weight=1)
+        stock_frame = ttk.LabelFrame(
+            self.stock_wrap,
+            text="Flower Stock",
+            padding=10,
+            style="Panel.TLabelframe",
+            borderwidth=0,
+            relief="flat",
+        )
+        stock_frame.grid(row=0, column=0, sticky="nsew")
         main.columnconfigure(0, weight=3)
         main.rowconfigure(1, weight=1)
         columns = ("name", "thc", "cbd", "grams")
@@ -350,7 +361,17 @@ class CannabisTracker:
         right = ttk.Frame(main)
         right.grid(row=1, column=1, sticky="nsew")
         main.columnconfigure(1, weight=4)
-        dose_frame = ttk.LabelFrame(right, text="Log Dose", padding=10, style="Panel.TLabelframe")
+        self.dose_wrap = tk.Frame(right, highlightthickness=1)
+        self.dose_wrap.grid(row=0, column=0, sticky="ew")
+        self.dose_wrap.columnconfigure(0, weight=1)
+        dose_frame = ttk.LabelFrame(
+            self.dose_wrap,
+            text="Log Dose",
+            padding=10,
+            style="Panel.TLabelframe",
+            borderwidth=0,
+            relief="flat",
+        )
         dose_frame.grid(row=0, column=0, sticky="ew")
         ttk.Label(dose_frame, text="Flower").grid(row=0, column=0, sticky="w")
         self.flower_choice = ttk.Combobox(dose_frame, state="readonly", width=35, values=[], style=self.combo_style)
@@ -389,8 +410,19 @@ class CannabisTracker:
         )
         self.remaining_today_cbd_label.grid(row=4, column=0, columnspan=3, sticky="w", pady=(2, 0))
         self.remaining_today_cbd_label.grid_remove()
-        log_frame = ttk.LabelFrame(right, text="Usage Log", padding=10, style="Panel.TLabelframe")
-        log_frame.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
+        self.log_wrap = tk.Frame(right, highlightthickness=1)
+        self.log_wrap.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
+        self.log_wrap.columnconfigure(0, weight=1)
+        self.log_wrap.rowconfigure(0, weight=1)
+        log_frame = ttk.LabelFrame(
+            self.log_wrap,
+            text="Usage Log",
+            padding=10,
+            style="Panel.TLabelframe",
+            borderwidth=0,
+            relief="flat",
+        )
+        log_frame.grid(row=0, column=0, sticky="nsew")
         right.rowconfigure(1, weight=1)
         right.columnconfigure(0, weight=1)
         nav = ttk.Frame(log_frame)
@@ -1240,8 +1272,21 @@ class CannabisTracker:
         self.style.configure("TCheckbutton", background=base, foreground=text_color)
         self.style.map("TCheckbutton", background=[("active", accent)], foreground=[("active", "#ffffff")])
         panel_border = "#2a2a2a" if dark else border
-        self.style.configure("Panel.TLabelframe", background=base, foreground=text_color, bordercolor=panel_border)
+        self.style.configure(
+            "Panel.TLabelframe",
+            background=base,
+            foreground=text_color,
+            bordercolor=panel_border,
+            borderwidth=0,
+            relief="flat",
+        )
         self.style.configure("Panel.TLabelframe.Label", background=base, foreground=text_color)
+        for wrap in (getattr(self, "stock_wrap", None), getattr(self, "dose_wrap", None), getattr(self, "log_wrap", None)):
+            if wrap:
+                try:
+                    wrap.configure(bg=base, highlightbackground=panel_border, highlightcolor=panel_border)
+                except Exception:
+                    pass
         self.style.configure("TEntry", fieldbackground=entry_bg, background=entry_bg, foreground=text_color, insertcolor=cursor_color)
         self.style.configure(
             self.combo_style,
