@@ -19,11 +19,6 @@ Shows usage, stock, and daily targets in a single view.
 
 <img src="docs/TrackerSS.png?v=20260124b" width="960" />
 
-### Tracker settings
-Configure thresholds, routes, and display options.
-
-<img src="docs/TrackerSettingSS.png?v=20260124b" width="300" />
-
 ### Usage stats
 Shows usage history and trends over time.
 
