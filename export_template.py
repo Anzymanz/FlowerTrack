@@ -88,7 +88,7 @@ html.modal-open, body.modal-open{overflow:hidden;height:100%}
 .range-tag{font-size:12px;color:var(--muted);min-width:28px;text-align:center}
 .range-val{font-size:12px;color:var(--fg);min-width:48px;text-align:center}
 .range-title{position:absolute;left:50%;top:6px;transform:translate(-50%,-50%);font-size:12px;color:var(--muted);pointer-events:none}
-input.search-box{padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--panel);color:var(--fg);min-width:200px}
+input.search-box{padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--panel);color:var(--fg);min-width:170px}
 button{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--accent);font-weight:600;cursor:pointer;transition:background .2s ease,color .2s ease}
 button.btn-filter{background:var(--panel);color:var(--accent)}
 button.btn-filter.active{background:var(--accent);color:var(--bg);background-image:none}

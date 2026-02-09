@@ -244,11 +244,11 @@ class CannabisTracker:
                 pass
             return False
         try:
-            # First try to focus an existing scraper window
+            # First try to focus an existing scraper window only when explicitly requested.
             if show_window:
                 self._send_scraper_command("show")
-            if focus_existing():
-                return
+                if focus_existing():
+                    return
             if self._scraper_process_alive_from_state():
                 return
             if getattr(sys, "frozen", False):
@@ -3597,7 +3597,9 @@ class CannabisTracker:
                 self._send_scraper_command("stop")
             else:
                 self._send_scraper_command("start")
-                self.open_parser(show_window=False)
+                # Ensure a background scraper process exists, but never force-show its window.
+                if not self._scraper_process_alive_from_state():
+                    self.open_parser(show_window=False)
             self._update_scraper_status_icon()
         except Exception:
             pass
