@@ -54,6 +54,24 @@ def _build_scraper_status_image(child_procs):
         return make_tray_image(running=running, warn=warn)
     except Exception:
         return None
+
+
+def _overlay_mute_icon(base_img):
+    if Image is None or ImageDraw is None or base_img is None:
+        return base_img
+    try:
+        img = base_img.copy().convert("RGBA")
+        draw = ImageDraw.Draw(img)
+        w, h = img.size
+        r = max(8, min(w, h) // 6)
+        cx = w - r - 3
+        cy = h - r - 3
+        draw.ellipse((cx - r, cy - r, cx + r, cy + r), fill=(230, 70, 70, 245), outline=(255, 255, 255, 245), width=2)
+        draw.line((cx - r + 3, cy - r + 3, cx + r - 3, cy + r - 3), fill=(255, 255, 255, 255), width=2)
+        draw.line((cx - r + 3, cy + r - 3, cx + r - 3, cy - r + 3), fill=(255, 255, 255, 255), width=2)
+        return img
+    except Exception:
+        return base_img
  
 class CannabisTracker:
     def __init__(self, root: tk.Tk) -> None:
@@ -123,6 +141,8 @@ class CannabisTracker:
         self.show_scraper_status_icon = True
         self.show_scraper_buttons = True
         self.scraper_notify_windows = True
+        self.scraper_notifications_muted = False
+        self._scraper_notify_restore: dict | None = None
         self.enable_stock_coloring = True
         self.enable_stock_coloring_thc = True
         self.enable_stock_coloring_cbd = True
@@ -300,6 +320,7 @@ class CannabisTracker:
         self.scraper_status_img = None
         self.scraper_status_label = ttk.Label(top_bar, text="")
         self.scraper_status_label.grid(row=0, column=6, sticky="e", padx=(6, 0))
+        self._bind_scraper_status_actions()
         self._apply_scraper_controls_visibility()
         top_bar.columnconfigure(4, weight=1)
         # Stock list
@@ -3500,6 +3521,119 @@ class CannabisTracker:
                 label.grid()
             except Exception:
                 pass
+
+    def _bind_scraper_status_actions(self) -> None:
+        label = getattr(self, "scraper_status_label", None)
+        if not label:
+            return
+        try:
+            label.bind("<Double-Button-1>", self._on_status_double_click)
+            label.bind("<Button-3>", self._on_status_right_click)
+            label.bind("<Enter>", self._on_status_enter)
+            label.bind("<Leave>", lambda _e: self._hide_tooltip())
+        except Exception:
+            pass
+
+    def _status_tooltip_text(self) -> str:
+        muted = bool(getattr(self, "scraper_notifications_muted", False))
+        muted_txt = "Muted" if muted else "Unmuted"
+        return (
+            f"Scraper status: {muted_txt}\n"
+            "Double-click: Start/Stop scraper\n"
+            "Right-click: Mute/Unmute notifications"
+        )
+
+    def _on_status_enter(self, event: tk.Event | None = None) -> None:
+        try:
+            self._show_tooltip(self._status_tooltip_text(), event)
+        except Exception:
+            pass
+
+    def _on_status_double_click(self, _event: tk.Event | None = None) -> None:
+        try:
+            running, _warn = resolve_scraper_status(getattr(self, "child_procs", []))
+            if running:
+                self._stop_scraper_instances()
+            else:
+                self.open_parser()
+            self._update_scraper_status_icon()
+        except Exception:
+            pass
+
+    def _stop_scraper_instances(self) -> None:
+        try:
+            for proc in list(getattr(self, "child_procs", [])):
+                try:
+                    if proc and proc.poll() is None:
+                        proc.terminate()
+                except Exception:
+                    pass
+            self._prune_child_procs()
+        except Exception:
+            pass
+        # Try to close any scraper window not launched as a tracked child process.
+        try:
+            import ctypes
+            from ctypes import wintypes
+            user32 = ctypes.WinDLL("user32", use_last_error=True)
+            HWND = wintypes.HWND
+            LPARAM = wintypes.LPARAM
+            WNDENUMPROC = ctypes.WINFUNCTYPE(wintypes.BOOL, HWND, LPARAM)
+            WM_CLOSE = 0x0010
+            targets = []
+
+            def enum_proc(hwnd, _lparam):
+                buf = ctypes.create_unicode_buffer(512)
+                user32.GetWindowTextW(hwnd, buf, 512)
+                title = buf.value or ""
+                if "Medicann Scraper" in title or ("FlowerTrack" in title and "Scraper" in title):
+                    targets.append(hwnd)
+                return True
+
+            user32.EnumWindows(WNDENUMPROC(enum_proc), 0)
+            for hwnd in targets:
+                try:
+                    user32.PostMessageW(hwnd, WM_CLOSE, 0, 0)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+    def _on_status_right_click(self, _event: tk.Event | None = None) -> None:
+        self._toggle_scraper_notifications_mute()
+
+    def _toggle_scraper_notifications_mute(self) -> None:
+        cfg = _load_capture_config() or {}
+        keys = (
+            "auto_notify_ha",
+            "notify_windows",
+            "notify_price_changes",
+            "notify_stock_changes",
+            "notify_out_of_stock",
+            "notify_restock",
+            "notify_new_items",
+            "notify_removed_items",
+        )
+        try:
+            if not self.scraper_notifications_muted:
+                self._scraper_notify_restore = {k: bool(cfg.get(k, False)) for k in keys}
+                for key in keys:
+                    cfg[key] = False
+                self.scraper_notifications_muted = True
+            else:
+                restore = self._scraper_notify_restore or {}
+                for key in keys:
+                    cfg[key] = bool(restore.get(key, cfg.get(key, False)))
+                self.scraper_notifications_muted = False
+                self._scraper_notify_restore = None
+            _save_capture_config(cfg)
+        except Exception:
+            pass
+        self._update_scraper_status_icon()
+        try:
+            self._show_tooltip(self._status_tooltip_text())
+        except Exception:
+            pass
         else:
             try:
                 label.grid_remove()
@@ -3552,6 +3686,8 @@ class CannabisTracker:
                 self._apply_scraper_controls_visibility()
                 return
             img = _build_scraper_status_image(getattr(self, "child_procs", []))
+            if img is not None and self.scraper_notifications_muted:
+                img = _overlay_mute_icon(img)
             if img and ImageTk is not None:
                 tk_img = ImageTk.PhotoImage(img)
                 self.scraper_status_img = tk_img
