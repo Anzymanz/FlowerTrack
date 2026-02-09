@@ -312,7 +312,7 @@ def log_dose():
         pass
 
     messagebox.showinfo("Logged", "Dose logged to tracker.")
-    root.destroy()
+    _close_and_save()
 
 
 
@@ -425,7 +425,7 @@ def add_to_stock():
         pass
 
     messagebox.showinfo("Blend added", "Blend added to stock.")
-    root.destroy()
+    _close_and_save()
 
 def calculate():
     idx_a = combo_a.current()
@@ -625,6 +625,29 @@ def _save_geometry() -> None:
     except Exception:
         pass
 
+def _close_and_save() -> None:
+    try:
+        _save_geometry()
+    except Exception:
+        pass
+    try:
+        root.destroy()
+    except Exception:
+        pass
+
+_save_geometry_job = None
+def _schedule_save_geometry(event=None) -> None:
+    global _save_geometry_job
+    try:
+        if _save_geometry_job is not None:
+            root.after_cancel(_save_geometry_job)
+    except Exception:
+        pass
+    try:
+        _save_geometry_job = root.after(300, _save_geometry)
+    except Exception:
+        pass
+
 def _place_near_mouse() -> None:
     if os.environ.get("FT_MOUSE_LAUNCH") != "1":
         return
@@ -656,7 +679,7 @@ def _show_root() -> None:
 
 if not items:
     ttk.Label(main, text="No stock found. Add stock in the tracker first.").pack(pady=10)
-    ttk.Button(main, text="Close", command=root.destroy).pack()
+    ttk.Button(main, text="Close", command=_close_and_save).pack()
     _place_near_mouse()
     _show_root()
     root.mainloop()
@@ -750,7 +773,7 @@ left_actions = ttk.Frame(actions)
 left_actions.pack(side="left")
 ttk.Button(left_actions, text="Swap A/B", command=swap_items).pack(side="left", padx=4)
 ttk.Button(left_actions, text="Calculate", command=calculate).pack(side="left", padx=4)
-ttk.Button(left_actions, text="Close", command=root.destroy).pack(side="left", padx=4)
+ttk.Button(left_actions, text="Close", command=_close_and_save).pack(side="left", padx=4)
 
 right_actions = ttk.Frame(actions)
 right_actions.pack(side="right")
@@ -776,5 +799,6 @@ result_lbl.pack(fill="x", pady=(4, 0))
 _load_saved_geometry()
 _place_near_mouse()
 _show_root()
-root.protocol("WM_DELETE_WINDOW", lambda: (_save_geometry(), root.destroy()))
+root.bind("<Configure>", _schedule_save_geometry)
+root.protocol("WM_DELETE_WINDOW", _close_and_save)
 root.mainloop()
