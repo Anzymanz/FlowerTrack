@@ -216,6 +216,7 @@ class App(tk.Tk):
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
         self.after(0, self._show_scraper_window)
+        self.after(50, self._apply_log_window_visibility)
 
     def _show_scraper_window(self) -> None:
         try:
@@ -225,6 +226,10 @@ class App(tk.Tk):
             self.lift()
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
+        try:
+            self._apply_log_window_visibility()
+        except Exception:
+            pass
     def _build_capture_controls(self) -> None:
         cfg = _load_capture_config()
         self.capture_config_path = Path(CONFIG_FILE)
@@ -689,6 +694,9 @@ class App(tk.Tk):
                             target_height = current_height + int(delta)
                     if target_height:
                         self.geometry(f"{self.winfo_width()}x{int(target_height)}")
+                else:
+                    if current_height and self._log_window_last_full_height:
+                        self.geometry(f"{self.winfo_width()}x{int(self._log_window_last_full_height)}")
             else:
                 if self.console_frame.winfo_ismapped():
                     self._log_window_last_full_height = current_height
@@ -698,6 +706,10 @@ class App(tk.Tk):
                     self.geometry(f"{self.winfo_width()}x{hidden_height}")
                     self.update_idletasks()
                     self.scraper_log_hidden_height = self.winfo_height()
+                else:
+                    hidden_height = int(getattr(self, "scraper_log_hidden_height", 260) or 260)
+                    if hidden_height:
+                        self.geometry(f"{self.winfo_width()}x{hidden_height}")
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
 
@@ -909,6 +921,10 @@ class App(tk.Tk):
             self._log_console(f"Saved config to {target}")
         except Exception as exc:
             self._log_console(f"Failed to save config: {exc}")
+        try:
+            self._apply_log_window_visibility()
+        except Exception:
+            pass
 
     def _current_screen_resolution(self) -> str:
         try:

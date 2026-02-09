@@ -1189,14 +1189,42 @@ class CannabisTracker:
 
         _style_widget(picker)
         try:
-            top = picker.winfo_toplevel()
-            self._queue_dark_titlebar(top, attempts=20, delay_ms=100, allow_parent=False)
-            top.bind("<Map>", lambda _e: self._queue_dark_titlebar(top, attempts=20, delay_ms=100, allow_parent=False))
-            top.bind("<Visibility>", lambda _e: self._queue_dark_titlebar(top, attempts=20, delay_ms=100, allow_parent=False))
-            top.bind("<FocusIn>", lambda _e: self._queue_dark_titlebar(top, attempts=20, delay_ms=100, allow_parent=False))
-            top.bind("<Activate>", lambda _e: self._queue_dark_titlebar(top, attempts=20, delay_ms=100, allow_parent=False))
+            hexa_entry = getattr(picker, "hexa", None)
+            if hexa_entry is not None and hexa_entry.winfo_exists():
+                parent = hexa_entry.master
+                if parent is not None and not getattr(parent, "_hex_clip_buttons", None):
+                    def _copy_hex() -> None:
+                        try:
+                            value = str(hexa_entry.get() or "").strip()
+                            if not value:
+                                return
+                            picker.clipboard_clear()
+                            picker.clipboard_append(value)
+                        except Exception:
+                            pass
+
+                    def _paste_hex() -> None:
+                        try:
+                            value = str(picker.clipboard_get() or "").strip()
+                            if not value:
+                                return
+                            hexa_entry.delete(0, "end")
+                            hexa_entry.insert(0, value)
+                            try:
+                                picker._update_color_hexa()
+                            except Exception:
+                                pass
+                        except Exception:
+                            pass
+
+                    copy_btn = ttk.Button(parent, text="Copy", width=5, command=_copy_hex)
+                    paste_btn = ttk.Button(parent, text="Paste", width=5, command=_paste_hex)
+                    copy_btn.pack(side="left", padx=(4, 2), pady=(4, 1))
+                    paste_btn.pack(side="left", padx=(2, 0), pady=(4, 1))
+                    parent._hex_clip_buttons = (copy_btn, paste_btn)
         except Exception:
             pass
+        # Titlebar apply happens in _ask_colour_picker when the picker is shown.
 
     def _center_child_window(self, child: tk.Toplevel, parent: tk.Toplevel | None) -> None:
         try:
@@ -1237,16 +1265,18 @@ class CannabisTracker:
             pass
         self._center_child_window(picker, parent)
         try:
+            top = picker.winfo_toplevel()
             picker.deiconify()
             picker.attributes("-alpha", 1.0)
             picker.update_idletasks()
+            self._apply_picker_titlebar(top)
+            picker.after_idle(lambda: self._apply_picker_titlebar(top))
         except Exception:
-            pass
-        try:
-            top = picker.winfo_toplevel()
-            self._queue_dark_titlebar(top, attempts=20, delay_ms=100, allow_parent=False)
-        except Exception:
-            pass
+            try:
+                picker.deiconify()
+                picker.attributes("-alpha", 1.0)
+            except Exception:
+                pass
         picker.wait_window(picker)
         try:
             res = picker.get_color()
@@ -1325,24 +1355,31 @@ class CannabisTracker:
 
     def _queue_settings_titlebar(self, settings_win: tk.Toplevel) -> None:
         try:
-            if getattr(self, "_settings_titlebar_job", None):
+            if getattr(self, "_settings_titlebar_job", None) is not None:
                 return
             def _apply():
                 self._settings_titlebar_job = None
                 try:
                     if settings_win and tk.Toplevel.winfo_exists(settings_win):
-                        self._queue_dark_titlebar(settings_win)
+                        self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
                 except Exception:
                     pass
-            self._settings_titlebar_job = self.root.after(1, _apply)
+            self._settings_titlebar_job = self.root.after_idle(_apply)
         except Exception:
             try:
-                self._queue_dark_titlebar(settings_win)
+                self._set_dark_title_bar(self.dark_var.get(), target=settings_win)
             except Exception:
                 pass
 
     def _resolve_hwnd(self, win: tk.Tk | tk.Toplevel, allow_parent: bool = True) -> int:
         hwnd = win.winfo_id()
+        try:
+            GA_ROOT = 2
+            root_hwnd = ctypes.windll.user32.GetAncestor(hwnd, GA_ROOT)
+            if root_hwnd:
+                hwnd = root_hwnd
+        except Exception:
+            pass
         if not allow_parent:
             return hwnd
         get_parent = ctypes.windll.user32.GetParent
@@ -1363,6 +1400,15 @@ class CannabisTracker:
             SWP_FRAMECHANGED = 0x0020
             flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED
             ctypes.windll.user32.SetWindowPos(hwnd, 0, 0, 0, 0, 0, flags)
+        except Exception:
+            pass
+
+    def _apply_picker_titlebar(self, win: tk.Toplevel) -> None:
+        try:
+            if not win or not tk.Toplevel.winfo_exists(win):
+                return
+            self._set_dark_title_bar(self.dark_var.get(), target=win, allow_parent=False)
+            self._refresh_window_frame(win, allow_parent=False)
         except Exception:
             pass
 

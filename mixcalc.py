@@ -8,7 +8,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from theme import apply_style_theme, apply_rounded_buttons, compute_colors, set_titlebar_dark
 import ctypes
-from config import load_tracker_config
+from config import load_tracker_config, save_tracker_config
 from resources import resource_path
 
 
@@ -580,13 +580,54 @@ labels = [format_item(it) for it in items]
 root = tk.Tk()
 root.title("Mix Calculator" if not IS_STOCK_MODE else "Blend Calculator (stock)")
 try:
+    root.withdraw()
+    root.attributes("-alpha", 0.0)
+except Exception:
+    pass
+try:
     icon_path = resource_path("icon.ico")
     if os.path.exists(icon_path):
         root.iconbitmap(icon_path)
 except Exception:
     pass
-# Best-effort place near mouse if requested by parent
-if os.environ.get("FT_MOUSE_LAUNCH") == "1":
+
+main = ttk.Frame(root, padding=10)
+main.pack(fill="both", expand=True)
+
+dark_mode = load_dark_mode_default()
+bg, fg = apply_theme(root, dark_mode)
+
+def _load_saved_geometry() -> None:
+    try:
+        cfg = load_tracker_config(CONFIG_FILE)
+    except Exception:
+        return
+    key = "mixcalc_stock_geometry" if IS_STOCK_MODE else "mixcalc_geometry"
+    geom = str(cfg.get(key) or "").strip()
+    if geom:
+        try:
+            root.geometry(geom)
+        except Exception:
+            pass
+
+def _save_geometry() -> None:
+    try:
+        cfg = load_tracker_config(CONFIG_FILE)
+    except Exception:
+        cfg = {}
+    key = "mixcalc_stock_geometry" if IS_STOCK_MODE else "mixcalc_geometry"
+    try:
+        cfg[key] = root.winfo_geometry()
+    except Exception:
+        return
+    try:
+        save_tracker_config(CONFIG_FILE, cfg)
+    except Exception:
+        pass
+
+def _place_near_mouse() -> None:
+    if os.environ.get("FT_MOUSE_LAUNCH") != "1":
+        return
     try:
         x = root.winfo_pointerx()
         y = root.winfo_pointery()
@@ -601,15 +642,23 @@ if os.environ.get("FT_MOUSE_LAUNCH") == "1":
     except Exception:
         pass
 
-main = ttk.Frame(root, padding=10)
-main.pack(fill="both", expand=True)
-
-dark_mode = load_dark_mode_default()
-bg, fg = apply_theme(root, dark_mode)
+def _show_root() -> None:
+    try:
+        _set_window_titlebar_dark(root, dark_mode)
+    except Exception:
+        pass
+    try:
+        root.deiconify()
+        root.attributes("-alpha", 1.0)
+        root.lift()
+    except Exception:
+        pass
 
 if not items:
     ttk.Label(main, text="No stock found. Add stock in the tracker first.").pack(pady=10)
     ttk.Button(main, text="Close", command=root.destroy).pack()
+    _place_near_mouse()
+    _show_root()
     root.mainloop()
     raise SystemExit
 
@@ -724,4 +773,8 @@ result_var = tk.StringVar(value="Select two flowers, set total grams and THC:CBD
 result_lbl = ttk.Label(main, textvariable=result_var, justify="left")
 result_lbl.pack(fill="x", pady=(4, 0))
 
+_load_saved_geometry()
+_place_near_mouse()
+_show_root()
+root.protocol("WM_DELETE_WINDOW", lambda: (_save_geometry(), root.destroy()))
 root.mainloop()
