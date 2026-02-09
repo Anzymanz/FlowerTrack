@@ -1131,6 +1131,7 @@ class CannabisTracker:
                 settings_win.lift()
                 settings_win.focus_force()
                 settings_win.after(0, lambda: self._set_dark_title_bar(self.dark_var.get(), target=settings_win))
+                settings_win.after(50, lambda: self._set_dark_title_bar(self.dark_var.get(), target=settings_win))
         except Exception:
             pass
         color = self._normalize_hex(picked or "")
@@ -1165,6 +1166,7 @@ class CannabisTracker:
                 settings_win.lift()
                 settings_win.focus_force()
                 settings_win.after(0, lambda: self._set_dark_title_bar(self.dark_var.get(), target=settings_win))
+                settings_win.after(50, lambda: self._set_dark_title_bar(self.dark_var.get(), target=settings_win))
         except Exception:
             pass
         color = self._normalize_hex(picked or "")

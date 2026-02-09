@@ -188,6 +188,11 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
         bordercolor=ctrl_bg,
         focuscolor=ctrl_bg,
     )
+    style.map(
+        "TNotebook.Tab",
+        background=[("selected", "#222222" if bg == "#111" else "#e0e0e0"), ("!selected", ctrl_bg)],
+        foreground=[("selected", fg), ("!selected", fg)],
+    )
     style.configure(
         "Settings.TNotebook.Tab",
         padding=[10, 4],

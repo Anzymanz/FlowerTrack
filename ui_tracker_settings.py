@@ -468,6 +468,13 @@ def open_tracker_settings(app) -> None:
         notebook.select(current)
     except Exception:
         pass
+    try:
+        app.apply_theme(app.dark_var.get())
+        notebook.update_idletasks()
+        current = notebook.index("current")
+        notebook.select(current)
+    except Exception:
+        pass
     # Place after layout to avoid resize flash
     app._prepare_toplevel(win)
     try:
