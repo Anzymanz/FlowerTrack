@@ -886,6 +886,7 @@ function normalizeKey(value) {
     if (!value) return "";
     return String(value)
         .replace(/&#x27;|&#39;|&apos;/gi, "'")
+        .replace(/[’‘]/g, "'")
         .toLowerCase();
 }
 function removeFromBasket(key, productId) {
