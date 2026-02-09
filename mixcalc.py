@@ -597,18 +597,20 @@ main.pack(fill="both", expand=True)
 dark_mode = load_dark_mode_default()
 bg, fg = apply_theme(root, dark_mode)
 
-def _load_saved_geometry() -> None:
+def _load_saved_geometry() -> bool:
     try:
         cfg = load_tracker_config(CONFIG_FILE)
     except Exception:
-        return
+        return False
     key = "mixcalc_stock_geometry" if IS_STOCK_MODE else "mixcalc_geometry"
     geom = str(cfg.get(key) or "").strip()
     if geom:
         try:
             root.geometry(geom)
+            return True
         except Exception:
-            pass
+            return False
+    return False
 
 def _save_geometry() -> None:
     try:
@@ -796,8 +798,9 @@ result_var = tk.StringVar(value="Select two flowers, set total grams and THC:CBD
 result_lbl = ttk.Label(main, textvariable=result_var, justify="left")
 result_lbl.pack(fill="x", pady=(4, 0))
 
-_load_saved_geometry()
-_place_near_mouse()
+_had_saved_geometry = _load_saved_geometry()
+if not _had_saved_geometry:
+    _place_near_mouse()
 _show_root()
 root.bind("<Configure>", _schedule_save_geometry)
 root.protocol("WM_DELETE_WINDOW", _close_and_save)

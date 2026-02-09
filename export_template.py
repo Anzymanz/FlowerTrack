@@ -27,7 +27,7 @@ HTML_TEMPLATE = """
 }
 body{background:var(--bg);color:var(--fg);font-family:Arial;padding:16px;margin:0;transition:background .2s ease,color .2s ease}
 html.modal-open, body.modal-open{overflow:hidden;height:100%}
-.export-header{display:flex;align-items:flex-start;justify-content:flex-start;gap:12px;margin-bottom:8px}
+.export-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;width:100%}
 .export-header h1{margin:0 0 4px 0}
 .header-logo-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 .header-logo{height:40px;max-width:180px;object-fit:contain;display:block}
