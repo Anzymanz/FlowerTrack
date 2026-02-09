@@ -256,6 +256,7 @@ function applyFilters(resetLimit = true) {
         c.style.display = 'none';
     });
     applyVisibleLimit();
+    tryAutoFill();
 }
 function handleSearch(el) {
     searchTerm = el.value || "";
@@ -266,11 +267,10 @@ function loadMore() {
     applyVisibleLimit();
 }
 let autoLoading = false;
-function tryAutoFill() {
+function triggerAutoLoad() {
+    if (autoLoading) return;
     const btn = document.getElementById('loadMore');
     if (!btn || btn.style.display === 'none') return;
-    const bodyShort = document.body.scrollHeight <= (window.innerHeight + 20);
-    if (!bodyShort) return;
     autoLoading = true;
     loadMore();
     setTimeout(() => {
@@ -278,28 +278,30 @@ function tryAutoFill() {
         tryAutoFill();
     }, 120);
 }
-function autoLoadOnScroll() {
-    if (autoLoading) return;
+function tryAutoFill() {
     const btn = document.getElementById('loadMore');
     if (!btn || btn.style.display === 'none') return;
-    const nearBottom = (window.innerHeight + window.scrollY) >= (document.body.scrollHeight - 200);
+    const bodyShort = document.body.scrollHeight <= (window.innerHeight + 20);
+    if (!bodyShort) return;
+    triggerAutoLoad();
+}
+function autoLoadOnScroll() {
+    const btn = document.getElementById('loadMore');
+    if (!btn || btn.style.display === 'none') return;
+    const nearBottom = (window.innerHeight + window.scrollY) >= (document.body.scrollHeight - 300);
     if (!nearBottom) return;
-    autoLoading = true;
-    loadMore();
-    setTimeout(() => { autoLoading = false; }, 200);
+    triggerAutoLoad();
 }
 function observeLoadMore() {
     const sentinel = document.getElementById('loadMoreSentinel');
     if (!sentinel || !('IntersectionObserver' in window)) return;
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            if (entry.isIntersecting && !autoLoading) {
-                autoLoading = true;
-                loadMore();
-                setTimeout(() => { autoLoading = false; }, 150);
+            if (entry.isIntersecting) {
+                triggerAutoLoad();
             }
         });
-    }, { root: null, rootMargin: '200px', threshold: 0.01 });
+    }, { root: null, rootMargin: '400px', threshold: 0.01 });
     observer.observe(sentinel);
 }
 function toggleBrandFilter(brand, checkbox) {
