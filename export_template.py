@@ -394,6 +394,36 @@ let historyLoading = false;
 let latestExportMs = 0;
 let updateBaselineSet = false;
 let headBaselineSet = false;
+const openModalLocks = new Set();
+let bodyPaddingBeforeModal = "";
+let htmlPaddingBeforeModal = "";
+function applyModalLockState() {
+    const shouldLock = openModalLocks.size > 0;
+    if (shouldLock) {
+        const sbw = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+        if (!document.body.classList.contains('modal-open')) {
+            bodyPaddingBeforeModal = document.body.style.paddingRight || "";
+            htmlPaddingBeforeModal = document.documentElement.style.paddingRight || "";
+        }
+        document.body.classList.add('modal-open');
+        document.documentElement.classList.add('modal-open');
+        document.body.style.paddingRight = sbw > 0 ? `${sbw}px` : bodyPaddingBeforeModal;
+        document.documentElement.style.paddingRight = sbw > 0 ? `${sbw}px` : htmlPaddingBeforeModal;
+    } else {
+        document.body.classList.remove('modal-open');
+        document.documentElement.classList.remove('modal-open');
+        document.body.style.paddingRight = bodyPaddingBeforeModal;
+        document.documentElement.style.paddingRight = htmlPaddingBeforeModal;
+        bodyPaddingBeforeModal = "";
+        htmlPaddingBeforeModal = "";
+    }
+}
+function setModalOpenLock(id, isOpen) {
+    if (!id) return;
+    if (isOpen) openModalLocks.add(id);
+    else openModalLocks.delete(id);
+    applyModalLockState();
+}
 function escapeHtml(val) {
     if (val === null || val === undefined) return "";
     return String(val)
@@ -742,8 +772,7 @@ function renderBasketModal(show) {
     });
     if (show) {
         modal.style.display = 'flex';
-        document.body.classList.add('modal-open');
-        document.documentElement.classList.add('modal-open');
+        setModalOpenLock('basket', true);
     }
 }
 function closeBasket() {
@@ -751,8 +780,7 @@ function closeBasket() {
     if (modal) modal.style.display = 'none';
     const btn = document.getElementById('basketButton');
     if (btn) btn.classList.remove('active');
-    document.body.classList.remove('modal-open');
-    document.documentElement.classList.remove('modal-open');
+    setModalOpenLock('basket', false);
 }
 async function toggleHistory() {
     let modal = document.getElementById('historyModal');
@@ -772,14 +800,12 @@ async function toggleHistory() {
     await preloadHistory();
     renderHistoryModal();
     modal.style.display = 'flex';
-    document.body.classList.add('modal-open');
-    document.documentElement.classList.add('modal-open');
+    setModalOpenLock('history', true);
 }
 function closeHistory() {
     const modal = document.getElementById('historyModal');
     if (modal) modal.style.display = 'none';
-    document.body.classList.remove('modal-open');
-    document.documentElement.classList.remove('modal-open');
+    setModalOpenLock('history', false);
 }
 function historySummary(rec) {
     const newCount = (rec.new_items || []).length;
