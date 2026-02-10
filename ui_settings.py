@@ -35,6 +35,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     def _on_close():
         try:
             app.auth_bootstrap_log_widget = None
+            app.auth_bootstrap_log_frame = None
         except Exception:
             pass
         try:
@@ -235,11 +236,15 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         row=row_idx, column=1, sticky="e", padx=6, pady=(8, 2)
     )
     row_idx += 1
-    ttk.Label(account_form, text="Auth bootstrap log").grid(
-        row=row_idx, column=0, columnspan=2, sticky="w", padx=6, pady=(8, 2)
+    colors = compute_colors(app.dark_mode_var.get())
+    account_log_frame = tk.Frame(
+        account_form,
+        bg=colors["ctrl_bg"],
+        highlightthickness=1,
+        highlightbackground=colors.get("border", colors["ctrl_bg"]),
+        highlightcolor=colors.get("border", colors["ctrl_bg"]),
+        bd=0,
     )
-    row_idx += 1
-    account_log_frame = ttk.Frame(account_form)
     account_log_frame.grid(row=row_idx, column=0, columnspan=2, sticky="nsew", padx=6, pady=(0, 4))
     account_form.rowconfigure(row_idx, weight=1)
     account_log_text = tk.Text(
@@ -255,6 +260,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     account_log_text.pack(side="left", fill="both", expand=True)
     account_log_scroll.pack(side="right", fill="y")
     app.auth_bootstrap_log_widget = account_log_text
+    app.auth_bootstrap_log_frame = account_log_frame
 
     capture_form = ttk.Frame(tab_capture)
     capture_form.pack(fill="x", expand=True)
@@ -441,6 +447,10 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     detail_combo.bind("<FocusOut>", _clear_combo_selection)
     detail_combo.bind("<<ComboboxSelected>>", _clear_combo_selection)
 
+    notify_actions = ttk.Frame(tab_notifications)
+    notify_actions.pack(fill="x", pady=(6, 0))
+    ttk.Button(notify_actions, text="Send test notification", command=app.send_test_notification).pack(side="right", padx=4)
+
     filters_frame = ttk.Frame(tab_filters)
     filters_frame.pack(fill="x", expand=True)
     ttk.Checkbutton(filters_frame, text="Include inactive products", variable=app.cap_include_inactive).pack(anchor="w", pady=2)
@@ -482,7 +492,6 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Button(scraper_btns, text="Export config", command=app.save_capture_config).pack(side="left", padx=4)
     ttk.Button(scraper_btns, text="Clear cache", command=app.clear_cache).pack(side="right", padx=4)
     ttk.Button(scraper_btns, text="Clear auth cache", command=app._clear_auth_cache).pack(side="right", padx=4)
-    ttk.Button(scraper_btns, text="Send test notification", command=app.send_test_notification).pack(side="right", padx=4)
 
     btn_row = ttk.Frame(outer)
     btn_row.pack(fill="x", pady=10, padx=10)

@@ -132,6 +132,7 @@ class App(tk.Tk):
         self.capture_window = None
         self.history_window = None
         self.auth_bootstrap_log_widget = None
+        self.auth_bootstrap_log_frame = None
         self.tray_icon = None
         self.capture_status = "idle"
         self.error_count = 0
@@ -610,7 +611,9 @@ class App(tk.Tk):
             widget.configure(state="normal")
             widget.insert("end", line)
             widget.see("end")
+            widget.yview_moveto(1.0)
             widget.configure(state="disabled")
+            widget.update_idletasks()
         except Exception:
             pass
 
@@ -2152,6 +2155,30 @@ class App(tk.Tk):
                         self.console_scroll.configure(style="Dark.Vertical.TScrollbar")
                 except Exception as exc:
                     self._debug_log(f"Suppressed exception: {exc}")
+            except Exception as exc:
+                self._debug_log(f"Suppressed exception: {exc}")
+        if hasattr(self, "auth_bootstrap_log_widget") and self.auth_bootstrap_log_widget:
+            try:
+                self.auth_bootstrap_log_widget.configure(
+                    bg=colors["ctrl_bg"],
+                    fg=colors["fg"],
+                    insertbackground=colors["fg"],
+                    selectbackground=colors["accent"],
+                    selectforeground=colors["bg"],
+                    highlightthickness=0,
+                    borderwidth=0,
+                )
+            except Exception as exc:
+                self._debug_log(f"Suppressed exception: {exc}")
+        if hasattr(self, "auth_bootstrap_log_frame") and self.auth_bootstrap_log_frame:
+            try:
+                self.auth_bootstrap_log_frame.configure(
+                    bg=colors["ctrl_bg"],
+                    highlightthickness=1,
+                    highlightbackground=colors.get("border", colors["ctrl_bg"]),
+                    highlightcolor=colors.get("border", colors["ctrl_bg"]),
+                    bd=0,
+                )
             except Exception as exc:
                 self._debug_log(f"Suppressed exception: {exc}")
         try:
