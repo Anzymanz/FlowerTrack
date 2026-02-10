@@ -106,13 +106,23 @@ class HistoryViewer(tk.Toplevel):
         self.tree_scroll.grid(row=0, column=1, sticky="ns")
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
 
-        detail_frame = ttk.LabelFrame(body, text="Details", padding=8)
-        detail_frame.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=(8, 0))
-        detail_frame.rowconfigure(0, weight=1)
-        detail_frame.columnconfigure(0, weight=1)
-        self.detail_text = tk.Text(detail_frame, wrap="word", height=10, state="disabled", padx=8, pady=6)
+        self.detail_frame = ttk.LabelFrame(body, text="Details", padding=8, style="History.TLabelframe")
+        self.detail_frame.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=(8, 0))
+        self.detail_frame.rowconfigure(0, weight=1)
+        self.detail_frame.columnconfigure(0, weight=1)
+        self.detail_text = tk.Text(
+            self.detail_frame,
+            wrap="word",
+            height=10,
+            state="disabled",
+            padx=8,
+            pady=6,
+            relief="flat",
+            borderwidth=0,
+            highlightthickness=1,
+        )
         self.detail_text.grid(row=0, column=0, sticky="nsew")
-        self.detail_scroll = ttk.Scrollbar(detail_frame, orient="vertical", command=self.detail_text.yview)
+        self.detail_scroll = ttk.Scrollbar(self.detail_frame, orient="vertical", command=self.detail_text.yview)
         self.detail_text.configure(yscrollcommand=self.detail_scroll.set)
         self.detail_scroll.grid(row=0, column=1, sticky="ns")
 
@@ -153,10 +163,14 @@ class HistoryViewer(tk.Toplevel):
                     widget.configure(style="History.Treeview")
                 elif isinstance(widget, tk.Text):
                     widget.configure(
-                        bg=bg,
+                        bg=ctrl_bg,
                         fg=fg,
                         insertbackground=fg,
-                        highlightbackground=bg,
+                        highlightbackground=border,
+                        highlightcolor=border,
+                        relief="flat",
+                        borderwidth=0,
+                        highlightthickness=1,
                         selectbackground=accent,
                         selectforeground="#ffffff",
                     )
@@ -184,6 +198,20 @@ class HistoryViewer(tk.Toplevel):
         _apply_widget(self)
         try:
             style = ttk.Style(self)
+            style.configure(
+                "History.TLabelframe",
+                background=bg,
+                bordercolor=border,
+                lightcolor=border,
+                darkcolor=border,
+                relief="flat",
+                borderwidth=1,
+            )
+            style.configure(
+                "History.TLabelframe.Label",
+                background=bg,
+                foreground=fg,
+            )
             style.configure(
                 "History.Treeview",
                 background=ctrl_bg,
@@ -216,10 +244,17 @@ class HistoryViewer(tk.Toplevel):
                 lightcolor=border,
                 darkcolor=border,
             )
+            style.map(
+                "History.Vertical.TScrollbar",
+                background=[("active", ctrl_bg), ("!active", ctrl_bg)],
+                troughcolor=[("active", bg), ("!active", bg)],
+                arrowcolor=[("active", fg), ("!active", fg)],
+            )
             apply_rounded_buttons(style, {"bg": bg, "fg": fg, "ctrl_bg": ctrl_bg, "accent": accent})
         except Exception as exc:
             _log_debug(f"HistoryViewer suppressed exception: {exc}")
         try:
+            self.detail_frame.configure(style="History.TLabelframe")
             self.tree.configure(style="History.Treeview")
             self.tree_scroll.configure(style="History.Vertical.TScrollbar")
             self.detail_scroll.configure(style="History.Vertical.TScrollbar")
