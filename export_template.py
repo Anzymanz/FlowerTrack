@@ -194,7 +194,7 @@ let activeTypes = new Set(['flower','oil','vape','pastille']);
 let activeStrains = new Set(['Indica','Sativa','Hybrid']);
 let favoritesOnly = false;
 let showSmalls = true;
-let showOutOfStock = false;
+let showInStockOnly = true;
 let showBetaIrr = true;
 let showGammaIrr = true;
 let brandFilter = new Set();
@@ -252,7 +252,7 @@ function applyFilters(resetLimit = true) {
         const brandOk = brandFilter.size > 0 ? brandFilter.has(brandText) : true;
         const favOk = favoritesOnly ? favorites.has(favKey) : true;
         const isOut = c.dataset.out === '1';
-        const stockOk = showOutOfStock || !isOut;
+        const stockOk = showInStockOnly ? !isOut : true;
         const smallsOk = showSmalls || !isSmalls;
         const irrRaw = (c.dataset.irradiation || '').toLowerCase();
         const isFlower = pt === 'flower';
@@ -356,9 +356,9 @@ function toggleSmalls(btn) {
     saveFilterPrefs();
     applyFilters();
 }
-function toggleOutOfStock(btn) {
-    showOutOfStock = !showOutOfStock;
-    btn.classList.toggle('active', showOutOfStock);
+function toggleInStock(btn) {
+    showInStockOnly = !showInStockOnly;
+    btn.classList.toggle('active', showInStockOnly);
     applyFilters();
 }
 function toggleIrradiation(kind, btn) {
@@ -1052,7 +1052,7 @@ function resetFilters() {
     document.querySelectorAll('[data-filter-irr]').forEach(b => b.classList.add('active'));
     favoritesOnly = false;
     showSmalls = true;
-    showOutOfStock = false;
+    showInStockOnly = true;
     showBetaIrr = true;
     showGammaIrr = true;
     brandFilter = new Set();
@@ -1151,9 +1151,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadFilterPrefs();
     loadFavorites();
     loadBasket();
-    showOutOfStock = false;
-    let outstockBtn = document.querySelector('[data-filter-outstock]');
-    if (outstockBtn) outstockBtn.classList.remove('active');
+    showInStockOnly = true;
+    let instockBtn = document.querySelector('[data-filter-instock]');
+    if (instockBtn) instockBtn.classList.add('active');
     document.querySelectorAll('.card').forEach(applyFavState);
     updateBasketUI();
     refreshBasketButtons();
@@ -1244,8 +1244,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     const smallsBtn = document.querySelector('[data-filter-smalls]');
     if (smallsBtn) smallsBtn.classList.toggle('active', showSmalls);
-    outstockBtn = outstockBtn || document.querySelector('[data-filter-outstock]');
-    if (outstockBtn) outstockBtn.classList.toggle('active', showOutOfStock);
+    instockBtn = instockBtn || document.querySelector('[data-filter-instock]');
+    if (instockBtn) instockBtn.classList.toggle('active', showInStockOnly);
     // Purge legacy stock filter preferences (in/low) if present.
     try {
         const raw = localStorage.getItem('ft_filters');
@@ -1324,7 +1324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <button class='btn-filter active' data-filter-irr="gamma" onclick="toggleIrradiation('gamma', this)">γ</button>
     <button class='btn-filter' onclick="toggleFavorites(this)">Favorites</button>
     <button class='btn-filter active' data-filter-smalls="1" onclick="toggleSmalls(this)">Smalls</button>
-    <button class='btn-filter' data-filter-outstock="1" onclick="toggleOutOfStock(this)">Out of stock</button>
+    <button class='btn-filter active' data-filter-instock="1" onclick="toggleInStock(this)">In stock</button>
     <div class="brand-filter" id="brandFilter">
       <button class="btn-filter" onclick="toggleBrandMenu()">Brands ▾</button>
       <div class="brand-menu" id="brandMenu"></div>
