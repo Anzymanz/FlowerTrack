@@ -157,7 +157,6 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
             insertbackground=colors["fg"],
             selectbackground=highlight,
             selectforeground=colors["fg"],
-            inactiveselectbackground=highlight,
             highlightthickness=1,
             highlightbackground=colors.get("border", colors["ctrl_bg"]),
             highlightcolor=colors.get("border", colors["ctrl_bg"]),
