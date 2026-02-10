@@ -3556,7 +3556,7 @@ class CannabisTracker:
         try:
             running, warn = resolve_scraper_status(getattr(self, "child_procs", []))
             # Keep the in-window status indicator compact so it does not dominate the top bar.
-            img = self._build_status_image(running, warn, size=24)
+            img = self._build_status_image(running, warn, size=18)
             if img is not None:
                 return img
         except Exception:
