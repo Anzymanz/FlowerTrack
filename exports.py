@@ -259,7 +259,7 @@ def _render_card_html(
         {f"<span class='pill'>£/g {ppg:.2f}</span>" if ppg is not None else ''}
         {f"<span class='pill'>🍃 {esc(it.get('strain_type'))}</span>" if it.get('strain_type') else ''}
         {f"<span class='pill pill-flag'><img class='flag-icon' loading='lazy' decoding='async' src='{esc_attr(_flag_cdn_url(it.get('origin_country')))}' alt='{esc_attr(it.get('origin_country') or '')}' /> {esc(it.get('origin_country'))}</span>" if _flag_cdn_url(it.get('origin_country')) else ''}
-        {f"<span class='pill'>☢️ {esc(it.get('irradiation_type'))}</span>" if (it.get('irradiation_type') and (it.get('product_type') or '').lower() not in ('vape','oil','device')) else ''}
+        {f"<span class='pill'>☢️ {esc(it.get('irradiation_type'))}</span>" if (it.get('irradiation_type') and (it.get('product_type') or '').lower() == 'flower') else ''}
     </div>
     <div class='small'>🌞THC: {esc(disp_thc)}</div>
     <div class='small'>🌙CBD: {esc(disp_cbd)}</div>
