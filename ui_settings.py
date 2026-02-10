@@ -32,6 +32,21 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     except Exception:
         pass
     app.settings_window = win
+    def _on_close():
+        try:
+            app.auth_bootstrap_log_widget = None
+        except Exception:
+            pass
+        try:
+            if win and tk.Toplevel.winfo_exists(win):
+                win.destroy()
+        except Exception:
+            pass
+        app.settings_window = None
+    try:
+        win.protocol("WM_DELETE_WINDOW", _on_close)
+    except Exception:
+        pass
     if not hasattr(app, "show_advanced_scraper"):
         app.show_advanced_scraper = tk.BooleanVar(value=True)
     else:
@@ -219,6 +234,27 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Button(account_form, text="Get auth token", command=app._run_auth_bootstrap).grid(
         row=row_idx, column=1, sticky="e", padx=6, pady=(8, 2)
     )
+    row_idx += 1
+    ttk.Label(account_form, text="Auth bootstrap log").grid(
+        row=row_idx, column=0, columnspan=2, sticky="w", padx=6, pady=(8, 2)
+    )
+    row_idx += 1
+    account_log_frame = ttk.Frame(account_form)
+    account_log_frame.grid(row=row_idx, column=0, columnspan=2, sticky="nsew", padx=6, pady=(0, 4))
+    account_form.rowconfigure(row_idx, weight=1)
+    account_log_text = tk.Text(
+        account_log_frame,
+        height=8,
+        wrap="word",
+        state="disabled",
+        relief="flat",
+        borderwidth=0,
+    )
+    account_log_scroll = ttk.Scrollbar(account_log_frame, orient="vertical", command=account_log_text.yview)
+    account_log_text.configure(yscrollcommand=account_log_scroll.set)
+    account_log_text.pack(side="left", fill="both", expand=True)
+    account_log_scroll.pack(side="right", fill="y")
+    app.auth_bootstrap_log_widget = account_log_text
 
     capture_form = ttk.Frame(tab_capture)
     capture_form.pack(fill="x", expand=True)
@@ -423,6 +459,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
             if win and tk.Toplevel.winfo_exists(win):
                 win.destroy()
             app.settings_window = None
+            app.auth_bootstrap_log_widget = None
         except Exception:
             pass
 

@@ -118,6 +118,104 @@ def _clean_title(value: str | None) -> str | None:
     out = re.sub(r"\s+", " ", out).strip()
     return out
 
+def _is_useful_oil_base_name(value: str | None) -> bool:
+    if not value:
+        return False
+    raw = re.sub(r"\s+", " ", str(value)).strip()
+    if not raw:
+        return False
+    norm = re.sub(r"[^a-z0-9]+", " ", raw.lower()).strip()
+    # Generic placeholders should not be preserved in title composition.
+    generic = {
+        "oil",
+        "cannabis oil",
+        "medical cannabis oil",
+        "thc medical cannabis oil",
+        "sublingual oil",
+        "cannabis sublingual oil",
+        "cannabis oral oil",
+        "oral oil",
+    }
+    if norm in generic:
+        return False
+    return True
+
+def _extract_oil_base_name(value: str | None) -> str | None:
+    if not value:
+        return None
+    out = str(value).strip()
+    # Remove potency/ratio and concentration fragments.
+    out = re.sub(r"\bT\s*\d{1,3}\s*:\s*C\s*\d{1,3}\b", "", out, flags=re.I)
+    out = re.sub(r"\bT\s*\d{1,3}\b", "", out, flags=re.I)
+    out = re.sub(r"\bTHC\s*[<>=~≤≥]?\s*\d{1,3}(?:\.\d+)?\s*MG\s*/\s*ML\b", "", out, flags=re.I)
+    out = re.sub(r"\bCBD\s*[<>=~≤≥]?\s*\d{1,3}(?:\.\d+)?\s*MG\s*/\s*ML\b", "", out, flags=re.I)
+    out = re.sub(r"\bTHC\s*:?\s*\d{1,3}\s*%?\b", "", out, flags=re.I)
+    out = re.sub(r"\bCBD\s*:?\s*\d{1,3}\s*%?\b", "", out, flags=re.I)
+    # Remove size and generic oil wording.
+    out = re.sub(r"\b\d+(?:\.\d+)?\s*ML\b", "", out, flags=re.I)
+    out = re.sub(r"\bMEDICAL\s+CANNABIS\b", "", out, flags=re.I)
+    out = re.sub(r"\bCANNABIS\s+SUBLINGUAL\s+OIL\b", "", out, flags=re.I)
+    out = re.sub(r"\bCANNABIS\s+OIL\b", "", out, flags=re.I)
+    out = re.sub(r"\bSUBLINGUAL\s+OIL\b", "", out, flags=re.I)
+    out = re.sub(r"\bORAL\s+OIL\b", "", out, flags=re.I)
+    out = re.sub(r"\bOIL\b", "", out, flags=re.I)
+    out = re.sub(r"[\(\)\[\],]+", " ", out)
+    out = re.sub(r"\s+", " ", out).strip(" -:")
+    tokens = []
+    for tok in out.split():
+        up = tok.upper()
+        if up in {"THC", "CBD", "MG", "ML", "S"}:
+            continue
+        if re.fullmatch(r"[<>=~≤≥]?\d+(?:\.\d+)?", tok):
+            continue
+        if re.search(r"MG\s*/\s*ML", tok, flags=re.I):
+            continue
+        tokens.append(tok)
+    out = " ".join(tokens).strip(" -:")
+    if not out:
+        return None
+    # Use a friendlier display case for residual base names.
+    return out.title()
+
+def _canonical_oil_name(raw_name: str, thc: float | None, cbd: float | None) -> str | None:
+    upper = str(raw_name or "").upper()
+    if not upper:
+        return None
+    if "BALANCE" in upper:
+        ratio_match = re.search(r"\bT\s*(\d{1,3})\s*:\s*C\s*(\d{1,3})\b", upper)
+        if ratio_match:
+            t_val = int(ratio_match.group(1))
+            c_val = int(ratio_match.group(2))
+            return f"Balance T{t_val}C{c_val} Sublingual Oil"
+        if thc is not None and cbd is not None:
+            t_val = int(round(thc))
+            c_val = int(round(cbd))
+            if c_val > 0:
+                return f"Balance T{t_val}C{c_val} Sublingual Oil"
+        return "Balance Sublingual Oil"
+
+    profile = None
+    code_match = re.search(r"\bT\s*(\d{1,3})(?:\s*:\s*C\s*(\d{1,3}))?\b", upper)
+    if code_match:
+        thc_code = code_match.group(1)
+        cbd_code = code_match.group(2)
+        if cbd_code:
+            profile = f"T{int(thc_code)}C{int(cbd_code)}"
+        else:
+            profile = f"T{int(thc_code)}"
+    elif thc is not None:
+        thc_i = int(round(thc))
+        cbd_i = int(round(cbd)) if cbd is not None else 0
+        # Keep ratio naming for clearly mixed oils; otherwise keep a simple THC profile.
+        if cbd_i >= 10:
+            profile = f"T{thc_i}C{cbd_i}"
+        else:
+            profile = f"T{thc_i}"
+
+    if not profile:
+        return None
+    return f"{profile} Sublingual Oil"
+
 def _parse_formulary_item(entry: dict) -> ItemDict | None:
     if not isinstance(entry, dict):
         return None
@@ -126,8 +224,10 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
     specs = entry.get("specifications") or product.get("specifications") or {}
     metadata = product.get("metadata") or {}
     raw_name = entry.get("name") or product.get("name") or entry.get("title") or product.get("title") or ""
+    product_name = product.get("name") or product.get("title") or ""
     long_name = (
         raw_name
+        or product_name
         or (metadata.get("name") if isinstance(metadata, dict) else None)
         or (metadata.get("title") if isinstance(metadata, dict) else None)
         or ""
@@ -158,26 +258,14 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
         or _normalize_product_type(product.get("type"))
         or _normalize_product_type(name)
     )
-    if product_type == "oil":
-        try:
-            if "BALANCE" in str(raw_name).upper():
-                name = "Balance"
-        except Exception:
-            pass
     if product_type in {"oil", "vape"} and long_name:
-        long_clean = _clean_title(long_name) or long_name
+        source_name = product_name if (product_type == "vape" and product_name) else long_name
+        long_clean = _clean_title(source_name) or source_name
         if long_clean:
             name = long_clean
     strain = cannabis.get("strainName") or metadata.get("strain")
-    if not strain or str(strain).strip().upper() in {"N/A", "NA", "NONE", "UNKNOWN"}:
+    if not strain or str(strain).strip().upper() in {"N/A", "NA", "NONE", "UNKNOWN", "-", "--"}:
         strain = name
-    if product_type == "oil":
-        try:
-            if "BALANCE" in str(raw_name).upper():
-                name = "Balance"
-                strain = "Balance"
-        except Exception:
-            pass
     grams = None
     ml = None
     size = _coerce_float(cannabis.get("size") or specs.get("size"))
@@ -189,6 +277,21 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
             ml = size
     thc = _coerce_float(cannabis.get("thcContent") or specs.get("thcContent"))
     cbd = _coerce_float(cannabis.get("cbdContent") or specs.get("cbdContent"))
+    if product_type == "oil":
+        canonical_name = _canonical_oil_name(raw_name, thc, cbd)
+        if canonical_name:
+            base_name = _extract_oil_base_name(name) or _extract_oil_base_name(raw_name) or _clean_title(name) or name
+            if _is_useful_oil_base_name(base_name):
+                base_upper = str(base_name).upper()
+                canon_upper = str(canonical_name).upper()
+                if canon_upper in base_upper:
+                    composed = base_name
+                else:
+                    composed = f"{base_name} - {canonical_name}"
+            else:
+                composed = canonical_name
+            name = composed
+            strain = composed
     thc_unit = "%" if thc is not None else None
     cbd_unit = "%" if cbd is not None else None
     pricing = entry.get("pricingOptions")

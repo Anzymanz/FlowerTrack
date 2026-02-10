@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+import math
 import os
 import sys
 import urllib.parse
@@ -378,6 +379,13 @@ class CaptureWorker:
             return False
         return True
 
+    def _credentials_ready(self) -> bool:
+        return bool(
+            (self.cfg.get("username") or "").strip()
+            and (self.cfg.get("password") or "").strip()
+            and (self.cfg.get("organization") or "").strip()
+        )
+
     def _direct_api_capture(self) -> list[dict] | None:
         self._last_auth_error = False
         auth = self._load_auth_cache()
@@ -562,6 +570,19 @@ class CaptureWorker:
             data = payload.get("data")
             if isinstance(data, list):
                 fetched_total += len(data)
+        expected_pages = 0
+        try:
+            expected_pages = max(1, math.ceil(int(total) / float(take))) if total else 1
+        except Exception:
+            expected_pages = len(api_payloads)
+        if len(api_payloads) < expected_pages:
+            try:
+                self.callbacks["capture_log"](
+                    f"API pagination incomplete pages ({len(api_payloads)}/{expected_pages}); skipping parse."
+                )
+            except Exception:
+                pass
+            return None
         if total and fetched_total < int(total):
             try:
                 self.callbacks["capture_log"](
@@ -597,30 +618,48 @@ class CaptureWorker:
             return None
         if self.callbacks["stop_event"].is_set():
             return None
+        username = (self.cfg.get("username") or "").strip()
+        password = (self.cfg.get("password") or "").strip()
+        organization = (self.cfg.get("organization") or "").strip()
+        manual_login_mode = not (username and password and organization)
+        if manual_login_mode:
+            try:
+                prompt_cb = self.callbacks.get("prompt_manual_login")
+                if prompt_cb:
+                    prompt_cb()
+            except Exception:
+                pass
         sync_playwright, PlaywrightTimeoutError = _Playwright
         api_payloads: list[dict] = []
         captured_auth = {"ready": False}
+        launch_headless = False if manual_login_mode else self.cfg.get("headless", True)
 
         def _capture_request(req):
             try:
                 url = req.url or ""
                 if not url:
                     return
-                if not any(tok in url for tok in ("formulary-products", "auth/initialize", "rpc-api")):
-                    return
                 payload = {"url": url}
+                headers = {}
                 try:
                     req_headers = req.headers
                     if isinstance(req_headers, dict):
-                        payload["request_headers"] = dict(req_headers)
+                        headers = dict(req_headers)
+                        payload["request_headers"] = headers
                 except Exception:
                     pass
+                has_auth = bool(headers.get("authorization") or headers.get("Authorization"))
+                wants_track = has_auth or any(
+                    tok in url for tok in ("formulary-products", "auth/initialize", "rpc-api", "entity-api")
+                )
+                if not wants_track:
+                    return
                 api_payloads.append(payload)
-                if "formulary-products" in url:
-                    headers = payload.get("request_headers") or {}
-                    token = headers.get("authorization") or headers.get("Authorization")
-                    if token:
+                try:
+                    if self._extract_auth_from_payloads(api_payloads):
                         captured_auth["ready"] = True
+                except Exception:
+                    pass
             except Exception:
                 pass
 
@@ -643,13 +682,19 @@ class CaptureWorker:
                 payload = {"url": url, "content_type": (resp.headers.get("content-type") or "").lower()}
                 payload["data"] = data
                 api_payloads.append(payload)
+                try:
+                    if self._extract_auth_from_payloads(api_payloads):
+                        captured_auth["ready"] = True
+                except Exception:
+                    pass
             except Exception:
                 pass
 
         with sync_playwright() as p:
             browser = None
             try:
-                browser = p.chromium.launch(headless=self.cfg.get("headless", True))
+                # If account details are incomplete, force visible browser for manual login.
+                browser = p.chromium.launch(headless=launch_headless)
             except Exception as exc:
                 attempted_install = False
                 if self.install_fn and not attempted_install:
@@ -660,7 +705,7 @@ class CaptureWorker:
                         pass
                     if self.install_fn():
                         try:
-                            browser = p.chromium.launch(headless=self.cfg.get("headless", True))
+                            browser = p.chromium.launch(headless=launch_headless)
                         except Exception as exc2:
                             self._safe_log(f"Auth bootstrap browser launch failed after install: {exc2}")
                     else:
@@ -673,6 +718,10 @@ class CaptureWorker:
             except Exception:
                 pass
             page = browser.new_page()
+            try:
+                page.bring_to_front()
+            except Exception:
+                pass
             try:
                 page.on("request", _capture_request)
                 page.on("response", _capture_response)
@@ -691,106 +740,101 @@ class CaptureWorker:
             # Short wait for form/UI to render.
             time.sleep(3)
             try:
-                self.callbacks["capture_log"]("Auth bootstrap: attempting login...")
+                if manual_login_mode:
+                    self.callbacks["capture_log"](
+                        "Auth bootstrap: account details incomplete. Please complete login in the opened browser window."
+                    )
+                else:
+                    self.callbacks["capture_log"]("Auth bootstrap: attempting login...")
             except Exception:
                 pass
-            try:
-                user_sels = [
-                    self.cfg.get("username_selector") or "",
-                    'input[data-path="email"]',
-                    'input[placeholder="Email"]',
-                    'input[type="email"]',
-                    'input#email',
-                    'input[name="email"]',
-                ]
-                pass_sels = [
-                    self.cfg.get("password_selector") or "",
-                    'input[data-path="password"]',
-                    'input[placeholder="Password"]',
-                    'input[type="password"]',
-                    'input#password',
-                    'input[name="password"]',
-                ]
-                btn_sels = [
-                    self.cfg.get("login_button_selector") or "",
-                    'button[type="submit"]',
-                    'button:has-text("Sign in")',
-                    'button:has-text("Login")',
-                ]
-                user_union = ",".join([s for s in user_sels if s])
-                pass_union = ",".join([s for s in pass_sels if s])
-                btn_union = ",".join([s for s in btn_sels if s])
-
-                org_value = (self.cfg.get("organization") or "").strip()
-                if org_value:
-                    org_sels = [
-                        self.cfg.get("organization_selector") or "",
-                        'select[name="organization"]',
-                        'select#organization',
-                        'input[data-path="organization"]',
-                        'input[placeholder="Organization"]',
-                        '[data-path="organization"]',
+            if not manual_login_mode:
+                try:
+                    user_sels = [
+                        self.cfg.get("username_selector") or "",
+                        'input[data-path="email"]',
+                        'input[placeholder="Email"]',
+                        'input[type="email"]',
+                        'input#email',
+                        'input[name="email"]',
                     ]
-                    org_union = ",".join([s for s in org_sels if s])
-                    if org_union:
-                        try:
-                            page.select_option(org_union, label=org_value)
-                        except Exception:
+                    pass_sels = [
+                        self.cfg.get("password_selector") or "",
+                        'input[data-path="password"]',
+                        'input[placeholder="Password"]',
+                        'input[type="password"]',
+                        'input#password',
+                        'input[name="password"]',
+                    ]
+                    btn_sels = [
+                        self.cfg.get("login_button_selector") or "",
+                        'button[type="submit"]',
+                        'button:has-text("Sign in")',
+                        'button:has-text("Login")',
+                    ]
+                    user_union = ",".join([s for s in user_sels if s])
+                    pass_union = ",".join([s for s in pass_sels if s])
+                    btn_union = ",".join([s for s in btn_sels if s])
+
+                    if organization:
+                        org_sels = [
+                            self.cfg.get("organization_selector") or "",
+                            'select[name="organization"]',
+                            'select#organization',
+                            'input[data-path="organization"]',
+                            'input[placeholder="Organization"]',
+                            '[data-path="organization"]',
+                        ]
+                        org_union = ",".join([s for s in org_sels if s])
+                        if org_union:
                             try:
-                                loc = page.wait_for_selector(org_union, timeout=5000)
-                                loc.click()
-                                try:
-                                    page.click(f"text={org_value}")
-                                except Exception:
-                                    page.keyboard.type(org_value)
-                                    page.keyboard.press("Enter")
+                                page.select_option(org_union, label=organization)
                             except Exception:
-                                pass
-                if self.cfg.get("username") and user_union:
-                    try:
-                        loc = page.wait_for_selector(user_union, timeout=10000)
-                        loc.fill(self.cfg["username"])
-                    except Exception:
-                        pass
-                if self.cfg.get("password") and pass_union:
-                    try:
-                        loc = page.wait_for_selector(pass_union, timeout=10000)
-                        loc.fill(self.cfg["password"])
-                    except Exception:
-                        pass
-                clicked = False
-                if btn_union:
-                    try:
-                        page.wait_for_selector(btn_union, timeout=5000)
-                        page.click(btn_union)
-                        clicked = True
-                    except Exception:
-                        clicked = False
-                if not clicked:
-                    try:
-                        page.keyboard.press("Enter")
-                    except Exception:
-                        pass
-            except PlaywrightTimeoutError:
-                pass
-            except Exception:
-                pass
-            wait_login = self.cfg.get("login_wait_seconds", 0)
-            if wait_login:
-                try:
-                    self.callbacks["responsive_wait"](wait_login, label="Waiting after login")
+                                try:
+                                    loc = page.wait_for_selector(org_union, timeout=5000)
+                                    loc.click()
+                                    try:
+                                        page.click(f"text={organization}")
+                                    except Exception:
+                                        page.keyboard.type(organization)
+                                        page.keyboard.press("Enter")
+                                except Exception:
+                                    pass
+                    if username and user_union:
+                        try:
+                            loc = page.wait_for_selector(user_union, timeout=10000)
+                            loc.fill(username)
+                        except Exception:
+                            pass
+                    if password and pass_union:
+                        try:
+                            loc = page.wait_for_selector(pass_union, timeout=10000)
+                            loc.fill(password)
+                        except Exception:
+                            pass
+                    clicked = False
+                    if btn_union:
+                        try:
+                            page.wait_for_selector(btn_union, timeout=5000)
+                            page.click(btn_union)
+                            clicked = True
+                        except Exception:
+                            clicked = False
+                    if not clicked:
+                        try:
+                            page.keyboard.press("Enter")
+                        except Exception:
+                            pass
+                except PlaywrightTimeoutError:
+                    pass
                 except Exception:
-                    time.sleep(wait_login)
-            try:
-                page.goto(self.cfg["url"], timeout=0, wait_until="domcontentloaded")
-            except Exception:
-                pass
-            wait_post = max(self.cfg.get("post_nav_wait_seconds", 0), 0)
-            if wait_post:
-                try:
-                    self.callbacks["responsive_wait"](wait_post, label="Waiting after navigation")
-                except Exception:
-                    time.sleep(wait_post)
+                    pass
+                wait_login = self.cfg.get("login_wait_seconds", 0)
+                if wait_login:
+                    try:
+                        self.callbacks["responsive_wait"](wait_login, label="Waiting after login")
+                    except Exception:
+                        time.sleep(wait_login)
             try:
                 self.callbacks["capture_log"]("Auth bootstrap: waiting for API auth headers.")
             except Exception:
@@ -799,14 +843,53 @@ class CaptureWorker:
                 page.wait_for_load_state("networkidle", timeout=20000)
             except Exception:
                 pass
+            wait_timeout = 90 if manual_login_mode else 35
+            navigate_retry_done = False
             start = time.time()
-            while not captured_auth["ready"] and (time.time() - start) < 20:
+            next_storage_probe = start
+            while not captured_auth["ready"] and (time.time() - start) < wait_timeout:
                 if self.callbacks["stop_event"].is_set():
                     break
-                try:
-                    self.callbacks["responsive_wait"](0.5, label="Waiting for auth bootstrap")
-                except Exception:
-                    time.sleep(0.5)
+                # Use a quiet polling wait here to avoid UI progress bar flicker/0.5s
+                # countdown churn during auth bootstrap.
+                if self.callbacks["stop_event"].wait(0.5):
+                    break
+                # Periodically probe storage to speed up token/context detection.
+                now = time.time()
+                if now >= next_storage_probe:
+                    next_storage_probe = now + 2.0
+                    try:
+                        storage = page.evaluate(
+                            "() => ({localStorage: {...localStorage}, sessionStorage: {...sessionStorage}})"
+                        )
+                        if isinstance(storage, dict):
+                            flat = {}
+                            local = storage.get("localStorage") or {}
+                            session = storage.get("sessionStorage") or {}
+                            if isinstance(local, dict):
+                                flat.update({f"localStorage.{k}": v for k, v in local.items()})
+                            if isinstance(session, dict):
+                                flat.update({f"sessionStorage.{k}": v for k, v in session.items()})
+                            if flat:
+                                probe_payload = {
+                                    "url": "storage://browser",
+                                    "kind": "storage",
+                                    "data": flat,
+                                }
+                                if self._extract_auth_from_payloads(api_payloads + [probe_payload]):
+                                    api_payloads.append(probe_payload)
+                                    captured_auth["ready"] = True
+                                    break
+                    except Exception:
+                        pass
+                # Some automated sessions only emit auth headers after a post-login
+                # navigation. Do one retry in automated mode only.
+                if (not manual_login_mode) and (not navigate_retry_done) and (time.time() - start) > 8:
+                    navigate_retry_done = True
+                    try:
+                        page.goto(self.cfg["url"], timeout=0, wait_until="domcontentloaded")
+                    except Exception:
+                        pass
             try:
                 storage = page.evaluate(
                     "() => ({localStorage: {...localStorage}, sessionStorage: {...sessionStorage}})"
@@ -872,13 +955,38 @@ class CaptureWorker:
             if self.cfg.get("api_only", True):
                 while not self.callbacks["stop_event"].is_set():
                     self._set_status("running", "API capture running...")
-                    api_payloads = self._direct_api_capture()
+                    creds_ready = self._credentials_ready()
+                    auth_cache_valid = self._auth_cache_valid()
+                    api_payloads = None
                     bootstrap_payloads = None
+                    bootstrap_attempted = False
+                    if not creds_ready and not auth_cache_valid:
+                        try:
+                            self.callbacks["capture_log"](
+                                "Credentials are missing. Launching browser for manual auth bootstrap..."
+                            )
+                        except Exception:
+                            pass
+                        bootstrap_payloads = self._bootstrap_auth_with_playwright()
+                        bootstrap_attempted = True
+                        if bootstrap_payloads:
+                            try:
+                                self._persist_auth_cache(bootstrap_payloads)
+                            except Exception as exc:
+                                self._safe_log(f"Auth bootstrap persist failed: {exc}")
+                            api_payloads = self._direct_api_capture()
+                            if api_payloads:
+                                self._auth_bootstrap_failures = 0
+                                self._auth_probe_failures = 0
+                        else:
+                            self._auth_bootstrap_failures += 1
+                    if api_payloads is None:
+                        api_payloads = self._direct_api_capture()
                     if not api_payloads and self._auth_cache_valid() and not self._last_auth_error:
                         self._auth_probe_failures += 1
                     else:
                         self._auth_probe_failures = 0
-                    if not api_payloads and (self._last_auth_error or not self._auth_cache_valid()):
+                    if not api_payloads and (self._last_auth_error or not self._auth_cache_valid()) and not bootstrap_attempted:
                         try:
                             self.callbacks["capture_log"]("Auth cache missing/expired; attempting bootstrap.")
                         except Exception:
@@ -921,6 +1029,15 @@ class CaptureWorker:
                         else:
                             self._auth_bootstrap_failures += 1
                     if api_payloads:
+                        if self.callbacks["stop_event"].is_set():
+                            try:
+                                self.callbacks["capture_log"](
+                                    "Stop requested before parse/apply; discarding fetched payloads."
+                                )
+                            except Exception:
+                                pass
+                            self._set_status("stopped")
+                            break
                         try:
                             # Persist auth cache and optionally dump data
                             self._persist_auth_cache(api_payloads)

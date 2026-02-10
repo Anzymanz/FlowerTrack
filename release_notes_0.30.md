@@ -1,0 +1,30 @@
+## Highlights
+- Stabilized the main tracker layout with a persistent draggable center splitter between stock and dose/usage panels.
+- Reworked auth bootstrap into a reliable manual-first flow when credentials are missing, with clearer guidance and live account-tab logging.
+- Hardened capture integrity to prevent partial pagination payloads from being parsed and corrupting history.
+- Improved scraper startup UX with compact default sizing, hidden log-by-default behavior, and cleaner first-open window states.
+- Continued UI consistency work across tracker/scraper windows, including theme sync, border/selection fixes, and reduced visual flicker.
+
+## Changes
+- Added a draggable center splitter between Flower Stock and Dose/Usage panels, with saved position across restarts.
+- Fixed splitter persistence by validating and storing `main_split_ratio` in tracker config.
+- Added debounced splitter save/apply behavior and stronger startup restore handling to reduce sash drift.
+- Stabilized stock drawer toggling so panel widths remain consistent when opening/closing Add/Edit stock.
+- Reduced scraper default height, hid scraper log panel by default, and enforced compact hidden-log sizing.
+- Set clear scraper height targets by log visibility (compact hidden state vs expanded shown state).
+- Improved auth bootstrap to avoid forced login-page refresh loops after successful sign-in.
+- Added manual bootstrap mode for incomplete account setup (launch browser, wait for user login, capture auth).
+- Added one-shot manual-login guidance popup when credential bootstrap requires user action.
+- Stopped manual bootstrap from auto-refreshing/navigation loops while waiting for credentials.
+- Added account-tab auth bootstrap logs so token acquisition progress is visible in real time.
+- Improved fresh-start bootstrap routing to avoid duplicate bootstrap attempts in one cycle.
+- Added API completeness guards so interrupted/incomplete pagination is discarded before parse/apply.
+- Removed noisy 0.5s auth bootstrap progress flicker while waiting for auth headers.
+- Synced tracker palette overrides into running scraper and flower library windows.
+- Brought change history viewer visuals in line with active tracker theme and selection rules.
+- Fixed lingering selection-highlight artifacts in settings/input controls.
+- Improved settings/theme behavior for first-run dark-mode defaults and in-window theme updates.
+- Added explicit swatch borders in colour settings for contrast in dark/light themes.
+- Improved status indicator interactions (start/stop on double-click, mute/unmute on right-click, muted overlay state).
+- Fixed stock deletion selection cleanup to avoid stale Treeview item exceptions.
+- Fixed mixed-window and scraper geometry persistence paths that were falling back to stale defaults.

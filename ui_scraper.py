@@ -92,7 +92,7 @@ class App(tk.Tk):
             pass
         self.title(SCRAPER_TITLE)
         cfg = _load_capture_config()
-        self.scraper_window_geometry = cfg.get("window_geometry", "900x720") or "900x720"
+        self.scraper_window_geometry = cfg.get("window_geometry", "769x420") or "769x420"
         self.scraper_settings_geometry = cfg.get("settings_geometry", "560x960") or "560x960"
         self.history_window_geometry = cfg.get("history_window_geometry", "900x600") or "900x600"
         self.screen_resolution = str(cfg.get("screen_resolution", "")).strip()
@@ -131,6 +131,7 @@ class App(tk.Tk):
         self.settings_window = None
         self.capture_window = None
         self.history_window = None
+        self.auth_bootstrap_log_widget = None
         self.tray_icon = None
         self.capture_status = "idle"
         self.error_count = 0
@@ -195,6 +196,7 @@ class App(tk.Tk):
         self.q = Queue()
         self._polling = False
         self._last_external_command_ts = 0.0
+        self._pending_external_start = False
         # reset capture error state
         self.error_count = 0
         self.error_threshold = 3
@@ -232,6 +234,11 @@ class App(tk.Tk):
         self.after(500, self._poll_external_commands)
 
     def _show_scraper_window(self) -> None:
+        try:
+            # Enforce compact geometry before showing when log window is hidden.
+            self._apply_log_window_visibility()
+        except Exception:
+            pass
         try:
             self.update_idletasks()
             self.deiconify()
@@ -286,16 +293,32 @@ class App(tk.Tk):
     def _apply_external_command(self, payload: dict) -> None:
         cmd = str(payload.get("cmd", "")).strip().lower()
         if cmd == "start":
-            if not self.capture_thread:
+            if self._is_capture_running():
+                self._pending_external_start = True
+                self._capture_log("External command: start queued until capture fully stops.")
+                self.after(250, self._try_pending_external_start)
+            else:
+                self._pending_external_start = False
                 self._capture_log("External command: start auto-capture.")
                 self.start_auto_capture()
         elif cmd == "stop":
+            self._pending_external_start = False
             if self.capture_thread:
                 self._capture_log("External command: stop auto-capture.")
                 self.stop_auto_capture()
         elif cmd == "show":
             self._capture_log("External command: show scraper window.")
             self._show_scraper_window()
+
+    def _try_pending_external_start(self) -> None:
+        if not self._pending_external_start:
+            return
+        if self._is_capture_running():
+            self.after(250, self._try_pending_external_start)
+            return
+        self._pending_external_start = False
+        self._capture_log("External command: start auto-capture.")
+        self.start_auto_capture()
     def _build_capture_controls(self) -> None:
         cfg = _load_capture_config()
         self.capture_config_path = Path(CONFIG_FILE)
@@ -317,11 +340,11 @@ class App(tk.Tk):
         self.cap_dump_html = tk.BooleanVar(value=bool(cfg.get("dump_capture_html", False)))
         self.cap_dump_api = tk.BooleanVar(value=bool(cfg.get("dump_api_json", False)))
         self.cap_dump_api_full = tk.BooleanVar(value=bool(cfg.get("dump_api_full", False)))
-        self.cap_show_log_window = tk.BooleanVar(value=bool(cfg.get("show_log_window", True)))
+        self.cap_show_log_window = tk.BooleanVar(value=bool(cfg.get("show_log_window", False)))
         try:
-            self.scraper_log_hidden_height = float(cfg.get("log_window_hidden_height", 260))
+            self.scraper_log_hidden_height = float(self._clamp_hidden_log_height(cfg.get("log_window_hidden_height", 210)))
         except Exception:
-            self.scraper_log_hidden_height = 260.0
+            self.scraper_log_hidden_height = 210.0
         try:
             self.cap_show_log_window.trace_add("write", lambda *_: self._apply_log_window_visibility())
         except Exception:
@@ -411,7 +434,7 @@ class App(tk.Tk):
             "notify_new_items": bool(self.notify_new_items.get()),
             "notify_removed_items": bool(self.notify_removed_items.get()),
             "notify_windows": bool(self.notify_windows.get()),
-            "log_window_hidden_height": float(getattr(self, "scraper_log_hidden_height", 260.0) or 260.0),
+            "log_window_hidden_height": float(getattr(self, "scraper_log_hidden_height", 210.0) or 210.0),
             "quiet_hours_enabled": bool(self.cap_quiet_hours_enabled.get()),
             "quiet_hours_start": self.cap_quiet_start.get(),
             "quiet_hours_end": self.cap_quiet_end.get(),
@@ -454,6 +477,7 @@ class App(tk.Tk):
             messagebox.showwarning("Auto-capture", "Please set the target URL before starting.")
             return
         self.capture_stop.clear()
+        self._manual_bootstrap_prompt_shown = False
         self.error_count = 0
         self._empty_retry_pending = False
         self._update_tray_status()
@@ -472,10 +496,30 @@ class App(tk.Tk):
             "on_status": self._on_capture_status,
             "responsive_wait": self._responsive_wait,
             "stop_event": self.capture_stop,
+            "prompt_manual_login": self._prompt_manual_login,
         }
         self.capture_thread = start_capture_worker(cfg, callbacks, app_dir=Path(APP_DIR), install_fn=install_cb)
         self._capture_log("Auto-capture running...")
         self._update_tray_status()
+
+    def _prompt_manual_login(self) -> None:
+        # Show once per auto-capture session to avoid repetitive popups while retrying.
+        if getattr(self, "_manual_bootstrap_prompt_shown", False):
+            return
+        self._manual_bootstrap_prompt_shown = True
+        self._capture_log("Manual login required: complete login in the opened browser window.")
+        try:
+            self.after(
+                0,
+                lambda: messagebox.showinfo(
+                    "Manual Login Required",
+                    "Credentials are missing or incomplete.\n\n"
+                    "A browser has been opened.\n"
+                    "Please log in manually, then wait for token capture to complete.",
+                ),
+            )
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
 
     def stop_auto_capture(self):
         if not self.capture_stop.is_set():
@@ -542,6 +586,36 @@ class App(tk.Tk):
             or "api capture failed" in lower
         ):
             self._set_pagination_busy(False)
+
+    def _append_auth_bootstrap_log(self, msg: str) -> None:
+        widget = getattr(self, "auth_bootstrap_log_widget", None)
+        if not widget:
+            return
+        try:
+            if not tk.Text.winfo_exists(widget):
+                self.auth_bootstrap_log_widget = None
+                return
+        except Exception:
+            self.auth_bootstrap_log_widget = None
+            return
+        line = f"{msg}\n"
+        try:
+            widget.configure(state="normal")
+            widget.insert("end", line)
+            widget.see("end")
+            widget.configure(state="disabled")
+        except Exception:
+            pass
+
+    def _auth_bootstrap_log(self, msg: str) -> None:
+        self._capture_log(msg)
+        try:
+            if threading.current_thread() is self._ui_thread:
+                self._append_auth_bootstrap_log(msg)
+            else:
+                self.after(0, lambda m=msg: self._append_auth_bootstrap_log(m))
+        except Exception:
+            pass
 
     def _set_pagination_busy(self, busy: bool) -> None:
         if self._pagination_busy == busy:
@@ -744,36 +818,32 @@ class App(tk.Tk):
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
 
+    def _clamp_hidden_log_height(self, height: float | int | None) -> int:
+        # Fixed compact height when log is hidden.
+        return 190
+
     def _apply_log_window_visibility(self) -> None:
         try:
             show = bool(self.cap_show_log_window.get()) if hasattr(self, "cap_show_log_window") else True
             self.update_idletasks()
-            current_height = self.winfo_height()
+            target_shown_height = 420
             if show:
                 if not self.console_frame.winfo_ismapped():
                     self.console_frame.pack(fill="both", expand=True, padx=10, pady=(0, 8), before=self.last_change_label)
                     self.update_idletasks()
-                    target_height = self._log_window_last_full_height
-                    if not target_height:
-                        delta = self.console_frame.winfo_height() or self.console_frame.winfo_reqheight()
-                        if delta:
-                            target_height = current_height + int(delta)
-                    if target_height:
-                        self.geometry(f"{self.winfo_width()}x{int(target_height)}")
+                    self.geometry(f"{self.winfo_width()}x{target_shown_height}")
                 else:
-                    if current_height and self._log_window_last_full_height:
-                        self.geometry(f"{self.winfo_width()}x{int(self._log_window_last_full_height)}")
+                    self.geometry(f"{self.winfo_width()}x{target_shown_height}")
             else:
                 if self.console_frame.winfo_ismapped():
-                    self._log_window_last_full_height = current_height
                     self.console_frame.pack_forget()
                     self.update_idletasks()
-                    hidden_height = int(getattr(self, "scraper_log_hidden_height", 260) or 260)
+                    hidden_height = self._clamp_hidden_log_height(getattr(self, "scraper_log_hidden_height", 210))
                     self.geometry(f"{self.winfo_width()}x{hidden_height}")
                     self.update_idletasks()
-                    self.scraper_log_hidden_height = self.winfo_height()
+                    self.scraper_log_hidden_height = float(self._clamp_hidden_log_height(self.winfo_height()))
                 else:
-                    hidden_height = int(getattr(self, "scraper_log_hidden_height", 260) or 260)
+                    hidden_height = self._clamp_hidden_log_height(getattr(self, "scraper_log_hidden_height", 210))
                     if hidden_height:
                         self.geometry(f"{self.winfo_width()}x{hidden_height}")
         except Exception as exc:
@@ -784,7 +854,7 @@ class App(tk.Tk):
             if hasattr(self, "cap_show_log_window") and not self.cap_show_log_window.get():
                 height = self.winfo_height()
                 if height:
-                    self.scraper_log_hidden_height = float(height)
+                    self.scraper_log_hidden_height = float(self._clamp_hidden_log_height(height))
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
     def _update_last_change(self, summary: str):
@@ -893,6 +963,8 @@ class App(tk.Tk):
             self._debug_log(f"Suppressed exception: {exc}")
         if status in {"idle", "stopped", "faulted", "retrying"}:
             self._set_pagination_busy(False)
+            if self._pending_external_start:
+                self.after(0, self._try_pending_external_start)
         self._update_tray_status()
     def _write_scraper_state(self, status: str) -> None:
         try:
@@ -947,9 +1019,9 @@ class App(tk.Tk):
         self.notify_removed_items.set(cfg.get("notify_removed_items", True))
         self.notify_windows.set(cfg.get("notify_windows", True))
         try:
-            self.scraper_log_hidden_height = float(cfg.get("log_window_hidden_height", 260))
+            self.scraper_log_hidden_height = float(self._clamp_hidden_log_height(cfg.get("log_window_hidden_height", 210)))
         except Exception:
-            self.scraper_log_hidden_height = 260.0
+            self.scraper_log_hidden_height = 210.0
         self.cap_quiet_hours_enabled.set(bool(cfg.get("quiet_hours_enabled", False)))
         self.cap_quiet_start.set(cfg.get("quiet_hours_start", "22:00"))
         self.cap_quiet_end.set(cfg.get("quiet_hours_end", "07:00"))
@@ -1019,7 +1091,7 @@ class App(tk.Tk):
                 self.screen_resolution = self._current_screen_resolution()
                 return
             if current[0] < saved[0] or current[1] < saved[1]:
-                self.scraper_window_geometry = "900x720"
+                self.scraper_window_geometry = "769x420"
                 self.scraper_settings_geometry = "560x960"
                 self.history_window_geometry = "900x600"
                 self.screen_resolution = self._current_screen_resolution()
@@ -1944,31 +2016,32 @@ class App(tk.Tk):
 
         def worker():
             try:
-                self._capture_log("Auth bootstrap starting...")
+                self._auth_bootstrap_log("Auth bootstrap starting...")
                 cw = CaptureWorker.__new__(CaptureWorker)
                 cw.cfg = cfg
                 cw.app_dir = APP_DIR
                 cw.install_fn = install_cb
                 cw.callbacks = {
-                    "capture_log": self._capture_log,
+                    "capture_log": self._auth_bootstrap_log,
                     "responsive_wait": self._responsive_wait,
                     "stop_event": stop_event,
+                    "prompt_manual_login": self._prompt_manual_login,
                 }
                 cw._auth_bootstrap_failures = 0
                 payloads = cw._bootstrap_auth_with_playwright()
                 if payloads:
                     try:
                         cw._persist_auth_cache(payloads)
-                        self._capture_log("Auth bootstrap complete; token cached.")
+                        self._auth_bootstrap_log("Auth bootstrap complete; token cached.")
                         messagebox.showinfo("Auth Token", "Auth token captured and cached.")
                     except Exception as exc:
-                        self._capture_log(f"Auth cache write failed: {exc}")
+                        self._auth_bootstrap_log(f"Auth cache write failed: {exc}")
                         messagebox.showwarning("Auth Token", f"Token captured but cache write failed:\n{exc}")
                 else:
-                    self._capture_log("Auth bootstrap did not capture a token.")
+                    self._auth_bootstrap_log("Auth bootstrap did not capture a token.")
                     messagebox.showwarning("Auth Token", "Auth bootstrap did not capture a token.")
             except Exception as exc:
-                self._capture_log(f"Auth bootstrap failed: {exc}")
+                self._auth_bootstrap_log(f"Auth bootstrap failed: {exc}")
                 messagebox.showerror("Auth Token", f"Auth bootstrap failed:\n{exc}")
 
         threading.Thread(target=worker, daemon=True).start()

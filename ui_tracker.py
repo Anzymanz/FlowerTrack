@@ -175,9 +175,15 @@ class CannabisTracker:
         self.screen_resolution = ""
         self._force_center_on_start = False
         self._force_center_settings = False
+        self.main_split_ratio = 0.48
         self.stock_column_widths: dict[str, int] = {}
         self.log_column_widths: dict[str, int] = {}
         self._geometry_save_job = None
+        self._split_save_job = None
+        self._restoring_split = True
+        self._split_stabilize_job = None
+        self._split_dragging = False
+        self._split_apply_job = None
         self.current_date: date = date.today()
         self._last_seen_date: date = date.today()
         self._data_mtime: float | None = None
@@ -194,6 +200,12 @@ class CannabisTracker:
                 pass
         self._refresh_stock()
         self._refresh_log()
+        try:
+            # Run a short startup stabilization so late child geometry requests
+            # cannot permanently displace the restored center sash.
+            self.root.after(120, self._finalize_split_restore)
+        except Exception:
+            self._restoring_split = False
         self._update_scraper_status_icon()
     def _scraper_process_alive_from_state(self) -> bool:
         try:
@@ -345,6 +357,7 @@ class CannabisTracker:
     def _build_ui(self) -> None:
         main = ttk.Frame(self.root, padding=12)
         main.grid(row=0, column=0, sticky="nsew")
+        self.main_content = main
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         self.root.protocol("WM_DELETE_WINDOW", self._on_main_close)
@@ -369,9 +382,23 @@ class CannabisTracker:
         self._bind_scraper_status_actions()
         self._apply_scraper_controls_visibility()
         top_bar.columnconfigure(4, weight=1)
+        # Draggable center splitter for stock (left) vs dose/log (right)
+        self.main_split = tk.PanedWindow(
+            main,
+            orient="horizontal",
+            sashwidth=8,
+            sashpad=1,
+            sashrelief="flat",
+            bd=0,
+            relief="flat",
+        )
+        self.main_split.grid(row=1, column=0, columnspan=2, sticky="nsew")
+        # Keep both grid columns weighted so the spanning paned window expands to full width.
+        main.columnconfigure(0, weight=1)
+        main.columnconfigure(1, weight=1)
+        main.rowconfigure(1, weight=1)
         # Stock list
-        self.stock_wrap = tk.Frame(main, highlightthickness=2)
-        self.stock_wrap.grid(row=1, column=0, sticky="nsew", padx=(0, 8))
+        self.stock_wrap = tk.Frame(self.main_split, highlightthickness=2)
         self.stock_wrap.columnconfigure(0, weight=1)
         self.stock_wrap.rowconfigure(0, weight=1)
         stock_frame = ttk.LabelFrame(
@@ -387,8 +414,6 @@ class CannabisTracker:
         stock_label.grid(padx=(6, 0), pady=(2, 0))
         stock_frame.configure(labelwidget=stock_label_wrap)
         stock_frame.grid(row=0, column=0, sticky="nsew")
-        main.columnconfigure(0, weight=3)
-        main.rowconfigure(1, weight=1)
         columns = ("name", "thc", "cbd", "grams")
         self.stock_tree = ttk.Treeview(
             stock_frame,
@@ -467,9 +492,8 @@ class CannabisTracker:
         self.days_label_cbd.grid(row=5, column=0, columnspan=2, sticky="w", pady=(0, 2))
         self.days_label_cbd.grid_remove()
         # Dose + log area
-        right = ttk.Frame(main)
-        right.grid(row=1, column=1, sticky="nsew")
-        main.columnconfigure(1, weight=4)
+        right = ttk.Frame(self.main_split)
+        self.right_content = right
         self.dose_wrap = tk.Frame(right, highlightthickness=2)
         self.dose_wrap.grid(row=0, column=0, sticky="ew")
         self.dose_wrap.columnconfigure(0, weight=1)
@@ -542,6 +566,14 @@ class CannabisTracker:
         log_frame.grid(row=0, column=0, sticky="nsew")
         right.rowconfigure(1, weight=1)
         right.columnconfigure(0, weight=1)
+        try:
+            self.main_split.add(self.stock_wrap, minsize=220, stretch="always")
+            self.main_split.add(right, minsize=260, stretch="always")
+            self.main_split.bind("<ButtonPress-1>", lambda _e: setattr(self, "_split_dragging", True))
+            self.main_split.bind("<ButtonRelease-1>", lambda _e: self._on_split_release())
+            self.main_split.bind("<Configure>", lambda _e: self._schedule_split_apply())
+        except Exception:
+            pass
         nav = ttk.Frame(log_frame)
         nav.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 6))
         prev_btn = ttk.Button(nav, text="< Prev", width=8, command=lambda: self._change_day(-1))
@@ -683,7 +715,14 @@ class CannabisTracker:
         self.save_data()
         self._save_config()
         self._clear_stock_inputs()
-        self.stock_tree.selection_remove(selection)
+        try:
+            self.stock_tree.selection_remove(selection)
+        except tk.TclError:
+            # Tree was rebuilt; selected item IDs can be stale after refresh.
+            try:
+                self.stock_tree.selection_set(())
+            except Exception:
+                pass
     def _clear_stock_inputs(self) -> None:
         self.name_entry.delete(0, tk.END)
         self.thc_entry.delete(0, tk.END)
@@ -1722,6 +1761,8 @@ class CannabisTracker:
     def _commit_tree_widths(self, tree: ttk.Treeview, key: str) -> None:
         widths = {col: int(tree.column(col, option="width")) for col in tree["columns"]}
         if key == "stock_column_widths":
+            if getattr(self, "_suspend_stock_width_save", False):
+                return
             self.stock_column_widths = widths
         else:
             if getattr(self, "_suspend_log_width_save", False):
@@ -1845,6 +1886,12 @@ class CannabisTracker:
                     wrap.configure(bg=base, highlightbackground=panel_border, highlightcolor=panel_border)
                 except Exception:
                     pass
+        try:
+            split = getattr(self, "main_split", None)
+            if split:
+                split.configure(bg=base, sashrelief="flat")
+        except Exception:
+            pass
         self.style.configure(
             "TEntry",
             fieldbackground=entry_bg,
@@ -2538,6 +2585,12 @@ class CannabisTracker:
         self.window_geometry = cfg.get("window_geometry", "") or self.window_geometry
         self.settings_window_geometry = cfg.get("settings_window_geometry", "") or self.settings_window_geometry
         self.screen_resolution = str(cfg.get("screen_resolution", self.screen_resolution or "")).strip()
+        try:
+            self.main_split_ratio = float(cfg.get("main_split_ratio", self.main_split_ratio))
+            if not (0.15 <= self.main_split_ratio <= 0.85):
+                self.main_split_ratio = 0.48
+        except Exception:
+            self.main_split_ratio = 0.48
         self._apply_resolution_safety()
         if self._force_center_on_start:
             try:
@@ -2564,6 +2617,11 @@ class CannabisTracker:
         self._apply_scraper_controls_visibility()
         self._apply_roa_visibility()
         self._apply_stock_form_visibility()
+        try:
+            self.root.after_idle(self._apply_split_ratio)
+            self.root.after(240, self._apply_split_ratio)
+        except Exception:
+            pass
     def _save_config(self) -> None:
         self.screen_resolution = self._current_screen_resolution()
         cfg = {
@@ -2618,6 +2676,7 @@ class CannabisTracker:
             "screen_resolution": self.screen_resolution,
             "stock_column_widths": self.stock_column_widths,
             "log_column_widths": self.log_column_widths,
+            "main_split_ratio": getattr(self, "main_split_ratio", 0.48),
             "minimize_to_tray": self.minimize_to_tray,
             "close_to_tray": self.close_to_tray,
             "show_scraper_status_icon": self.show_scraper_status_icon,
@@ -3189,6 +3248,8 @@ class CannabisTracker:
         self.tray_thread = None
     def _on_main_close(self) -> None:
         try:
+            self.window_geometry = self.root.geometry()
+            self._persist_split_ratio()
             self._persist_tree_widths()
             self._save_config()
         except Exception:
@@ -3445,10 +3506,138 @@ class CannabisTracker:
         self._apply_mix_button_visibility()
 
     def _toggle_stock_form(self) -> None:
+        prev_root_w = None
+        prev_root_h = None
+        prev_sash_x = None
+        try:
+            self.root.update_idletasks()
+            prev_root_w = int(self.root.winfo_width())
+            prev_root_h = int(self.root.winfo_height())
+            split = getattr(self, "main_split", None)
+            if split is not None:
+                prev_sash_x = int(split.sash_coord(0)[0])
+        except Exception:
+            pass
+        setattr(self, "_suspend_stock_width_save", True)
         self.show_stock_form = not bool(getattr(self, "show_stock_form", True))
         self._apply_stock_form_visibility()
         try:
+            split = getattr(self, "main_split", None)
+            if split is not None and prev_sash_x is not None and prev_sash_x > 0:
+                def _restore_sash():
+                    try:
+                        split.sash_place(0, prev_sash_x, 0)
+                    except Exception:
+                        pass
+                    self._persist_split_ratio()
+                    setattr(self, "_suspend_stock_width_save", False)
+                self.root.after(220, _restore_sash)
+            else:
+                self.root.after(220, lambda: setattr(self, "_suspend_stock_width_save", False))
+            if prev_root_w and prev_root_w > 0 and prev_root_h and prev_root_h > 0:
+                # Prevent temporary width growth of the whole tracker window.
+                self.root.geometry(f"{prev_root_w}x{prev_root_h}")
+        except Exception:
+            setattr(self, "_suspend_stock_width_save", False)
+        try:
             self._save_config()
+        except Exception:
+            pass
+
+    def _persist_split_ratio(self) -> None:
+        try:
+            if getattr(self, "_restoring_split", False):
+                return
+            split = getattr(self, "main_split", None)
+            if split is None:
+                return
+            self.root.update_idletasks()
+            total_w = int(split.winfo_width())
+            if total_w <= 0:
+                return
+            sash_x = int(split.sash_coord(0)[0])
+            sash_w = int(split.cget("sashwidth") or 0)
+            usable = max(total_w - sash_w, 1)
+            ratio = sash_x / float(usable)
+            self.main_split_ratio = min(0.85, max(0.15, ratio))
+        except Exception:
+            pass
+
+    def _finalize_split_restore(self) -> None:
+        def _tick(remaining: int) -> None:
+            try:
+                if not getattr(self, "_split_dragging", False):
+                    self._apply_split_ratio()
+            except Exception:
+                pass
+            if remaining > 0:
+                try:
+                    self._split_stabilize_job = self.root.after(140, lambda: _tick(remaining - 1))
+                except Exception:
+                    self._restoring_split = False
+                return
+            self._restoring_split = False
+
+        try:
+            _tick(7)
+        except Exception:
+            self._restoring_split = False
+
+    def _schedule_split_persist(self) -> None:
+        try:
+            self._split_dragging = False
+            if self._split_save_job is not None:
+                try:
+                    self.root.after_cancel(self._split_save_job)
+                except Exception:
+                    pass
+            self._split_save_job = self.root.after(150, self._persist_split_ratio)
+        except Exception:
+            self._persist_split_ratio()
+
+    def _on_split_release(self) -> None:
+        try:
+            self._split_dragging = False
+            self._persist_split_ratio()
+            self._schedule_split_persist()
+        except Exception:
+            pass
+
+    def _schedule_split_apply(self) -> None:
+        try:
+            if self._split_dragging:
+                return
+            if self._split_apply_job is not None:
+                try:
+                    self.root.after_cancel(self._split_apply_job)
+                except Exception:
+                    pass
+            self._split_apply_job = self.root.after(10, self._apply_split_ratio)
+        except Exception:
+            pass
+
+    def _apply_split_ratio(self) -> None:
+        try:
+            split = getattr(self, "main_split", None)
+            if split is None:
+                return
+            self.root.update_idletasks()
+            total_w = int(split.winfo_width())
+            if total_w <= 0:
+                return
+            ratio = float(getattr(self, "main_split_ratio", 0.48) or 0.48)
+            ratio = min(0.85, max(0.15, ratio))
+            sash_w = int(split.cget("sashwidth") or 0)
+            usable = max(total_w - sash_w, 1)
+            x = int(usable * ratio)
+            left_w = x
+            right_w = max(total_w - sash_w - left_w, 1)
+            try:
+                split.paneconfigure(self.stock_wrap, width=left_w, minsize=220, stretch="always")
+                split.paneconfigure(self.right_content, width=right_w, minsize=260, stretch="always")
+            except Exception:
+                pass
+            split.sash_place(0, x, 0)
         except Exception:
             pass
 

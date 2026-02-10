@@ -239,14 +239,14 @@ def _render_card_html(
     {image_html if image_html else ("<img class='type-badge' data-theme-icon='dark' loading='lazy' decoding='async' src='" + esc_attr(type_icon_dark) + "' alt='" + esc_attr(it.get('product_type') or '') + "' />") if type_icon_dark else ""}
     {"" if image_html else ("<img class='type-badge' data-theme-icon='light' loading='lazy' decoding='async' src='" + esc_attr(type_icon_light) + "' alt='" + esc_attr(it.get('product_type') or '') + "' style='display:none;' />") if type_icon_light else ""}
     {"" if image_html else (("<img class='strain-badge' loading='lazy' decoding='async' src='" + esc_attr(strain_badge_src) + "' alt='" + esc_attr(it.get('strain_type') or '') + "' />") if strain_badge_src else "")}
-    {("<span class='badge-new'>New</span>") if it.get('is_new') else ("<span class='badge-removed'>Removed</span>" if it.get('is_removed') else "")}
+    {("<span class='badge-new'>New</span>") if it.get('is_new') else ("<span class='badge-removed' title='Dismiss removed highlight' onclick='dismissRemovedBadge(this)'>Removed</span>" if it.get('is_removed') else "")}
     <div style='display:flex;flex-direction:column;align-items:flex-start;gap:4px;'>
       {price_badge}
       <h3 class='card-title'>{heading_html}</h3>
     </div>
 <a class='search' style='position:absolute;bottom:12px;right:44px;font-size:18px;padding:6px 8px;border-radius:6px;min-width:auto;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none' href='{esc_attr(build_launch_url(it.get('producer'), it.get('strain')))}' target='_blank' title='Search Medbud.wiki'>🔎</a>
       <p class="brand-line"><strong>{esc(brand)}</strong></p>
-      {("<p class='small'>Removed since last parse</p>") if it.get('is_removed') else ""}
+      {("<p class='small removed-note'>Removed since last parse</p>") if it.get('is_removed') else ""}
         <p class='small'>
         {(esc((it.get('product_type') or '').title())) if it.get('product_type') else ''}
         </p>
