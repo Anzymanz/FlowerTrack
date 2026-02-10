@@ -253,9 +253,9 @@ class FlowerLibraryApp:
                 pass
 
     def _build_topbar(self) -> None:
-        container = ttk.Frame(self.root, padding=(10, 6), style="Topbar.TFrame")
+        # Keep a minimal spacer to preserve layout rhythm without a redundant title row.
+        container = ttk.Frame(self.root, padding=(10, 2), style="Topbar.TFrame")
         container.pack(fill="x")
-        ttk.Label(container, text="Flower Library", style="Topbar.TLabel").pack(side="left")
 
     def _build_table(self) -> None:
         columns = (
