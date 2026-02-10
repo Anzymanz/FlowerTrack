@@ -146,8 +146,8 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         widget.bind("<Leave>", lambda _e: _hide_tooltip())
     def _make_capture_entry(parent, textvariable, width=40, show: str | None = None):
         colors = compute_colors(app.dark_mode_var.get())
-        highlight = colors.get("highlight", colors["accent"])
-        highlight_text = colors.get("highlight_text", colors["fg"])
+        highlight = colors["fg"]
+        highlight_text = colors["bg"]
         entry = tk.Entry(
             parent,
             textvariable=textvariable,

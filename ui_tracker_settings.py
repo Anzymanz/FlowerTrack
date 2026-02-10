@@ -53,7 +53,26 @@ def open_tracker_settings(app) -> None:
     border = getattr(app, "current_border_color", None) or "#2a2a2a"
     ctrl_bg = getattr(app, "current_ctrl_bg", None) or "#222"
     fg = getattr(app, "text_color", "#eee")
+    base_bg = getattr(app, "current_base_color", "#111")
     selected_bg = "#222222" if app.dark_var.get() else "#e0e0e0"
+    # Settings-window selection colors: use foreground as requested.
+    try:
+        win.option_add("*Entry*selectBackground", fg)
+        win.option_add("*Entry*selectForeground", base_bg)
+        win.option_add("*Entry*inactiveselectBackground", fg)
+        win.option_add("*Entry*inactiveselectForeground", base_bg)
+        win.option_add("*TEntry*selectBackground", fg)
+        win.option_add("*TEntry*selectForeground", base_bg)
+        win.option_add("*TEntry*inactiveselectBackground", fg)
+        win.option_add("*TEntry*inactiveselectForeground", base_bg)
+        win.option_add("*TCombobox*Entry*selectBackground", fg)
+        win.option_add("*TCombobox*Entry*selectForeground", base_bg)
+        win.option_add("*TCombobox*Entry*inactiveselectBackground", fg)
+        win.option_add("*TCombobox*Entry*inactiveselectForeground", base_bg)
+        win.option_add("*TCombobox*Listbox*selectBackground", fg)
+        win.option_add("*TCombobox*Listbox*selectForeground", base_bg)
+    except Exception:
+        pass
     local_style.configure(tab_style, background=getattr(app, "current_base_color", "#111"), bordercolor=border, lightcolor=border, darkcolor=border, relief="solid", borderwidth=1)
     local_style.configure(tab_style_tab, background=ctrl_bg, foreground=fg, lightcolor=border, bordercolor=border, focuscolor=border, padding=[10, 4])
     local_style.map(
