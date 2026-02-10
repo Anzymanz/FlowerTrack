@@ -2746,7 +2746,16 @@ class CannabisTracker:
         except Exception as exc:
             messagebox.showerror("Backup failed", f"Could not create backup:\n{exc}")
             return
-        messagebox.showinfo("Backup created", f"Saved {count} files to:\n{zip_path}")
+        try:
+            json_count, json_backup_dir = self._snapshot_data_json_backups(stamp)
+        except Exception:
+            json_count, json_backup_dir = 0, None
+        details = [f"Saved {count} files to:\n{zip_path}"]
+        if json_backup_dir:
+            details.append(
+                f"\nJSON snapshots saved: {json_count}\n{json_backup_dir}"
+            )
+        messagebox.showinfo("Backup created", "".join(details))
     def _settings_import_backup(self) -> None:
         backups_dir = Path(APP_DIR) / "backups"
         path = filedialog.askopenfilename(
@@ -2884,6 +2893,28 @@ class CannabisTracker:
                 except Exception:
                     pass
         return len(paths)
+
+    def _snapshot_data_json_backups(self, stamp: str) -> tuple[int, Path]:
+        app_dir = Path(APP_DIR)
+        data_dir = app_dir / "data"
+        backup_dir = app_dir / "backups" / "data-json" / stamp
+        count = 0
+        if not data_dir.exists():
+            backup_dir.mkdir(parents=True, exist_ok=True)
+            return 0, backup_dir
+        for pattern in ("*.json", "*.json.bak"):
+            for src in data_dir.rglob(pattern):
+                if not src.is_file():
+                    continue
+                rel = src.relative_to(data_dir)
+                dst = backup_dir / rel
+                try:
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(src, dst)
+                    count += 1
+                except Exception:
+                    pass
+        return count, backup_dir
     def _restore_backup_zip(self, zip_path: Path) -> None:
         app_dir = Path(APP_DIR)
         data_dir = app_dir / "data"
