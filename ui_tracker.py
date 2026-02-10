@@ -3555,7 +3555,8 @@ class CannabisTracker:
                     pass
         try:
             running, warn = resolve_scraper_status(getattr(self, "child_procs", []))
-            img = self._build_status_image(running, warn, size=64)
+            # Keep the in-window status indicator compact so it does not dominate the top bar.
+            img = self._build_status_image(running, warn, size=24)
             if img is not None:
                 return img
         except Exception:
@@ -4094,10 +4095,17 @@ class CannabisTracker:
             else:
                 color_hex = self.scraper_status_stopped_color
             rgb = self._hex_to_rgb(color_hex, fallback=(46, 204, 113) if running else (231, 76, 60))
+            border_hex = str(getattr(self, "current_border_color", "#2a2a2a") or "#2a2a2a")
+            border_rgb = self._hex_to_rgb(border_hex, fallback=(42, 42, 42))
             img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
             draw = ImageDraw.Draw(img)
-            pad = max(6, size // 8)
-            draw.ellipse((pad, pad, size - pad, size - pad), fill=(rgb[0], rgb[1], rgb[2], 255), outline=(255, 255, 255, 220), width=max(1, size // 22))
+            pad = max(2, size // 8)
+            draw.ellipse(
+                (pad, pad, size - pad, size - pad),
+                fill=(rgb[0], rgb[1], rgb[2], 255),
+                outline=(border_rgb[0], border_rgb[1], border_rgb[2], 220),
+                width=max(1, size // 16),
+            )
             return img
         except Exception:
             return _build_scraper_status_image(getattr(self, "child_procs", []))
