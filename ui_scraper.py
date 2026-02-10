@@ -2455,11 +2455,12 @@ class App(tk.Tk):
                     )
                     self.style.map(
                         "Settings.TNotebook.Tab",
-                        background=[("selected", selected_bg), ("!selected", ctrl_bg)],
-                        foreground=[("selected", fg), ("!selected", fg)],
-                        bordercolor=[("selected", border), ("!selected", border)],
-                        lightcolor=[("selected", border), ("!selected", border)],
-                        darkcolor=[("selected", border), ("!selected", border)],
+                        background=[("selected", selected_bg), ("active", ctrl_bg), ("!selected", ctrl_bg)],
+                        foreground=[("selected", fg), ("active", fg), ("!selected", fg)],
+                        bordercolor=[("selected", border), ("active", border), ("!selected", border)],
+                        lightcolor=[("selected", border), ("active", border), ("!selected", border)],
+                        darkcolor=[("selected", border), ("active", border), ("!selected", border)],
+                        focuscolor=[("selected", border), ("active", border), ("!selected", border)],
                     )
                 except Exception as exc:
                     self._debug_log(f"Suppressed exception: {exc}")

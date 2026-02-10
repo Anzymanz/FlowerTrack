@@ -56,7 +56,15 @@ def open_tracker_settings(app) -> None:
     selected_bg = "#222222" if app.dark_var.get() else "#e0e0e0"
     local_style.configure(tab_style, background=getattr(app, "current_base_color", "#111"), bordercolor=border, lightcolor=border, darkcolor=border, relief="solid", borderwidth=1)
     local_style.configure(tab_style_tab, background=ctrl_bg, foreground=fg, lightcolor=border, bordercolor=border, focuscolor=border, padding=[10, 4])
-    local_style.map(tab_style_tab, background=[("selected", selected_bg), ("!selected", ctrl_bg)], foreground=[("selected", fg), ("!selected", fg)])
+    local_style.map(
+        tab_style_tab,
+        background=[("selected", selected_bg), ("active", ctrl_bg), ("!selected", ctrl_bg)],
+        foreground=[("selected", fg), ("active", fg), ("!selected", fg)],
+        bordercolor=[("selected", border), ("active", border), ("!selected", border)],
+        lightcolor=[("selected", border), ("active", border), ("!selected", border)],
+        darkcolor=[("selected", border), ("active", border), ("!selected", border)],
+        focuscolor=[("selected", border), ("active", border), ("!selected", border)],
+    )
     local_style.configure(sep_style, background=border)
 
     notebook = ttk.Notebook(container, style=tab_style)
