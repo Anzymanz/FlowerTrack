@@ -140,6 +140,9 @@ class CannabisTracker:
         self.minimize_to_tray = False
         self.close_to_tray = False
         self.show_scraper_status_icon = True
+        self.scraper_status_running_color = "#2ecc71"
+        self.scraper_status_stopped_color = "#e74c3c"
+        self.scraper_status_error_color = "#f39c12"
         self.show_scraper_buttons = True
         self.scraper_notify_windows = True
         self.scraper_notifications_muted = False
@@ -1457,6 +1460,8 @@ class CannabisTracker:
         self._update_threshold_color_buttons()
         self._refresh_stock()
         self._refresh_log()
+        if key.startswith("scraper_status_"):
+            self._update_scraper_status_icon()
         self._save_config()
 
     def _bring_settings_to_front(self, settings_win: tk.Toplevel) -> None:
@@ -2583,6 +2588,9 @@ class CannabisTracker:
         self.minimize_to_tray = bool(cfg.get("minimize_to_tray", self.minimize_to_tray))
         self.close_to_tray = bool(cfg.get("close_to_tray", self.close_to_tray))
         self.show_scraper_status_icon = bool(cfg.get("show_scraper_status_icon", self.show_scraper_status_icon))
+        self.scraper_status_running_color = str(cfg.get("scraper_status_running_color", self.scraper_status_running_color))
+        self.scraper_status_stopped_color = str(cfg.get("scraper_status_stopped_color", self.scraper_status_stopped_color))
+        self.scraper_status_error_color = str(cfg.get("scraper_status_error_color", self.scraper_status_error_color))
         self.show_scraper_buttons = bool(cfg.get("show_scraper_buttons", self.show_scraper_buttons))
         try:
             cap_cfg = _load_capture_config()
@@ -2734,6 +2742,9 @@ class CannabisTracker:
             "minimize_to_tray": self.minimize_to_tray,
             "close_to_tray": self.close_to_tray,
             "show_scraper_status_icon": self.show_scraper_status_icon,
+            "scraper_status_running_color": self.scraper_status_running_color,
+            "scraper_status_stopped_color": self.scraper_status_stopped_color,
+            "scraper_status_error_color": self.scraper_status_error_color,
             "show_scraper_buttons": self.show_scraper_buttons,
         }
         save_tracker_config(Path(TRACKER_CONFIG_FILE), cfg)
@@ -3531,7 +3542,8 @@ class CannabisTracker:
                 except Exception:
                     pass
         try:
-            img = _build_scraper_status_image(getattr(self, "child_procs", []))
+            running, warn = resolve_scraper_status(getattr(self, "child_procs", []))
+            img = self._build_status_image(running, warn, size=64)
             if img is not None:
                 return img
         except Exception:
@@ -4042,7 +4054,7 @@ class CannabisTracker:
             if not self.show_scraper_status_icon or not self.show_scraper_buttons:
                 self._apply_scraper_controls_visibility()
                 return
-            img = _build_scraper_status_image(getattr(self, "child_procs", []))
+            img = self._build_status_image(running, warn, size=64)
             if img is not None and self.scraper_notifications_muted:
                 img = _overlay_mute_icon(img)
             if img and ImageTk is not None:
@@ -4058,3 +4070,22 @@ class CannabisTracker:
                 self.root.after(1500, self._update_scraper_status_icon)
             except Exception:
                 pass
+
+    def _build_status_image(self, running: bool, warn: bool, size: int = 64):
+        if Image is None or ImageDraw is None:
+            return _build_scraper_status_image(getattr(self, "child_procs", []))
+        try:
+            if warn:
+                color_hex = self.scraper_status_error_color
+            elif running:
+                color_hex = self.scraper_status_running_color
+            else:
+                color_hex = self.scraper_status_stopped_color
+            rgb = self._hex_to_rgb(color_hex, fallback=(46, 204, 113) if running else (231, 76, 60))
+            img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(img)
+            pad = max(6, size // 8)
+            draw.ellipse((pad, pad, size - pad, size - pad), fill=(rgb[0], rgb[1], rgb[2], 255), outline=(255, 255, 255, 220), width=max(1, size // 22))
+            return img
+        except Exception:
+            return _build_scraper_status_image(getattr(self, "child_procs", []))

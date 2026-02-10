@@ -388,14 +388,39 @@ def open_tracker_settings(app) -> None:
     app.scraper_status_icon_check.grid(
         row=3, column=0, columnspan=2, sticky="w", pady=(2, 0)
     )
+    lbl_status_colours = ttk.Label(frame, text="Status indicator colours")
+    lbl_status_colours.grid(row=4, column=0, sticky="w", pady=(8, 0))
+    status_row = ttk.Frame(frame)
+    status_row.grid(row=4, column=1, sticky="w", padx=(12, 0), pady=(8, 0))
+    ttk.Label(status_row, text="Running").grid(row=0, column=0, sticky="w", padx=(0, 6))
+    btn_status_running = _color_button(
+        status_row,
+        "scraper_status_running_color",
+        "Pick the status icon colour when scraper is running.",
+    )
+    btn_status_running.grid(row=0, column=1, sticky="w", padx=(0, 10))
+    ttk.Label(status_row, text="Stopped").grid(row=0, column=2, sticky="w", padx=(0, 6))
+    btn_status_stopped = _color_button(
+        status_row,
+        "scraper_status_stopped_color",
+        "Pick the status icon colour when scraper is stopped.",
+    )
+    btn_status_stopped.grid(row=0, column=3, sticky="w", padx=(0, 10))
+    ttk.Label(status_row, text="Errored").grid(row=0, column=4, sticky="w", padx=(0, 6))
+    btn_status_error = _color_button(
+        status_row,
+        "scraper_status_error_color",
+        "Pick the status icon colour when scraper status is errored.",
+    )
+    btn_status_error.grid(row=0, column=5, sticky="w")
 
     app.minimize_var_check = ttk.Checkbutton(frame, text="Minimize to tray when minimizing", variable=app.minimize_var)
     app.minimize_var_check.grid(
-        row=4, column=0, columnspan=2, sticky="w", pady=(2, 0)
+        row=5, column=0, columnspan=2, sticky="w", pady=(2, 0)
     )
     app.close_var_check = ttk.Checkbutton(frame, text="Minimize to tray when closing", variable=app.close_var)
     app.close_var_check.grid(
-        row=5, column=0, columnspan=2, sticky="w", pady=(2, 0)
+        row=6, column=0, columnspan=2, sticky="w", pady=(2, 0)
     )
 
     frame = tab_theme
@@ -513,6 +538,10 @@ def open_tracker_settings(app) -> None:
     app._bind_tooltip(app.open_data_folder_btn, "Open the data folder in File Explorer.")
     app._bind_tooltip(app.scraper_controls_check, "Show the scraper button, browser button, and status dot in the main window.")
     app._bind_tooltip(app.scraper_status_icon_check, "Show the scraper status dot in the main window.")
+    app._bind_tooltip(lbl_status_colours, "Configure running, stopped, and errored colours for the scraper status indicator.")
+    app._bind_tooltip(btn_status_running, "Status indicator colour when auto-scraper is running.")
+    app._bind_tooltip(btn_status_stopped, "Status indicator colour when auto-scraper is stopped.")
+    app._bind_tooltip(btn_status_error, "Status indicator colour when scraper status is errored.")
     app._bind_tooltip(app.minimize_var_check, "Hide to system tray when minimizing if enabled.")
     app._bind_tooltip(app.close_var_check, "Hide to system tray when closing if enabled.")
     app._bind_tooltip(app.dark_mode_check, "Toggle the tracker theme between dark and light.")

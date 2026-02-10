@@ -189,6 +189,9 @@ DEFAULT_TRACKER_CONFIG = {
     "minimize_to_tray": False,
     "close_to_tray": False,
     "show_scraper_status_icon": True,
+    "scraper_status_running_color": "#2ecc71",
+    "scraper_status_stopped_color": "#e74c3c",
+    "scraper_status_error_color": "#f39c12",
     "show_scraper_buttons": True,
     "enable_stock_coloring": True,
     "enable_usage_coloring": True,
@@ -375,6 +378,9 @@ def _validate_tracker_config(raw: dict) -> dict:
         "minimize_to_tray",
         "close_to_tray",
         "show_scraper_status_icon",
+        "scraper_status_running_color",
+        "scraper_status_stopped_color",
+        "scraper_status_error_color",
 }
     float_keys = {
         "total_green_threshold",
@@ -410,6 +416,9 @@ def _validate_tracker_config(raw: dict) -> dict:
         elif key in (
             "accent_green",
             "accent_red",
+            "scraper_status_running_color",
+            "scraper_status_stopped_color",
+            "scraper_status_error_color",
             "total_thc_high_color",
             "total_thc_low_color",
             "total_cbd_high_color",
