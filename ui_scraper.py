@@ -2117,23 +2117,24 @@ class App(tk.Tk):
         self.option_add("*Menu*ActiveBackground", colors["accent"])
         self.option_add("*Menu*ActiveForeground", colors["bg"])
         highlight = colors.get("highlight", colors["accent"])
+        highlight_text = colors.get("highlight_text", "#ffffff")
         self.option_add("*TCombobox*Listbox*Background", colors["ctrl_bg"])
         self.option_add("*TCombobox*Listbox*Foreground", colors["fg"])
         self.option_add("*TCombobox*Listbox*selectBackground", highlight)
-        self.option_add("*TCombobox*Listbox*selectForeground", colors["fg"])
+        self.option_add("*TCombobox*Listbox*selectForeground", highlight_text)
         # Alias patterns improve reliability across Tk builds/themes.
         self.option_add("*TCombobox*Listbox.background", colors["ctrl_bg"])
         self.option_add("*TCombobox*Listbox.foreground", colors["fg"])
         self.option_add("*TCombobox*Listbox.selectBackground", highlight)
-        self.option_add("*TCombobox*Listbox.selectForeground", colors["fg"])
+        self.option_add("*TCombobox*Listbox.selectForeground", highlight_text)
         self.option_add("*TCombobox*Entry*selectBackground", highlight)
-        self.option_add("*TCombobox*Entry*selectForeground", colors["fg"])
+        self.option_add("*TCombobox*Entry*selectForeground", highlight_text)
         self.option_add("*TCombobox*Entry*inactiveselectBackground", highlight)
-        self.option_add("*TCombobox*Entry*inactiveselectForeground", colors["fg"])
+        self.option_add("*TCombobox*Entry*inactiveselectForeground", highlight_text)
         self.option_add("*Entry*selectBackground", highlight)
-        self.option_add("*Entry*selectForeground", colors["fg"])
+        self.option_add("*Entry*selectForeground", highlight_text)
         self.option_add("*Entry*inactiveselectBackground", highlight)
-        self.option_add("*Entry*inactiveselectForeground", colors["fg"])
+        self.option_add("*Entry*inactiveselectForeground", highlight_text)
         # ttk scrollbar styling
         self.style.configure(
             "Vertical.TScrollbar",
@@ -2189,7 +2190,7 @@ class App(tk.Tk):
                     fg=colors["fg"],
                     insertbackground=colors["fg"],
                     selectbackground=colors["accent"],
-                    selectforeground=colors["bg"],
+                    selectforeground=highlight_text,
                     highlightthickness=0,
                     borderwidth=0,
                 )
@@ -2211,7 +2212,7 @@ class App(tk.Tk):
                     fg=colors["fg"],
                     insertbackground=colors["fg"],
                     selectbackground=colors["accent"],
-                    selectforeground=colors["bg"],
+                    selectforeground=highlight_text,
                     highlightthickness=0,
                     borderwidth=0,
                 )
@@ -2333,7 +2334,7 @@ class App(tk.Tk):
                 ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value))
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
-    def _apply_theme_recursive(self, widget, bg, fg, ctrl_bg, accent, dark):
+    def _apply_theme_recursive(self, widget, bg, fg, ctrl_bg, accent, highlight, highlight_text, dark):
         """Lightweight recursive theming for child widgets."""
         try:
             if isinstance(widget, ttk.Notebook):
@@ -2384,7 +2385,7 @@ class App(tk.Tk):
                     bg=bg if dark else "#ffffff",
                     fg=fg,
                     selectbackground=highlight,
-                    selectforeground="#000" if dark else "#fff",
+                    selectforeground=highlight_text,
                     highlightbackground=bg,
                 )
             elif isinstance(widget, tk.Text):
@@ -2400,7 +2401,7 @@ class App(tk.Tk):
                     except Exception as exc:
                         self._debug_log(f"Suppressed exception: {exc}")
             for child in widget.winfo_children():
-                self._apply_theme_recursive(child, bg, fg, ctrl_bg, accent, dark)
+                self._apply_theme_recursive(child, bg, fg, ctrl_bg, accent, highlight, highlight_text, dark)
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
     def _apply_theme_to_window(self, window):
@@ -2410,6 +2411,8 @@ class App(tk.Tk):
         fg = colors["fg"]
         ctrl_bg = colors["ctrl_bg"]
         accent = colors["accent"]
+        highlight = colors.get("highlight", colors["accent"])
+        highlight_text = colors.get("highlight_text", "#ffffff")
         border = colors.get("border", ctrl_bg)
         muted = colors.get("muted", fg)
         def _clear_entry_selection(widget):
@@ -2432,7 +2435,7 @@ class App(tk.Tk):
         try:
             window.configure(bg=bg)
             for widget in window.winfo_children():
-                self._apply_theme_recursive(widget, bg, fg, ctrl_bg, accent, dark)
+                self._apply_theme_recursive(widget, bg, fg, ctrl_bg, accent, highlight, highlight_text, dark)
             self._apply_entry_clear_bindings(window)
             self._set_window_titlebar_dark(window, dark)
             self._set_win_titlebar_dark(dark)
@@ -2519,9 +2522,9 @@ class App(tk.Tk):
         try:
             highlight = colors.get("highlight", muted if dark else "#d6d6d6")
             self.option_add("*Entry*selectBackground", highlight)
-            self.option_add("*Entry*selectForeground", fg)
+            self.option_add("*Entry*selectForeground", colors.get("highlight_text", "#ffffff"))
             self.option_add("*Entry*inactiveselectBackground", highlight)
-            self.option_add("*Entry*inactiveselectForeground", fg)
+            self.option_add("*Entry*inactiveselectForeground", colors.get("highlight_text", "#ffffff"))
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
 

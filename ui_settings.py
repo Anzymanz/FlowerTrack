@@ -147,6 +147,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     def _make_capture_entry(parent, textvariable, width=40, show: str | None = None):
         colors = compute_colors(app.dark_mode_var.get())
         highlight = colors.get("highlight", colors["accent"])
+        highlight_text = colors.get("highlight_text", colors["fg"])
         entry = tk.Entry(
             parent,
             textvariable=textvariable,
@@ -156,7 +157,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
             fg=colors["fg"],
             insertbackground=colors["fg"],
             selectbackground=highlight,
-            selectforeground=colors["fg"],
+            selectforeground=highlight_text,
             highlightthickness=1,
             highlightbackground=colors.get("border", colors["ctrl_bg"]),
             highlightcolor=colors.get("border", colors["ctrl_bg"]),

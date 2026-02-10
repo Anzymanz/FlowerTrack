@@ -1859,6 +1859,7 @@ class CannabisTracker:
         entry_bg = colors["ctrl_bg"]
         accent = colors["accent"]
         highlight = colors.get("highlight", colors["accent"])
+        highlight_text = colors.get("highlight_text", "#ffffff")
         border = colors.get("border", colors["ctrl_bg"])
         scroll = "#2a2a2a" if dark else "#e6e6e6"
         cursor_color = text_color
@@ -1923,24 +1924,24 @@ class CannabisTracker:
         self.root.option_add("*TCombobox*Listbox*Background", entry_bg)
         self.root.option_add("*TCombobox*Listbox*Foreground", text_color)
         self.root.option_add("*TCombobox*Listbox*selectBackground", highlight)
-        self.root.option_add("*TCombobox*Listbox*selectForeground", text_color)
+        self.root.option_add("*TCombobox*Listbox*selectForeground", highlight_text)
         # Alias patterns improve reliability across Tk builds/themes.
         self.root.option_add("*TCombobox*Listbox.background", entry_bg)
         self.root.option_add("*TCombobox*Listbox.foreground", text_color)
         self.root.option_add("*TCombobox*Listbox.selectBackground", highlight)
-        self.root.option_add("*TCombobox*Listbox.selectForeground", text_color)
+        self.root.option_add("*TCombobox*Listbox.selectForeground", highlight_text)
         self.root.option_add("*TCombobox*Entry*selectBackground", highlight)
-        self.root.option_add("*TCombobox*Entry*selectForeground", text_color)
+        self.root.option_add("*TCombobox*Entry*selectForeground", highlight_text)
         self.root.option_add("*TCombobox*Entry*inactiveselectBackground", highlight)
-        self.root.option_add("*TCombobox*Entry*inactiveselectForeground", text_color)
+        self.root.option_add("*TCombobox*Entry*inactiveselectForeground", highlight_text)
         self.root.option_add("*Entry*selectBackground", highlight)
-        self.root.option_add("*Entry*selectForeground", text_color)
+        self.root.option_add("*Entry*selectForeground", highlight_text)
         self.root.option_add("*Entry*inactiveselectBackground", highlight)
-        self.root.option_add("*Entry*inactiveselectForeground", text_color)
+        self.root.option_add("*Entry*inactiveselectForeground", highlight_text)
         self.root.option_add("*TEntry*selectBackground", highlight)
-        self.root.option_add("*TEntry*selectForeground", text_color)
+        self.root.option_add("*TEntry*selectForeground", highlight_text)
         self.root.option_add("*TEntry*inactiveselectBackground", highlight)
-        self.root.option_add("*TEntry*inactiveselectForeground", text_color)
+        self.root.option_add("*TEntry*inactiveselectForeground", highlight_text)
         self.style.configure(
             "Treeview",
             background=panel,
@@ -1961,7 +1962,7 @@ class CannabisTracker:
             font=self.font_body,
         )
         self.style.map("Treeview.Heading", background=[("active", accent)], foreground=[("active", "#ffffff")])
-        self.style.map("Treeview", background=[("selected", highlight)], foreground=[("selected", "#ffffff")])
+        self.style.map("Treeview", background=[("selected", highlight)], foreground=[("selected", highlight_text)])
         self.style.configure(
             self.vscroll_style,
             troughcolor=panel,
