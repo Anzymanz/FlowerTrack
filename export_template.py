@@ -396,26 +396,21 @@ let updateBaselineSet = false;
 let headBaselineSet = false;
 const openModalLocks = new Set();
 let bodyPaddingBeforeModal = "";
-let htmlPaddingBeforeModal = "";
 function applyModalLockState() {
     const shouldLock = openModalLocks.size > 0;
     if (shouldLock) {
         const sbw = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
         if (!document.body.classList.contains('modal-open')) {
             bodyPaddingBeforeModal = document.body.style.paddingRight || "";
-            htmlPaddingBeforeModal = document.documentElement.style.paddingRight || "";
         }
         document.body.classList.add('modal-open');
         document.documentElement.classList.add('modal-open');
         document.body.style.paddingRight = sbw > 0 ? `${sbw}px` : bodyPaddingBeforeModal;
-        document.documentElement.style.paddingRight = sbw > 0 ? `${sbw}px` : htmlPaddingBeforeModal;
     } else {
         document.body.classList.remove('modal-open');
         document.documentElement.classList.remove('modal-open');
         document.body.style.paddingRight = bodyPaddingBeforeModal;
-        document.documentElement.style.paddingRight = htmlPaddingBeforeModal;
         bodyPaddingBeforeModal = "";
-        htmlPaddingBeforeModal = "";
     }
 }
 function setModalOpenLock(id, isOpen) {
