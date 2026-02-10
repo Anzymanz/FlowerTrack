@@ -60,6 +60,7 @@ class ExportTests(unittest.TestCase):
             self.assertIn("data-pastille-count='1'", text)
             self.assertIn("Pastilles", text)
             self.assertIn("🍬 14", text)
+            self.assertIn("£/pc 0.71", text)
 
     def test_export_writes_history_sidecar(self):
         data = [

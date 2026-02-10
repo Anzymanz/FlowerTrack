@@ -210,6 +210,7 @@ def _render_card_html(
     price_pill: str,
     stock_pill: str,
     ppg: float | None,
+    ppc: float | None,
     disp_thc: str,
     disp_cbd: str,
 ) -> str:
@@ -257,6 +258,7 @@ def _render_card_html(
       <span class='pill'>{esc(qty_pill_text or '⚖️ ?')}</span>
       {stock_pill}
         {f"<span class='pill'>£/g {ppg:.2f}</span>" if ppg is not None else ''}
+        {f"<span class='pill'>£/pc {ppc:.2f}</span>" if ppc is not None else ''}
         {f"<span class='pill'>🍃 {esc(it.get('strain_type'))}</span>" if it.get('strain_type') else ''}
         {f"<span class='pill pill-flag'><img class='flag-icon' loading='lazy' decoding='async' src='{esc_attr(_flag_cdn_url(it.get('origin_country')))}' alt='{esc_attr(it.get('origin_country') or '')}' /> {esc(it.get('origin_country'))}</span>" if _flag_cdn_url(it.get('origin_country')) else ''}
         {f"<span class='pill'>☢️ {esc(it.get('irradiation_type'))}</span>" if (it.get('irradiation_type') and (it.get('product_type') or '').lower() == 'flower') else ''}
@@ -374,6 +376,15 @@ def export_html(data, path, fetch_images=False):
             price = 0
         grams = it.get("grams")
         ppg = (price / grams) if isinstance(price, (int, float)) and isinstance(grams, (int, float)) and grams else None
+        ppc = None
+        if (it.get("product_type") or "").lower() == "pastille":
+            explicit_ppc = it.get("price_per_unit")
+            if isinstance(explicit_ppc, (int, float)):
+                ppc = float(explicit_ppc)
+            else:
+                unit_count = it.get("unit_count")
+                if isinstance(price, (int, float)) and isinstance(unit_count, (int, float)) and unit_count:
+                    ppc = float(price) / float(unit_count)
         qty_pill_text = "⚖️ ?"
         product_type = str(it.get("product_type") or "").strip().lower()
         if product_type == "pastille":
@@ -542,6 +553,7 @@ def export_html(data, path, fetch_images=False):
                 price_pill=price_pill,
                 stock_pill=stock_pill,
                 ppg=ppg,
+                ppc=ppc,
                 disp_thc=disp_thc,
                 disp_cbd=disp_cbd,
             )

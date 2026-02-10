@@ -21,6 +21,7 @@ class Item:
     ml: Optional[float] = None
     unit_count: Optional[float] = None
     price: Optional[float] = None
+    price_per_unit: Optional[float] = None
     thc: Optional[float] = None
     thc_unit: Optional[str] = None
     cbd: Optional[float] = None
@@ -50,6 +51,7 @@ class ItemDict(TypedDict, total=False):
     ml: Optional[float]
     unit_count: Optional[float]
     price: Optional[float]
+    price_per_unit: Optional[float]
     thc: Optional[float]
     thc_unit: Optional[str]
     cbd: Optional[float]
@@ -104,6 +106,7 @@ def item_from_dict(data: dict) -> Item:
         ml=data.get("ml"),
         unit_count=data.get("unit_count"),
         price=data.get("price"),
+        price_per_unit=data.get("price_per_unit"),
         thc=data.get("thc"),
         thc_unit=data.get("thc_unit"),
         cbd=data.get("cbd"),

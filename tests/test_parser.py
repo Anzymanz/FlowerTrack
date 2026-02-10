@@ -113,6 +113,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(item.get("product_type"), "pastille")
         self.assertEqual(item.get("stock_status"), "IN STOCK")
         self.assertEqual(item.get("unit_count"), 30)
+        self.assertAlmostEqual(item.get("price_per_unit") or 0, 0.4)
 
     def test_identity_key_ignores_price(self):
         base = {

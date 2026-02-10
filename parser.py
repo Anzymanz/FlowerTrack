@@ -94,6 +94,20 @@ def _coerce_int(value: Any) -> int | None:
     except Exception:
         return None
 
+def _extract_price_per_unit(opt: dict | None) -> float | None:
+    if not isinstance(opt, dict):
+        return None
+    for key in ("pricePerUnit", "unitPrice", "price_per_unit"):
+        val = _coerce_float(opt.get(key))
+        if val is not None:
+            return val
+    # Some APIs expose pence/cents for unit price.
+    for key in ("pricePerUnitInPence", "unitPriceInPence", "price_per_unit_pence"):
+        val = _coerce_float(opt.get(key))
+        if val is not None:
+            return val / 100.0
+    return None
+
 def _coerce_bool(value: Any) -> bool | None:
     if value is None:
         return None
@@ -308,17 +322,28 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
     cbd_unit = "%" if cbd is not None else None
     pricing = entry.get("pricingOptions")
     price = None
+    price_per_unit = None
     availability = None
     on_order = bool(entry.get("onOrder"))
     if isinstance(pricing, dict) and pricing:
         opt = pricing.get("STANDARD") or next(iter(pricing.values()))
         price = _coerce_float(opt.get("price") if isinstance(opt, dict) else None)
+        price_per_unit = _extract_price_per_unit(opt if isinstance(opt, dict) else None)
         availability = _coerce_int(opt.get("totalAvailability") if isinstance(opt, dict) else None)
     elif isinstance(pricing, list) and pricing:
         opt = pricing[0]
         if isinstance(opt, dict):
             price = _coerce_float(opt.get("price"))
+            price_per_unit = _extract_price_per_unit(opt)
             availability = _coerce_int(opt.get("totalAvailability"))
+    if (
+        price_per_unit is None
+        and product_type == "pastille"
+        and isinstance(price, (int, float))
+        and isinstance(unit_count, (int, float))
+        and float(unit_count) > 0
+    ):
+        price_per_unit = float(price) / float(unit_count)
     stock_status = None
     stock_detail = None
     if availability is not None:
@@ -391,6 +416,7 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
         "ml": ml,
         "unit_count": unit_count,
         "price": price,
+        "price_per_unit": price_per_unit,
         "thc": thc,
         "thc_unit": thc_unit,
         "cbd": cbd,
