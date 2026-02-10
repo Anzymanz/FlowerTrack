@@ -1,6 +1,6 @@
 # FlowerTrack
 
-FlowerTrack is a Windows desktop app for tracking medical cannabis usage and stock, with an integrated scraper for Medicann products. It combines a dosage tracker, flower library, and automated price/stock change detection with optional Home Assistant notifications and local HTML snapshots.
+FlowerTrack is a Windows desktop app for tracking medical cannabis usage and stock, with an integrated Medicann scraper and local Flower Browser. It combines a dosage tracker, flower library, API-first catalog capture, and automated price/stock change detection with optional Home Assistant and Windows notifications.
 
 ## Download (Windows)
 [Download](https://github.com/Anzymanz/FlowerTrack/releases/latest) the latest `FlowerTrack.exe` from Releases.
@@ -9,9 +9,12 @@ FlowerTrack is a Windows desktop app for tracking medical cannabis usage and sto
 - Track flower stock, THC/CBD potency, remaining grams, and daily targets.
 - Log doses by route of administration with per-day totals.
 - Flower Library and Mix Calculator tools.
-- Medicann scraper with API-based pagination and change detection (new/removed items, price/stock changes, restocks).
+- Medicann scraper with API pagination and change detection (new/removed items, price/stock changes, restocks, out-of-stock).
+- API auth bootstrap flow (including manual login bootstrap on first run when credentials are missing).
 - Home Assistant webhook notifications and optional Windows desktop notifications.
-- Local HTML browser with filters, badges, favorites, basket, and image previews.
+- Local Flower Browser with fixed URL (`/flowerbrowser`), filters, badges, favorites, basket, and image previews.
+- Change history viewer in both scraper UI and Flower Browser.
+- Theme customization with colour pickers (including tracker thresholds and dark/light palette overrides).
 
 ## Screenshots
 ### Tracker dashboard
@@ -55,7 +58,11 @@ Calculator for blend ratios.
 <img src="docs/MixcalcSS.png?v=20260210a" width="500" />
 
 ## The Flower Browser (local webpage)
-The scraper generates a local HTML page that you can open from the app. It’s designed for fast scanning and filtering of the live product list.
+The scraper generates a local HTML page that you can open from the app. It is served from a fixed local path on the local export server:
+
+`http://127.0.0.1:<port>/flowerbrowser` (default port: `8765`)
+
+It is designed for fast scanning and filtering of the live product list.
 
 Key features:
 - Search, filter, and sort by brand, strain, type, stock, THC, and CBD.
@@ -64,11 +71,14 @@ Key features:
 - Flags for origin country and irradiation type (where available).
 - Brand images with click‑to‑enlarge previews.
 - Favorites and basket lists stored locally in the page.
+- Live "new page available" banner when a newer export is detected.
+- Embedded change history modal with readable detail formatting.
 
 ## Scraper behavior
-- Logs in (if configured), then navigates to the products page.
-- Captures API responses and paginates through the full product list.
-- Retries on empty/partial captures using the retry settings.
+- Uses API-first capture and paginates through the full product list.
+- Validates pagination completeness and skips parse/apply on interrupted/partial capture.
+- Uses cached auth tokens and refreshes via Playwright bootstrap when required.
+- Supports manual visible-browser bootstrap when credentials are incomplete on first run.
 - Sends notifications only when changes are detected (per notification toggles).
 
 ## Home Assistant setup
@@ -136,7 +146,7 @@ Key features:
 
 ## Desktop notifications
 - Enable "Send Windows desktop notifications" in scraper settings.
-- Uses win10toast for toasts.
+- Uses `win10toast-click` when available (falls back to `win10toast`).
 
 ## Configuration and data
 All user data and configs are stored under:
@@ -145,8 +155,10 @@ All user data and configs are stored under:
 ```
 Key files:
 - `flowertrack_config.json` (unified tracker + scraper settings)
-- Tracker data and library JSON files
-- `Exports\` (HTML snapshots)
+- `data\tracker_data.json` and `data\library_data.json`
+- `Exports\` (latest export HTML + `changes_latest.json`)
+- `logs\changes.ndjson` (change history)
+- `dumps\` (optional API dumps when enabled)
 
 Credentials and tokens are stored encrypted (DPAPI on Windows).
 
@@ -168,7 +180,7 @@ py .\flowertracker.py
 ## Build (single exe)
 Use the one-liner in `buildline.txt`, or:
 ```powershell
-pyinstaller --noconfirm --clean --onefile --windowed --icon assets/icon.ico --add-data "assets;assets" --add-data "flowerlibrary.py;." --add-data "mixcalc.py;." --name FlowerTrack flowertracker.py
+pyinstaller --onefile --windowed --icon assets/icon.ico --add-data "assets;assets" --add-data "flowerlibrary.py;." --add-data "mixcalc.py;." --add-data "mix_utils.py;." --exclude-module setuptools.msvc --name FlowerTrack flowertracker.py
 ```
 
 ## Tests
@@ -194,7 +206,8 @@ py -m pytest
 - `flowertracker.py` entry point
 - `ui_*.py` UI modules
 - `capture.py` scraper worker
-- `parser.py` HTML parser
-- `exports.py` HTML export generation
+- `parser.py` API payload parser and dedupe logic
+- `exports.py` + `export_template.py` Flower Browser HTML generation
+- `export_server.py` local HTTP server for `/flowerbrowser` and live export events
 - `config.py` config persistence and migrations
 - `tests/` unit tests
