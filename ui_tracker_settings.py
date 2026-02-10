@@ -319,15 +319,6 @@ def open_tracker_settings(app) -> None:
     chk_track_cbd.grid(row=row, column=0, columnspan=3, sticky="w", pady=(2, 4))
     row += 1
 
-    app.hide_mixed_dose_var = tk.BooleanVar(value=getattr(app, "hide_mixed_dose", False))
-    chk_hide_mixed = ttk.Checkbutton(frame, text="Hide mixed dose option", variable=app.hide_mixed_dose_var)
-    chk_hide_mixed.grid(row=row, column=0, columnspan=3, sticky="w", pady=(0, 6))
-    row += 1
-    app.hide_mix_stock_var = tk.BooleanVar(value=getattr(app, "hide_mix_stock", False))
-    chk_hide_mix_stock = ttk.Checkbutton(frame, text="Hide mix stock option", variable=app.hide_mix_stock_var)
-    chk_hide_mix_stock.grid(row=row, column=0, columnspan=3, sticky="w", pady=(0, 6))
-    row += 1
-
     app.hide_roa_var = tk.BooleanVar(value=getattr(app, "hide_roa_options", False))
     chk_hide_roa = ttk.Checkbutton(frame, text="Hide ROA options in log", variable=app.hide_roa_var)
     chk_hide_roa.grid(row=row, column=0, columnspan=3, sticky="w", pady=(0, 6))
@@ -406,14 +397,24 @@ def open_tracker_settings(app) -> None:
     app.scraper_controls_check.grid(
         row=2, column=0, columnspan=2, sticky="w", pady=(2, 0)
     )
-    app.scraper_status_icon_check = ttk.Checkbutton(frame, text="Show scraper status icon", variable=app.scraper_status_icon_var)
-    app.scraper_status_icon_check.grid(
+    app.hide_mixed_dose_var = tk.BooleanVar(value=getattr(app, "hide_mixed_dose", False))
+    chk_hide_mixed = ttk.Checkbutton(frame, text="Hide mixed dose option", variable=app.hide_mixed_dose_var)
+    chk_hide_mixed.grid(
         row=3, column=0, columnspan=2, sticky="w", pady=(2, 0)
     )
+    app.hide_mix_stock_var = tk.BooleanVar(value=getattr(app, "hide_mix_stock", False))
+    chk_hide_mix_stock = ttk.Checkbutton(frame, text="Hide mix stock option", variable=app.hide_mix_stock_var)
+    chk_hide_mix_stock.grid(
+        row=4, column=0, columnspan=2, sticky="w", pady=(2, 0)
+    )
+    app.scraper_status_icon_check = ttk.Checkbutton(frame, text="Show scraper status icon", variable=app.scraper_status_icon_var)
+    app.scraper_status_icon_check.grid(
+        row=5, column=0, columnspan=2, sticky="w", pady=(2, 0)
+    )
     lbl_status_colours = ttk.Label(frame, text="Status indicator colours")
-    lbl_status_colours.grid(row=4, column=0, sticky="w", pady=(8, 0))
+    lbl_status_colours.grid(row=6, column=0, sticky="w", pady=(8, 0))
     status_row = ttk.Frame(frame)
-    status_row.grid(row=4, column=1, sticky="w", padx=(12, 0), pady=(8, 0))
+    status_row.grid(row=6, column=1, sticky="w", padx=(12, 0), pady=(8, 0))
     ttk.Label(status_row, text="Running").grid(row=0, column=0, sticky="w", padx=(0, 6))
     btn_status_running = _color_button(
         status_row,
@@ -438,11 +439,11 @@ def open_tracker_settings(app) -> None:
 
     app.minimize_var_check = ttk.Checkbutton(frame, text="Minimize to tray when minimizing", variable=app.minimize_var)
     app.minimize_var_check.grid(
-        row=5, column=0, columnspan=2, sticky="w", pady=(2, 0)
+        row=7, column=0, columnspan=2, sticky="w", pady=(2, 0)
     )
     app.close_var_check = ttk.Checkbutton(frame, text="Minimize to tray when closing", variable=app.close_var)
     app.close_var_check.grid(
-        row=6, column=0, columnspan=2, sticky="w", pady=(2, 0)
+        row=8, column=0, columnspan=2, sticky="w", pady=(2, 0)
     )
 
     frame = tab_theme
