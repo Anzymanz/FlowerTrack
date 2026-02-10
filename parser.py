@@ -200,6 +200,30 @@ def _normalize_vape_cartridge_name_order(name: str, descriptor: str | None) -> s
     stem = re.sub(r"\s+", " ", stem).strip(" -:")
     return f"{stem} Cartridge".strip()
 
+_BLOCKED_PRESCRIBE_PATTERN = re.compile(
+    r"\b(?:DO\s+NOT\s+PRESCRIB(?:E|ABLE)|NOT\s+PRESCRIB(?:E|ABLE)|FORMULATION\s+ONLY)\b",
+    flags=re.I,
+)
+
+def _has_blocked_prescribe_text(value: Any, max_checks: int = 500) -> bool:
+    """Search nested API fields for blocked prescribing markers."""
+    queue: list[Any] = [value]
+    checks = 0
+    while queue and checks < max_checks:
+        current = queue.pop()
+        if isinstance(current, str):
+            checks += 1
+            if _BLOCKED_PRESCRIBE_PATTERN.search(current):
+                return True
+            continue
+        if isinstance(current, dict):
+            queue.extend(current.values())
+            continue
+        if isinstance(current, list):
+            queue.extend(current)
+            continue
+    return False
+
 def _canonical_pastille_name(raw_name: str | None, brand: str | None, unit_count: int | float | None) -> str | None:
     if not raw_name:
         return None
@@ -573,6 +597,8 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
         and float(unit_count) > 0
     ):
         price_per_unit = float(price) / float(unit_count)
+    if product_type == "vape" and isinstance(price, (int, float)) and float(price) <= 0:
+        return None
     stock_status = None
     stock_detail = None
     if availability is not None:
@@ -594,10 +620,7 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
     if unknown_name:
         if (availability is not None and availability >= 1000) or (price is not None and price <= 0):
             return None
-    if name and (
-        'NOT PRESCRIBABLE' in str(name).upper()
-        or 'FORMULATION ONLY' in str(name).upper()
-    ):
+    if _has_blocked_prescribe_text(entry):
         return None
     status = entry.get("status") or product.get("status") or metadata.get("status")
     requestable = _coerce_bool(

@@ -288,6 +288,61 @@ class TestParser(unittest.TestCase):
         self.assertEqual(item.get("product_type"), "vape")
         self.assertEqual(item.get("strain"), "Blue Dream Full Spectrum Cartridge")
 
+    def test_parse_api_payloads_vape_zero_price_filtered(self):
+        payloads = [
+            {
+                "url": "https://api.example.com/formulary-products?take=1",
+                "data": [
+                    {
+                        "productId": "FREE-VAPE-1",
+                        "name": "ACME LIVE RESIN THC 700MG/ML VAPE CARTRIDGE 1ML",
+                        "product": {
+                            "name": "Acme Citrus Medical Cannabis Cartridge",
+                            "brand": {"name": "Acme"},
+                            "cannabisSpecification": {
+                                "format": "VAPE",
+                                "size": 1.0,
+                                "volumeUnit": "GRAMS",
+                            },
+                        },
+                        "pricingOptions": {
+                            "STANDARD": {"price": 0.0, "totalAvailability": 15}
+                        },
+                    }
+                ],
+            }
+        ]
+        items = parse_api_payloads(payloads)
+        self.assertEqual(items, [])
+
+    def test_parse_api_payloads_not_prescribable_filtered_from_nested_field(self):
+        payloads = [
+            {
+                "url": "https://api.example.com/formulary-products?take=1",
+                "data": [
+                    {
+                        "productId": "BLOCK-1",
+                        "name": "Acme Cherry",
+                        "product": {
+                            "name": "Acme Cherry Medical Cannabis Cartridge",
+                            "brand": {"name": "Acme"},
+                            "metadata": {"notes": "DO NOT PRESCRIBE - TEST"},
+                            "cannabisSpecification": {
+                                "format": "VAPE",
+                                "size": 1.0,
+                                "volumeUnit": "GRAMS",
+                            },
+                        },
+                        "pricingOptions": {
+                            "STANDARD": {"price": 30.0, "totalAvailability": 15}
+                        },
+                    }
+                ],
+            }
+        ]
+        items = parse_api_payloads(payloads)
+        self.assertEqual(items, [])
+
 
 if __name__ == "__main__":
     unittest.main()
