@@ -84,7 +84,7 @@ def open_tracker_settings(app) -> None:
         darkcolor=[("selected", border), ("active", border), ("!selected", border)],
         focuscolor=[("selected", border), ("active", border), ("!selected", border)],
     )
-    local_style.configure(sep_style, background=getattr(app, "muted_color", border))
+    local_style.configure(sep_style, background=border)
 
     notebook = ttk.Notebook(container, style=tab_style)
     app.settings_notebook = notebook
