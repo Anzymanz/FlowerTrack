@@ -4075,7 +4075,14 @@ class CannabisTracker:
             if not self.show_scraper_status_icon or not self.show_scraper_buttons:
                 self._apply_scraper_controls_visibility()
                 return
-            img = self._build_status_image(running, warn, size=64)
+            target_size = 12
+            img = self._build_status_image(running, warn, size=target_size)
+            try:
+                if img is not None and Image is not None and hasattr(img, "size") and tuple(img.size) != (target_size, target_size):
+                    img = img.copy()
+                    img.thumbnail((target_size, target_size), Image.LANCZOS)
+            except Exception:
+                pass
             if img is not None and self.scraper_notifications_muted:
                 img = _overlay_mute_icon(img)
             if img and ImageTk is not None:
