@@ -982,7 +982,6 @@ function loadFilterPrefs() {
         const data = JSON.parse(raw);
         if (Array.isArray(data.types)) {
             activeTypes = new Set(data.types);
-            if (!activeTypes.has('pastille')) activeTypes.add('pastille');
         }
         if (Array.isArray(data.strains)) {
             activeStrains = new Set(data.strains);
