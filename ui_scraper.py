@@ -1960,7 +1960,8 @@ class App(tk.Tk):
             combined.extend(self.removed_data)
         return combined
     # Export functions removed (no longer used)
-    def clear_cache(self):
+    def _clear_parse_cache(self, notify: bool = True) -> bool:
+        cleared = False
         self.data.clear()
         self.prev_items = []
         self.prev_keys = set()
@@ -1968,14 +1969,28 @@ class App(tk.Tk):
         try:
             if LAST_PARSE_FILE.exists():
                 LAST_PARSE_FILE.unlink()
+                cleared = True
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
-        for path in (CHANGES_LOG_FILE,):
-            try:
-                if path.exists():
-                    path.unlink()
-            except Exception as exc:
-                self._debug_log(f"Suppressed exception: {exc}")
+        if notify:
+            self.status.config(text="Parse cache cleared")
+            messagebox.showinfo("Cleared", "Parsed cache cleared.")
+        return cleared
+
+    def _clear_change_history(self, notify: bool = True) -> bool:
+        cleared = False
+        try:
+            if CHANGES_LOG_FILE.exists():
+                CHANGES_LOG_FILE.unlink()
+                cleared = True
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
+        if notify:
+            self.status.config(text="Change history cleared")
+            messagebox.showinfo("Cleared", "Change history log cleared.")
+        return cleared
+
+    def _clear_scraper_state_cache(self, notify: bool = True) -> bool:
         try:
             self.progress['value'] = 0
         except Exception as exc:
@@ -1986,8 +2001,17 @@ class App(tk.Tk):
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
         update_scraper_state(SCRAPER_STATE_FILE, last_change=None, last_scrape=None)
+        if notify:
+            self.status.config(text="Scraper state cleared")
+            messagebox.showinfo("Cleared", "Scraper state markers cleared.")
+        return True
+
+    def clear_cache(self):
+        self._clear_parse_cache(notify=False)
+        self._clear_change_history(notify=False)
+        self._clear_scraper_state_cache(notify=False)
         self.status.config(text="Cache cleared")
-        messagebox.showinfo("Cleared", "Cache cleared (including previous parse and logs).")
+        messagebox.showinfo("Cleared", "Cleared parsed cache, change history, and scraper state.")
     def _clear_auth_cache(self) -> None:
         if self.capture_thread and self.capture_thread.is_alive():
             messagebox.showwarning("Auth Cache", "Stop auto-capture before clearing auth cache.")
