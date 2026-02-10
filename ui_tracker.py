@@ -1922,7 +1922,12 @@ class CannabisTracker:
         self.root.option_add("*TCombobox*Listbox*Background", entry_bg)
         self.root.option_add("*TCombobox*Listbox*Foreground", text_color)
         self.root.option_add("*TCombobox*Listbox*selectBackground", accent)
-        self.root.option_add("*TCombobox*Listbox*selectForeground", "#ffffff")
+        self.root.option_add("*TCombobox*Listbox*selectForeground", text_color)
+        # Alias patterns improve reliability across Tk builds/themes.
+        self.root.option_add("*TCombobox*Listbox.background", entry_bg)
+        self.root.option_add("*TCombobox*Listbox.foreground", text_color)
+        self.root.option_add("*TCombobox*Listbox.selectBackground", accent)
+        self.root.option_add("*TCombobox*Listbox.selectForeground", text_color)
         self.root.option_add("*TCombobox*Entry*selectBackground", entry_bg)
         self.root.option_add("*TCombobox*Entry*selectForeground", text_color)
         self.root.option_add("*TCombobox*Entry*inactiveselectBackground", entry_bg)

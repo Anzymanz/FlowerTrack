@@ -240,7 +240,12 @@ class FlowerLibraryApp:
         self.root.option_add("*TCombobox*Listbox*Background", list_bg)
         self.root.option_add("*TCombobox*Listbox*Foreground", text_color)
         self.root.option_add("*TCombobox*Listbox*selectBackground", accent)
-        self.root.option_add("*TCombobox*Listbox*selectForeground", "#ffffff")
+        self.root.option_add("*TCombobox*Listbox*selectForeground", text_color)
+        # Alias patterns improve reliability across Tk builds/themes.
+        self.root.option_add("*TCombobox*Listbox.background", list_bg)
+        self.root.option_add("*TCombobox*Listbox.foreground", text_color)
+        self.root.option_add("*TCombobox*Listbox.selectBackground", accent)
+        self.root.option_add("*TCombobox*Listbox.selectForeground", text_color)
 
         if hasattr(self, "tree"):
             self.tree.tag_configure("odd", background=panel)

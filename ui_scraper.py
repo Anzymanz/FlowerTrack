@@ -2119,7 +2119,12 @@ class App(tk.Tk):
         self.option_add("*TCombobox*Listbox*Background", colors["ctrl_bg"])
         self.option_add("*TCombobox*Listbox*Foreground", colors["fg"])
         self.option_add("*TCombobox*Listbox*selectBackground", colors["accent"])
-        self.option_add("*TCombobox*Listbox*selectForeground", colors["bg"])
+        self.option_add("*TCombobox*Listbox*selectForeground", colors["fg"])
+        # Alias patterns improve reliability across Tk builds/themes.
+        self.option_add("*TCombobox*Listbox.background", colors["ctrl_bg"])
+        self.option_add("*TCombobox*Listbox.foreground", colors["fg"])
+        self.option_add("*TCombobox*Listbox.selectBackground", colors["accent"])
+        self.option_add("*TCombobox*Listbox.selectForeground", colors["fg"])
         self.option_add("*TCombobox*Entry*selectBackground", colors["ctrl_bg"])
         self.option_add("*TCombobox*Entry*selectForeground", colors["fg"])
         self.option_add("*TCombobox*Entry*inactiveselectBackground", colors["ctrl_bg"])
