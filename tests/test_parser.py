@@ -195,7 +195,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(len(items), 1)
         item = items[0]
         self.assertEqual(item.get("product_type"), "vape")
-        self.assertEqual(item.get("strain"), "Hash Rosin Cookie Pie Cartridge")
+        self.assertEqual(item.get("strain"), "Cookie Pie Hash Rosin Cartridge")
 
     def test_parse_api_payloads_vape_name_4c_code_removed(self):
         payloads = [
@@ -256,7 +256,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(len(items), 1)
         item = items[0]
         self.assertEqual(item.get("product_type"), "vape")
-        self.assertEqual(item.get("strain"), "Distillate Jack Herer Liquid Cartridge")
+        self.assertEqual(item.get("strain"), "Jack Herer Liquid Distillate Cartridge")
 
     def test_parse_api_payloads_vape_name_includes_full_spectrum_descriptor(self):
         payloads = [
@@ -286,7 +286,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(len(items), 1)
         item = items[0]
         self.assertEqual(item.get("product_type"), "vape")
-        self.assertEqual(item.get("strain"), "Full Spectrum Blue Dream Cartridge")
+        self.assertEqual(item.get("strain"), "Blue Dream Full Spectrum Cartridge")
 
 
 if __name__ == "__main__":

@@ -181,6 +181,25 @@ def _extract_vape_profile_descriptor(*values: str | None) -> str | None:
             return label
     return None
 
+def _remove_phrase_ci(text: str, phrase: str) -> str:
+    if not text or not phrase:
+        return text
+    out = re.sub(rf"\b{re.escape(phrase)}\b", "", text, flags=re.I)
+    out = re.sub(r"\s+", " ", out).strip(" -:")
+    return out
+
+def _normalize_vape_cartridge_name_order(name: str, descriptor: str | None) -> str:
+    """Enforce cartridge names as '<name> <type> Cartridge'."""
+    if not name:
+        return name
+    stem = re.sub(r"\s+Cartridge\s*$", "", name, flags=re.I).strip(" -:")
+    if descriptor:
+        # Remove descriptor from any position, then append it before Cartridge.
+        stem_without_descriptor = _remove_phrase_ci(stem, descriptor)
+        stem = f"{stem_without_descriptor} {descriptor}".strip() if stem_without_descriptor else descriptor
+    stem = re.sub(r"\s+", " ", stem).strip(" -:")
+    return f"{stem} Cartridge".strip()
+
 def _canonical_pastille_name(raw_name: str | None, brand: str | None, unit_count: int | float | None) -> str | None:
     if not raw_name:
         return None
@@ -420,12 +439,11 @@ def _canonical_vape_name(
     if not name:
         return None
 
-    profile = _extract_vape_profile_descriptor(raw_name, product_name, strain_name)
-    if profile and profile.lower() not in name.lower():
-        name = f"{profile} {name}"
-
     # Ensure a meaningful product suffix for vapes.
-    if suffix.lower() not in name.lower():
+    if suffix.lower() == "cartridge":
+        profile = _extract_vape_profile_descriptor(raw_name, product_name, strain_name)
+        name = _normalize_vape_cartridge_name_order(name, profile)
+    elif suffix.lower() not in name.lower():
         name = f"{name} {suffix}"
     name = re.sub(r"\s+", " ", name).strip(" -:")
     return name
