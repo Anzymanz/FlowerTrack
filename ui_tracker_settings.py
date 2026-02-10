@@ -327,7 +327,7 @@ def open_tracker_settings(app) -> None:
     chk_hide_roa.grid(row=row, column=0, columnspan=3, sticky="w", pady=(0, 6))
     row += 1
 
-    ttk.Separator(frame, orient="horizontal", style=sep_style).grid(
+    tk.Frame(frame, height=1, bg=border, bd=0, highlightthickness=0).grid(
         row=row, column=0, columnspan=4, sticky="ew", pady=(4, 8)
     )
     row += 1
@@ -364,7 +364,7 @@ def open_tracker_settings(app) -> None:
     avg_frame.grid(row=row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
     row += 1
 
-    ttk.Separator(frame, orient="horizontal", style=sep_style).grid(
+    tk.Frame(frame, height=1, bg=border, bd=0, highlightthickness=0).grid(
         row=row, column=0, columnspan=4, sticky="ew", pady=(6, 8)
     )
     row += 1
