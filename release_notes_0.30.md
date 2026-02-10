@@ -26,5 +26,6 @@
 - Improved settings/theme behavior for first-run dark-mode defaults and in-window theme updates.
 - Added explicit swatch borders in colour settings for contrast in dark/light themes.
 - Improved status indicator interactions (start/stop on double-click, mute/unmute on right-click, muted overlay state).
+- Added Flower Browser irradiation filters (`β` and `γ`) for quicker filtering by beta/gamma treated products.
 - Fixed stock deletion selection cleanup to avoid stale Treeview item exceptions.
 - Fixed mixed-window and scraper geometry persistence paths that were falling back to stale defaults.
