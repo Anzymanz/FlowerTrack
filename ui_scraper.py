@@ -155,7 +155,7 @@ class App(tk.Tk):
         ttk.Button(btns, text="Open browser", command=self.open_latest_export).pack(side="left", padx=5)
         ttk.Button(btns, text="History", command=self._open_history_window).pack(side="left", padx=5)
         ttk.Button(btns, text="Settings", command=self._open_settings_window).pack(side="left", padx=5)
-        self.progress = ttk.Progressbar(self, mode="determinate")
+        self.progress = ttk.Progressbar(self, mode="determinate", style="Scraper.Horizontal.TProgressbar")
         self.progress.pack(fill="x", padx=10, pady=5)
         self.status = ttk.Label(self, text="Idle")
         self.status.pack(pady=(2, 2))
@@ -2147,6 +2147,19 @@ class App(tk.Tk):
             lightcolor=colors["ctrl_bg"],
             darkcolor=colors["ctrl_bg"],
         )
+        self.style.configure(
+            "Scraper.Horizontal.TProgressbar",
+            background=colors["accent"],
+            troughcolor=colors["ctrl_bg"],
+            bordercolor=colors.get("border", colors["ctrl_bg"]),
+            lightcolor=colors.get("border", colors["ctrl_bg"]),
+            darkcolor=colors.get("border", colors["ctrl_bg"]),
+        )
+        self.style.map(
+            "Scraper.Horizontal.TProgressbar",
+            background=[("disabled", colors["accent"]), ("!disabled", colors["accent"])],
+            troughcolor=[("disabled", colors["ctrl_bg"]), ("!disabled", colors["ctrl_bg"])],
+        )
         # Apply option database overrides for classic Tk scrollbars (used by ScrolledText)
         try:
             self.option_add("*Scrollbar.background", colors["ctrl_bg"])
@@ -2181,6 +2194,10 @@ class App(tk.Tk):
                     self._debug_log(f"Suppressed exception: {exc}")
             except Exception as exc:
                 self._debug_log(f"Suppressed exception: {exc}")
+        try:
+            self.progress.configure(style="Scraper.Horizontal.TProgressbar")
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         if hasattr(self, "auth_bootstrap_log_widget") and self.auth_bootstrap_log_widget:
             try:
                 self.auth_bootstrap_log_widget.configure(
