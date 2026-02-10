@@ -139,6 +139,27 @@ class CaptureWorker:
             except Exception:
                 pass
 
+    def _api_dump_enabled(self) -> bool:
+        return bool(self.cfg.get("dump_api_json") or self.cfg.get("dump_api_full"))
+
+    def _prune_dump_files(self, dump_dir: Path, keep: int = 10) -> None:
+        """Keep only the newest API dump artifacts to control disk usage."""
+        if keep < 1:
+            keep = 1
+        try:
+            patterns = ("api_dump_*.json", "api_dump_full_*.json", "api_endpoints_*.json")
+            files: list[Path] = []
+            for pattern in patterns:
+                files.extend(dump_dir.glob(pattern))
+            files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+            for stale in files[keep:]:
+                try:
+                    stale.unlink(missing_ok=True)
+                except Exception:
+                    pass
+        except Exception as exc:
+            self._safe_log(f"Dump pruning failed: {exc}")
+
     def _auth_cache_path(self) -> Path:
         if self.app_dir:
             return Path(self.app_dir) / "data" / "api_auth.json"
@@ -1053,21 +1074,15 @@ class CaptureWorker:
                                         save_api_latest(latest_path, api_payloads)
                                 except Exception as exc:
                                     self.callbacks["capture_log"](f"API latest write failed: {exc}")
-                                if self.cfg.get("dump_api_json"):
+                                if self._api_dump_enabled():
                                     try:
                                         api_path = dump_dir / f"api_dump_{stamp}.json"
-                                        api_path.write_text(json.dumps(api_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
+                                        full_payloads = list(bootstrap_payloads or []) + list(api_payloads or [])
+                                        api_path.write_text(json.dumps(full_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
                                         self.callbacks["capture_log"](f"Saved API dump: {api_path}")
                                     except Exception as exc:
                                         self.callbacks["capture_log"](f"API dump failed: {exc}")
-                                if self.cfg.get("dump_api_full"):
-                                    try:
-                                        full_path = dump_dir / f"api_dump_full_{stamp}.json"
-                                        full_payloads = list(bootstrap_payloads or []) + list(api_payloads or [])
-                                        full_path.write_text(json.dumps(full_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
-                                        self.callbacks["capture_log"](f"Saved full API dump: {full_path}")
-                                    except Exception as exc:
-                                        self.callbacks["capture_log"](f"Full API dump failed: {exc}")
+                                self._prune_dump_files(dump_dir, keep=10)
                             self.callbacks["apply_text"]("")
                         except Exception as exc:
                             self._safe_log(f"API capture apply failed: {exc}")
@@ -1116,7 +1131,7 @@ class CaptureWorker:
                                 if url and len(xhr_urls) < 50:
                                     xhr_urls.append(url)
                             wants_data = any(tok in url for tok in ("formulary", "rpc-api", "entity-api", "api", "auth", "oauth", "token"))
-                            if self.cfg.get("dump_api_full"):
+                            if self._api_dump_enabled():
                                 wants_data = wants_data or rtype in ("xhr", "fetch")
                             if not wants_data and "json" not in ctype and rtype not in ("xhr", "fetch"):
                                 return
@@ -1690,7 +1705,7 @@ class CaptureWorker:
                                 except Exception:
                                     dump_dir = None
                                     data_dir = None
-                                if self.cfg.get("dump_capture_html") or self.cfg.get("dump_api_json") or self.cfg.get("dump_api_full"):
+                                if self.cfg.get("dump_capture_html") or self._api_dump_enabled():
                                     stamp = time.strftime("%Y%m%d_%H%M%S")
                                 if dump_dir:
                                     if not api_payloads:
@@ -1703,33 +1718,21 @@ class CaptureWorker:
                                                 save_api_latest(latest_path, api_payloads)
                                         except Exception as exc:
                                             self.callbacks["capture_log"](f"API latest write failed: {exc}")
-                                        if endpoint_summaries and stamp:
+                                        if endpoint_summaries and stamp and self._api_dump_enabled():
                                             try:
                                                 summary_path = dump_dir / f"api_endpoints_{stamp}.json"
                                                 summary_path.write_text(json.dumps(endpoint_summaries, ensure_ascii=False, indent=2), encoding="utf-8")
                                                 self.callbacks["capture_log"](f"Saved API endpoint summary: {summary_path}")
                                             except Exception as exc:
                                                 self.callbacks["capture_log"](f"API endpoint summary failed: {exc}")
-                                if self.cfg.get("dump_api_full") and stamp:
-                                    try:
-                                        full_path = dump_dir / f"api_dump_full_{stamp}.json"
-                                        full_path.write_text(json.dumps(api_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
-                                        self.callbacks["capture_log"](f"Saved full API dump: {full_path}")
-                                    except Exception as exc:
-                                        self.callbacks["capture_log"](f"Full API dump failed: {exc}")
-                                if self.cfg.get("dump_api_json") and stamp:
-                                    try:
-                                        summary_path = dump_dir / f"api_endpoints_{stamp}.json"
-                                        summary_path.write_text(json.dumps(endpoint_summaries, ensure_ascii=False, indent=2), encoding="utf-8")
-                                        self.callbacks["capture_log"](f"Saved API endpoint summary: {summary_path}")
-                                    except Exception as exc:
-                                                self.callbacks["capture_log"](f"API endpoint summary failed: {exc}")
+                                if self._api_dump_enabled() and stamp:
                                     try:
                                         api_path = dump_dir / f"api_dump_{stamp}.json"
                                         api_path.write_text(json.dumps(api_payloads, ensure_ascii=False, indent=2), encoding="utf-8")
                                         self.callbacks["capture_log"](f"Saved API dump: {api_path}")
                                     except Exception as exc:
                                         self.callbacks["capture_log"](f"API dump failed: {exc}")
+                                    self._prune_dump_files(dump_dir, keep=10)
                                 if self.cfg.get("dump_capture_html") and dump_dir and stamp:
                                     try:
                                         html_path = dump_dir / f"page_dump_{stamp}.html"

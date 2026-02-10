@@ -2,6 +2,7 @@ import base64
 import json
 import tempfile
 import unittest
+from pathlib import Path
 
 from capture import CaptureStateMachine, CaptureWorker
 
@@ -39,6 +40,20 @@ class CaptureStateTests(unittest.TestCase):
             cleared = worker.clear_auth_cache()
             self.assertTrue(cleared)
             self.assertFalse(path.exists())
+
+    def test_prune_dump_files_keeps_latest_10(self):
+        worker = CaptureWorker.__new__(CaptureWorker)
+        worker.callbacks = {"capture_log": lambda _m: None}
+        with tempfile.TemporaryDirectory() as tmp:
+            dump_dir = Path(tmp)
+            created = []
+            for i in range(12):
+                path = dump_dir / f"api_dump_20260210_1200{i:02d}.json"
+                path.write_text("{}", encoding="utf-8")
+                created.append(path)
+            worker._prune_dump_files(dump_dir, keep=10)
+            remaining = sorted(dump_dir.glob("api_dump_*.json"))
+            self.assertEqual(len(remaining), 10)
 
 
 if __name__ == "__main__":

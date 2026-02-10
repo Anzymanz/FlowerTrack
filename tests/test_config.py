@@ -19,6 +19,11 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(cfg["url"], config.DEFAULT_CAPTURE_CONFIG["url"])
         self.assertEqual(cfg["username_selector"], config.DEFAULT_CAPTURE_CONFIG["username_selector"])
 
+    def test_validate_capture_combines_legacy_dump_flags(self):
+        cfg = config._validate_capture_config({"dump_api_json": False, "dump_api_full": True})
+        self.assertTrue(cfg["dump_api_json"])
+        self.assertTrue(cfg["dump_api_full"])
+
     def test_load_unified_defaults(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "config.json"

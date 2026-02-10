@@ -338,8 +338,8 @@ class App(tk.Tk):
         self.cap_org = tk.StringVar(value=cfg.get("organization", ""))
         self.cap_org_sel = tk.StringVar(value=cfg.get("organization_selector", ""))
         self.cap_dump_html = tk.BooleanVar(value=bool(cfg.get("dump_capture_html", False)))
-        self.cap_dump_api = tk.BooleanVar(value=bool(cfg.get("dump_api_json", False)))
-        self.cap_dump_api_full = tk.BooleanVar(value=bool(cfg.get("dump_api_full", False)))
+        dump_api_enabled = bool(cfg.get("dump_api_json", False) or cfg.get("dump_api_full", False))
+        self.cap_dump_api = tk.BooleanVar(value=dump_api_enabled)
         self.cap_show_log_window = tk.BooleanVar(value=bool(cfg.get("show_log_window", False)))
         try:
             self.scraper_log_hidden_height = float(self._clamp_hidden_log_height(cfg.get("log_window_hidden_height", 210)))
@@ -415,7 +415,8 @@ class App(tk.Tk):
             "retry_backoff_max": _parse_float(self.cap_retry_backoff.get(), DEFAULT_CAPTURE_CONFIG["retry_backoff_max"], "retry_backoff_max"),
             "dump_capture_html": bool(self.cap_dump_html.get()),
             "dump_api_json": bool(self.cap_dump_api.get()),
-            "dump_api_full": bool(self.cap_dump_api_full.get()),
+            # Keep writing legacy key so older imports/versions continue to read the same state.
+            "dump_api_full": bool(self.cap_dump_api.get()),
             "show_log_window": bool(self.cap_show_log_window.get()),
             "username": self.cap_user.get(),
             "password": self.cap_pass.get(),
@@ -1001,7 +1002,7 @@ class App(tk.Tk):
         self.cap_retry_wait.set(str(cfg.get("retry_wait_seconds", cfg.get("post_nav_wait_seconds", 30))))
         self.cap_retry_backoff.set(str(cfg.get("retry_backoff_max", 4)))
         self.cap_dump_html.set(bool(cfg.get("dump_capture_html", False)))
-        self.cap_dump_api.set(bool(cfg.get("dump_api_json", False)))
+        self.cap_dump_api.set(bool(cfg.get("dump_api_json", False) or cfg.get("dump_api_full", False)))
         self.cap_user.set(decrypt_secret(cfg.get("username", "")))
         self.cap_pass.set(decrypt_secret(cfg.get("password", "")))
         self.cap_user_sel.set(cfg.get("username_selector", ""))

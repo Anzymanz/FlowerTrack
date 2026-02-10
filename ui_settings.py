@@ -339,10 +339,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Checkbutton(advanced_frame, text="Dump page HTML to file", variable=app.cap_dump_html).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
     adv_row += 1
 
-    ttk.Checkbutton(advanced_frame, text="Dump API JSON responses", variable=app.cap_dump_api).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
-    adv_row += 1
-
-    ttk.Checkbutton(advanced_frame, text="Dump full API traffic (XHR/fetch)", variable=app.cap_dump_api_full).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
+    ttk.Checkbutton(advanced_frame, text="Dump API traffic (full details)", variable=app.cap_dump_api).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
     adv_row += 1
 
     ttk.Checkbutton(advanced_frame, text="Show log window", variable=app.cap_show_log_window).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
@@ -388,8 +385,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         app.cap_retry_backoff.set(str(defaults.get("retry_backoff_max", "")))
         app.cap_headless.set(bool(defaults.get("headless", True)))
         app.cap_dump_html.set(bool(defaults.get("dump_capture_html", False)))
-        app.cap_dump_api.set(bool(defaults.get("dump_api_json", False)))
-        app.cap_dump_api_full.set(bool(defaults.get("dump_api_full", False)))
+        app.cap_dump_api.set(bool(defaults.get("dump_api_json", False) or defaults.get("dump_api_full", False)))
         app.cap_show_log_window.set(bool(defaults.get("show_log_window", True)))
         update_scraper_hints()
 
