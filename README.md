@@ -20,42 +20,42 @@ FlowerTrack is a Windows desktop app for tracking medical cannabis usage and sto
 ### Tracker dashboard
 Shows usage, stock, and daily targets in a single view.
 
-<img src="docs/TrackerSS.png?v=20260210a" width="960" />
+<img src="docs/TrackerSS.png?v=20260210b" width="960" />
 
 ### Usage stats
 Shows usage history and trends over time.
 
-<img src="docs/StatsSS.png?v=20260210a" width="360" />
+<img src="docs/StatsSS.png?v=20260210b" width="360" />
 
 ### Flower library
 Stores strains, notes, and metadata.
 
-<img src="docs/LibrarySS.png?v=20260210a" width="960" />
+<img src="docs/LibrarySS.png?v=20260210b" width="960" />
 
 ### Scraper window
 Shows auto-scraper controls, progress, and log output.
 
-<img src="docs/ScraperSS_20260209.png?v=20260210a" width="750" />
+<img src="docs/ScraperSS_20260209.png?v=20260210b" width="750" />
 
 ### Flower Browser
 Local webpage with filters, badges, and change highlights.
 
-<img src="docs/WebpageSS.png?v=20260210a" width="960" />
+<img src="docs/WebpageSS.png?v=20260210b" width="960" />
 
 ### Flower Browser favorites
 Favorites list for quick access.
 
-<img src="docs/WebpageFavoriteSS.png?v=20260210a" width="960" />
+<img src="docs/WebpageFavoriteSS.png?v=20260210b" width="960" />
 
 ### Flower Browser basket
 Basket view for comparing items.
 
-<img src="docs/WebpageBasketSS.png?v=20260210a" width="960" />
+<img src="docs/WebpageBasketSS.png?v=20260210b" width="960" />
 
 ### Mix calculator
 Calculator for blend ratios.
 
-<img src="docs/MixcalcSS.png?v=20260210a" width="500" />
+<img src="docs/MixcalcSS.png?v=20260210b" width="500" />
 
 ## The Flower Browser (local webpage)
 The scraper generates a local HTML page that you can open from the app. It is served from a fixed local path on the local export server:
@@ -66,6 +66,7 @@ It is designed for fast scanning and filtering of the live product list.
 
 Key features:
 - Search, filter, and sort by brand, strain, type, stock, THC, and CBD.
+- Dedicated irradiation filters (`β` and `γ`) for quick beta/gamma product filtering.
 - Visual badges for new/removed items, price movement, out‑of‑stock, and restock highlights.
 - Per‑gram pricing and THC/CBD normalization.
 - Flags for origin country and irradiation type (where available).
