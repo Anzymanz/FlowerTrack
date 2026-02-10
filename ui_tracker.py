@@ -2032,7 +2032,52 @@ class CannabisTracker:
         except Exception:
             pass
         self._apply_caret_color(cursor_color)
+        self._refresh_combobox_popdowns(entry_bg, highlight, highlight_text)
         self._refresh_settings_notebook_style(dark)
+
+    def _iter_comboboxes(self, root_widget: tk.Misc) -> list[ttk.Combobox]:
+        combos: list[ttk.Combobox] = []
+        try:
+            stack: list[tk.Misc] = [root_widget]
+            while stack:
+                widget = stack.pop()
+                try:
+                    stack.extend(widget.winfo_children())
+                except Exception:
+                    pass
+                if isinstance(widget, ttk.Combobox):
+                    combos.append(widget)
+        except Exception:
+            pass
+        return combos
+
+    def _refresh_combobox_popdowns(self, list_bg: str, select_bg: str, select_fg: str) -> None:
+        """Apply combobox dropdown list colours immediately without requiring app restart."""
+        roots: list[tk.Misc] = [self.root]
+        for win_name in ("settings_window", "tools_window"):
+            win = getattr(self, win_name, None)
+            try:
+                if win and tk.Toplevel.winfo_exists(win):
+                    roots.append(win)
+            except Exception:
+                pass
+        for root_widget in roots:
+            for combo in self._iter_comboboxes(root_widget):
+                try:
+                    popdown = str(combo.tk.call("ttk::combobox::PopdownWindow", combo))
+                    listbox = f"{popdown}.f.l"
+                    combo.tk.call(
+                        listbox,
+                        "configure",
+                        "-background",
+                        list_bg,
+                        "-selectbackground",
+                        select_bg,
+                        "-selectforeground",
+                        select_fg,
+                    )
+                except Exception:
+                    pass
 
     def _refresh_settings_notebook_style(self, dark: bool) -> None:
         win = getattr(self, "settings_window", None)
