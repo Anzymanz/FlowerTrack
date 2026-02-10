@@ -95,16 +95,16 @@ def open_tracker_settings(app) -> None:
         pass
     notebook.grid(row=0, column=0, sticky="nsew")
 
-    tab_colors = ttk.Frame(notebook, padding=8)
     tab_tracker = ttk.Frame(notebook, padding=8)
-    tab_data = ttk.Frame(notebook, padding=8)
     tab_window = ttk.Frame(notebook, padding=8)
+    tab_colors = ttk.Frame(notebook, padding=8)
     tab_theme = ttk.Frame(notebook, padding=8)
-    notebook.add(tab_colors, text="Colour settings")
+    tab_data = ttk.Frame(notebook, padding=8)
     notebook.add(tab_tracker, text="Tracker settings")
-    notebook.add(tab_data, text="Data settings")
     notebook.add(tab_window, text="Window settings")
+    notebook.add(tab_colors, text="Colour settings")
     notebook.add(tab_theme, text="Theme")
+    notebook.add(tab_data, text="Data settings")
     notebook.configure(style=tab_style)
 
     for tab in (tab_colors, tab_tracker, tab_data, tab_window, tab_theme):
