@@ -177,9 +177,10 @@ class FlowerLibraryApp:
         accent = colors["accent"]
         highlight = colors.get("highlight", colors["accent"])
         border = colors.get("border", colors["ctrl_bg"])
-        selected_bg = colors["accent"]
+        selected_bg = colors.get("highlight", colors["accent"])
         selected_fg = "#ffffff"
         cursor = text_color
+        scroll_style = "FlowerLib.Vertical.TScrollbar"
 
         self.root.configure(bg=base)
         self.current_base_color = base
@@ -213,6 +214,8 @@ class FlowerLibraryApp:
             fieldbackground=base,
             foreground=text_color,
             bordercolor=border,
+            lightcolor=border,
+            darkcolor=border,
             font=font_body,
         )
         self.style.map(
@@ -233,6 +236,21 @@ class FlowerLibraryApp:
             "Treeview.Heading",
             background=[("active", accent)],
             foreground=[("active", "#ffffff")],
+        )
+        self.style.configure(
+            scroll_style,
+            troughcolor=base,
+            background=panel,
+            arrowcolor=text_color,
+            bordercolor=border,
+            lightcolor=border,
+            darkcolor=border,
+        )
+        self.style.map(
+            scroll_style,
+            background=[("active", accent), ("!active", panel)],
+            troughcolor=[("active", base), ("!active", base)],
+            arrowcolor=[("active", text_color), ("!active", text_color)],
         )
         self.style.configure("TCheckbutton", background=base, foreground=text_color)
         self.style.map(
@@ -275,7 +293,7 @@ class FlowerLibraryApp:
                 pass
         if hasattr(self, "tree_scroll"):
             try:
-                self.tree_scroll.configure(style="Dark.Vertical.TScrollbar")
+                self.tree_scroll.configure(style=scroll_style)
             except Exception:
                 pass
 
@@ -342,7 +360,7 @@ class FlowerLibraryApp:
                 width = self.settings.get("column_widths", {}).get(col, 40)
             self.tree.column(col, width=width, anchor="center")
         self.tree.grid(row=0, column=0, sticky="nsew")
-        self.tree_scroll = ttk.Scrollbar(tree_inner, orient="vertical", command=self.tree.yview, style="Dark.Vertical.TScrollbar")
+        self.tree_scroll = ttk.Scrollbar(tree_inner, orient="vertical", command=self.tree.yview, style="FlowerLib.Vertical.TScrollbar")
         self.tree.configure(yscrollcommand=self.tree_scroll.set)
         self.tree_scroll.grid(row=0, column=1, sticky="ns")
         self.tree.bind("<ButtonRelease-1>", self.on_tree_button_release)
