@@ -224,6 +224,9 @@ class FlowerLibraryApp:
             "Treeview.Heading",
             background=panel,
             foreground=text_color,
+            bordercolor=border,
+            lightcolor=border,
+            darkcolor=border,
             font=font_body,
         )
         self.style.map(
@@ -251,6 +254,30 @@ class FlowerLibraryApp:
         if hasattr(self, "tree"):
             self.tree.tag_configure("odd", background=panel)
             self.tree.tag_configure("even", background=base)
+            try:
+                self.tree.configure(
+                    borderwidth=0,
+                    relief="flat",
+                    highlightthickness=0,
+                )
+            except Exception:
+                pass
+        if hasattr(self, "tree_border_frame"):
+            try:
+                self.tree_border_frame.configure(
+                    bg=panel,
+                    highlightthickness=1,
+                    highlightbackground=border,
+                    highlightcolor=border,
+                    bd=0,
+                )
+            except Exception:
+                pass
+        if hasattr(self, "tree_scroll"):
+            try:
+                self.tree_scroll.configure(style="Dark.Vertical.TScrollbar")
+            except Exception:
+                pass
 
         for window in self.windows:
             try:
@@ -281,7 +308,24 @@ class FlowerLibraryApp:
             "overall",
             "search",
         )
-        self.tree = ttk.Treeview(self.root, columns=columns, show="headings", height=14)
+        colors = compute_colors(self.is_dark.get())
+        panel = colors["ctrl_bg"]
+        border = colors.get("border", panel)
+        self.tree_border_frame = tk.Frame(
+            self.root,
+            bg=panel,
+            highlightthickness=1,
+            highlightbackground=border,
+            highlightcolor=border,
+            bd=0,
+        )
+        self.tree_border_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        tree_inner = ttk.Frame(self.tree_border_frame)
+        tree_inner.pack(fill="both", expand=True, padx=1, pady=1)
+        tree_inner.columnconfigure(0, weight=1)
+        tree_inner.rowconfigure(0, weight=1)
+
+        self.tree = ttk.Treeview(tree_inner, columns=columns, show="headings", height=14)
         heading_labels = {
             "thc": "THC %",
             "cbd": "CBD %",
@@ -297,7 +341,10 @@ class FlowerLibraryApp:
             if col == "search":
                 width = self.settings.get("column_widths", {}).get(col, 40)
             self.tree.column(col, width=width, anchor="center")
-        self.tree.pack(fill="both", expand=True, padx=10, pady=10)
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        self.tree_scroll = ttk.Scrollbar(tree_inner, orient="vertical", command=self.tree.yview, style="Dark.Vertical.TScrollbar")
+        self.tree.configure(yscrollcommand=self.tree_scroll.set)
+        self.tree_scroll.grid(row=0, column=1, sticky="ns")
         self.tree.bind("<ButtonRelease-1>", self.on_tree_button_release)
 
     def _build_buttons(self) -> None:
