@@ -2031,7 +2031,7 @@ class App(tk.Tk):
             messagebox.showinfo("Auth Cache", "No auth cache found to clear.")
     def _run_auth_bootstrap(self) -> None:
         if self.capture_thread and self.capture_thread.is_alive():
-            messagebox.showwarning("Auth Token", "Stop auto-capture before bootstrapping auth.")
+            self._show_themed_popup("Auth Token", "Stop auto-capture before bootstrapping auth.", kind="warning")
             return
         try:
             self._save_capture_window()
@@ -2039,14 +2039,15 @@ class App(tk.Tk):
             self._debug_log(f"Suppressed exception: {exc}")
         cfg = self._collect_capture_cfg()
         if not cfg.get("url"):
-            messagebox.showwarning("Auth Token", "Please set the target URL before bootstrapping.")
+            self._show_themed_popup("Auth Token", "Please set the target URL before bootstrapping.", kind="warning")
             return
         if not cfg.get("username") or not cfg.get("password") or not cfg.get("organization"):
             cfg = dict(cfg)
             cfg["headless"] = False
-            messagebox.showinfo(
+            self._show_themed_popup(
                 "Auth Token",
                 "Missing account details. A browser will open for manual login.",
+                kind="info",
             )
         stop_event = threading.Event()
 
@@ -2072,18 +2073,103 @@ class App(tk.Tk):
                     try:
                         cw._persist_auth_cache(payloads)
                         self._auth_bootstrap_log("Auth bootstrap complete; token cached.")
-                        messagebox.showinfo("Auth Token", "Auth token captured and cached.")
+                        self._show_themed_popup("Auth Token", "Auth token captured and cached.", kind="info")
                     except Exception as exc:
                         self._auth_bootstrap_log(f"Auth cache write failed: {exc}")
-                        messagebox.showwarning("Auth Token", f"Token captured but cache write failed:\n{exc}")
+                        self._show_themed_popup("Auth Token", f"Token captured but cache write failed:\n{exc}", kind="warning")
                 else:
                     self._auth_bootstrap_log("Auth bootstrap did not capture a token.")
-                    messagebox.showwarning("Auth Token", "Auth bootstrap did not capture a token.")
+                    self._show_themed_popup("Auth Token", "Auth bootstrap did not capture a token.", kind="warning")
             except Exception as exc:
                 self._auth_bootstrap_log(f"Auth bootstrap failed: {exc}")
-                messagebox.showerror("Auth Token", f"Auth bootstrap failed:\n{exc}")
+                self._show_themed_popup("Auth Token", f"Auth bootstrap failed:\n{exc}", kind="error")
 
         threading.Thread(target=worker, daemon=True).start()
+
+    def _show_themed_popup(self, title: str, message: str, kind: str = "info") -> None:
+        """Show a small themed popup that follows app dark/light palette."""
+        def _render() -> None:
+            try:
+                dark = bool(self.dark_mode_var.get())
+                colors = compute_colors(dark)
+                accent = colors.get("accent", colors["fg"])
+                border = colors.get("border", colors["ctrl_bg"])
+                icon_map = {
+                    "info": "i",
+                    "warning": "!",
+                    "error": "x",
+                }
+                icon_char = icon_map.get(str(kind).lower(), "i")
+
+                win = tk.Toplevel(self)
+                win.title(str(title or "Message"))
+                win.transient(self)
+                win.resizable(False, False)
+                win.configure(bg=colors["bg"])
+                container = tk.Frame(
+                    win,
+                    bg=colors["bg"],
+                    highlightthickness=1,
+                    highlightbackground=border,
+                    highlightcolor=border,
+                    bd=0,
+                )
+                container.pack(fill="both", expand=True, padx=10, pady=10)
+
+                top = tk.Frame(container, bg=colors["bg"])
+                top.pack(fill="both", expand=True, padx=10, pady=(10, 6))
+                badge = tk.Label(
+                    top,
+                    text=icon_char,
+                    width=2,
+                    bg=accent,
+                    fg=colors.get("highlight_text", "#ffffff"),
+                    font=("", 11, "bold"),
+                )
+                badge.grid(row=0, column=0, sticky="n", padx=(0, 10))
+                msg = tk.Label(
+                    top,
+                    text=str(message or ""),
+                    bg=colors["bg"],
+                    fg=colors["fg"],
+                    justify="left",
+                    anchor="w",
+                    wraplength=360,
+                )
+                msg.grid(row=0, column=1, sticky="w")
+                top.columnconfigure(1, weight=1)
+
+                btns = tk.Frame(container, bg=colors["bg"])
+                btns.pack(fill="x", padx=10, pady=(2, 10))
+                ok_btn = ttk.Button(btns, text="OK", command=win.destroy)
+                ok_btn.pack(side="right")
+
+                win.update_idletasks()
+                w = max(320, int(win.winfo_reqwidth()))
+                h = max(140, int(win.winfo_reqheight()))
+                px = self.winfo_rootx() + max((self.winfo_width() - w) // 2, 0)
+                py = self.winfo_rooty() + max((self.winfo_height() - h) // 2, 0)
+                win.geometry(f"{w}x{h}+{px}+{py}")
+                self._set_window_titlebar_dark(win, dark)
+                win.grab_set()
+                win.focus_force()
+            except Exception:
+                # Hard fallback to native messagebox if themed popup fails.
+                k = str(kind).lower()
+                if k == "error":
+                    messagebox.showerror(title, message)
+                elif k == "warning":
+                    messagebox.showwarning(title, message)
+                else:
+                    messagebox.showinfo(title, message)
+
+        try:
+            if threading.current_thread() is self._ui_thread:
+                _render()
+            else:
+                self.after(0, _render)
+        except Exception:
+            _render()
     def _set_busy_ui(self, busy, message=None):
         try:
             if busy:
