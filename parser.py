@@ -287,10 +287,12 @@ def _is_useful_oil_base_name(value: str | None) -> bool:
         return False
     return True
 
-def _extract_oil_base_name(value: str | None) -> str | None:
+def _extract_oil_base_name(value: str | None, brand: str | None = None) -> str | None:
     if not value:
         return None
     out = str(value).strip()
+    if brand:
+        out = re.sub(rf"^\s*{re.escape(str(brand))}\b[\s\-:]*", "", out, flags=re.I)
     # Remove potency/ratio and concentration fragments.
     out = re.sub(r"\bT\s*\d{1,3}\s*:\s*C\s*\d{1,3}\b", "", out, flags=re.I)
     out = re.sub(r"\bT\s*\d{1,3}\s*C\s*\d{1,3}\b", "", out, flags=re.I)
@@ -307,21 +309,44 @@ def _extract_oil_base_name(value: str | None) -> str | None:
     out = re.sub(r"\bSUBLINGUAL\s+OIL\b", "", out, flags=re.I)
     out = re.sub(r"\bORAL\s+OIL\b", "", out, flags=re.I)
     out = re.sub(r"\bOIL\b", "", out, flags=re.I)
+    out = re.sub(r"\bIN\s+\d+(?:\.\d+)?\s*ML\b", "", out, flags=re.I)
     out = re.sub(r"[\(\)\[\],]+", " ", out)
     out = re.sub(r"\s+", " ", out).strip(" -:")
     tokens = []
+    brand_tokens = set()
+    if brand:
+        brand_tokens = {t for t in re.split(r"\s+", str(brand).upper()) if t}
     for tok in out.split():
         up = tok.upper()
         if up in {"THC", "CBD", "MG", "ML", "S"}:
+            continue
+        if up in {"IN", ":"}:
+            continue
+        if "/" in tok:
+            continue
+        if up in {"GP"}:
+            continue
+        if re.fullmatch(r"[A-Z]{1,2}", up):
+            continue
+        if re.fullmatch(r"\d+(?:\.\d+)?(?:MG|ML|G|MCG)?", up):
+            continue
+        if re.fullmatch(r"[TCS]\d+(?:\.\d+)?", up):
             continue
         if re.fullmatch(r"[<>=~≤≥]?\d+(?:\.\d+)?", tok):
             continue
         if re.search(r"MG\s*/\s*ML", tok, flags=re.I):
             continue
+        if up in {"FS", "FCC"}:
+            tok = "Full Spectrum"
+        if up == "BALANCED":
+            tok = "Balance"
+        if not tokens and up in brand_tokens:
+            continue
         tokens.append(tok)
     out = " ".join(tokens).strip(" -:")
     if not out:
         return None
+    out = re.sub(r"\bFULL\s+SPECTRUM\s+FULL\s+SPECTRUM\b", "Full Spectrum", out, flags=re.I)
     # Use a friendlier display case for residual base names.
     return out.title()
 
@@ -348,17 +373,63 @@ def _extract_oil_tc_ratio(raw_name: str, thc: float | None, cbd: float | None) -
     c_val = int(round(float(cbd))) if cbd is not None else 0
     return t_val, c_val
 
-def _canonical_oil_name(raw_name: str, thc: float | None, cbd: float | None) -> str | None:
-    upper = str(raw_name or "").upper()
-    if not upper:
+def _format_oil_profile_label(t_val: int, c_val: int) -> str:
+    if c_val > 3:
+        return f"T{t_val}C{c_val}"
+    return f"T{t_val}"
+
+def _oil_base_score(base_name: str | None) -> int:
+    if not base_name:
+        return -1
+    tokens = [t for t in re.split(r"\s+", str(base_name).strip().lower()) if t]
+    if not tokens:
+        return -1
+    style_tokens = {"full", "spectrum", "balance", "sativa", "indica", "hybrid", "isolate"}
+    informative = [t for t in tokens if t not in style_tokens]
+    score = len(tokens) + (len(informative) * 4)
+    if "balance" in tokens:
+        score += 2
+    return score
+
+def _select_oil_base_name(raw_base: str | None, product_base: str | None) -> str | None:
+    raw_score = _oil_base_score(raw_base)
+    product_score = _oil_base_score(product_base)
+    if raw_score > product_score:
+        return raw_base
+    if product_score > raw_score:
+        return product_base
+    if raw_base and product_base:
+        return raw_base if len(raw_base) >= len(product_base) else product_base
+    return raw_base or product_base
+
+def _canonical_oil_name(
+    raw_name: str | None,
+    product_name: str | None,
+    brand: str | None,
+    thc: float | None,
+    cbd: float | None,
+) -> str | None:
+    source = " ".join([str(raw_name or ""), str(product_name or "")]).strip()
+    if not source:
         return None
-    tc_ratio = _extract_oil_tc_ratio(raw_name, thc, cbd)
+    tc_ratio = _extract_oil_tc_ratio(source, thc, cbd)
     if not tc_ratio:
         return None
     t_val, c_val = tc_ratio
-    profile = f"T{t_val}:C{c_val}"
-    if "BALANCE" in upper:
-        return f"Balance {profile} Sublingual Oil"
+    profile = _format_oil_profile_label(t_val, c_val)
+
+    raw_base = _extract_oil_base_name(raw_name, brand)
+    product_base = _extract_oil_base_name(product_name, brand)
+    base_name = _select_oil_base_name(raw_base, product_base)
+    if base_name:
+        # Normalize common descriptor variants.
+        base_name = re.sub(r"\bBalanced\b", "Balance", base_name, flags=re.I)
+        base_name = re.sub(r"\s+", " ", base_name).strip(" -:")
+
+    if base_name and _is_useful_oil_base_name(base_name):
+        if profile.lower() in base_name.lower():
+            return f"{base_name} Sublingual Oil".strip()
+        return f"{base_name} {profile} Sublingual Oil".strip()
     return f"{profile} Sublingual Oil"
 
 def _is_useful_strain_name(value: str | None) -> bool:
@@ -545,20 +616,10 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
     thc = _coerce_float(cannabis.get("thcContent") or specs.get("thcContent"))
     cbd = _coerce_float(cannabis.get("cbdContent") or specs.get("cbdContent"))
     if product_type == "oil":
-        canonical_name = _canonical_oil_name(raw_name, thc, cbd)
+        canonical_name = _canonical_oil_name(raw_name, product_name, brand, thc, cbd)
         if canonical_name:
-            base_name = _extract_oil_base_name(name) or _extract_oil_base_name(raw_name) or _clean_title(name) or name
-            if _is_useful_oil_base_name(base_name):
-                base_upper = str(base_name).upper()
-                canon_upper = str(canonical_name).upper()
-                if canon_upper in base_upper:
-                    composed = base_name
-                else:
-                    composed = f"{base_name} - {canonical_name}"
-            else:
-                composed = canonical_name
-            name = composed
-            strain = composed
+            name = canonical_name
+            strain = canonical_name
     if product_type == "vape":
         canonical_vape = _canonical_vape_name(raw_name or long_name or name, product_name, source_strain, brand)
         if canonical_vape:

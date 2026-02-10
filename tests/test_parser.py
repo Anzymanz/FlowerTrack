@@ -145,7 +145,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(len(items), 1)
         item = items[0]
         self.assertEqual(item.get("product_type"), "oil")
-        self.assertIn("T25:C25", item.get("strain") or "")
+        self.assertEqual(item.get("strain"), "Balance T25C25 Sublingual Oil")
 
     def test_parse_api_payloads_oil_thc_only_includes_c0_profile(self):
         payloads = [
@@ -175,7 +175,71 @@ class TestParser(unittest.TestCase):
         self.assertEqual(len(items), 1)
         item = items[0]
         self.assertEqual(item.get("product_type"), "oil")
-        self.assertIn("T50:C0", item.get("strain") or "")
+        self.assertEqual(item.get("strain"), "T50 Sublingual Oil")
+
+    def test_parse_api_payloads_oil_includes_descriptors_and_flavour(self):
+        payloads = [
+            {
+                "url": "https://api.example.com/formulary-products?take=1",
+                "data": [
+                    {
+                        "productId": "MCAN03596",
+                        "name": "CIRCLE CANNABIS SUBLINGUAL OIL BALANCE MINT T10:C10 THC 10MG/ML CBD 10MG/ML 30ML",
+                        "product": {
+                            "name": "Circle T10:C10 Full Spectrum Oil Medical Cannabis",
+                            "brand": {"name": "Circle"},
+                            "cannabisSpecification": {
+                                "format": "OIL",
+                                "size": 30,
+                                "volumeUnit": "ML",
+                                "thcContent": 10,
+                                "cbdContent": 10,
+                            },
+                        },
+                        "pricingOptions": {
+                            "STANDARD": {"price": 75.0, "totalAvailability": 15}
+                        },
+                    }
+                ],
+            }
+        ]
+        items = parse_api_payloads(payloads)
+        self.assertEqual(len(items), 1)
+        item = items[0]
+        self.assertEqual(item.get("product_type"), "oil")
+        self.assertEqual(item.get("strain"), "Balance Mint T10C10 Sublingual Oil")
+
+    def test_parse_api_payloads_oil_cbd_threshold_uses_t_only_when_cbd_le_3(self):
+        payloads = [
+            {
+                "url": "https://api.example.com/formulary-products?take=1",
+                "data": [
+                    {
+                        "productId": "MCAN03424",
+                        "name": "CIRCLE T20 THC 20MG/ML CBD <3MG/ML CANNABIS SUBLINGUAL OIL 30ML",
+                        "product": {
+                            "name": "Circle T20 Full Spectrum Oil Medical Cannabis",
+                            "brand": {"name": "Circle"},
+                            "cannabisSpecification": {
+                                "format": "OIL",
+                                "size": 30,
+                                "volumeUnit": "ML",
+                                "thcContent": 20,
+                                "cbdContent": 3,
+                            },
+                        },
+                        "pricingOptions": {
+                            "STANDARD": {"price": 60.0, "totalAvailability": 15}
+                        },
+                    }
+                ],
+            }
+        ]
+        items = parse_api_payloads(payloads)
+        self.assertEqual(len(items), 1)
+        item = items[0]
+        self.assertEqual(item.get("product_type"), "oil")
+        self.assertEqual(item.get("strain"), "Full Spectrum T20 Sublingual Oil")
 
     def test_identity_key_ignores_price(self):
         base = {
