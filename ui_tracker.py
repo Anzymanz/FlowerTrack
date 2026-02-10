@@ -4075,7 +4075,7 @@ class CannabisTracker:
             if not self.show_scraper_status_icon or not self.show_scraper_buttons:
                 self._apply_scraper_controls_visibility()
                 return
-            target_size = 12
+            target_size = 32
             img = self._build_status_image(running, warn, size=target_size)
             try:
                 if img is not None and Image is not None and hasattr(img, "size") and tuple(img.size) != (target_size, target_size):
