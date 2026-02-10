@@ -142,12 +142,18 @@ class CaptureWorker:
     def _api_dump_enabled(self) -> bool:
         return bool(self.cfg.get("dump_api_json") or self.cfg.get("dump_api_full"))
 
-    def _prune_dump_files(self, dump_dir: Path, keep: int = 10) -> None:
-        """Keep only the newest API dump artifacts to control disk usage."""
+    def _prune_dump_files(
+        self,
+        dump_dir: Path,
+        patterns: tuple[str, ...] | None = None,
+        keep: int = 10,
+    ) -> None:
+        """Keep only the newest matching dump artifacts to control disk usage."""
         if keep < 1:
             keep = 1
         try:
-            patterns = ("api_dump_*.json", "api_dump_full_*.json", "api_endpoints_*.json")
+            if not patterns:
+                patterns = ("api_dump_*.json", "api_dump_full_*.json", "api_endpoints_*.json")
             files: list[Path] = []
             for pattern in patterns:
                 files.extend(dump_dir.glob(pattern))
@@ -1082,7 +1088,12 @@ class CaptureWorker:
                                         self.callbacks["capture_log"](f"Saved API dump: {api_path}")
                                     except Exception as exc:
                                         self.callbacks["capture_log"](f"API dump failed: {exc}")
-                                self._prune_dump_files(dump_dir, keep=10)
+                                api_keep = int(self.cfg.get("dump_api_keep_files", 10) or 10)
+                                self._prune_dump_files(
+                                    dump_dir,
+                                    patterns=("api_dump_*.json", "api_dump_full_*.json", "api_endpoints_*.json"),
+                                    keep=api_keep,
+                                )
                             self.callbacks["apply_text"]("")
                         except Exception as exc:
                             self._safe_log(f"API capture apply failed: {exc}")
@@ -1732,12 +1743,23 @@ class CaptureWorker:
                                         self.callbacks["capture_log"](f"Saved API dump: {api_path}")
                                     except Exception as exc:
                                         self.callbacks["capture_log"](f"API dump failed: {exc}")
-                                    self._prune_dump_files(dump_dir, keep=10)
+                                    api_keep = int(self.cfg.get("dump_api_keep_files", 10) or 10)
+                                    self._prune_dump_files(
+                                        dump_dir,
+                                        patterns=("api_dump_*.json", "api_dump_full_*.json", "api_endpoints_*.json"),
+                                        keep=api_keep,
+                                    )
                                 if self.cfg.get("dump_capture_html") and dump_dir and stamp:
                                     try:
                                         html_path = dump_dir / f"page_dump_{stamp}.html"
                                         html_path.write_text(page.content(), encoding="utf-8")
                                         self.callbacks["capture_log"](f"Saved page HTML: {html_path}")
+                                        html_keep = int(self.cfg.get("dump_html_keep_files", 10) or 10)
+                                        self._prune_dump_files(
+                                            dump_dir,
+                                            patterns=("page_dump_*.html",),
+                                            keep=html_keep,
+                                        )
                                     except Exception as exc:
                                         self.callbacks["capture_log"](f"HTML dump failed: {exc}")
                                 try:

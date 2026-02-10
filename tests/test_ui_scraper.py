@@ -78,7 +78,9 @@ class UiScraperTests(unittest.TestCase):
                 self.cap_retry_wait = _Var("y")
                 self.cap_retry_backoff = _Var("z")
                 self.cap_dump_html = _Var(False)
+                self.cap_dump_html_keep = _Var("bad")
                 self.cap_dump_api = _Var(False)
+                self.cap_dump_api_keep = _Var("bad")
                 self.cap_dump_api_full = _Var(False)
                 self.cap_show_log_window = _Var(True)
                 self.cap_user = _Var("user")
@@ -130,6 +132,14 @@ class UiScraperTests(unittest.TestCase):
             ui_scraper.DEFAULT_CAPTURE_CONFIG["quiet_hours_interval_seconds"],
         )
         self.assertEqual(cfg["log_window_hidden_height"], 222)
+        self.assertEqual(
+            cfg["dump_html_keep_files"],
+            ui_scraper.DEFAULT_CAPTURE_CONFIG["dump_html_keep_files"],
+        )
+        self.assertEqual(
+            cfg["dump_api_keep_files"],
+            ui_scraper.DEFAULT_CAPTURE_CONFIG["dump_api_keep_files"],
+        )
         self.assertTrue(any("Invalid interval_seconds" in msg for msg in logs))
 
 

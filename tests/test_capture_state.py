@@ -55,6 +55,18 @@ class CaptureStateTests(unittest.TestCase):
             remaining = sorted(dump_dir.glob("api_dump_*.json"))
             self.assertEqual(len(remaining), 10)
 
+    def test_prune_dump_files_respects_patterns(self):
+        worker = CaptureWorker.__new__(CaptureWorker)
+        worker.callbacks = {"capture_log": lambda _m: None}
+        with tempfile.TemporaryDirectory() as tmp:
+            dump_dir = Path(tmp)
+            for i in range(6):
+                (dump_dir / f"page_dump_20260210_1200{i:02d}.html").write_text("<html></html>", encoding="utf-8")
+                (dump_dir / f"api_dump_20260210_1200{i:02d}.json").write_text("{}", encoding="utf-8")
+            worker._prune_dump_files(dump_dir, patterns=("page_dump_*.html",), keep=3)
+            self.assertEqual(len(list(dump_dir.glob("page_dump_*.html"))), 3)
+            self.assertEqual(len(list(dump_dir.glob("api_dump_*.json"))), 6)
+
 
 if __name__ == "__main__":
     unittest.main()

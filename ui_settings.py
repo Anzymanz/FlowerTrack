@@ -336,10 +336,24 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     )
     adv_row += 1
 
-    ttk.Checkbutton(advanced_frame, text="Dump page HTML to file", variable=app.cap_dump_html).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
+    html_dump_row = ttk.Frame(advanced_frame)
+    html_dump_row.grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
+    ttk.Checkbutton(html_dump_row, text="Dump page HTML to file", variable=app.cap_dump_html).pack(side="left")
+    ttk.Label(html_dump_row, text="Keep").pack(side="left", padx=(10, 4))
+    html_keep_entry = _make_capture_entry(html_dump_row, app.cap_dump_html_keep, width=5)
+    html_keep_entry.pack(side="left")
+    ttk.Label(html_dump_row, text="files").pack(side="left", padx=(4, 0))
+    _bind_tooltip(html_keep_entry, "How many page HTML dump files to keep in the dumps folder.")
     adv_row += 1
 
-    ttk.Checkbutton(advanced_frame, text="Dump API traffic (full details)", variable=app.cap_dump_api).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
+    api_dump_row = ttk.Frame(advanced_frame)
+    api_dump_row.grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
+    ttk.Checkbutton(api_dump_row, text="Dump API traffic (full details)", variable=app.cap_dump_api).pack(side="left")
+    ttk.Label(api_dump_row, text="Keep").pack(side="left", padx=(10, 4))
+    api_keep_entry = _make_capture_entry(api_dump_row, app.cap_dump_api_keep, width=5)
+    api_keep_entry.pack(side="left")
+    ttk.Label(api_dump_row, text="files").pack(side="left", padx=(4, 0))
+    _bind_tooltip(api_keep_entry, "How many API dump files to keep in the dumps folder.")
     adv_row += 1
 
     ttk.Checkbutton(advanced_frame, text="Show log window", variable=app.cap_show_log_window).grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
@@ -385,7 +399,9 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         app.cap_retry_backoff.set(str(defaults.get("retry_backoff_max", "")))
         app.cap_headless.set(bool(defaults.get("headless", True)))
         app.cap_dump_html.set(bool(defaults.get("dump_capture_html", False)))
+        app.cap_dump_html_keep.set(str(defaults.get("dump_html_keep_files", 10)))
         app.cap_dump_api.set(bool(defaults.get("dump_api_json", False) or defaults.get("dump_api_full", False)))
+        app.cap_dump_api_keep.set(str(defaults.get("dump_api_keep_files", 10)))
         app.cap_show_log_window.set(bool(defaults.get("show_log_window", True)))
         update_scraper_hints()
 

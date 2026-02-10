@@ -24,6 +24,16 @@ class ConfigTests(unittest.TestCase):
         self.assertTrue(cfg["dump_api_json"])
         self.assertTrue(cfg["dump_api_full"])
 
+    def test_validate_capture_dump_retention_minimum(self):
+        cfg = config._validate_capture_config(
+            {
+                "dump_html_keep_files": 0,
+                "dump_api_keep_files": -3,
+            }
+        )
+        self.assertEqual(cfg["dump_html_keep_files"], 1)
+        self.assertEqual(cfg["dump_api_keep_files"], 1)
+
     def test_load_unified_defaults(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "config.json"
