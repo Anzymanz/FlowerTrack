@@ -447,10 +447,6 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     detail_combo.bind("<FocusOut>", _clear_combo_selection)
     detail_combo.bind("<<ComboboxSelected>>", _clear_combo_selection)
 
-    notify_actions = ttk.Frame(tab_notifications)
-    notify_actions.pack(fill="x", pady=(6, 0))
-    ttk.Button(notify_actions, text="Send test notification", command=app.send_test_notification).pack(side="right", padx=4)
-
     filters_frame = ttk.Frame(tab_filters)
     filters_frame.pack(fill="x", expand=True)
     ttk.Checkbutton(filters_frame, text="Include inactive products", variable=app.cap_include_inactive).pack(anchor="w", pady=2)
@@ -470,6 +466,9 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Label(ha_frame, text="HA token (optional)").grid(row=1, column=0, sticky="w", padx=6, pady=2)
     ha_token_entry = _make_capture_entry(ha_frame, app.cap_ha_token, width=50, show="*")
     ha_token_entry.grid(row=1, column=1, sticky="ew", padx=6, pady=2)
+    ttk.Button(ha_frame, text="Send test notification", command=app.send_test_notification).grid(
+        row=2, column=1, sticky="e", padx=6, pady=(8, 2)
+    )
     ha_frame.columnconfigure(1, weight=1)
 
     def save_and_close():
