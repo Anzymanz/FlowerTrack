@@ -100,7 +100,7 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
         indicatorbackground=ctrl_bg,
         indicatorforeground=fg,
     )
-    style.configure("TSeparator", background=border)
+    style.configure("TSeparator", background=colors.get("muted", border))
     scrollbar_bg = "#1a1a1a" if colors["bg"] == "#111" else "#dcdcdc"
     scrollbar_trough = "#0d0d0d" if colors["bg"] == "#111" else "#cfcfcf"
     style.configure(
