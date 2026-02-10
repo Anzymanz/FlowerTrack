@@ -314,6 +314,9 @@ def open_tracker_settings(app) -> None:
     ttk.Label(frame, text="Tracker settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
     row = 1
 
+    ttk.Label(frame, text="Tracking options", font=app.font_bold_small).grid(row=row, column=0, sticky="w", pady=(0, 4))
+    row += 1
+
     app.track_cbd_flower_var = tk.BooleanVar(value=getattr(app, "track_cbd_flower", False))
     chk_track_cbd = ttk.Checkbutton(frame, text="Track CBD flower", variable=app.track_cbd_flower_var)
     chk_track_cbd.grid(row=row, column=0, columnspan=3, sticky="w", pady=(2, 4))
@@ -324,31 +327,23 @@ def open_tracker_settings(app) -> None:
     chk_hide_roa.grid(row=row, column=0, columnspan=3, sticky="w", pady=(0, 6))
     row += 1
 
-    ttk.Label(frame, text="Route efficiency (%)", font=app.font_bold_small).grid(
-        row=row, column=0, sticky="w", pady=(6, 6)
+    ttk.Separator(frame, orient="horizontal", style=sep_style).grid(
+        row=row, column=0, columnspan=4, sticky="ew", pady=(4, 8)
     )
-    app.roa_vars: dict[str, tk.StringVar] = {}
-    app.roa_entries: dict[str, ttk.Entry] = {}
-    roa_row = row + 1
-    for idx, (name, eff) in enumerate(app.roa_options.items()):
-        ttk.Label(frame, text=name).grid(row=roa_row + idx, column=0, sticky="w", pady=(2, 0))
-        var = tk.StringVar(value=f"{eff*100:.0f}")
-        app.roa_vars[name] = var
-        rf = ttk.Frame(frame)
-        entry = ttk.Entry(rf, textvariable=var, width=4)
-        entry.pack(side="left", padx=(0, 2))
-        app.roa_entries[name] = entry
-        ttk.Label(rf, text="%").pack(side="left")
-        rf.grid(row=roa_row + idx, column=1, sticky="w", padx=(12, 0))
-    row = roa_row + len(app.roa_options)
+    row += 1
+
+    ttk.Label(frame, text="Usage targets", font=app.font_bold_small).grid(
+        row=row, column=0, sticky="w", pady=(0, 4)
+    )
+    row += 1
 
     lbl_daily_target = ttk.Label(frame, text="Daily target (THC)")
-    lbl_daily_target.grid(row=row, column=0, sticky="w", pady=(6, 0))
+    lbl_daily_target.grid(row=row, column=0, sticky="w", pady=(2, 0))
     dt_frame = ttk.Frame(frame)
     app.daily_target_entry = ttk.Entry(dt_frame, width=4)
     app.daily_target_entry.pack(side="left", padx=(0, 2))
     ttk.Label(dt_frame, text="g/day").pack(side="left")
-    dt_frame.grid(row=row, column=1, sticky="w", padx=(12, 0), pady=(6, 0))
+    dt_frame.grid(row=row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
     row += 1
 
     lbl_daily_target_cbd = ttk.Label(frame, text="Daily target (CBD)")
@@ -368,6 +363,29 @@ def open_tracker_settings(app) -> None:
     ttk.Label(avg_frame, text="days").pack(side="left")
     avg_frame.grid(row=row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
     row += 1
+
+    ttk.Separator(frame, orient="horizontal", style=sep_style).grid(
+        row=row, column=0, columnspan=4, sticky="ew", pady=(6, 8)
+    )
+    row += 1
+
+    ttk.Label(frame, text="Route efficiency (%)", font=app.font_bold_small).grid(
+        row=row, column=0, sticky="w", pady=(0, 4)
+    )
+    row += 1
+
+    app.roa_vars: dict[str, tk.StringVar] = {}
+    app.roa_entries: dict[str, ttk.Entry] = {}
+    for idx, (name, eff) in enumerate(app.roa_options.items()):
+        ttk.Label(frame, text=name).grid(row=row + idx, column=0, sticky="w", pady=(2, 0))
+        var = tk.StringVar(value=f"{eff*100:.0f}")
+        app.roa_vars[name] = var
+        rf = ttk.Frame(frame)
+        entry = ttk.Entry(rf, textvariable=var, width=4)
+        entry.pack(side="left", padx=(0, 2))
+        app.roa_entries[name] = entry
+        ttk.Label(rf, text="%").pack(side="left")
+        rf.grid(row=row + idx, column=1, sticky="w", padx=(12, 0))
 
     frame = tab_data
     ttk.Label(frame, text="Data settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
