@@ -434,10 +434,7 @@ def open_tracker_settings(app) -> None:
     frame = tab_theme
     ttk.Label(frame, text="Theme", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
 
-    theme_row = 1
-    ttk.Label(frame, text="Dark palette", font=app.font_bold_small).grid(row=theme_row, column=0, sticky="w", pady=(0, 6))
-    theme_row += 1
-    for label, key in (
+    palette_items = (
         ("Background", "bg"),
         ("Foreground", "fg"),
         ("Control background", "ctrl_bg"),
@@ -447,47 +444,45 @@ def open_tracker_settings(app) -> None:
         ("Highlight text", "highlight_text"),
         ("List background", "list_bg"),
         ("Muted", "muted"),
-    ):
-        label_widget = ttk.Label(frame, text=label)
-        label_widget.grid(row=theme_row, column=0, sticky="w", pady=(2, 0))
+    )
+
+    dark_col = ttk.Frame(frame)
+    light_col = ttk.Frame(frame)
+    dark_col.grid(row=1, column=0, sticky="nw", padx=(0, 20))
+    light_col.grid(row=1, column=1, sticky="nw")
+
+    ttk.Label(dark_col, text="Dark palette", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
+    ttk.Label(light_col, text="Light palette", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
+
+    dark_row = 1
+    for label, key in palette_items:
+        label_widget = ttk.Label(dark_col, text=label)
+        label_widget.grid(row=dark_row, column=0, sticky="w", pady=(2, 0))
         try:
             app._bind_tooltip(label_widget, f"Dark theme {label.lower()} colour.")
         except Exception:
             pass
-        row_frame = ttk.Frame(frame)
+        row_frame = ttk.Frame(dark_col)
         _color_button(row_frame, f"dark:{key}", f"Pick dark theme {label.lower()} colour.").pack(side="left")
-        row_frame.grid(row=theme_row, column=1, sticky="w", padx=(12, 0))
-        theme_row += 1
+        row_frame.grid(row=dark_row, column=1, sticky="w", padx=(12, 0))
+        dark_row += 1
 
-    ttk.Separator(frame, orient="horizontal", style=sep_style).grid(row=theme_row, column=0, columnspan=4, sticky="ew", pady=(8, 8))
-    theme_row += 1
-    ttk.Label(frame, text="Light palette", font=app.font_bold_small).grid(row=theme_row, column=0, sticky="w", pady=(0, 6))
-    theme_row += 1
-    for label, key in (
-        ("Background", "bg"),
-        ("Foreground", "fg"),
-        ("Control background", "ctrl_bg"),
-        ("Border", "border"),
-        ("Accent", "accent"),
-        ("Highlight", "highlight"),
-        ("Highlight text", "highlight_text"),
-        ("List background", "list_bg"),
-        ("Muted", "muted"),
-    ):
-        label_widget = ttk.Label(frame, text=label)
-        label_widget.grid(row=theme_row, column=0, sticky="w", pady=(2, 0))
+    light_row = 1
+    for label, key in palette_items:
+        label_widget = ttk.Label(light_col, text=label)
+        label_widget.grid(row=light_row, column=0, sticky="w", pady=(2, 0))
         try:
             app._bind_tooltip(label_widget, f"Light theme {label.lower()} colour.")
         except Exception:
             pass
-        row_frame = ttk.Frame(frame)
+        row_frame = ttk.Frame(light_col)
         _color_button(row_frame, f"light:{key}", f"Pick light theme {label.lower()} colour.").pack(side="left")
-        row_frame.grid(row=theme_row, column=1, sticky="w", padx=(12, 0))
-        theme_row += 1
+        row_frame.grid(row=light_row, column=1, sticky="w", padx=(12, 0))
+        light_row += 1
 
     reset_theme_btn = ttk.Button(frame, text="Reset theme colours", command=app._reset_theme_palettes)
     reset_theme_btn.grid(
-        row=theme_row, column=0, sticky="w", pady=(10, 0)
+        row=2, column=0, sticky="w", pady=(10, 0)
     )
 
     app.total_green_entry.insert(0, f"{app.total_green_threshold}")
