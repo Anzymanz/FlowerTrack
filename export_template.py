@@ -1316,7 +1316,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <button class='btn-filter active' data-filter-type="flower" onclick="toggleType('flower', this)">Flower</button>
     <button class='btn-filter active' data-filter-type="oil" onclick="toggleType('oil', this)">Oil</button>
     <button class='btn-filter active' data-filter-type="vape" onclick="toggleType('vape', this)">Vape</button>
-    <button class='btn-filter active' data-filter-type="pastille" onclick="toggleType('pastille', this)">Pastilles</button>
+    <button class='btn-filter active' data-filter-type="pastille" onclick="toggleType('pastille', this)">Pastille</button>
     <button class='btn-filter active' data-filter-strain="Indica" onclick="toggleStrain('Indica', this)">Indica</button>
     <button class='btn-filter active' data-filter-strain="Sativa" onclick="toggleStrain('Sativa', this)">Sativa</button>
     <button class='btn-filter active' data-filter-strain="Hybrid" onclick="toggleStrain('Hybrid', this)">Hybrid</button>
