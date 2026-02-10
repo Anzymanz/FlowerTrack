@@ -87,7 +87,7 @@ html.modal-open, body.modal-open{overflow:hidden;height:100%}
 .range-slider input[type=range]::-moz-range-track{height:6px;background:transparent;border-radius:999px}
 .range-label{font-size:12px;color:var(--muted)}
 .range-values{font-size:14px;font-weight:700;color:var(--fg);text-align:center}
-.range-tag{font-size:12px;color:var(--muted);min-width:28px;text-align:center}
+.range-tag{font-size:12px;color:var(--muted);min-width:44px;text-align:center}
 .range-val{font-size:12px;color:var(--fg);min-width:48px;text-align:center}
 .range-title{position:absolute;left:50%;top:6px;transform:translate(-50%,-50%);font-size:12px;color:var(--muted);pointer-events:none}
 input.search-box{padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--panel);color:var(--fg);width:130px;min-width:100px;max-width:130px}
@@ -1062,6 +1062,10 @@ function resetFilters() {
     const priceMaxEl = document.getElementById('priceMaxRange');
     const thcMinEl = document.getElementById('thcMinRange');
     const thcMaxEl = document.getElementById('thcMaxRange');
+    const priceMinBoundTag = document.getElementById('priceMinBoundTag');
+    const priceMaxBoundTag = document.getElementById('priceMaxBoundTag');
+    const thcMinBoundTag = document.getElementById('thcMinBoundTag');
+    const thcMaxBoundTag = document.getElementById('thcMaxBoundTag');
     if (priceMinEl && priceMaxEl) {
         priceMinSel = priceMinBound;
         priceMaxSel = priceMaxBound;
@@ -1185,6 +1189,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (minVal) minVal.textContent = `${thcMinSel.toFixed(0)}%`;
         if (maxVal) maxVal.textContent = `${thcMaxSel.toFixed(0)}%`;
     };
+    if (priceMinBoundTag) priceMinBoundTag.textContent = `£${priceMinBound.toFixed(0)}`;
+    if (priceMaxBoundTag) priceMaxBoundTag.textContent = `£${priceMaxBound.toFixed(0)}`;
+    if (thcMinBoundTag) thcMinBoundTag.textContent = `${thcMinBound.toFixed(0)}%`;
+    if (thcMaxBoundTag) thcMaxBoundTag.textContent = `${thcMaxBound.toFixed(0)}%`;
     if (priceMinEl && priceMaxEl) {
         priceMinEl.min = priceMinBound; priceMinEl.max = priceMaxBound; priceMinEl.value = priceMinBound;
         priceMaxEl.min = priceMinBound; priceMaxEl.max = priceMaxBound; priceMaxEl.value = priceMaxBound;
@@ -1333,12 +1341,12 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="range-group">
       <div class="range-line">
         <span class="range-val" id="priceMinVal"></span>
-        <span class="range-tag">Min</span>
+        <span class="range-tag" id="priceMinBoundTag"></span>
         <div class="range-slider">
           <input class="range-min" type="range" id="priceMinRange" step="1">
           <input class="range-max" type="range" id="priceMaxRange" step="1">
         </div>
-        <span class="range-tag">Max</span>
+        <span class="range-tag" id="priceMaxBoundTag"></span>
         <span class="range-val" id="priceMaxVal"></span>
         <div class="range-title">Price</div>
       </div>
@@ -1347,12 +1355,12 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="range-group">
       <div class="range-line">
         <span class="range-val" id="thcMinVal"></span>
-        <span class="range-tag">Min</span>
+        <span class="range-tag" id="thcMinBoundTag"></span>
         <div class="range-slider">
           <input class="range-min" type="range" id="thcMinRange" step="1">
           <input class="range-max" type="range" id="thcMaxRange" step="1">
         </div>
-        <span class="range-tag">Max</span>
+        <span class="range-tag" id="thcMaxBoundTag"></span>
         <span class="range-val" id="thcMaxVal"></span>
         <div class="range-title">THC %</div>
       </div>
