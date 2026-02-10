@@ -1881,7 +1881,7 @@ class CannabisTracker:
             foreground=text_color,
             indicatorcolor=panel,
             indicatorbackground=panel,
-            indicatorforeground=accent,
+            indicatorforeground=text_color,
         )
         self.style.map(
             "TCheckbutton",
@@ -1889,7 +1889,7 @@ class CannabisTracker:
             foreground=[("active", "#ffffff")],
             indicatorcolor=[("selected", accent), ("!selected", panel)],
             indicatorbackground=[("selected", accent), ("!selected", panel)],
-            indicatorforeground=[("selected", accent), ("!selected", text_color)],
+            indicatorforeground=[("selected", text_color), ("!selected", text_color)],
         )
         panel_border = border
         self.style.configure(

@@ -90,7 +90,7 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
         foreground=[("active", fg)],
         indicatorcolor=[("selected", accent), ("!selected", ctrl_bg)],
         indicatorbackground=[("selected", accent), ("!selected", ctrl_bg)],
-        indicatorforeground=[("selected", accent), ("!selected", fg)],
+        indicatorforeground=[("selected", fg), ("!selected", fg)],
     )
     style.configure(
         "TCheckbutton",
@@ -98,7 +98,7 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
         foreground=fg,
         indicatorcolor=ctrl_bg,
         indicatorbackground=ctrl_bg,
-        indicatorforeground=accent,
+        indicatorforeground=fg,
     )
     style.configure("TSeparator", background=border)
     scrollbar_bg = "#1a1a1a" if colors["bg"] == "#111" else "#dcdcdc"
