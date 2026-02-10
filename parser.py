@@ -293,6 +293,7 @@ def _extract_oil_base_name(value: str | None) -> str | None:
     out = str(value).strip()
     # Remove potency/ratio and concentration fragments.
     out = re.sub(r"\bT\s*\d{1,3}\s*:\s*C\s*\d{1,3}\b", "", out, flags=re.I)
+    out = re.sub(r"\bT\s*\d{1,3}\s*C\s*\d{1,3}\b", "", out, flags=re.I)
     out = re.sub(r"\bT\s*\d{1,3}\b", "", out, flags=re.I)
     out = re.sub(r"\bTHC\s*[<>=~≤≥]?\s*\d{1,3}(?:\.\d+)?\s*MG\s*/\s*ML\b", "", out, flags=re.I)
     out = re.sub(r"\bCBD\s*[<>=~≤≥]?\s*\d{1,3}(?:\.\d+)?\s*MG\s*/\s*ML\b", "", out, flags=re.I)
@@ -324,43 +325,40 @@ def _extract_oil_base_name(value: str | None) -> str | None:
     # Use a friendlier display case for residual base names.
     return out.title()
 
+def _extract_oil_tc_ratio(raw_name: str, thc: float | None, cbd: float | None) -> tuple[int, int] | None:
+    upper = str(raw_name or "").upper()
+    # Prefer explicit T:C profile codes in title.
+    ratio_match = re.search(r"\bT\s*(\d{1,3})\s*:\s*C\s*(\d{1,3})\b", upper)
+    if ratio_match:
+        return int(ratio_match.group(1)), int(ratio_match.group(2))
+    compact_ratio_match = re.search(r"\bT\s*(\d{1,3})\s*C\s*(\d{1,3})\b", upper)
+    if compact_ratio_match:
+        return int(compact_ratio_match.group(1)), int(compact_ratio_match.group(2))
+    # Next, try concentration values in the raw title.
+    thc_match = re.search(r"\bTHC\s*[<>=~]?\s*(\d{1,3}(?:\.\d+)?)\s*MG\s*/\s*ML\b", upper)
+    cbd_match = re.search(r"\bCBD\s*[<>=~]?\s*(\d{1,3}(?:\.\d+)?)\s*MG\s*/\s*ML\b", upper)
+    if thc_match or cbd_match:
+        t_val = int(round(float(thc_match.group(1)))) if thc_match else 0
+        c_val = int(round(float(cbd_match.group(1)))) if cbd_match else 0
+        return t_val, c_val
+    # Fallback to normalized numeric THC/CBD fields.
+    if thc is None and cbd is None:
+        return None
+    t_val = int(round(float(thc))) if thc is not None else 0
+    c_val = int(round(float(cbd))) if cbd is not None else 0
+    return t_val, c_val
+
 def _canonical_oil_name(raw_name: str, thc: float | None, cbd: float | None) -> str | None:
     upper = str(raw_name or "").upper()
     if not upper:
         return None
-    if "BALANCE" in upper:
-        ratio_match = re.search(r"\bT\s*(\d{1,3})\s*:\s*C\s*(\d{1,3})\b", upper)
-        if ratio_match:
-            t_val = int(ratio_match.group(1))
-            c_val = int(ratio_match.group(2))
-            return f"Balance T{t_val}C{c_val} Sublingual Oil"
-        if thc is not None and cbd is not None:
-            t_val = int(round(thc))
-            c_val = int(round(cbd))
-            if c_val > 0:
-                return f"Balance T{t_val}C{c_val} Sublingual Oil"
-        return "Balance Sublingual Oil"
-
-    profile = None
-    code_match = re.search(r"\bT\s*(\d{1,3})(?:\s*:\s*C\s*(\d{1,3}))?\b", upper)
-    if code_match:
-        thc_code = code_match.group(1)
-        cbd_code = code_match.group(2)
-        if cbd_code:
-            profile = f"T{int(thc_code)}C{int(cbd_code)}"
-        else:
-            profile = f"T{int(thc_code)}"
-    elif thc is not None:
-        thc_i = int(round(thc))
-        cbd_i = int(round(cbd)) if cbd is not None else 0
-        # Keep ratio naming for clearly mixed oils; otherwise keep a simple THC profile.
-        if cbd_i >= 10:
-            profile = f"T{thc_i}C{cbd_i}"
-        else:
-            profile = f"T{thc_i}"
-
-    if not profile:
+    tc_ratio = _extract_oil_tc_ratio(raw_name, thc, cbd)
+    if not tc_ratio:
         return None
+    t_val, c_val = tc_ratio
+    profile = f"T{t_val}:C{c_val}"
+    if "BALANCE" in upper:
+        return f"Balance {profile} Sublingual Oil"
     return f"{profile} Sublingual Oil"
 
 def _is_useful_strain_name(value: str | None) -> bool:

@@ -116,6 +116,67 @@ class TestParser(unittest.TestCase):
         self.assertAlmostEqual(item.get("price_per_unit") or 0, 0.4)
         self.assertEqual(item.get("strain"), "Mixed Berries 30 Pastilles")
 
+    def test_parse_api_payloads_oil_balance_includes_tc_profile(self):
+        payloads = [
+            {
+                "url": "https://api.example.com/formulary-products?take=1",
+                "data": [
+                    {
+                        "productId": 8801,
+                        "name": "CIRCLE BALANCE T25:C25 THC 25MG/ML CBD 25MG/ML CANNABIS SUBLINGUAL OIL 30ML",
+                        "product": {
+                            "brand": {"name": "Circle"},
+                            "cannabisSpecification": {
+                                "format": "OIL",
+                                "size": 30,
+                                "volumeUnit": "ML",
+                                "thcContent": 25,
+                                "cbdContent": 25,
+                            },
+                        },
+                        "pricingOptions": {
+                            "STANDARD": {"price": 89.0, "totalAvailability": 15}
+                        },
+                    }
+                ],
+            }
+        ]
+        items = parse_api_payloads(payloads)
+        self.assertEqual(len(items), 1)
+        item = items[0]
+        self.assertEqual(item.get("product_type"), "oil")
+        self.assertIn("T25:C25", item.get("strain") or "")
+
+    def test_parse_api_payloads_oil_thc_only_includes_c0_profile(self):
+        payloads = [
+            {
+                "url": "https://api.example.com/formulary-products?take=1",
+                "data": [
+                    {
+                        "productId": 8802,
+                        "name": "CURALEAF T50 THC 50MG/ML CANNABIS SUBLINGUAL OIL 30ML",
+                        "product": {
+                            "brand": {"name": "Curaleaf"},
+                            "cannabisSpecification": {
+                                "format": "OIL",
+                                "size": 30,
+                                "volumeUnit": "ML",
+                                "thcContent": 50,
+                            },
+                        },
+                        "pricingOptions": {
+                            "STANDARD": {"price": 120.0, "totalAvailability": 15}
+                        },
+                    }
+                ],
+            }
+        ]
+        items = parse_api_payloads(payloads)
+        self.assertEqual(len(items), 1)
+        item = items[0]
+        self.assertEqual(item.get("product_type"), "oil")
+        self.assertIn("T50:C0", item.get("strain") or "")
+
     def test_identity_key_ignores_price(self):
         base = {
             "product_id": "ABC123",
