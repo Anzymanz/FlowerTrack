@@ -90,7 +90,7 @@ class TestParser(unittest.TestCase):
                 "data": [
                     {
                         "productId": 777,
-                        "name": "Curaleaf Pastille Gums",
+                        "name": "CURALEAF THC 10MG CBD 10MG MIXED BERRIES CANNABIS PASTILLES 30",
                         "product": {
                             "brand": {"name": "Curaleaf"},
                             "cannabisSpecification": {
@@ -114,6 +114,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(item.get("stock_status"), "IN STOCK")
         self.assertEqual(item.get("unit_count"), 30)
         self.assertAlmostEqual(item.get("price_per_unit") or 0, 0.4)
+        self.assertEqual(item.get("strain"), "Mixed Berries 30 Pastilles")
 
     def test_identity_key_ignores_price(self):
         base = {

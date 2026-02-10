@@ -134,6 +134,74 @@ def _clean_title(value: str | None) -> str | None:
     out = re.sub(r"\s+", " ", out).strip()
     return out
 
+def _extract_pastille_count(value: str | None) -> int | None:
+    if not value:
+        return None
+    raw = str(value)
+    m = re.search(r"\b(\d{1,3})\s*(?:PCS?|PIECES?|UNITS?|PASTILLES?|GUMS?|LOZENGES?)\b", raw, flags=re.I)
+    if m:
+        try:
+            return int(m.group(1))
+        except Exception:
+            return None
+    m = re.search(r"\b(\d{1,3})\s*$", raw)
+    if m:
+        try:
+            return int(m.group(1))
+        except Exception:
+            return None
+    return None
+
+def _title_case_label(value: str) -> str:
+    tokens = []
+    for tok in str(value).split():
+        if tok.isupper() and len(tok) <= 3:
+            tokens.append(tok)
+        else:
+            tokens.append(tok.title())
+    return " ".join(tokens)
+
+def _canonical_pastille_name(raw_name: str | None, brand: str | None, unit_count: int | float | None) -> str | None:
+    if not raw_name:
+        return None
+    work = re.sub(r"\s+", " ", str(raw_name)).strip()
+    if brand:
+        work = re.sub(rf"^\s*{re.escape(str(brand))}\b[\s\-:]*", "", work, flags=re.I)
+
+    # Remove strength/profile tokens so flavor text can be isolated.
+    work = re.sub(r"\bTHC\s*[<>=~≤≥]?\s*\d+(?:\.\d+)?\s*MG\b", "", work, flags=re.I)
+    work = re.sub(r"\bCBD\s*[<>=~≤≥]?\s*\d+(?:\.\d+)?\s*MG\b", "", work, flags=re.I)
+    work = re.sub(r"\bT\s*\d{1,3}\s*:\s*C\s*\d{1,3}\b", "", work, flags=re.I)
+    work = re.sub(r"\bT\s*\d{1,3}\b", "", work, flags=re.I)
+
+    # Remove generic product wording and count markers from flavor extraction.
+    work = re.sub(r"\bMEDICAL\b", "", work, flags=re.I)
+    work = re.sub(r"\bCANNABIS\b", "", work, flags=re.I)
+    work = re.sub(r"\bPASTILLES?\b", "", work, flags=re.I)
+    work = re.sub(r"\bGUMS?\b", "", work, flags=re.I)
+    work = re.sub(r"\bLOZENGES?\b", "", work, flags=re.I)
+    work = re.sub(r"\b\d{1,3}\s*(?:PCS?|PIECES?|UNITS?)\b", "", work, flags=re.I)
+    work = re.sub(r"\b\d{1,3}\b$", "", work, flags=re.I)
+    work = re.sub(r"[\(\)\[\],]+", " ", work)
+    work = re.sub(r"\s+", " ", work).strip(" -:")
+
+    flavor = _title_case_label(work) if work else None
+
+    count_text = None
+    if isinstance(unit_count, (int, float)) and float(unit_count) > 0:
+        if float(unit_count).is_integer():
+            count_text = str(int(float(unit_count)))
+        else:
+            count_text = f"{float(unit_count):g}"
+
+    if flavor and count_text:
+        return f"{flavor} {count_text} Pastilles"
+    if flavor:
+        return f"{flavor} Pastilles"
+    if count_text:
+        return f"{count_text} Pastilles"
+    return None
+
 def _is_useful_oil_base_name(value: str | None) -> bool:
     if not value:
         return False
@@ -301,6 +369,8 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
                     unit_count = as_float
             except Exception:
                 unit_count = size
+    if product_type == "pastille" and unit_count is None:
+        unit_count = _extract_pastille_count(raw_name) or _extract_pastille_count(long_name) or _extract_pastille_count(name)
     thc = _coerce_float(cannabis.get("thcContent") or specs.get("thcContent"))
     cbd = _coerce_float(cannabis.get("cbdContent") or specs.get("cbdContent"))
     if product_type == "oil":
@@ -318,6 +388,11 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
                 composed = canonical_name
             name = composed
             strain = composed
+    if product_type == "pastille":
+        canonical_pastille = _canonical_pastille_name(raw_name or long_name or name, brand, unit_count)
+        if canonical_pastille:
+            name = canonical_pastille
+            strain = canonical_pastille
     thc_unit = "%" if thc is not None else None
     cbd_unit = "%" if cbd is not None else None
     pricing = entry.get("pricingOptions")
