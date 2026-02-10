@@ -96,7 +96,7 @@ class TestParser(unittest.TestCase):
                             "cannabisSpecification": {
                                 "format": "PASTILLE",
                                 "size": 30,
-                                "volumeUnit": "GRAMS",
+                                "volumeUnit": "UNITS",
                             },
                             "metadata": {"oldProductType": "PASTILLE"},
                         },
@@ -112,6 +112,7 @@ class TestParser(unittest.TestCase):
         item = items[0]
         self.assertEqual(item.get("product_type"), "pastille")
         self.assertEqual(item.get("stock_status"), "IN STOCK")
+        self.assertEqual(item.get("unit_count"), 30)
 
     def test_identity_key_ignores_price(self):
         base = {

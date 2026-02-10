@@ -270,6 +270,7 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
         strain = name
     grams = None
     ml = None
+    unit_count = None
     size = _coerce_float(cannabis.get("size") or specs.get("size"))
     unit = (cannabis.get("volumeUnit") or specs.get("volumeUnit") or metadata.get("units") or "").upper()
     if size is not None:
@@ -277,6 +278,15 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
             grams = size
         elif unit in ("ML", "MILLILITERS", "MILLILITRES"):
             ml = size
+        elif unit == "UNITS":
+            try:
+                as_float = float(size)
+                if as_float.is_integer():
+                    unit_count = int(as_float)
+                else:
+                    unit_count = as_float
+            except Exception:
+                unit_count = size
     thc = _coerce_float(cannabis.get("thcContent") or specs.get("thcContent"))
     cbd = _coerce_float(cannabis.get("cbdContent") or specs.get("cbdContent"))
     if product_type == "oil":
@@ -379,6 +389,7 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
         "is_smalls": is_smalls,
         "grams": grams,
         "ml": ml,
+        "unit_count": unit_count,
         "price": price,
         "thc": thc,
         "thc_unit": thc_unit,

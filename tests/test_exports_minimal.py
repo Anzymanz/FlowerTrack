@@ -41,7 +41,7 @@ class ExportTests(unittest.TestCase):
                 "producer": "Producer",
                 "strain": "Pastille Example",
                 "price": 10.0,
-                "grams": 5.0,
+                "unit_count": 14,
                 "product_type": "pastille",
                 "thc": 10,
                 "thc_unit": "%",
@@ -59,6 +59,7 @@ class ExportTests(unittest.TestCase):
             self.assertIn("toggleType('pastille'", text)
             self.assertIn("data-pastille-count='1'", text)
             self.assertIn("Pastilles", text)
+            self.assertIn("🍬 14", text)
 
     def test_export_writes_history_sidecar(self):
         data = [

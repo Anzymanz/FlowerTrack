@@ -206,7 +206,7 @@ def _render_card_html(
     price_badge: str,
     heading_html: str,
     product_type_label: str,
-    qty: str,
+    qty_pill_text: str,
     price_pill: str,
     stock_pill: str,
     ppg: float | None,
@@ -254,7 +254,7 @@ def _render_card_html(
   <div class='card-content'>
     <div>
       {price_pill}
-      <span class='pill'>⚖️ {qty or '?'}</span>
+      <span class='pill'>{esc(qty_pill_text or '⚖️ ?')}</span>
       {stock_pill}
         {f"<span class='pill'>£/g {ppg:.2f}</span>" if ppg is not None else ''}
         {f"<span class='pill'>🍃 {esc(it.get('strain_type'))}</span>" if it.get('strain_type') else ''}
@@ -374,11 +374,27 @@ def export_html(data, path, fetch_images=False):
             price = 0
         grams = it.get("grams")
         ppg = (price / grams) if isinstance(price, (int, float)) and isinstance(grams, (int, float)) and grams else None
-        qty = ""
-        if it.get("grams") is not None:
-            qty = f"{it['grams']}g"
+        qty_pill_text = "⚖️ ?"
+        product_type = str(it.get("product_type") or "").strip().lower()
+        if product_type == "pastille":
+            count = it.get("unit_count")
+            if count is None and it.get("grams") is not None:
+                # Backward compatibility for older parses where unit count landed in grams.
+                count = it.get("grams")
+            if isinstance(count, (int, float)):
+                if float(count).is_integer():
+                    count_str = str(int(float(count)))
+                else:
+                    count_str = f"{float(count):g}"
+            elif count is not None:
+                count_str = str(count)
+            else:
+                count_str = "?"
+            qty_pill_text = f"🍬 {count_str}"
+        elif it.get("grams") is not None:
+            qty_pill_text = f"⚖️ {it['grams']}g"
         elif it.get("ml") is not None:
-            qty = f"{it['ml']}ml"
+            qty_pill_text = f"⚖️ {it['ml']}ml"
 
         type_icon_dark = get_type_icon(it.get('product_type'), "dark")
         image_url = (it.get("brand_logo_url") or it.get("image_url") or '').strip()
@@ -522,7 +538,7 @@ def export_html(data, path, fetch_images=False):
                 price_badge=price_badge,
                 heading_html=heading_html,
                 product_type_label=display_product_type(it.get("product_type")),
-                qty=qty,
+                qty_pill_text=qty_pill_text,
                 price_pill=price_pill,
                 stock_pill=stock_pill,
                 ppg=ppg,

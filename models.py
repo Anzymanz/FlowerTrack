@@ -19,6 +19,7 @@ class Item:
     is_smalls: bool = False
     grams: Optional[float] = None
     ml: Optional[float] = None
+    unit_count: Optional[float] = None
     price: Optional[float] = None
     thc: Optional[float] = None
     thc_unit: Optional[str] = None
@@ -47,6 +48,7 @@ class ItemDict(TypedDict, total=False):
     is_smalls: bool
     grams: Optional[float]
     ml: Optional[float]
+    unit_count: Optional[float]
     price: Optional[float]
     thc: Optional[float]
     thc_unit: Optional[str]
@@ -100,6 +102,7 @@ def item_from_dict(data: dict) -> Item:
         is_smalls=bool(data.get("is_smalls", False)),
         grams=data.get("grams"),
         ml=data.get("ml"),
+        unit_count=data.get("unit_count"),
         price=data.get("price"),
         thc=data.get("thc"),
         thc_unit=data.get("thc_unit"),
