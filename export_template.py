@@ -1175,19 +1175,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const updatePriceLabel = () => {
         const label = document.getElementById('priceLabel');
-        const minVal = document.getElementById('priceMinVal');
-        const maxVal = document.getElementById('priceMaxVal');
         if (label) label.textContent = `£${priceMinSel.toFixed(0)} – £${priceMaxSel.toFixed(0)}`;
-        if (minVal) minVal.textContent = `£${priceMinSel.toFixed(0)}`;
-        if (maxVal) maxVal.textContent = `£${priceMaxSel.toFixed(0)}`;
     };
     const updateThcLabel = () => {
         const label = document.getElementById('thcLabel');
-        const minVal = document.getElementById('thcMinVal');
-        const maxVal = document.getElementById('thcMaxVal');
         if (label) label.textContent = `${thcMinSel.toFixed(0)}% – ${thcMaxSel.toFixed(0)}%`;
-        if (minVal) minVal.textContent = `${thcMinSel.toFixed(0)}%`;
-        if (maxVal) maxVal.textContent = `${thcMaxSel.toFixed(0)}%`;
     };
     if (priceMinBoundTag) priceMinBoundTag.textContent = `£${priceMinBound.toFixed(0)}`;
     if (priceMaxBoundTag) priceMaxBoundTag.textContent = `£${priceMaxBound.toFixed(0)}`;
@@ -1340,28 +1332,24 @@ document.addEventListener('DOMContentLoaded', () => {
     <button onclick="resetFilters()">Reset</button>
     <div class="range-group">
       <div class="range-line">
-        <span class="range-val" id="priceMinVal"></span>
         <span class="range-tag" id="priceMinBoundTag"></span>
         <div class="range-slider">
           <input class="range-min" type="range" id="priceMinRange" step="1">
           <input class="range-max" type="range" id="priceMaxRange" step="1">
         </div>
         <span class="range-tag" id="priceMaxBoundTag"></span>
-        <span class="range-val" id="priceMaxVal"></span>
         <div class="range-title">Price</div>
       </div>
       <div class="range-values" id="priceLabel"></div>
     </div>
     <div class="range-group">
       <div class="range-line">
-        <span class="range-val" id="thcMinVal"></span>
         <span class="range-tag" id="thcMinBoundTag"></span>
         <div class="range-slider">
           <input class="range-min" type="range" id="thcMinRange" step="1">
           <input class="range-max" type="range" id="thcMaxRange" step="1">
         </div>
         <span class="range-tag" id="thcMaxBoundTag"></span>
-        <span class="range-val" id="thcMaxVal"></span>
         <div class="range-title">THC %</div>
       </div>
       <div class="range-values" id="thcLabel"></div>
