@@ -2339,12 +2339,31 @@ class App(tk.Tk):
         try:
             if isinstance(widget, ttk.Notebook):
                 try:
-                    self.style.configure("Settings.TNotebook", background=bg, borderwidth=0, tabmargins=2)
-                    self.style.configure("Settings.TNotebook.Tab", background=ctrl_bg, foreground=fg, padding=[10, 4])
+                    selected_bg = "#222222" if dark else "#e0e0e0"
+                    border = compute_colors(dark).get("border", ctrl_bg)
+                    self.style.configure(
+                        "Settings.TNotebook",
+                        background=bg,
+                        bordercolor=border,
+                        lightcolor=border,
+                        darkcolor=border,
+                        relief="solid",
+                        borderwidth=1,
+                        tabmargins=2,
+                    )
+                    self.style.configure(
+                        "Settings.TNotebook.Tab",
+                        background=ctrl_bg,
+                        foreground=fg,
+                        padding=[10, 4],
+                        lightcolor=border,
+                        bordercolor=border,
+                        focuscolor=border,
+                    )
                     self.style.map(
                         "Settings.TNotebook.Tab",
-                        background=[("selected", accent), ("!selected", ctrl_bg)],
-                        foreground=[("selected", "#000" if dark else "#fff"), ("!selected", fg)],
+                        background=[("selected", selected_bg), ("!selected", ctrl_bg)],
+                        foreground=[("selected", fg), ("!selected", fg)],
                     )
                 except Exception as exc:
                     self._debug_log(f"Suppressed exception: {exc}")
