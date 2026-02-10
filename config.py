@@ -378,10 +378,7 @@ def _validate_tracker_config(raw: dict) -> dict:
         "minimize_to_tray",
         "close_to_tray",
         "show_scraper_status_icon",
-        "scraper_status_running_color",
-        "scraper_status_stopped_color",
-        "scraper_status_error_color",
-}
+ }
     float_keys = {
         "total_green_threshold",
         "total_red_threshold",
