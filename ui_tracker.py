@@ -380,7 +380,7 @@ class CannabisTracker:
         self.top_date_label = ttk.Label(top_bar, text="", font=time_font)
         self.top_date_label.grid(row=0, column=5, sticky="e", padx=(6, 0))
         self.scraper_status_img = None
-        self.scraper_status_label = ttk.Label(top_bar, text="")
+        self.scraper_status_label = ttk.Label(top_bar, text="", padding=0)
         self.scraper_status_label.grid(row=0, column=6, sticky="e", padx=(6, 0))
         self._bind_scraper_status_actions()
         self._apply_scraper_controls_visibility()
@@ -3556,7 +3556,7 @@ class CannabisTracker:
         try:
             running, warn = resolve_scraper_status(getattr(self, "child_procs", []))
             # Keep the in-window status indicator compact so it does not dominate the top bar.
-            img = self._build_status_image(running, warn, size=18)
+            img = self._build_status_image(running, warn, size=12)
             if img is not None:
                 return img
         except Exception:
@@ -4099,12 +4099,12 @@ class CannabisTracker:
             border_rgb = self._hex_to_rgb(border_hex, fallback=(42, 42, 42))
             img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
             draw = ImageDraw.Draw(img)
-            pad = max(2, size // 8)
+            pad = max(1, size // 8)
             draw.ellipse(
                 (pad, pad, size - pad, size - pad),
                 fill=(rgb[0], rgb[1], rgb[2], 255),
                 outline=(border_rgb[0], border_rgb[1], border_rgb[2], 220),
-                width=max(1, size // 16),
+                width=1,
             )
             return img
         except Exception:
