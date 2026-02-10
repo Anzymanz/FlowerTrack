@@ -97,19 +97,17 @@ def open_tracker_settings(app) -> None:
 
     tab_colors = ttk.Frame(notebook, padding=8)
     tab_tracker = ttk.Frame(notebook, padding=8)
-    tab_roa = ttk.Frame(notebook, padding=8)
     tab_data = ttk.Frame(notebook, padding=8)
     tab_window = ttk.Frame(notebook, padding=8)
     tab_theme = ttk.Frame(notebook, padding=8)
     notebook.add(tab_colors, text="Colour settings")
     notebook.add(tab_tracker, text="Tracker settings")
-    notebook.add(tab_roa, text="RoA settings")
     notebook.add(tab_data, text="Data settings")
     notebook.add(tab_window, text="Window settings")
     notebook.add(tab_theme, text="Theme")
     notebook.configure(style=tab_style)
 
-    for tab in (tab_colors, tab_tracker, tab_roa, tab_data, tab_window, tab_theme):
+    for tab in (tab_colors, tab_tracker, tab_data, tab_window, tab_theme):
         tab.columnconfigure(0, weight=0)
         tab.columnconfigure(1, weight=0)
         tab.columnconfigure(2, weight=1)
@@ -330,6 +328,29 @@ def open_tracker_settings(app) -> None:
     chk_hide_mix_stock.grid(row=row, column=0, columnspan=3, sticky="w", pady=(0, 6))
     row += 1
 
+    app.hide_roa_var = tk.BooleanVar(value=getattr(app, "hide_roa_options", False))
+    chk_hide_roa = ttk.Checkbutton(frame, text="Hide ROA options in log", variable=app.hide_roa_var)
+    chk_hide_roa.grid(row=row, column=0, columnspan=3, sticky="w", pady=(0, 6))
+    row += 1
+
+    ttk.Label(frame, text="Route efficiency (%)", font=app.font_bold_small).grid(
+        row=row, column=0, sticky="w", pady=(6, 6)
+    )
+    app.roa_vars: dict[str, tk.StringVar] = {}
+    app.roa_entries: dict[str, ttk.Entry] = {}
+    roa_row = row + 1
+    for idx, (name, eff) in enumerate(app.roa_options.items()):
+        ttk.Label(frame, text=name).grid(row=roa_row + idx, column=0, sticky="w", pady=(2, 0))
+        var = tk.StringVar(value=f"{eff*100:.0f}")
+        app.roa_vars[name] = var
+        rf = ttk.Frame(frame)
+        entry = ttk.Entry(rf, textvariable=var, width=4)
+        entry.pack(side="left", padx=(0, 2))
+        app.roa_entries[name] = entry
+        ttk.Label(rf, text="%").pack(side="left")
+        rf.grid(row=roa_row + idx, column=1, sticky="w", padx=(12, 0))
+    row = roa_row + len(app.roa_options)
+
     lbl_daily_target = ttk.Label(frame, text="Daily target (THC)")
     lbl_daily_target.grid(row=row, column=0, sticky="w", pady=(6, 0))
     dt_frame = ttk.Frame(frame)
@@ -356,32 +377,6 @@ def open_tracker_settings(app) -> None:
     ttk.Label(avg_frame, text="days").pack(side="left")
     avg_frame.grid(row=row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
     row += 1
-
-    frame = tab_roa
-    ttk.Label(frame, text="RoA settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
-    row = 1
-
-    app.hide_roa_var = tk.BooleanVar(value=getattr(app, "hide_roa_options", False))
-    chk_hide_roa = ttk.Checkbutton(frame, text="Hide ROA options in log", variable=app.hide_roa_var)
-    chk_hide_roa.grid(row=row, column=0, columnspan=3, sticky="w", pady=(2, 6))
-    row += 1
-
-    ttk.Label(frame, text="Route efficiency (%)", font=app.font_bold_small).grid(
-        row=row, column=0, sticky="w", pady=(6, 6)
-    )
-    app.roa_vars: dict[str, tk.StringVar] = {}
-    app.roa_entries: dict[str, ttk.Entry] = {}
-    roa_row = row + 1
-    for idx, (name, eff) in enumerate(app.roa_options.items()):
-        ttk.Label(frame, text=name).grid(row=roa_row + idx, column=0, sticky="w", pady=(2, 0))
-        var = tk.StringVar(value=f"{eff*100:.0f}")
-        app.roa_vars[name] = var
-        rf = ttk.Frame(frame)
-        entry = ttk.Entry(rf, textvariable=var, width=4)
-        entry.pack(side="left", padx=(0, 2))
-        app.roa_entries[name] = entry
-        ttk.Label(rf, text="%").pack(side="left")
-        rf.grid(row=roa_row + idx, column=1, sticky="w", padx=(12, 0))
 
     frame = tab_data
     ttk.Label(frame, text="Data settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
