@@ -1875,8 +1875,20 @@ class CannabisTracker:
         self.current_border_color = border
         self.root.configure(bg=base)
         apply_style_theme(self.style, colors)
-        self.style.configure("TCheckbutton", background=base, foreground=text_color)
-        self.style.map("TCheckbutton", background=[("active", accent)], foreground=[("active", "#ffffff")])
+        self.style.configure(
+            "TCheckbutton",
+            background=base,
+            foreground=text_color,
+            indicatorcolor=panel,
+            indicatorbackground=panel,
+        )
+        self.style.map(
+            "TCheckbutton",
+            background=[("active", accent)],
+            foreground=[("active", "#ffffff")],
+            indicatorcolor=[("selected", accent), ("!selected", panel)],
+            indicatorbackground=[("selected", accent), ("!selected", panel)],
+        )
         panel_border = border
         self.style.configure(
             "Panel.TLabelframe",
