@@ -2088,6 +2088,7 @@ class CannabisTracker:
         if notebook is None or not style_name:
             return
         tab_style = "SettingsLocal.TNotebook.Tab"
+        sep_style = "SettingsLocal.TSeparator"
         colors = compute_colors(dark)
         bg = colors["bg"]
         fg = colors["fg"]
@@ -2119,6 +2120,7 @@ class CannabisTracker:
             background=[("selected", selected_bg), ("!selected", ctrl_bg)],
             foreground=[("selected", fg), ("!selected", fg)],
         )
+        local_style.configure(sep_style, background=border)
         try:
             notebook.configure(style=style_name)
             current = notebook.index("current")

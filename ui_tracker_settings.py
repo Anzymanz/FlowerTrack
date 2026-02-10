@@ -49,6 +49,7 @@ def open_tracker_settings(app) -> None:
     local_style.theme_use("clam")
     tab_style = "SettingsLocal.TNotebook"
     tab_style_tab = "SettingsLocal.TNotebook.Tab"
+    sep_style = "SettingsLocal.TSeparator"
     border = getattr(app, "current_border_color", None) or "#2a2a2a"
     ctrl_bg = getattr(app, "current_ctrl_bg", None) or "#222"
     fg = getattr(app, "text_color", "#eee")
@@ -56,6 +57,7 @@ def open_tracker_settings(app) -> None:
     local_style.configure(tab_style, background=getattr(app, "current_base_color", "#111"), bordercolor=border, lightcolor=border, darkcolor=border, relief="solid", borderwidth=1)
     local_style.configure(tab_style_tab, background=ctrl_bg, foreground=fg, lightcolor=border, bordercolor=border, focuscolor=border, padding=[10, 4])
     local_style.map(tab_style_tab, background=[("selected", selected_bg), ("!selected", ctrl_bg)], foreground=[("selected", fg), ("!selected", fg)])
+    local_style.configure(sep_style, background=border)
 
     notebook = ttk.Notebook(container, style=tab_style)
     app.settings_notebook = notebook
@@ -424,7 +426,7 @@ def open_tracker_settings(app) -> None:
         row_frame.grid(row=theme_row, column=1, sticky="w", padx=(12, 0))
         theme_row += 1
 
-    ttk.Separator(frame, orient="horizontal").grid(row=theme_row, column=0, columnspan=4, sticky="ew", pady=(8, 8))
+    ttk.Separator(frame, orient="horizontal", style=sep_style).grid(row=theme_row, column=0, columnspan=4, sticky="ew", pady=(8, 8))
     theme_row += 1
     ttk.Label(frame, text="Light palette", font=app.font_bold_small).grid(row=theme_row, column=0, sticky="w", pady=(0, 6))
     theme_row += 1

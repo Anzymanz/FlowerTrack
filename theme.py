@@ -90,6 +90,7 @@ def apply_style_theme(style: ttk.Style, colors: dict) -> None:
         foreground=[("active", fg)],
     )
     style.configure("TCheckbutton", background=bg, foreground=fg)
+    style.configure("TSeparator", background=border)
     scrollbar_bg = "#1a1a1a" if colors["bg"] == "#111" else "#dcdcdc"
     scrollbar_trough = "#0d0d0d" if colors["bg"] == "#111" else "#cfcfcf"
     style.configure(
