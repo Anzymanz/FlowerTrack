@@ -161,6 +161,26 @@ def _title_case_label(value: str) -> str:
             tokens.append(tok.title())
     return " ".join(tokens)
 
+_VAPE_PROFILE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
+    ("Live Hash Rosin", re.compile(r"\blive\s+hash\s+rosin\b", flags=re.I)),
+    ("Hash Rosin", re.compile(r"\bhash\s+rosin\b", flags=re.I)),
+    ("Live Rosin", re.compile(r"\blive\s+rosin\b", flags=re.I)),
+    ("Live Resin", re.compile(r"\blive\s+resin\b", flags=re.I)),
+    ("Full Spectrum", re.compile(r"\bfull\s+spectrum\b", flags=re.I)),
+    ("Distillate", re.compile(r"\bdistillate\b", flags=re.I)),
+    ("Rosin", re.compile(r"\brosin\b", flags=re.I)),
+    ("Resin", re.compile(r"\bresin\b", flags=re.I)),
+]
+
+def _extract_vape_profile_descriptor(*values: str | None) -> str | None:
+    merged = " ".join(str(v or "") for v in values)
+    if not merged.strip():
+        return None
+    for label, pattern in _VAPE_PROFILE_PATTERNS:
+        if pattern.search(merged):
+            return label
+    return None
+
 def _canonical_pastille_name(raw_name: str | None, brand: str | None, unit_count: int | float | None) -> str | None:
     if not raw_name:
         return None
@@ -399,6 +419,10 @@ def _canonical_vape_name(
 
     if not name:
         return None
+
+    profile = _extract_vape_profile_descriptor(raw_name, product_name, strain_name)
+    if profile and profile.lower() not in name.lower():
+        name = f"{profile} {name}"
 
     # Ensure a meaningful product suffix for vapes.
     if suffix.lower() not in name.lower():

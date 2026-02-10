@@ -227,6 +227,67 @@ class TestParser(unittest.TestCase):
         self.assertEqual(item.get("product_type"), "vape")
         self.assertEqual(item.get("strain"), "Cherry Lime Cartridge")
 
+    def test_parse_api_payloads_vape_name_includes_distillate_descriptor(self):
+        payloads = [
+            {
+                "url": "https://api.example.com/formulary-products?take=1",
+                "data": [
+                    {
+                        "productId": "WCAN04490",
+                        "name": "CURALEAF LIQUID VAPE DISTILLATE THC 600MG/1G CBD 200MG/1G QUE VAPE CARTRIDGE 1",
+                        "product": {
+                            "name": "Curaleaf T600:C200 (600mg/ml THC, 200mg/ml CBD) Jack Herer Medical Cannabis Liquid Vape Cartridge",
+                            "brand": {"name": "Curaleaf"},
+                            "cannabisSpecification": {
+                                "format": "VAPE",
+                                "strainName": "Jack Herer",
+                                "size": 1.0,
+                                "volumeUnit": "GRAMS",
+                            },
+                        },
+                        "pricingOptions": {
+                            "STANDARD": {"price": 80.0, "totalAvailability": 15}
+                        },
+                    }
+                ],
+            }
+        ]
+        items = parse_api_payloads(payloads)
+        self.assertEqual(len(items), 1)
+        item = items[0]
+        self.assertEqual(item.get("product_type"), "vape")
+        self.assertEqual(item.get("strain"), "Distillate Jack Herer Liquid Cartridge")
+
+    def test_parse_api_payloads_vape_name_includes_full_spectrum_descriptor(self):
+        payloads = [
+            {
+                "url": "https://api.example.com/formulary-products?take=1",
+                "data": [
+                    {
+                        "productId": "FS-101",
+                        "name": "ACME FULL SPECTRUM THC 800MG/ML CBD 20MG/ML VAPE CARTRIDGE 1ML",
+                        "product": {
+                            "name": "Acme Blue Dream Medical Cannabis Cartridge",
+                            "brand": {"name": "Acme"},
+                            "cannabisSpecification": {
+                                "format": "VAPE",
+                                "size": 1.0,
+                                "volumeUnit": "GRAMS",
+                            },
+                        },
+                        "pricingOptions": {
+                            "STANDARD": {"price": 45.0, "totalAvailability": 15}
+                        },
+                    }
+                ],
+            }
+        ]
+        items = parse_api_payloads(payloads)
+        self.assertEqual(len(items), 1)
+        item = items[0]
+        self.assertEqual(item.get("product_type"), "vape")
+        self.assertEqual(item.get("strain"), "Full Spectrum Blue Dream Cartridge")
+
 
 if __name__ == "__main__":
     unittest.main()
