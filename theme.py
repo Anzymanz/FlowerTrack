@@ -9,7 +9,7 @@ import tkinter as tk
 from logger import log_event
 
 
-PALETTE_KEYS = ("bg", "fg", "ctrl_bg", "border", "accent", "list_bg", "muted")
+PALETTE_KEYS = ("bg", "fg", "ctrl_bg", "border", "accent", "highlight", "list_bg", "muted")
 _PALETTE_OVERRIDES = {"dark": {}, "light": {}}
 
 
@@ -20,6 +20,7 @@ def get_default_palettes() -> tuple[dict, dict]:
         "ctrl_bg": "#222",
         "border": "#2a2a2a",
         "accent": "#3c3c3c",
+        "highlight": "#3a3a3a",
         "list_bg": "#1e1e1e",
         "muted": "#777777",
     }
@@ -29,6 +30,7 @@ def get_default_palettes() -> tuple[dict, dict]:
         "ctrl_bg": "#e6e6e6",
         "border": "#e6e6e6",
         "accent": "#666666",
+        "highlight": "#cfd7e6",
         "list_bg": "#ffffff",
         "muted": "#666666",
     }

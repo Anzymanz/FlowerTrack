@@ -408,6 +408,7 @@ def open_tracker_settings(app) -> None:
         ("Control background", "ctrl_bg"),
         ("Border", "border"),
         ("Accent", "accent"),
+        ("Highlight", "highlight"),
         ("List background", "list_bg"),
         ("Muted", "muted"),
     ):
@@ -432,6 +433,7 @@ def open_tracker_settings(app) -> None:
         ("Control background", "ctrl_bg"),
         ("Border", "border"),
         ("Accent", "accent"),
+        ("Highlight", "highlight"),
         ("List background", "list_bg"),
         ("Muted", "muted"),
     ):

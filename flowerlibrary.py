@@ -175,6 +175,7 @@ class FlowerLibraryApp:
         entry_bg = colors["ctrl_bg"]
         text_color = colors["fg"]
         accent = colors["accent"]
+        highlight = colors.get("highlight", colors["accent"])
         border = colors.get("border", colors["ctrl_bg"])
         selected_bg = colors["accent"]
         selected_fg = "#ffffff"
@@ -239,12 +240,12 @@ class FlowerLibraryApp:
         list_bg = colors.get("list_bg", entry_bg)
         self.root.option_add("*TCombobox*Listbox*Background", list_bg)
         self.root.option_add("*TCombobox*Listbox*Foreground", text_color)
-        self.root.option_add("*TCombobox*Listbox*selectBackground", accent)
+        self.root.option_add("*TCombobox*Listbox*selectBackground", highlight)
         self.root.option_add("*TCombobox*Listbox*selectForeground", text_color)
         # Alias patterns improve reliability across Tk builds/themes.
         self.root.option_add("*TCombobox*Listbox.background", list_bg)
         self.root.option_add("*TCombobox*Listbox.foreground", text_color)
-        self.root.option_add("*TCombobox*Listbox.selectBackground", accent)
+        self.root.option_add("*TCombobox*Listbox.selectBackground", highlight)
         self.root.option_add("*TCombobox*Listbox.selectForeground", text_color)
 
         if hasattr(self, "tree"):

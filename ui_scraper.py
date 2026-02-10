@@ -2116,22 +2116,23 @@ class App(tk.Tk):
         self.option_add("*Menu*Foreground", colors["fg"])
         self.option_add("*Menu*ActiveBackground", colors["accent"])
         self.option_add("*Menu*ActiveForeground", colors["bg"])
+        highlight = colors.get("highlight", colors["accent"])
         self.option_add("*TCombobox*Listbox*Background", colors["ctrl_bg"])
         self.option_add("*TCombobox*Listbox*Foreground", colors["fg"])
-        self.option_add("*TCombobox*Listbox*selectBackground", colors["accent"])
+        self.option_add("*TCombobox*Listbox*selectBackground", highlight)
         self.option_add("*TCombobox*Listbox*selectForeground", colors["fg"])
         # Alias patterns improve reliability across Tk builds/themes.
         self.option_add("*TCombobox*Listbox.background", colors["ctrl_bg"])
         self.option_add("*TCombobox*Listbox.foreground", colors["fg"])
-        self.option_add("*TCombobox*Listbox.selectBackground", colors["accent"])
+        self.option_add("*TCombobox*Listbox.selectBackground", highlight)
         self.option_add("*TCombobox*Listbox.selectForeground", colors["fg"])
-        self.option_add("*TCombobox*Entry*selectBackground", colors["ctrl_bg"])
+        self.option_add("*TCombobox*Entry*selectBackground", highlight)
         self.option_add("*TCombobox*Entry*selectForeground", colors["fg"])
-        self.option_add("*TCombobox*Entry*inactiveselectBackground", colors["ctrl_bg"])
+        self.option_add("*TCombobox*Entry*inactiveselectBackground", highlight)
         self.option_add("*TCombobox*Entry*inactiveselectForeground", colors["fg"])
-        self.option_add("*Entry*selectBackground", colors.get("muted", colors["ctrl_bg"]))
+        self.option_add("*Entry*selectBackground", highlight)
         self.option_add("*Entry*selectForeground", colors["fg"])
-        self.option_add("*Entry*inactiveselectBackground", colors.get("muted", colors["ctrl_bg"]))
+        self.option_add("*Entry*inactiveselectBackground", highlight)
         self.option_add("*Entry*inactiveselectForeground", colors["fg"])
         # ttk scrollbar styling
         self.style.configure(
@@ -2516,9 +2517,10 @@ class App(tk.Tk):
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
         try:
-            self.option_add("*Entry*selectBackground", muted if dark else "#d6d6d6")
+            highlight = colors.get("highlight", muted if dark else "#d6d6d6")
+            self.option_add("*Entry*selectBackground", highlight)
             self.option_add("*Entry*selectForeground", fg)
-            self.option_add("*Entry*inactiveselectBackground", muted if dark else "#d6d6d6")
+            self.option_add("*Entry*inactiveselectBackground", highlight)
             self.option_add("*Entry*inactiveselectForeground", fg)
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")

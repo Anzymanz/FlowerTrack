@@ -150,6 +150,7 @@ class HistoryViewer(tk.Toplevel):
         fg = colors["fg"]
         ctrl_bg = colors["ctrl_bg"]
         accent = colors["accent"]
+        highlight = colors.get("highlight", colors["accent"])
         border = colors.get("border", ctrl_bg)
         list_bg = colors.get("list_bg", ctrl_bg)
         muted = colors.get("muted", fg)
@@ -171,7 +172,7 @@ class HistoryViewer(tk.Toplevel):
                         relief="flat",
                         borderwidth=0,
                         highlightthickness=1,
-                        selectbackground=accent,
+                        selectbackground=highlight,
                         selectforeground="#ffffff",
                     )
                 elif isinstance(widget, tk.Listbox):

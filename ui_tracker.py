@@ -1858,6 +1858,7 @@ class CannabisTracker:
         panel = colors["ctrl_bg"]
         entry_bg = colors["ctrl_bg"]
         accent = colors["accent"]
+        highlight = colors.get("highlight", colors["accent"])
         border = colors.get("border", colors["ctrl_bg"])
         scroll = "#2a2a2a" if dark else "#e6e6e6"
         cursor_color = text_color
@@ -1921,24 +1922,24 @@ class CannabisTracker:
         # Try to align dropdown list colors with the combobox button/field
         self.root.option_add("*TCombobox*Listbox*Background", entry_bg)
         self.root.option_add("*TCombobox*Listbox*Foreground", text_color)
-        self.root.option_add("*TCombobox*Listbox*selectBackground", accent)
+        self.root.option_add("*TCombobox*Listbox*selectBackground", highlight)
         self.root.option_add("*TCombobox*Listbox*selectForeground", text_color)
         # Alias patterns improve reliability across Tk builds/themes.
         self.root.option_add("*TCombobox*Listbox.background", entry_bg)
         self.root.option_add("*TCombobox*Listbox.foreground", text_color)
-        self.root.option_add("*TCombobox*Listbox.selectBackground", accent)
+        self.root.option_add("*TCombobox*Listbox.selectBackground", highlight)
         self.root.option_add("*TCombobox*Listbox.selectForeground", text_color)
-        self.root.option_add("*TCombobox*Entry*selectBackground", entry_bg)
+        self.root.option_add("*TCombobox*Entry*selectBackground", highlight)
         self.root.option_add("*TCombobox*Entry*selectForeground", text_color)
-        self.root.option_add("*TCombobox*Entry*inactiveselectBackground", entry_bg)
+        self.root.option_add("*TCombobox*Entry*inactiveselectBackground", highlight)
         self.root.option_add("*TCombobox*Entry*inactiveselectForeground", text_color)
-        self.root.option_add("*Entry*selectBackground", entry_bg)
+        self.root.option_add("*Entry*selectBackground", highlight)
         self.root.option_add("*Entry*selectForeground", text_color)
-        self.root.option_add("*Entry*inactiveselectBackground", entry_bg)
+        self.root.option_add("*Entry*inactiveselectBackground", highlight)
         self.root.option_add("*Entry*inactiveselectForeground", text_color)
-        self.root.option_add("*TEntry*selectBackground", entry_bg)
+        self.root.option_add("*TEntry*selectBackground", highlight)
         self.root.option_add("*TEntry*selectForeground", text_color)
-        self.root.option_add("*TEntry*inactiveselectBackground", entry_bg)
+        self.root.option_add("*TEntry*inactiveselectBackground", highlight)
         self.root.option_add("*TEntry*inactiveselectForeground", text_color)
         self.style.configure(
             "Treeview",

@@ -395,6 +395,7 @@ def _validate_tracker_config(raw: dict) -> dict:
         "ctrl_bg",
         "border",
         "accent",
+        "highlight",
         "list_bg",
         "muted",
     }
