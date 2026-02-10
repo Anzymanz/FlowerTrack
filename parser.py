@@ -300,6 +300,112 @@ def _canonical_oil_name(raw_name: str, thc: float | None, cbd: float | None) -> 
         return None
     return f"{profile} Sublingual Oil"
 
+def _is_useful_strain_name(value: str | None) -> bool:
+    if not value:
+        return False
+    raw = re.sub(r"\s+", " ", str(value)).strip()
+    if not raw:
+        return False
+    upper = raw.upper()
+    if upper in {"N/A", "NA", "NONE", "UNKNOWN", "-", "--"}:
+        return False
+    return True
+
+def _extract_vape_base_name(value: str | None, brand: str | None = None) -> str | None:
+    if not value:
+        return None
+    out = str(value).strip()
+    if brand:
+        out = re.sub(rf"^\s*{re.escape(str(brand))}\b[\s\-:]*", "", out, flags=re.I)
+
+    # Remove potency/ratio and concentration fragments.
+    out = re.sub(r"\bT\s*\d{1,4}\s*:\s*C\s*\d{1,4}\b", "", out, flags=re.I)
+    out = re.sub(r"\bT\s*\d{1,4}\b", "", out, flags=re.I)
+    out = re.sub(r"\bTHC\s*[<>=~≤≥]?\s*\d{1,4}(?:\.\d+)?\s*MG(?:\s*/\s*(?:ML|G))?\b", "", out, flags=re.I)
+    out = re.sub(r"\bCBD\s*[<>=~≤≥]?\s*\d{1,4}(?:\.\d+)?\s*MG(?:\s*/\s*(?:ML|G))?\b", "", out, flags=re.I)
+    out = re.sub(r"\bTHC\s*[<>=~≤≥]?\s*\d{1,3}(?:\.\d+)?\s*%(?:\s*W/W)?\b", "", out, flags=re.I)
+    out = re.sub(r"\bCBD\s*[<>=~≤≥]?\s*\d{1,3}(?:\.\d+)?\s*%(?:\s*W/W)?\b", "", out, flags=re.I)
+    out = re.sub(r"\b\d+(?:\.\d+)?\s*(?:MG|G|ML)\b", "", out, flags=re.I)
+    out = re.sub(r"\b\d+\s*/\s*\d+\b", "", out, flags=re.I)
+
+    # Remove generic wording, keep meaningful style words like Rosin/Distillate.
+    out = re.sub(r"\bMEDICAL\b", "", out, flags=re.I)
+    out = re.sub(r"\bCANNABIS\b", "", out, flags=re.I)
+    out = re.sub(r"\bVAPE\b", "", out, flags=re.I)
+    out = re.sub(r"\bCARTRIDGE\b", "", out, flags=re.I)
+    out = re.sub(r"\bDEVICE\b", "", out, flags=re.I)
+    out = re.sub(r"\bWITH\b", "", out, flags=re.I)
+
+    tokens: list[str] = []
+    keep_all_caps = {"QUE"}
+    for tok in re.split(r"\s+", out):
+        t = tok.strip(" -_.,:;()[]{}\\/")
+        if not t:
+            continue
+        up = t.upper()
+        if up in {"THC", "CBD", "MG", "ML", "G"}:
+            continue
+        if re.fullmatch(r"[<>=~≤≥]+", t):
+            continue
+        if re.fullmatch(r"\d+(?:\.\d+)?", t):
+            continue
+        if re.fullmatch(r"[A-Z0-9-]{3,}", t) and up not in keep_all_caps:
+            # Drop short code-like tokens such as CLV, EHD-CA, CPI, ECSD, EZD-GRA.
+            continue
+        tokens.append(t)
+    out = " ".join(tokens).strip(" -:")
+    if not out:
+        return None
+    return _title_case_label(out)
+
+def _canonical_vape_name(
+    raw_name: str | None,
+    product_name: str | None,
+    strain_name: str | None,
+    brand: str | None,
+) -> str | None:
+    source = product_name or raw_name or ""
+    base = _extract_vape_base_name(source, brand)
+
+    strain_clean = _extract_vape_base_name(strain_name, brand) if strain_name else None
+    if not strain_clean and strain_name:
+        strain_clean = _clean_title(strain_name)
+        if strain_clean and brand:
+            strain_clean = re.sub(rf"^\s*{re.escape(str(brand))}\b[\s\-:]*", "", strain_clean, flags=re.I).strip()
+    if not _is_useful_strain_name(strain_clean):
+        strain_clean = None
+    elif strain_clean:
+        strain_clean = _title_case_label(strain_clean)
+
+    source_upper = str(source).upper()
+    is_device = "DEVICE" in source_upper or "INHALATION DEVICE" in source_upper
+    suffix = "Device" if is_device else "Cartridge"
+
+    if base and strain_clean:
+        base_l = base.lower()
+        strain_l = strain_clean.lower()
+        if strain_l in base_l:
+            name = base
+        elif any(k in base_l for k in ("rosin", "distillate", "resin")):
+            if any(k in strain_l for k in ("rosin", "distillate", "resin")):
+                name = strain_clean if len(strain_clean) >= len(base) else base
+            else:
+                name = f"{strain_clean} {base}"
+        else:
+            # Prefer the specific strain/flavor when base is broad.
+            name = strain_clean
+    else:
+        name = strain_clean or base
+
+    if not name:
+        return None
+
+    # Ensure a meaningful product suffix for vapes.
+    if suffix.lower() not in name.lower():
+        name = f"{name} {suffix}"
+    name = re.sub(r"\s+", " ", name).strip(" -:")
+    return name
+
 def _parse_formulary_item(entry: dict) -> ItemDict | None:
     if not isinstance(entry, dict):
         return None
@@ -347,7 +453,8 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
         long_clean = _clean_title(source_name) or source_name
         if long_clean:
             name = long_clean
-    strain = cannabis.get("strainName") or metadata.get("strain")
+    source_strain = cannabis.get("strainName") or metadata.get("strain")
+    strain = source_strain
     if not strain or str(strain).strip().upper() in {"N/A", "NA", "NONE", "UNKNOWN", "-", "--"}:
         strain = name
     grams = None
@@ -388,6 +495,11 @@ def _parse_formulary_item(entry: dict) -> ItemDict | None:
                 composed = canonical_name
             name = composed
             strain = composed
+    if product_type == "vape":
+        canonical_vape = _canonical_vape_name(raw_name or long_name or name, product_name, source_strain, brand)
+        if canonical_vape:
+            name = canonical_vape
+            strain = canonical_vape
     if product_type == "pastille":
         canonical_pastille = _canonical_pastille_name(raw_name or long_name or name, brand, unit_count)
         if canonical_pastille:

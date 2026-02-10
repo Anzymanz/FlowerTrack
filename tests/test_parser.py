@@ -136,6 +136,97 @@ class TestParser(unittest.TestCase):
         item_b = dict(base, price=9.0)
         self.assertEqual(make_identity_key(item_a), make_identity_key(item_b))
 
+    def test_parse_api_payloads_vape_name_easy_dose(self):
+        payloads = [
+            {
+                "url": "https://api.example.com/formulary-products?take=1",
+                "data": [
+                    {
+                        "productId": 9901,
+                        "name": "EZD-GRA 1000 THC 1000MG/1.2G CBD 24MG/1.2G CANNABIS VAPE CARTRIDGE 1.2G",
+                        "product": {
+                            "name": "Easy Dose GRA T1000 Grapezilla Medical Cannabis Cartridge",
+                            "brand": {"name": "Easy Dose"},
+                            "cannabisSpecification": {
+                                "format": "VAPE",
+                                "size": 1.2,
+                                "volumeUnit": "GRAMS",
+                            },
+                        },
+                        "pricingOptions": {
+                            "STANDARD": {"price": 62.0, "totalAvailability": 15}
+                        },
+                    }
+                ],
+            }
+        ]
+        items = parse_api_payloads(payloads)
+        self.assertEqual(len(items), 1)
+        item = items[0]
+        self.assertEqual(item.get("product_type"), "vape")
+        self.assertEqual(item.get("strain"), "Grapezilla Cartridge")
+
+    def test_parse_api_payloads_vape_name_clearleaf_rosin(self):
+        payloads = [
+            {
+                "url": "https://api.example.com/formulary-products?take=1",
+                "data": [
+                    {
+                        "productId": 9902,
+                        "name": "CLEARLEAF T750 CPI ROSIN (THC 750MG/ML CBD ≤ 50MG/ML) VAPE CARTRIDGE 1ML",
+                        "product": {
+                            "name": "Clearleaf Hash Rosin T750 Cookie Pie Medical Cannabis Cartridge",
+                            "brand": {"name": "Clearleaf"},
+                            "cannabisSpecification": {
+                                "format": "VAPE",
+                                "strainName": "Cookie Pie",
+                                "size": 1.0,
+                                "volumeUnit": "GRAMS",
+                            },
+                        },
+                        "pricingOptions": {
+                            "STANDARD": {"price": 80.0, "totalAvailability": 15}
+                        },
+                    }
+                ],
+            }
+        ]
+        items = parse_api_payloads(payloads)
+        self.assertEqual(len(items), 1)
+        item = items[0]
+        self.assertEqual(item.get("product_type"), "vape")
+        self.assertEqual(item.get("strain"), "Hash Rosin Cookie Pie Cartridge")
+
+    def test_parse_api_payloads_vape_name_4c_code_removed(self):
+        payloads = [
+            {
+                "url": "https://api.example.com/formulary-products?take=1",
+                "data": [
+                    {
+                        "productId": 9903,
+                        "name": "4C LABS CLV 85/1 CHERRY LIME THC 850MG/G CBD <10MG/G VAPE CARTRIDGE 0.95G",
+                        "product": {
+                            "name": "4C Labs CLV T807 Cherry Lime Medical Cannabis Cartridge",
+                            "brand": {"name": "4C Labs"},
+                            "cannabisSpecification": {
+                                "format": "VAPE",
+                                "size": 0.95,
+                                "volumeUnit": "GRAMS",
+                            },
+                        },
+                        "pricingOptions": {
+                            "STANDARD": {"price": 49.0, "totalAvailability": 15}
+                        },
+                    }
+                ],
+            }
+        ]
+        items = parse_api_payloads(payloads)
+        self.assertEqual(len(items), 1)
+        item = items[0]
+        self.assertEqual(item.get("product_type"), "vape")
+        self.assertEqual(item.get("strain"), "Cherry Lime Cartridge")
+
 
 if __name__ == "__main__":
     unittest.main()
