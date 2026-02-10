@@ -881,7 +881,7 @@ class App(tk.Tk):
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
     def _update_last_change(self, summary: str):
-        ts_line = f"{datetime.now().astimezone().strftime('%Y-%m-%d %H:%M:%S%z')} | {summary}"
+        ts_line = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | {summary}"
         write_scraper_state(SCRAPER_STATE_FILE, last_change=ts_line)
         try:
             self.last_change_label.config(text=f"Last change detected: {ts_line}")
@@ -1435,11 +1435,20 @@ class App(tk.Tk):
                 "price_down": getattr(self, "price_down_count", 0),
                 "items": items,
             }
-            summary_local = (
-                f"+{len(new_items_local)} new, -{len(removed_items_local)} removed, "
-                f"{len(price_changes_local)} price changes, {len(stock_changes_local)} stock changes, "
-                f"{len(out_of_stock_changes_local)} out of stock, {len(restock_changes_local)} restocks"
-            )
+            summary_parts_local = []
+            if len(new_items_local):
+                summary_parts_local.append(f"+{len(new_items_local)} new")
+            if len(removed_items_local):
+                summary_parts_local.append(f"-{len(removed_items_local)} removed")
+            if len(price_changes_local):
+                summary_parts_local.append(f"{len(price_changes_local)} price changes")
+            if len(stock_changes_local):
+                summary_parts_local.append(f"{len(stock_changes_local)} stock changes")
+            if len(out_of_stock_changes_local):
+                summary_parts_local.append(f"{len(out_of_stock_changes_local)} out of stock")
+            if len(restock_changes_local):
+                summary_parts_local.append(f"{len(restock_changes_local)} restocks")
+            summary_local = ", ".join(summary_parts_local) if summary_parts_local else "changes detected"
             return payload_local, summary_local, price_change_compact_local, stock_change_summaries_local, out_of_stock_change_summaries_local, restock_change_summaries_local
         new_flowers = [_flower_label(it) for it in new_items if (it.get("product_type") or "").lower() == "flower"]
         removed_flowers = [_flower_label(it) for it in removed_items if (it.get("product_type") or "").lower() == "flower"]
