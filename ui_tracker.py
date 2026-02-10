@@ -3556,7 +3556,15 @@ class CannabisTracker:
         try:
             running, warn = resolve_scraper_status(getattr(self, "child_procs", []))
             # Keep the in-window status indicator compact so it does not dominate the top bar.
-            img = self._build_status_image(running, warn, size=12)
+            target_size = 12
+            img = self._build_status_image(running, warn, size=target_size)
+            # Enforce compact display size even if fallback paths return larger tray images.
+            try:
+                if img is not None and Image is not None and hasattr(img, "size") and tuple(img.size) != (target_size, target_size):
+                    img = img.copy()
+                    img.thumbnail((target_size, target_size), Image.LANCZOS)
+            except Exception:
+                pass
             if img is not None:
                 return img
         except Exception:
