@@ -205,6 +205,7 @@ def _render_card_html(
     strain_badge_src: str | None,
     price_badge: str,
     heading_html: str,
+    product_type_label: str,
     qty: str,
     price_pill: str,
     stock_pill: str,
@@ -248,7 +249,7 @@ def _render_card_html(
       <p class="brand-line"><strong>{esc(brand)}</strong></p>
       {("<p class='small removed-note'>Removed since last parse</p>") if it.get('is_removed') else ""}
         <p class='small'>
-        {(esc((it.get('product_type') or '').title())) if it.get('product_type') else ''}
+        {esc(product_type_label)}
         </p>
   <div class='card-content'>
     <div>
@@ -290,7 +291,7 @@ def export_html(data, path, fetch_images=False):
         """Return a data URI for the strain badge image if available."""
         if not strain_type:
             return None
-        if product_type and product_type.lower() in {"vape", "oil", "device"}:
+        if product_type and product_type.lower() in {"vape", "oil", "device", "pastille"}:
             return None
         return _load_asset(f"{strain_type.title()}.png")
 
@@ -303,6 +304,12 @@ def export_html(data, path, fetch_images=False):
         if pt.lower() == "oil":
             return _load_asset("OilLight.png" if theme == "light" else "OilDark.png")
         return None
+
+    def display_product_type(pt: str | None) -> str:
+        norm = str(pt or "").strip().lower()
+        if norm == "pastille":
+            return "Pastilles"
+        return str(pt or "").title()
 
     def normalize_pct(value, unit):
         if value is None:
@@ -514,6 +521,7 @@ def export_html(data, path, fetch_images=False):
                 strain_badge_src=strain_badge_src,
                 price_badge=price_badge,
                 heading_html=heading_html,
+                product_type_label=display_product_type(it.get("product_type")),
                 qty=qty,
                 price_pill=price_pill,
                 stock_pill=stock_pill,
@@ -578,9 +586,13 @@ def export_html(data, path, fetch_images=False):
     in_stock = 0
     low_stock = 0
     out_stock = 0
+    type_counts = {"flower": 0, "oil": 0, "vape": 0, "pastille": 0}
     for it in data:
         if it.get("is_removed"):
             continue
+        pt = str(it.get("product_type") or "").strip().lower()
+        if pt in type_counts:
+            type_counts[pt] += 1
         remaining = it.get("stock_remaining")
         status = (it.get("stock_status") or it.get("stock") or "").upper()
         if isinstance(remaining, (int, float)):
@@ -608,7 +620,9 @@ def export_html(data, path, fetch_images=False):
             f"<body data-exported='{esc_attr(exported_at.strftime('%Y-%m-%d %H:%M:%S'))}' "
             f"data-exported-ms='{exported_ms}' data-count='{total_products}' "
             f"data-in-stock='{in_stock}' data-low-stock='{low_stock}' "
-            f"data-out-stock='{out_stock}'>"
+            f"data-out-stock='{out_stock}' data-flower-count='{type_counts['flower']}' "
+            f"data-oil-count='{type_counts['oil']}' data-vape-count='{type_counts['vape']}' "
+            f"data-pastille-count='{type_counts['pastille']}'>"
         ),
     )
     html_text = html_text.replace("{price_min_bound}", str(price_min_bound))

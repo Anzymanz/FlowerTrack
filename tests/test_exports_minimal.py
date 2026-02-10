@@ -34,6 +34,32 @@ class ExportTests(unittest.TestCase):
             self.assertIn("data-in-stock='1'", text)
             self.assertIn("rawChangesB64", text)
 
+    def test_export_html_includes_pastille_filter_and_stats(self):
+        data = [
+            {
+                "brand": "Brand",
+                "producer": "Producer",
+                "strain": "Pastille Example",
+                "price": 10.0,
+                "grams": 5.0,
+                "product_type": "pastille",
+                "thc": 10,
+                "thc_unit": "%",
+                "cbd": 10,
+                "cbd_unit": "%",
+                "stock_status": "IN STOCK",
+                "stock_remaining": 15,
+            }
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "out.html"
+            export_html(data, path)
+            text = path.read_text(encoding="utf-8")
+            self.assertIn("data-filter-type=\"pastille\"", text)
+            self.assertIn("toggleType('pastille'", text)
+            self.assertIn("data-pastille-count='1'", text)
+            self.assertIn("Pastilles", text)
+
     def test_export_writes_history_sidecar(self):
         data = [
             {

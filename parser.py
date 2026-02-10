@@ -72,6 +72,8 @@ def _normalize_product_type(raw: str | None) -> str | None:
         return "oil"
     if "VAPE" in upper or "CARTRIDGE" in upper:
         return "vape"
+    if "PASTILLE" in upper or "LOZENGE" in upper or "GUM" in upper:
+        return "pastille"
     if "DEVICE" in upper:
         return "device"
     return None

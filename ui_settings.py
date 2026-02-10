@@ -438,6 +438,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     ttk.Checkbutton(filters_frame, text="Flower only", variable=app.cap_filter_flower).pack(anchor="w", pady=2)
     ttk.Checkbutton(filters_frame, text="Oil only", variable=app.cap_filter_oil).pack(anchor="w", pady=2)
     ttk.Checkbutton(filters_frame, text="Vape only", variable=app.cap_filter_vape).pack(anchor="w", pady=2)
+    ttk.Checkbutton(filters_frame, text="Pastilles only", variable=app.cap_filter_pastille).pack(anchor="w", pady=2)
 
     ha_frame = ttk.Frame(tab_notifications)
     ha_frame.pack(fill="x", pady=(0, 6))

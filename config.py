@@ -162,6 +162,7 @@ DEFAULT_CAPTURE_CONFIG = {
     "filter_flower": False,
     "filter_oil": False,
     "filter_vape": False,
+    "filter_pastille": False,
     "minimize_to_tray": False,
     "close_to_tray": False,
 }
@@ -519,6 +520,7 @@ def _validate_capture_config(raw: dict) -> dict:
     cfg["filter_flower"] = _coerce_bool(raw.get("filter_flower"), DEFAULT_CAPTURE_CONFIG["filter_flower"])
     cfg["filter_oil"] = _coerce_bool(raw.get("filter_oil"), DEFAULT_CAPTURE_CONFIG["filter_oil"])
     cfg["filter_vape"] = _coerce_bool(raw.get("filter_vape"), DEFAULT_CAPTURE_CONFIG["filter_vape"])
+    cfg["filter_pastille"] = _coerce_bool(raw.get("filter_pastille"), DEFAULT_CAPTURE_CONFIG["filter_pastille"])
     cfg["minimize_to_tray"] = _coerce_bool(raw.get("minimize_to_tray"), DEFAULT_CAPTURE_CONFIG["minimize_to_tray"])
     cfg["close_to_tray"] = _coerce_bool(raw.get("close_to_tray"), DEFAULT_CAPTURE_CONFIG["close_to_tray"])
     return cfg

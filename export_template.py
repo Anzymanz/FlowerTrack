@@ -190,7 +190,7 @@ function sortCards(key, btn) {
     updateSortButtons();
     applyVisibleLimit();
 }
-let activeTypes = new Set(['flower','oil','vape']);
+let activeTypes = new Set(['flower','oil','vape','pastille']);
 let activeStrains = new Set(['Indica','Sativa','Hybrid']);
 let favoritesOnly = false;
 let showSmalls = true;
@@ -243,7 +243,7 @@ function applyFilters(resetLimit = true) {
         const priceVal = parseFloat(c.dataset.price);
         const thcVal = parseFloat(c.dataset.thc);
         const priceOk = Number.isFinite(priceVal) ? (priceVal >= priceMinSel && priceVal <= priceMaxSel) : true;
-        const thcOk = (pt === 'vape' || pt === 'oil' || pt === 'device') ? true : (Number.isFinite(thcVal) ? (thcVal >= thcMinSel && thcVal <= thcMaxSel) : true);
+        const thcOk = (pt === 'vape' || pt === 'oil' || pt === 'pastille' || pt === 'device') ? true : (Number.isFinite(thcVal) ? (thcVal >= thcMinSel && thcVal <= thcMaxSel) : true);
         const showType = isRemoved ? true : activeTypes.has(pt);
         const showStrain = (!st) ? true : activeStrains.has(st);
         const text = (c.dataset.strain || '') + ' ' + (c.dataset.brand || '') + ' ' + (c.dataset.producer || '') + ' ' + (c.dataset.productId || '');
@@ -985,6 +985,7 @@ function loadFilterPrefs() {
         const data = JSON.parse(raw);
         if (Array.isArray(data.types)) {
             activeTypes = new Set(data.types);
+            if (!activeTypes.has('pastille')) activeTypes.add('pastille');
         }
         if (Array.isArray(data.strains)) {
             activeStrains = new Set(data.strains);
@@ -1045,7 +1046,7 @@ function toggleFavorite(btn) {
     document.cookie = `ft_favs_global=${encodeURIComponent(JSON.stringify(Array.from(favorites)))}; path=/; max-age=${60*60*24*365}`;
 }
 function resetFilters() {
-    activeTypes = new Set(['flower','oil','vape']);
+    activeTypes = new Set(['flower','oil','vape','pastille']);
     activeStrains = new Set(['Indica','Sativa','Hybrid']);
     document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('[data-filter-type]').forEach(b => b.classList.add('active'));
@@ -1267,6 +1268,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const inStock = document.body.getAttribute('data-in-stock') || '';
         const lowStock = document.body.getAttribute('data-low-stock') || '';
         const outStock = document.body.getAttribute('data-out-stock') || '';
+        const flowerCount = document.body.getAttribute('data-flower-count') || '0';
+        const oilCount = document.body.getAttribute('data-oil-count') || '0';
+        const vapeCount = document.body.getAttribute('data-vape-count') || '0';
+        const pastilleCount = document.body.getAttribute('data-pastille-count') || '0';
         const parts = [];
         if (count) {
             parts.push(
@@ -1276,6 +1281,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 (outStock ? ` - ${outStock} out of stock` : "")
             );
         }
+        parts.push(
+            `${flowerCount} flower` +
+            ` - ${oilCount} oil` +
+            ` - ${vapeCount} vape` +
+            ` - ${pastilleCount} pastilles`
+        );
         if (ts) parts.push(`Updated ${ts}`);
         meta.textContent = parts.join(' • ');
     }
@@ -1308,6 +1319,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <button class='btn-filter active' data-filter-type="flower" onclick="toggleType('flower', this)">Flower</button>
     <button class='btn-filter active' data-filter-type="oil" onclick="toggleType('oil', this)">Oil</button>
     <button class='btn-filter active' data-filter-type="vape" onclick="toggleType('vape', this)">Vape</button>
+    <button class='btn-filter active' data-filter-type="pastille" onclick="toggleType('pastille', this)">Pastilles</button>
     <button class='btn-filter active' data-filter-strain="Indica" onclick="toggleStrain('Indica', this)">Indica</button>
     <button class='btn-filter active' data-filter-strain="Sativa" onclick="toggleStrain('Sativa', this)">Sativa</button>
     <button class='btn-filter active' data-filter-strain="Hybrid" onclick="toggleStrain('Hybrid', this)">Hybrid</button>

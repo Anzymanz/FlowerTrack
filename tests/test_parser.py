@@ -83,6 +83,36 @@ class TestParser(unittest.TestCase):
         self.assertEqual(item.get("stock_status"), "OUT OF STOCK")
         self.assertAlmostEqual(item.get("ml") or 0, 1.0)
 
+    def test_parse_api_payloads_pastille_type(self):
+        payloads = [
+            {
+                "url": "https://api.example.com/formulary-products?take=1",
+                "data": [
+                    {
+                        "productId": 777,
+                        "name": "Curaleaf Pastille Gums",
+                        "product": {
+                            "brand": {"name": "Curaleaf"},
+                            "cannabisSpecification": {
+                                "format": "PASTILLE",
+                                "size": 30,
+                                "volumeUnit": "GRAMS",
+                            },
+                            "metadata": {"oldProductType": "PASTILLE"},
+                        },
+                        "pricingOptions": {
+                            "STANDARD": {"price": 12.0, "totalAvailability": 15}
+                        },
+                    }
+                ],
+            }
+        ]
+        items = parse_api_payloads(payloads)
+        self.assertEqual(len(items), 1)
+        item = items[0]
+        self.assertEqual(item.get("product_type"), "pastille")
+        self.assertEqual(item.get("stock_status"), "IN STOCK")
+
     def test_identity_key_ignores_price(self):
         base = {
             "product_id": "ABC123",

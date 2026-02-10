@@ -369,6 +369,7 @@ class App(tk.Tk):
         self.cap_filter_flower = tk.BooleanVar(value=bool(cfg.get("filter_flower", False)))
         self.cap_filter_oil = tk.BooleanVar(value=bool(cfg.get("filter_oil", False)))
         self.cap_filter_vape = tk.BooleanVar(value=bool(cfg.get("filter_vape", False)))
+        self.cap_filter_pastille = tk.BooleanVar(value=bool(cfg.get("filter_pastille", False)))
         self.cap_notify_detail = tk.StringVar(value=cfg.get("notification_detail", "full"))
         self.minimize_to_tray = tk.BooleanVar(value=bool(cfg.get("minimize_to_tray", False)))
         self.close_to_tray = tk.BooleanVar(value=bool(cfg.get("close_to_tray", False)))
@@ -449,6 +450,7 @@ class App(tk.Tk):
             "filter_flower": _get_bool_var("cap_filter_flower", False),
             "filter_oil": _get_bool_var("cap_filter_oil", False),
             "filter_vape": _get_bool_var("cap_filter_vape", False),
+            "filter_pastille": _get_bool_var("cap_filter_pastille", False),
             "notification_detail": self.cap_notify_detail.get(),
             "minimize_to_tray": bool(self.minimize_to_tray.get()),
             "close_to_tray": bool(self.close_to_tray.get()),
@@ -1029,6 +1031,7 @@ class App(tk.Tk):
         self.cap_filter_flower.set(bool(cfg.get("filter_flower", False)))
         self.cap_filter_oil.set(bool(cfg.get("filter_oil", False)))
         self.cap_filter_vape.set(bool(cfg.get("filter_vape", False)))
+        self.cap_filter_pastille.set(bool(cfg.get("filter_pastille", False)))
         self.cap_notify_detail.set(cfg.get("notification_detail", "full"))
         self.minimize_to_tray.set(cfg.get("minimize_to_tray", False))
         self.close_to_tray.set(cfg.get("close_to_tray", False))
@@ -1807,6 +1810,8 @@ class App(tk.Tk):
                 selected.add("oil")
             if self.cap_filter_vape.get():
                 selected.add("vape")
+            if self.cap_filter_pastille.get():
+                selected.add("pastille")
             if not selected:
                 return items
             filtered = []
