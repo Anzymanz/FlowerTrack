@@ -179,7 +179,7 @@ class HistoryViewer(tk.Toplevel):
                     widget.configure(
                         bg=list_bg,
                         fg=fg,
-                        selectbackground=accent,
+                        selectbackground=highlight,
                         selectforeground=fg,
                         highlightbackground=bg,
                         highlightcolor=border,
@@ -224,7 +224,7 @@ class HistoryViewer(tk.Toplevel):
             )
             style.map(
                 "History.Treeview",
-                background=[("selected", accent)],
+                background=[("selected", highlight)],
                 foreground=[("selected", "#ffffff")],
             )
             style.configure(

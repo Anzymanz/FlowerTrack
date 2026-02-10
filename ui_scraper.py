@@ -2383,7 +2383,7 @@ class App(tk.Tk):
                 widget.configure(
                     bg=bg if dark else "#ffffff",
                     fg=fg,
-                    selectbackground=accent,
+                    selectbackground=highlight,
                     selectforeground="#000" if dark else "#fff",
                     highlightbackground=bg,
                 )

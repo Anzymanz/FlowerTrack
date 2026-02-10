@@ -1961,7 +1961,7 @@ class CannabisTracker:
             font=self.font_body,
         )
         self.style.map("Treeview.Heading", background=[("active", accent)], foreground=[("active", "#ffffff")])
-        self.style.map("Treeview", background=[("selected", accent)], foreground=[("selected", "#ffffff")])
+        self.style.map("Treeview", background=[("selected", highlight)], foreground=[("selected", "#ffffff")])
         self.style.configure(
             self.vscroll_style,
             troughcolor=panel,
