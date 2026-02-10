@@ -595,7 +595,7 @@ class App(tk.Tk):
         ):
             self._set_pagination_busy(False)
 
-    def _append_auth_bootstrap_log(self, msg: str) -> None:
+    def _append_auth_bootstrap_log(self, msg: str, level: str = "info") -> None:
         widget = getattr(self, "auth_bootstrap_log_widget", None)
         if not widget:
             return
@@ -608,8 +608,21 @@ class App(tk.Tk):
             return
         line = f"{msg}\n"
         try:
+            colors = compute_colors(bool(self.dark_mode_var.get()))
+            success_fg = "#2ecc71" if bool(self.dark_mode_var.get()) else "#1f7a1f"
+            warn_fg = "#f39c12" if bool(self.dark_mode_var.get()) else "#9a6500"
+            error_fg = "#e74c3c" if bool(self.dark_mode_var.get()) else "#a32020"
+            widget.tag_configure("log_info", foreground=colors["fg"])
+            widget.tag_configure("log_success", foreground=success_fg)
+            widget.tag_configure("log_warning", foreground=warn_fg)
+            widget.tag_configure("log_error", foreground=error_fg)
+            tag = {
+                "success": "log_success",
+                "warning": "log_warning",
+                "error": "log_error",
+            }.get(str(level).lower(), "log_info")
             widget.configure(state="normal")
-            widget.insert("end", line)
+            widget.insert("end", line, tag)
             widget.see("end")
             widget.yview_moveto(1.0)
             widget.configure(state="disabled")
@@ -617,13 +630,13 @@ class App(tk.Tk):
         except Exception:
             pass
 
-    def _auth_bootstrap_log(self, msg: str) -> None:
+    def _auth_bootstrap_log(self, msg: str, level: str = "info") -> None:
         self._capture_log(msg)
         try:
             if threading.current_thread() is self._ui_thread:
-                self._append_auth_bootstrap_log(msg)
+                self._append_auth_bootstrap_log(msg, level=level)
             else:
-                self.after(0, lambda m=msg: self._append_auth_bootstrap_log(m))
+                self.after(0, lambda m=msg, lvl=level: self._append_auth_bootstrap_log(m, level=lvl))
         except Exception:
             pass
 
@@ -2031,7 +2044,7 @@ class App(tk.Tk):
             messagebox.showinfo("Auth Cache", "No auth cache found to clear.")
     def _run_auth_bootstrap(self) -> None:
         if self.capture_thread and self.capture_thread.is_alive():
-            self._show_themed_popup("Auth Token", "Stop auto-capture before bootstrapping auth.", kind="warning")
+            self._auth_bootstrap_log("Stop auto-capture before bootstrapping auth.", level="warning")
             return
         try:
             self._save_capture_window()
@@ -2039,16 +2052,12 @@ class App(tk.Tk):
             self._debug_log(f"Suppressed exception: {exc}")
         cfg = self._collect_capture_cfg()
         if not cfg.get("url"):
-            self._show_themed_popup("Auth Token", "Please set the target URL before bootstrapping.", kind="warning")
+            self._auth_bootstrap_log("Please set the target URL before bootstrapping.", level="warning")
             return
         if not cfg.get("username") or not cfg.get("password") or not cfg.get("organization"):
             cfg = dict(cfg)
             cfg["headless"] = False
-            self._show_themed_popup(
-                "Auth Token",
-                "Missing account details. A browser will open for manual login.",
-                kind="info",
-            )
+            self._auth_bootstrap_log("Missing account details. A browser will open for manual login.", level="warning")
         stop_event = threading.Event()
 
         def install_cb():
@@ -2072,17 +2081,14 @@ class App(tk.Tk):
                 if payloads:
                     try:
                         cw._persist_auth_cache(payloads)
-                        self._auth_bootstrap_log("Auth bootstrap complete; token cached.")
-                        self._show_themed_popup("Auth Token", "Auth token captured and cached.", kind="info")
+                        self._auth_bootstrap_log("Auth bootstrap complete; token cached.", level="success")
                     except Exception as exc:
                         self._auth_bootstrap_log(f"Auth cache write failed: {exc}")
-                        self._show_themed_popup("Auth Token", f"Token captured but cache write failed:\n{exc}", kind="warning")
+                        self._auth_bootstrap_log(f"Token captured but cache write failed: {exc}", level="warning")
                 else:
-                    self._auth_bootstrap_log("Auth bootstrap did not capture a token.")
-                    self._show_themed_popup("Auth Token", "Auth bootstrap did not capture a token.", kind="warning")
+                    self._auth_bootstrap_log("Auth bootstrap did not capture a token.", level="warning")
             except Exception as exc:
-                self._auth_bootstrap_log(f"Auth bootstrap failed: {exc}")
-                self._show_themed_popup("Auth Token", f"Auth bootstrap failed:\n{exc}", kind="error")
+                self._auth_bootstrap_log(f"Auth bootstrap failed: {exc}", level="error")
 
         threading.Thread(target=worker, daemon=True).start()
 
