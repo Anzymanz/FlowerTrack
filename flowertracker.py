@@ -6,6 +6,7 @@ import socket
 import os
 import sys
 import threading
+import time
 from typing import Callable
 import tkinter as tk
 from tkinter import messagebox
@@ -230,6 +231,7 @@ def main() -> None:
     root = tk.Tk()
     root.withdraw()
     splash = _show_startup_splash(root)
+    splash_started_at = time.perf_counter() if splash is not None else None
     try:
         root.update_idletasks()
         root.update()
@@ -238,6 +240,15 @@ def main() -> None:
     try:
         app = CannabisTracker(root)
     finally:
+        if splash is not None and splash_started_at is not None:
+            elapsed = time.perf_counter() - splash_started_at
+            remaining = 2.0 - elapsed
+            if remaining > 0:
+                try:
+                    # Keep splash visible long enough to avoid pop-in flicker on fast starts.
+                    time.sleep(remaining)
+                except Exception:
+                    pass
         _close_startup_splash(splash)
     try:
         root.deiconify()
