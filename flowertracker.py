@@ -114,6 +114,7 @@ def _enable_optional_console() -> None:
     """Enable a Windows console when launched with -console/--console."""
     requested = any(flag in sys.argv for flag in CONSOLE_FLAGS)
     if not requested:
+        os.environ.pop("FLOWERTRACK_CONSOLE", None)
         return
     # Strip custom flags so downstream argv checks remain unchanged.
     sys.argv[:] = [arg for arg in sys.argv if arg not in CONSOLE_FLAGS]
@@ -135,6 +136,7 @@ def _enable_optional_console() -> None:
         sys.stdout = open("CONOUT$", "w", buffering=1, encoding="utf-8", errors="replace")
         sys.stderr = open("CONOUT$", "w", buffering=1, encoding="utf-8", errors="replace")
         sys.stdin = open("CONIN$", "r", encoding="utf-8", errors="replace")
+        os.environ["FLOWERTRACK_CONSOLE"] = "1"
         print("FlowerTrack console enabled.")
     except Exception:
         pass

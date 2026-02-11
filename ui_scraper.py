@@ -146,7 +146,7 @@ class App(tk.Tk):
         self._last_parse_empty = False
         self._empty_retry = False
         log_file = Path(APP_DIR) / "logs" / "flowertrack.log"
-        self.logger = UILogger(console_fn=self._log_console, tray_fn=None, file_path=log_file, also_stdout=True)
+        self.logger = UILogger(console_fn=self._log_console, tray_fn=None, file_path=log_file, also_stdout=False)
         self.notify_service = NotificationService(
             ha_webhook=lambda: self.cap_ha_webhook.get(),
             ha_token=lambda: self.cap_ha_token.get(),
@@ -916,6 +916,11 @@ class App(tk.Tk):
             self.console.insert("end", line)
             self.console.see("end")
             self.console.configure(state="disabled")
+            if os.getenv("FLOWERTRACK_CONSOLE") == "1":
+                try:
+                    print(line.rstrip())
+                except Exception:
+                    pass
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
 
