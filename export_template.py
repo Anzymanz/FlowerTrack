@@ -1213,7 +1213,7 @@ function applyTheme(saved) {
     } catch (e) {}
     const btn = document.getElementById('themeToggle');
     if (btn) {
-        btn.textContent = useLight ? '☀️' : '🌙';
+        btn.textContent = useLight ? '🌙' : '☀️';
         btn.title = useLight ? 'Light theme' : 'Dark theme';
         btn.setAttribute('aria-label', useLight ? 'Light theme' : 'Dark theme');
     }
@@ -1482,7 +1482,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <div class='controls-right'>
     <button class="basket-button" id="basketButton" onclick="toggleBasket()">Basket: <span id="basketCount">0</span> | £<span id="basketTotal">0.00</span></button>
     <button id="historyButton" onclick="toggleHistory()">History</button>
-    <button id="themeToggle" onclick="toggleTheme()">🌙</button>
+    <button id="themeToggle" onclick="toggleTheme()">☀️</button>
   </div>
 </div>
 <div class='grid' id='grid'>
