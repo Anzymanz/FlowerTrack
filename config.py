@@ -239,6 +239,10 @@ DEFAULT_TRACKER_CONFIG = {
     "settings_window_geometry": "",
     "screen_resolution": "",
     "main_split_ratio": 0.48,
+    "network_host": "127.0.0.1",
+    "network_bind_host": "0.0.0.0",
+    "network_port": 8766,
+    "network_export_port": 8765,
     "mixcalc_geometry": "",
     "mixcalc_stock_geometry": "",
     "stock_column_widths": {},
@@ -392,6 +396,10 @@ def _validate_tracker_config(raw: dict) -> dict:
         "target_daily_cbd_grams",
         "main_split_ratio",
     }
+    int_keys = {
+        "network_port",
+        "network_export_port",
+    }
     palette_keys = {
         "bg",
         "fg",
@@ -410,6 +418,8 @@ def _validate_tracker_config(raw: dict) -> dict:
             cfg[key] = _coerce_bool(value, cfg[key])
         elif key in float_keys:
             cfg[key] = _coerce_float(value, cfg[key], 0.0)
+        elif key in int_keys:
+            cfg[key] = _coerce_int(value, cfg[key], 1)
         elif key in (
             "accent_green",
             "accent_red",
@@ -448,6 +458,16 @@ def _validate_tracker_config(raw: dict) -> dict:
             cfg[key] = cleaned
         else:
             cfg[key] = value
+    try:
+        cfg["network_port"] = max(1, min(65535, int(cfg.get("network_port", 8766))))
+    except Exception:
+        cfg["network_port"] = 8766
+    try:
+        cfg["network_export_port"] = max(1, min(65535, int(cfg.get("network_export_port", 8765))))
+    except Exception:
+        cfg["network_export_port"] = 8765
+    cfg["network_host"] = str(cfg.get("network_host", "127.0.0.1") or "127.0.0.1").strip()
+    cfg["network_bind_host"] = str(cfg.get("network_bind_host", "0.0.0.0") or "0.0.0.0").strip()
     if not cfg.get("data_path"):
         cfg["data_path"] = _default_tracker_data_path()
     if not cfg.get("library_data_path"):

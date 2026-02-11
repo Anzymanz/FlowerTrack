@@ -16,29 +16,48 @@ from app_core import APP_DIR, CONFIG_FILE, LAST_PARSE_FILE, SCRAPER_STATE_FILE
 from config import load_unified_config
 from scraper_state import read_scraper_state
 from storage import load_last_parse
+from network_mode import (
+    MODE_CLIENT,
+    MODE_HOST,
+    MODE_STANDALONE,
+    consume_mode_flags,
+    get_mode,
+)
 import json
 from pathlib import Path
 
 SINGLE_INSTANCE_HOST = "127.0.0.1"
-SINGLE_INSTANCE_PORT = 47651
-SINGLE_INSTANCE_TOKEN = b"FLOWERTRACK_SHOW_MAIN"
+_SINGLE_INSTANCE_PORTS = {
+    MODE_STANDALONE: 47651,
+    MODE_HOST: 47652,
+    MODE_CLIENT: 47653,
+}
 CONSOLE_FLAGS = {"-console", "--console"}
 
 
-def _send_focus_signal() -> bool:
+def _single_instance_settings(mode: str | None = None) -> tuple[int, bytes]:
+    value = (mode or get_mode()).strip().lower()
+    port = _SINGLE_INSTANCE_PORTS.get(value, _SINGLE_INSTANCE_PORTS[MODE_STANDALONE])
+    token = f"FLOWERTRACK_SHOW_MAIN:{value}".encode("utf-8")
+    return port, token
+
+
+def _send_focus_signal(mode: str | None = None) -> bool:
+    port, token = _single_instance_settings(mode)
     try:
-        with socket.create_connection((SINGLE_INSTANCE_HOST, SINGLE_INSTANCE_PORT), timeout=0.35) as conn:
-            conn.sendall(SINGLE_INSTANCE_TOKEN)
+        with socket.create_connection((SINGLE_INSTANCE_HOST, port), timeout=0.35) as conn:
+            conn.sendall(token)
         return True
     except Exception:
         return False
 
 
-def _start_focus_listener(on_focus: Callable[[], None]) -> socket.socket | None:
+def _start_focus_listener(on_focus: Callable[[], None], mode: str | None = None) -> socket.socket | None:
+    port, token = _single_instance_settings(mode)
     try:
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server.bind((SINGLE_INSTANCE_HOST, SINGLE_INSTANCE_PORT))
+        server.bind((SINGLE_INSTANCE_HOST, port))
         server.listen(5)
         server.settimeout(0.5)
     except Exception:
@@ -58,7 +77,7 @@ def _start_focus_listener(on_focus: Callable[[], None]) -> socket.socket | None:
                 break
             try:
                 payload = conn.recv(128)
-                if payload and payload.startswith(SINGLE_INSTANCE_TOKEN):
+                if payload and payload.startswith(token):
                     try:
                         on_focus()
                     except Exception:
@@ -148,6 +167,7 @@ def _enable_optional_console() -> None:
 
 
 def main() -> None:
+    network_mode = consume_mode_flags()
     _enable_optional_console()
     if "--diagnostics" in sys.argv:
         try:
@@ -224,7 +244,7 @@ def main() -> None:
         return
 
     # Main tracker mode only: enforce single instance and restore existing window.
-    if _send_focus_signal():
+    if _send_focus_signal(network_mode):
         return
 
     app_ref: dict[str, CannabisTracker] = {}
@@ -240,7 +260,7 @@ def main() -> None:
         except Exception:
             pass
 
-    focus_listener = _start_focus_listener(_on_focus_signal)
+    focus_listener = _start_focus_listener(_on_focus_signal, network_mode)
 
     root = tk.Tk()
     app = CannabisTracker(root)

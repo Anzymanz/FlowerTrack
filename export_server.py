@@ -33,11 +33,25 @@ def _port_ready(host: str, port: int, timeout: float = 0.5) -> bool:
         return False
 
 
-def start_export_server(preferred_port: int, exports_dir: Path, log: Callable[[str], None]) -> Tuple[Optional[http.server.ThreadingHTTPServer], Optional[threading.Thread], Optional[int]]:
+def start_export_server(
+    preferred_port: int,
+    exports_dir: Path,
+    log: Callable[[str], None],
+    bind_host: str = "127.0.0.1",
+    probe_host: str | None = None,
+) -> Tuple[Optional[http.server.ThreadingHTTPServer], Optional[threading.Thread], Optional[int]]:
     """Start a lightweight HTTP server to serve exports; returns (httpd, thread, port) or (None, None, None) on failure."""
     exports_dir.mkdir(parents=True, exist_ok=True)
 
-    if _port_ready("127.0.0.1", preferred_port):
+    bind = (bind_host or "127.0.0.1").strip() or "127.0.0.1"
+    if probe_host:
+        probe = probe_host
+    elif bind in {"0.0.0.0", "::"}:
+        probe = "127.0.0.1"
+    else:
+        probe = bind
+
+    if _port_ready(probe, preferred_port):
         log(f"[server] already running on port {preferred_port}")
         return None, None, preferred_port
 
@@ -150,11 +164,11 @@ def start_export_server(preferred_port: int, exports_dir: Path, log: Callable[[s
 
     handler = functools.partial(QuietHandler, directory=str(exports_dir))
     port = preferred_port
-    log(f"[server] attempting to start on port {port} serving {exports_dir}")
+    log(f"[server] attempting to start on {bind}:{port} serving {exports_dir}")
     httpd = None
     for _ in range(10):
         try:
-            httpd = http.server.ThreadingHTTPServer(("127.0.0.1", port), handler)
+            httpd = http.server.ThreadingHTTPServer((bind, port), handler)
             httpd.allow_reuse_address = True
             break
         except OSError as e:
@@ -170,14 +184,14 @@ def start_export_server(preferred_port: int, exports_dir: Path, log: Callable[[s
     # Wait briefly for socket to be ready
     ready = False
     for _ in range(10):
-        if _port_ready("127.0.0.1", port, timeout=0.2):
+        if _port_ready(probe, port, timeout=0.2):
             ready = True
             break
         time.sleep(0.1)
     if not ready:
         log(f"[server] started but not reachable on port {port}")
     else:
-        log(f"[server] serving exports at http://127.0.0.1:{port}")
+        log(f"[server] serving exports at http://{probe}:{port}")
     return httpd, thread, port
 
 
