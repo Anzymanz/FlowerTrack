@@ -308,7 +308,6 @@ class App(tk.Tk):
                 self._capture_log("External command: stop auto-capture.")
                 self.stop_auto_capture()
         elif cmd == "show":
-            self._capture_log("External command: show scraper window.")
             self._show_scraper_window()
 
     def _try_pending_external_start(self) -> None:
@@ -581,7 +580,9 @@ class App(tk.Tk):
             self._log_console(msg)
         # Update status label for capture-related messages
         try:
-            self.status.config(text=msg)
+            status_msg = self._friendly_status_text(msg)
+            if status_msg:
+                self.status.config(text=status_msg)
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
         lower = str(msg or "").lower()
@@ -594,6 +595,33 @@ class App(tk.Tk):
             or "api capture failed" in lower
         ):
             self._set_pagination_busy(False)
+
+    def _friendly_status_text(self, msg: str) -> str:
+        text = str(msg or "").strip()
+        if not text:
+            return ""
+        lower = text.lower()
+        if "external command: show scraper window" in lower:
+            return ""
+        if "external command: start queued" in lower:
+            return "Start requested; waiting for current run to finish."
+        if "external command: start auto-capture" in lower:
+            return "Starting auto-capture..."
+        if "external command: stop auto-capture" in lower:
+            return "Stopping auto-capture..."
+        if "applying api capture" in lower:
+            return "Processing latest data..."
+        if "api pagination fetch" in lower or "pagination fetch" in lower:
+            return "Fetching product pages..."
+        if "count fetch status" in lower:
+            return "Fetching product count..."
+        if lower.startswith("saved last parse to "):
+            return "Latest parse saved."
+        if "no api data found" in lower:
+            return "No data found this run."
+        if lower.startswith("sending windows notification:"):
+            return "Sending desktop notification..."
+        return text
 
     def _append_auth_bootstrap_log(self, msg: str, level: str = "info") -> None:
         widget = getattr(self, "auth_bootstrap_log_widget", None)
