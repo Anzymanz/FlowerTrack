@@ -22,6 +22,7 @@ from pathlib import Path
 SINGLE_INSTANCE_HOST = "127.0.0.1"
 SINGLE_INSTANCE_PORT = 47651
 SINGLE_INSTANCE_TOKEN = b"FLOWERTRACK_SHOW_MAIN"
+CONSOLE_FLAGS = {"-console", "--console"}
 
 
 def _send_focus_signal() -> bool:
@@ -109,7 +110,38 @@ def _close_pyinstaller_splash() -> None:
         pass
 
 
+def _enable_optional_console() -> None:
+    """Enable a Windows console when launched with -console/--console."""
+    requested = any(flag in sys.argv for flag in CONSOLE_FLAGS)
+    if not requested:
+        return
+    # Strip custom flags so downstream argv checks remain unchanged.
+    sys.argv[:] = [arg for arg in sys.argv if arg not in CONSOLE_FLAGS]
+    if os.name != "nt":
+        return
+    try:
+        import ctypes
+
+        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        # If a console already exists (for example launched from terminal), reuse it.
+        if kernel32.GetConsoleWindow():
+            return
+        if not kernel32.AllocConsole():
+            return
+    except Exception:
+        return
+
+    try:
+        sys.stdout = open("CONOUT$", "w", buffering=1, encoding="utf-8", errors="replace")
+        sys.stderr = open("CONOUT$", "w", buffering=1, encoding="utf-8", errors="replace")
+        sys.stdin = open("CONIN$", "r", encoding="utf-8", errors="replace")
+        print("FlowerTrack console enabled.")
+    except Exception:
+        pass
+
+
 def main() -> None:
+    _enable_optional_console()
     if "--diagnostics" in sys.argv:
         try:
             cfg = load_unified_config(Path(CONFIG_FILE), decrypt_scraper_keys=[], write_back=False)
