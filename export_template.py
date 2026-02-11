@@ -106,6 +106,11 @@ button:hover{background:var(--hover)}
 .card-fav{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
 .light .card-removed{background:#ffe6e6;border-color:#e0b3b3}
 .light .card-new{background:#e6ffef;border-color:#b3e0c5}
+.card.unread-new{box-shadow:0 0 0 1px #2f7a46 inset}
+.card.unread-removed{box-shadow:0 0 0 1px #9c2f2f inset}
+.card.unread-price-up{box-shadow:0 0 0 1px #2f7a46 inset}
+.card.unread-price-down{box-shadow:0 0 0 1px #a13535 inset}
+.card.unread-stock{box-shadow:0 0 0 1px #7b6a2b inset}
 .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--pill);margin:4px 6px 0 0;font-size:13px;color:var(--fg)}
 .pill.stock-up{background:#15331e;color:#b7f0c8}
 .pill.stock-down{background:#3a1a1a;color:#f6c6c6}
@@ -391,6 +396,7 @@ let changesData = null;
 let changesError = "";
 let historyLoaded = false;
 let historyLoading = false;
+let unreadState = { epoch: 0, updated_at: "", items: {} };
 let latestExportMs = 0;
 let updateBaselineSet = false;
 let headBaselineSet = false;
@@ -513,6 +519,112 @@ function decodeBase64Utf8(b64) {
     let binary = "";
     bytes.forEach(b => { binary += String.fromCharCode(b); });
     return decodeURIComponent(escape(binary));
+}
+function isHttpMode() {
+    return location.protocol.startsWith('http');
+}
+function unreadEntryFor(card) {
+    if (!card) return null;
+    const key = card.dataset.key || "";
+    if (!key || !unreadState || !unreadState.items) return null;
+    const entry = unreadState.items[key];
+    return (entry && typeof entry === 'object') ? entry : null;
+}
+function clearUnreadVisualForCard(card) {
+    if (!card) return;
+    card.classList.remove('unread-new', 'unread-removed', 'unread-price-up', 'unread-price-down', 'unread-stock');
+    card.querySelectorAll('.badge-removed[data-unread-badge=\"1\"]').forEach(el => el.remove());
+}
+function ensureUnreadRemovedBadge(card) {
+    if (!card) return;
+    if (card.querySelector('.badge-removed')) return;
+    const badge = document.createElement('span');
+    badge.className = 'badge-removed';
+    badge.setAttribute('data-unread-badge', '1');
+    badge.setAttribute('title', 'Dismiss removed highlight');
+    badge.textContent = 'Removed';
+    badge.onclick = function () { dismissRemovedBadge(badge); };
+    card.appendChild(badge);
+}
+function applyUnreadVisualForCard(card) {
+    if (!card) return;
+    clearUnreadVisualForCard(card);
+    const entry = unreadEntryFor(card);
+    if (!entry) return;
+    if (entry.new) {
+        card.classList.add('unread-new');
+    }
+    if (entry.removed) {
+        card.classList.add('unread-removed');
+        ensureUnreadRemovedBadge(card);
+    }
+    if (entry.price) {
+        const delta = parseFloat(entry.price_delta);
+        if (Number.isFinite(delta) && delta < 0) {
+            card.classList.add('unread-price-down');
+        } else {
+            card.classList.add('unread-price-up');
+        }
+    }
+    if (entry.stock || entry.out_of_stock || entry.restock) {
+        card.classList.add('unread-stock');
+    }
+}
+function unreadItemCount() {
+    try {
+        const items = unreadState && unreadState.items ? unreadState.items : {};
+        return Object.keys(items).length;
+    } catch (e) {
+        return 0;
+    }
+}
+function updateMarkViewedButton() {
+    const btn = document.getElementById('markViewedButton');
+    if (!btn) return;
+    const count = unreadItemCount();
+    btn.disabled = count === 0;
+    btn.textContent = count > 0 ? `Mark viewed (${count})` : 'Mark viewed';
+}
+function applyUnreadStateToCards() {
+    document.querySelectorAll('.card').forEach(applyUnreadVisualForCard);
+    updateMarkViewedButton();
+}
+async function refreshUnreadState() {
+    if (!isHttpMode()) {
+        unreadState = { epoch: 0, updated_at: "", items: {} };
+        applyUnreadStateToCards();
+        return;
+    }
+    try {
+        const resp = await fetch('/api/changes/unread', { cache: 'no-store' });
+        if (!resp.ok) return;
+        const payload = await resp.json();
+        unreadState = {
+            epoch: Number(payload && payload.epoch || 0) || 0,
+            updated_at: String(payload && payload.updated_at || ''),
+            items: (payload && typeof payload.items === 'object' && payload.items) ? payload.items : {},
+        };
+        applyUnreadStateToCards();
+    } catch (e) {}
+}
+async function markChangesViewed() {
+    if (!isHttpMode()) return;
+    try {
+        const resp = await fetch('/api/changes/ack', {
+            method: 'POST',
+            cache: 'no-store',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+        });
+        if (!resp.ok) return;
+        const payload = await resp.json();
+        unreadState = {
+            epoch: Number(payload && payload.epoch || 0) || 0,
+            updated_at: String(payload && payload.updated_at || ''),
+            items: (payload && typeof payload.items === 'object' && payload.items) ? payload.items : {},
+        };
+        applyUnreadStateToCards();
+    } catch (e) {}
 }
 function ensureChangesData() {
     if (changesData !== null) return changesData;
@@ -1315,6 +1427,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(tryAutoFill, 100);
     preloadHistory();
     startExportUpdates();
+    updateMarkViewedButton();
+    refreshUnreadState();
 });
 </script>
 </head><body>
@@ -1378,6 +1492,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <div class='controls-right'>
     <button class="basket-button" id="basketButton" onclick="toggleBasket()">Basket: <span id="basketCount">0</span> | £<span id="basketTotal">0.00</span></button>
     <button id="historyButton" onclick="toggleHistory()">History</button>
+    <button id="markViewedButton" onclick="markChangesViewed()">Mark viewed</button>
     <button id="themeToggle" onclick="toggleTheme()">Use light theme</button>
   </div>
 </div>
