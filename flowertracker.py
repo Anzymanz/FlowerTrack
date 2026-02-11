@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import importlib.machinery
 import importlib.util
+import socket
 import os
 import sys
+import threading
+from typing import Callable
 import tkinter as tk
 from tkinter import messagebox
 
@@ -15,6 +18,79 @@ from scraper_state import read_scraper_state
 from storage import load_last_parse
 import json
 from pathlib import Path
+
+SINGLE_INSTANCE_HOST = "127.0.0.1"
+SINGLE_INSTANCE_PORT = 47651
+SINGLE_INSTANCE_TOKEN = b"FLOWERTRACK_SHOW_MAIN"
+
+
+def _send_focus_signal() -> bool:
+    try:
+        with socket.create_connection((SINGLE_INSTANCE_HOST, SINGLE_INSTANCE_PORT), timeout=0.35) as conn:
+            conn.sendall(SINGLE_INSTANCE_TOKEN)
+        return True
+    except Exception:
+        return False
+
+
+def _start_focus_listener(on_focus: Callable[[], None]) -> socket.socket | None:
+    try:
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        server.bind((SINGLE_INSTANCE_HOST, SINGLE_INSTANCE_PORT))
+        server.listen(5)
+        server.settimeout(0.5)
+    except Exception:
+        try:
+            server.close()
+        except Exception:
+            pass
+        return None
+
+    def _run() -> None:
+        while True:
+            try:
+                conn, _addr = server.accept()
+            except socket.timeout:
+                continue
+            except OSError:
+                break
+            try:
+                payload = conn.recv(128)
+                if payload and payload.startswith(SINGLE_INSTANCE_TOKEN):
+                    try:
+                        on_focus()
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+            finally:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+
+    threading.Thread(target=_run, daemon=True, name="single-instance-focus-listener").start()
+    return server
+
+
+def _focus_main_window(app: CannabisTracker) -> None:
+    try:
+        app._restore_from_tray()
+    except Exception:
+        pass
+    try:
+        app.root.deiconify()
+    except Exception:
+        pass
+    try:
+        app.root.lift()
+    except Exception:
+        pass
+    try:
+        app.root.focus_force()
+    except Exception:
+        pass
 
 
 def main() -> None:
@@ -92,9 +168,38 @@ def main() -> None:
             messagebox.showerror("Cannot launch", f"Failed to start flower library:\n{exc}")
         return
 
+    # Main tracker mode only: enforce single instance and restore existing window.
+    if _send_focus_signal():
+        return
+
+    app_ref: dict[str, CannabisTracker] = {}
+    pending_focus = {"value": False}
+
+    def _on_focus_signal() -> None:
+        app = app_ref.get("app")
+        if app is None:
+            pending_focus["value"] = True
+            return
+        try:
+            app.root.after(0, lambda: _focus_main_window(app))
+        except Exception:
+            pass
+
+    focus_listener = _start_focus_listener(_on_focus_signal)
+
     root = tk.Tk()
     app = CannabisTracker(root)
-    app.run()
+    app_ref["app"] = app
+    if pending_focus["value"]:
+        _on_focus_signal()
+    try:
+        app.run()
+    finally:
+        try:
+            if focus_listener is not None:
+                focus_listener.close()
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
