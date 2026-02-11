@@ -197,6 +197,7 @@ class CannabisTracker:
         self._client_missed_pings = 0
         self._client_ever_connected = False
         self._network_bootstrap_ready = False
+        self._host_services_starting = False
         self.tray_thread: threading.Thread | None = None
         self.is_hidden_to_tray = False
         self.tools_window: tk.Toplevel | None = None
@@ -244,11 +245,12 @@ class CannabisTracker:
     def _startup_data_init(self) -> None:
         try:
             if self.network_mode == MODE_HOST:
-                self._ensure_network_server()
-                # Keep browser endpoint available for clients even if host never
-                # manually opens the browser button.
-                self._ensure_export_server()
-            if self.network_mode == MODE_CLIENT:
+                # Load tracker UI data first, then bring up host services in the
+                # background so server binds never stall the main thread.
+                self.load_data()
+                self._network_bootstrap_ready = True
+                self._start_host_services_async()
+            elif self.network_mode == MODE_CLIENT:
                 # Non-blocking client bootstrap: populate when network fetch completes.
                 self._network_bootstrap_ready = True
                 self._request_client_network_poll(initial=True)
@@ -280,6 +282,29 @@ class CannabisTracker:
         self.apply_theme(self.dark_var.get())
         self._refresh_stock()
         self._refresh_log()
+
+    def _start_host_services_async(self) -> None:
+        if self.network_mode != MODE_HOST:
+            return
+        if (self.network_server and self.network_port) and (self.export_server and self.export_port):
+            return
+        if self._host_services_starting:
+            return
+        self._host_services_starting = True
+
+        def worker() -> None:
+            try:
+                self._ensure_network_server()
+                # Keep browser endpoint available for clients even if host never
+                # manually opens the browser button.
+                self._ensure_export_server()
+            finally:
+                try:
+                    self.root.after(0, lambda: setattr(self, "_host_services_starting", False))
+                except Exception:
+                    self._host_services_starting = False
+
+        threading.Thread(target=worker, daemon=True, name="flowertrack-host-services").start()
 
     def _request_client_network_poll(self, initial: bool = False) -> None:
         if self.network_mode != MODE_CLIENT:
