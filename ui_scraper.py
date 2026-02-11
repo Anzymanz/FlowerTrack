@@ -58,6 +58,11 @@ from notifications import NotificationService
 from theme import apply_style_theme, set_titlebar_dark, compute_colors, set_palette_overrides
 from resources import resource_path
 from history_viewer import open_history_window
+from unread_changes import (
+    clear_unread_changes,
+    merge_unread_changes,
+    unread_removed_items_for_export,
+)
 
 # Scraper UI constants
 SCRAPER_TITLE = "Medicann Scraper"
@@ -2005,6 +2010,10 @@ class App(tk.Tk):
         except Exception as exc:
             self._capture_log(f"Failed to save last parse: {exc}")
         try:
+            merge_unread_changes(diff, items)
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
+        try:
             self._set_next_capture_timer(float(self.cap_interval.get() or 0))
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
@@ -2082,6 +2091,20 @@ class App(tk.Tk):
         combined = list(self.data)
         if getattr(self, "removed_data", None):
             combined.extend(self.removed_data)
+        try:
+            extra_removed = unread_removed_items_for_export(combined)
+            if extra_removed:
+                seen = {make_identity_key(it) for it in combined if isinstance(it, dict)}
+                seen.discard("")
+                for it in extra_removed:
+                    key = make_identity_key(it) if isinstance(it, dict) else ""
+                    if key and key in seen:
+                        continue
+                    combined.append(it)
+                    if key:
+                        seen.add(key)
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
         return combined
     # Export functions removed (no longer used)
     def _clear_parse_cache(self, notify: bool = True) -> bool:
@@ -2093,6 +2116,11 @@ class App(tk.Tk):
         try:
             if LAST_PARSE_FILE.exists():
                 LAST_PARSE_FILE.unlink()
+                cleared = True
+        except Exception as exc:
+            self._debug_log(f"Suppressed exception: {exc}")
+        try:
+            if clear_unread_changes():
                 cleared = True
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
