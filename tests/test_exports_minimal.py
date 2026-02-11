@@ -33,6 +33,8 @@ class ExportTests(unittest.TestCase):
             self.assertIn("loading='lazy'", text)
             self.assertIn("data-in-stock='1'", text)
             self.assertIn("rawChangesB64", text)
+            self.assertNotIn("markViewedButton", text)
+            self.assertIn("/api/changes/ack", text)
 
     def test_export_html_includes_pastille_filter_and_stats(self):
         data = [

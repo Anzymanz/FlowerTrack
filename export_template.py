@@ -578,16 +578,21 @@ function unreadItemCount() {
         return 0;
     }
 }
-function updateMarkViewedButton() {
-    const btn = document.getElementById('markViewedButton');
-    if (!btn) return;
-    const count = unreadItemCount();
-    btn.disabled = count === 0;
-    btn.textContent = count > 0 ? `Mark viewed (${count})` : 'Mark viewed';
-}
 function applyUnreadStateToCards() {
     document.querySelectorAll('.card').forEach(applyUnreadVisualForCard);
-    updateMarkViewedButton();
+}
+function acknowledgeUnreadOnRefresh() {
+    if (!isHttpMode()) return;
+    const count = unreadItemCount();
+    if (count <= 0) return;
+    try {
+        fetch('/api/changes/ack', {
+            method: 'POST',
+            cache: 'no-store',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+        }).catch(() => {});
+    } catch (e) {}
 }
 async function refreshUnreadState() {
     if (!isHttpMode()) {
@@ -605,25 +610,7 @@ async function refreshUnreadState() {
             items: (payload && typeof payload.items === 'object' && payload.items) ? payload.items : {},
         };
         applyUnreadStateToCards();
-    } catch (e) {}
-}
-async function markChangesViewed() {
-    if (!isHttpMode()) return;
-    try {
-        const resp = await fetch('/api/changes/ack', {
-            method: 'POST',
-            cache: 'no-store',
-            headers: { 'Content-Type': 'application/json' },
-            body: '{}',
-        });
-        if (!resp.ok) return;
-        const payload = await resp.json();
-        unreadState = {
-            epoch: Number(payload && payload.epoch || 0) || 0,
-            updated_at: String(payload && payload.updated_at || ''),
-            items: (payload && typeof payload.items === 'object' && payload.items) ? payload.items : {},
-        };
-        applyUnreadStateToCards();
+        acknowledgeUnreadOnRefresh();
     } catch (e) {}
 }
 function ensureChangesData() {
@@ -1427,7 +1414,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(tryAutoFill, 100);
     preloadHistory();
     startExportUpdates();
-    updateMarkViewedButton();
     refreshUnreadState();
 });
 </script>
@@ -1492,7 +1478,6 @@ document.addEventListener('DOMContentLoaded', () => {
 <div class='controls-right'>
     <button class="basket-button" id="basketButton" onclick="toggleBasket()">Basket: <span id="basketCount">0</span> | £<span id="basketTotal">0.00</span></button>
     <button id="historyButton" onclick="toggleHistory()">History</button>
-    <button id="markViewedButton" onclick="markChangesViewed()">Mark viewed</button>
     <button id="themeToggle" onclick="toggleTheme()">Use light theme</button>
   </div>
 </div>
