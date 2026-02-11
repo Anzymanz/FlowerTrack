@@ -611,10 +611,14 @@ class App(tk.Tk):
             return "Stopping auto-capture..."
         if "applying api capture" in lower:
             return "Processing latest data..."
-        if "api pagination fetch" in lower or "pagination fetch" in lower:
-            return "Fetching product pages..."
-        if "count fetch status" in lower:
-            return "Fetching product count..."
+        # Pagination/count progress is already shown by the dedicated pagination label.
+        if (
+            "api pagination fetch" in lower
+            or "pagination fetch" in lower
+            or "pagination:" in lower
+            or "count fetch status" in lower
+        ):
+            return ""
         if lower.startswith("saved last parse to "):
             return "Latest parse saved."
         if "no api data found" in lower:
