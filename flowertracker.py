@@ -266,8 +266,20 @@ def main() -> None:
     focus_listener = _start_focus_listener(_on_focus_signal, network_mode)
 
     root = tk.Tk()
+    # Prevent the default empty Tk window from flashing before CannabisTracker
+    # finishes constructing/styling the main UI.
+    try:
+        root.withdraw()
+    except Exception:
+        pass
     app = CannabisTracker(root)
     _close_pyinstaller_splash()
+    try:
+        root.update_idletasks()
+        root.deiconify()
+        root.lift()
+    except Exception:
+        pass
     app_ref["app"] = app
     if pending_focus["value"]:
         _on_focus_signal()
