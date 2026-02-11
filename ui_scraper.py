@@ -896,6 +896,14 @@ class App(tk.Tk):
             _log_debug(msg)
         except Exception:
             pass
+    def _stdout_mirror_enabled(self) -> bool:
+        if os.getenv("FLOWERTRACK_CONSOLE") == "1":
+            return True
+        try:
+            stream = getattr(sys, "stdout", None)
+            return bool(stream) and bool(getattr(stream, "isatty", lambda: False)())
+        except Exception:
+            return False
     def _log_console(self, msg: str):
         if threading.current_thread() is not getattr(self, "_ui_thread", None):
             try:
@@ -916,7 +924,7 @@ class App(tk.Tk):
             self.console.insert("end", line)
             self.console.see("end")
             self.console.configure(state="disabled")
-            if os.getenv("FLOWERTRACK_CONSOLE") == "1":
+            if self._stdout_mirror_enabled():
                 try:
                     print(line.rstrip())
                 except Exception:
