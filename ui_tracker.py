@@ -194,6 +194,8 @@ class CannabisTracker:
         self._client_disconnect_closing = False
         self._client_poll_inflight = False
         self._client_poll_lock = threading.Lock()
+        self._client_missed_pings = 0
+        self._client_ever_connected = False
         self.tray_thread: threading.Thread | None = None
         self.is_hidden_to_tray = False
         self.tools_window: tk.Toplevel | None = None
@@ -318,6 +320,7 @@ class CannabisTracker:
         if self.network_mode != MODE_CLIENT:
             return
         if not bool(result.get("ok")):
+            self._client_missed_pings = int(getattr(self, "_client_missed_pings", 0) or 0) + 1
             now = time.monotonic()
             since = getattr(self, "_client_disconnect_since", None)
             if since is None:
@@ -338,6 +341,8 @@ class CannabisTracker:
                         self._on_main_close()
             return
 
+        self._client_ever_connected = True
+        self._client_missed_pings = 0
         self._client_disconnect_since = None
         try:
             remote_mtime = float(result.get("mtime") or 0.0)
@@ -4472,7 +4477,17 @@ class CannabisTracker:
 
     def _status_tooltip_text(self) -> str:
         if self.network_mode == MODE_CLIENT:
-            return "Scraper controls are disabled in client mode."
+            state, missed = self._client_connection_state()
+            label = {
+                "good": "Connected",
+                "interrupted": "Connection interrupted",
+                "down": "Disconnected",
+            }.get(state, "Unknown")
+            return (
+                f"Client connection: {label}\n"
+                f"Missed polls: {missed}\n"
+                "Green: connected | Orange: interrupted | Red: disconnected"
+            )
         muted = bool(getattr(self, "scraper_notifications_muted", False))
         muted_txt = "Muted" if muted else "Unmuted"
         state_txt = "Stopped"
@@ -4661,6 +4676,9 @@ class CannabisTracker:
         try:
             self._prune_child_procs()
             running, warn = resolve_scraper_status(getattr(self, "child_procs", []))
+            client_state = None
+            if self.network_mode == MODE_CLIENT:
+                client_state, _missed = self._client_connection_state()
             if getattr(self, "tray_icon", None):
                 if not getattr(self, "show_scraper_buttons", True):
                     icon_path = self._resource_path('icon.png')
@@ -4677,7 +4695,7 @@ class CannabisTracker:
                 self._apply_scraper_controls_visibility()
                 return
             target_size = 32
-            img = self._build_status_image(running, warn, size=target_size)
+            img = self._build_status_image(running, warn, size=target_size, client_state=client_state)
             try:
                 if img is not None and Image is not None and hasattr(img, "size") and tuple(img.size) != (target_size, target_size):
                     img = img.copy()
@@ -4700,11 +4718,23 @@ class CannabisTracker:
             except Exception:
                 pass
 
-    def _build_status_image(self, running: bool, warn: bool, size: int = 64):
+    def _build_status_image(
+        self,
+        running: bool,
+        warn: bool,
+        size: int = 64,
+        client_state: str | None = None,
+    ):
         if Image is None or ImageDraw is None:
             return _build_scraper_status_image(getattr(self, "child_procs", []))
         try:
-            if warn:
+            if client_state == "good":
+                color_hex = self.scraper_status_running_color
+            elif client_state == "interrupted":
+                color_hex = self.scraper_status_error_color
+            elif client_state == "down":
+                color_hex = self.scraper_status_stopped_color
+            elif warn:
                 color_hex = self.scraper_status_error_color
             elif running:
                 color_hex = self.scraper_status_running_color
@@ -4725,3 +4755,14 @@ class CannabisTracker:
             return img
         except Exception:
             return _build_scraper_status_image(getattr(self, "child_procs", []))
+
+    def _client_connection_state(self) -> tuple[str, int]:
+        missed = int(getattr(self, "_client_missed_pings", 0) or 0)
+        ever = bool(getattr(self, "_client_ever_connected", False))
+        if not ever:
+            return ("down" if missed >= 3 else "interrupted", missed)
+        if missed <= 0:
+            return ("good", 0)
+        if missed >= 3:
+            return ("down", missed)
+        return ("interrupted", missed)
