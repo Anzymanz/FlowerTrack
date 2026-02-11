@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import functools
 import http.server
+import json
 import socket
 import threading
 import time
 from pathlib import Path
 from typing import Callable, Optional, Tuple
+
+from unread_changes import clear_unread_changes, unread_payload
 
 _EXPORT_EVENT_LOCK = threading.Lock()
 _EXPORT_EVENT_COND = threading.Condition(_EXPORT_EVENT_LOCK)
@@ -52,9 +55,40 @@ def start_export_server(preferred_port: int, exports_dir: Path, log: Callable[[s
                 pass
             return None
 
+        def _send_json(self, payload: dict, status: int = 200) -> None:
+            raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", str(len(raw)))
+            self.end_headers()
+            self.wfile.write(raw)
+
+        def do_POST(self):
+            try:
+                path = self.path.split("?", 1)[0]
+                if path.rstrip("/") == "/api/changes/ack":
+                    had_changes = clear_unread_changes()
+                    payload = unread_payload()
+                    payload["acknowledged"] = True
+                    payload["had_changes"] = bool(had_changes)
+                    self._send_json(payload, status=200)
+                    return
+            except Exception as e:
+                log(f"[server] post handler exception: {e}")
+                try:
+                    self._send_json({"ok": False, "error": str(e)}, status=500)
+                except Exception:
+                    pass
+                return
+            self.send_error(404, "Not found")
+
         def do_GET(self):
             try:
                 path = self.path.split("?", 1)[0]
+                if path.rstrip("/") == "/api/changes/unread":
+                    self._send_json(unread_payload(), status=200)
+                    return
                 if path.rstrip("/") == "/events":
                     self.send_response(200)
                     self.send_header("Content-Type", "text/event-stream")
