@@ -106,3 +106,36 @@ def test_unread_ack_reports_no_changes_when_empty(tmp_path):
             os.environ.pop("APPDATA", None)
         else:
             os.environ["APPDATA"] = old_appdata
+
+
+def test_flowerbrowser_route_serves_latest_export(tmp_path):
+    appdata = Path(tmp_path)
+    exports_dir = appdata / "FlowerTrack" / "Exports"
+    exports_dir.mkdir(parents=True, exist_ok=True)
+    old_file = exports_dir / "export-2026-01-01_00-00-00+0000.html"
+    new_file = exports_dir / "export-2026-01-01_00-10-00+0000.html"
+    old_file.write_text("<html>OLD</html>", encoding="utf-8")
+    new_file.write_text("<html>NEW</html>", encoding="utf-8")
+    # Ensure deterministic mtime ordering.
+    old_ts = 1000
+    new_ts = 2000
+    os.utime(old_file, (old_ts, old_ts))
+    os.utime(new_file, (new_ts, new_ts))
+
+    old_appdata = os.environ.get("APPDATA")
+    os.environ["APPDATA"] = str(appdata)
+    httpd = None
+    thread = None
+    try:
+        httpd, thread, port = start_export_server(_free_port(), exports_dir, lambda _m: None)
+        assert port
+        with request.urlopen(f"http://127.0.0.1:{port}/flowerbrowser", timeout=5) as resp:
+            html = resp.read().decode("utf-8")
+        assert "NEW" in html
+        assert "OLD" not in html
+    finally:
+        stop_export_server(httpd, thread, lambda _m: None)
+        if old_appdata is None:
+            os.environ.pop("APPDATA", None)
+        else:
+            os.environ["APPDATA"] = old_appdata

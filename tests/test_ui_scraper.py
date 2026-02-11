@@ -142,6 +142,83 @@ class UiScraperTests(unittest.TestCase):
         )
         self.assertTrue(any("Invalid interval_seconds" in msg for msg in logs))
 
+    def test_stage_diff_first_run_seeds_baseline(self):
+        class Dummy:
+            def __init__(self):
+                self.prev_items = []
+                self.removed_data = []
+                self.price_up_count = 0
+                self.price_down_count = 0
+                self._baseline_capture = False
+
+        item = {
+            "product_id": "A1",
+            "producer": "Brand",
+            "brand": "Brand",
+            "strain": "Example",
+            "grams": 10.0,
+            "ml": None,
+            "product_type": "flower",
+            "strain_type": "Hybrid",
+            "is_smalls": False,
+            "thc": 20.0,
+            "thc_unit": "%",
+            "cbd": 1.0,
+            "cbd_unit": "%",
+            "price": 10.0,
+            "stock": "IN STOCK",
+        }
+        Dummy._stage_diff = ui_scraper.App._stage_diff
+        app = Dummy()
+        diff = app._stage_diff([item])
+        self.assertTrue(app._baseline_capture)
+        self.assertEqual(diff["new_items"], [])
+        self.assertEqual(diff["removed_items"], [])
+        self.assertEqual(diff["price_changes"], [])
+        self.assertEqual(diff["stock_changes"], [])
+        self.assertEqual(diff["current_keys"], {ui_scraper.make_identity_key(item)})
+
+    def test_stage_notify_baseline_message_and_post_process(self):
+        class _Status:
+            def __init__(self):
+                self.text = ""
+
+            def config(self, **kwargs):
+                if "text" in kwargs:
+                    self.text = str(kwargs["text"])
+
+        class Dummy:
+            def __init__(self):
+                self._baseline_capture = True
+                self.status = _Status()
+                self._logs = []
+                self.post_args = None
+                self.data = [{"product_id": "A1"}]
+                self.price_up_count = 0
+                self.price_down_count = 0
+
+            def _log_console(self, msg):
+                self._logs.append(str(msg))
+
+            def _post_process_actions(self, diff, items):
+                self.post_args = (diff, items)
+
+        Dummy._stage_notify = ui_scraper.App._stage_notify
+        app = Dummy()
+        diff = {
+            "new_items": [],
+            "removed_items": [],
+            "price_changes": [],
+            "stock_changes": [],
+            "restock_changes": [],
+            "out_of_stock_changes": [],
+            "stock_change_count": 0,
+        }
+        app._stage_notify(diff, 42)
+        self.assertIn("Baseline established (42 items).", app.status.text)
+        self.assertTrue(any("Baseline established (42 items)." in msg for msg in app._logs))
+        self.assertIsNotNone(app.post_args)
+
 
 if __name__ == "__main__":
     unittest.main()
