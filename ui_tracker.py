@@ -192,6 +192,8 @@ class CannabisTracker:
         self._client_disconnect_since = None
         self._client_disconnect_timeout_s = 30.0
         self._client_disconnect_closing = False
+        self._client_poll_inflight = False
+        self._client_poll_lock = threading.Lock()
         self.tray_thread: threading.Thread | None = None
         self.is_hidden_to_tray = False
         self.tools_window: tk.Toplevel | None = None
@@ -217,8 +219,8 @@ class CannabisTracker:
         self._build_ui()
         self._ensure_storage_dirs()
         self._load_config()
-        # Defer network/data startup until the UI is painted so client-mode connection
-        # attempts do not make the initial window load feel choppy.
+        # Defer network/data startup until the UI is painted so connection work does not
+        # block initial rendering.
         self.root.after(10, self._startup_data_init)
         self.root.after(50, lambda: self._set_dark_title_bar(self.dark_var.get()))
         self.apply_theme(self.dark_var.get())
@@ -241,7 +243,11 @@ class CannabisTracker:
         try:
             if self.network_mode == MODE_HOST:
                 self._ensure_network_server()
-            self.load_data()
+            if self.network_mode == MODE_CLIENT:
+                # Non-blocking client bootstrap: populate when network fetch completes.
+                self._request_client_network_poll(initial=True)
+            else:
+                self.load_data()
         except Exception as exc:
             # Never allow network-mode startup failures to crash the tracker UI.
             print(f"[network] startup fallback: {exc}")
@@ -266,6 +272,84 @@ class CannabisTracker:
         self.apply_theme(self.dark_var.get())
         self._refresh_stock()
         self._refresh_log()
+
+    def _request_client_network_poll(self, initial: bool = False) -> None:
+        if self.network_mode != MODE_CLIENT:
+            return
+        with self._client_poll_lock:
+            if self._client_poll_inflight:
+                return
+            self._client_poll_inflight = True
+        host = (self.network_host or "").strip()
+        port = int(self.network_port)
+        prev_mtime = float(getattr(self, "_network_tracker_mtime", 0.0) or 0.0)
+
+        def worker() -> None:
+            result: dict[str, object] = {"ok": False, "initial": initial}
+            try:
+                meta = fetch_tracker_meta(host, port, timeout=0.75)
+                if not isinstance(meta, dict) or not meta.get("ok"):
+                    result = {"ok": False, "initial": initial}
+                else:
+                    try:
+                        remote_mtime = float(meta.get("mtime") or 0.0)
+                    except Exception:
+                        remote_mtime = 0.0
+                    result = {"ok": True, "mtime": remote_mtime, "initial": initial}
+                    if initial or (remote_mtime > 0 and remote_mtime > prev_mtime):
+                        data = fetch_tracker_data(host, port, timeout=1.5 if initial else 1.0)
+                        if isinstance(data, dict):
+                            result["data"] = data
+                        else:
+                            result = {"ok": False, "initial": initial}
+            except Exception:
+                result = {"ok": False, "initial": initial}
+            finally:
+                with self._client_poll_lock:
+                    self._client_poll_inflight = False
+                try:
+                    self.root.after(0, lambda r=result: self._consume_client_network_result(r))
+                except Exception:
+                    pass
+
+        threading.Thread(target=worker, daemon=True, name="flowertrack-client-poll").start()
+
+    def _consume_client_network_result(self, result: dict[str, object]) -> None:
+        if self.network_mode != MODE_CLIENT:
+            return
+        if not bool(result.get("ok")):
+            now = time.monotonic()
+            since = getattr(self, "_client_disconnect_since", None)
+            if since is None:
+                self._client_disconnect_since = now
+            elif (now - float(since)) >= float(getattr(self, "_client_disconnect_timeout_s", 30.0)):
+                if not self._client_disconnect_closing:
+                    self._client_disconnect_closing = True
+                    try:
+                        messagebox.showerror(
+                            "Host disconnected",
+                            "Connection to the host was lost for too long. The client will now close.",
+                        )
+                    except Exception:
+                        pass
+                    try:
+                        self.root.after(0, self._on_main_close)
+                    except Exception:
+                        self._on_main_close()
+            return
+
+        self._client_disconnect_since = None
+        try:
+            remote_mtime = float(result.get("mtime") or 0.0)
+        except Exception:
+            remote_mtime = 0.0
+        if remote_mtime > 0:
+            self._network_tracker_mtime = remote_mtime
+        data = result.get("data")
+        if isinstance(data, dict):
+            self._apply_loaded_tracker_data(data, remote_mtime=remote_mtime)
+            self._refresh_stock()
+            self._refresh_log()
     def _scraper_process_alive_from_state(self) -> bool:
         try:
             state = read_scraper_state(SCRAPER_STATE_FILE)
@@ -2704,11 +2788,13 @@ class CannabisTracker:
             messagebox.showwarning("No data", f"No tracker data found at {self.data_path}")
             self._update_data_mtime(reset=True)
             return
-        self.flowers = {}
         if self.network_mode != MODE_CLIENT:
             loaded = load_tracker_data(path=Path(self.data_path), logger=lambda m: print(m))
             if loaded:
                 data = loaded
+        self._apply_loaded_tracker_data(data)
+
+    def _apply_loaded_tracker_data(self, data: dict, remote_mtime: float | None = None) -> None:
         self.flowers = {}
         for item in data.get("flowers", []):
             self.flowers[item["name"]] = Flower(
@@ -2786,12 +2872,15 @@ class CannabisTracker:
             self.current_date = date.today()
         self._last_seen_date = self.current_date
         if self.network_mode == MODE_CLIENT:
-            meta = fetch_tracker_meta(self.network_host, int(self.network_port), timeout=0.9)
-            if isinstance(meta, dict):
-                try:
-                    self._network_tracker_mtime = float(meta.get("mtime") or 0.0)
-                except Exception:
-                    self._network_tracker_mtime = 0.0
+            if remote_mtime is not None:
+                self._network_tracker_mtime = float(remote_mtime or 0.0)
+            else:
+                meta = fetch_tracker_meta(self.network_host, int(self.network_port), timeout=0.9)
+                if isinstance(meta, dict):
+                    try:
+                        self._network_tracker_mtime = float(meta.get("mtime") or 0.0)
+                    except Exception:
+                        self._network_tracker_mtime = 0.0
         self._update_data_mtime()
     def choose_data_file(self) -> None:
         path = filedialog.askopenfilename(
@@ -3411,37 +3500,7 @@ class CannabisTracker:
     def _maybe_reload_external(self) -> None:
         """Reload data if tracker file changed externally (e.g., mix calculator)."""
         if self.network_mode == MODE_CLIENT:
-            meta = fetch_tracker_meta(self.network_host, int(self.network_port), timeout=0.75)
-            if not isinstance(meta, dict) or not meta.get("ok"):
-                now = time.monotonic()
-                since = getattr(self, "_client_disconnect_since", None)
-                if since is None:
-                    self._client_disconnect_since = now
-                elif (now - float(since)) >= float(getattr(self, "_client_disconnect_timeout_s", 30.0)):
-                    if not self._client_disconnect_closing:
-                        self._client_disconnect_closing = True
-                        try:
-                            messagebox.showerror(
-                                "Host disconnected",
-                                "Connection to the host was lost for too long. The client will now close.",
-                            )
-                        except Exception:
-                            pass
-                        try:
-                            self.root.after(0, self._on_main_close)
-                        except Exception:
-                            self._on_main_close()
-                return
-            self._client_disconnect_since = None
-            try:
-                remote_mtime = float(meta.get("mtime") or 0.0)
-            except Exception:
-                remote_mtime = 0.0
-            prev = float(getattr(self, "_network_tracker_mtime", 0.0) or 0.0)
-            if remote_mtime > 0 and remote_mtime > prev:
-                self.load_data()
-                self._refresh_stock()
-                self._refresh_log()
+            self._request_client_network_poll(initial=False)
             return
         try:
             current = os.path.getmtime(self.data_path)
