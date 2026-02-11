@@ -93,6 +93,20 @@ def _focus_main_window(app: CannabisTracker) -> None:
         pass
 
 
+def _close_pyinstaller_splash() -> None:
+    """Close PyInstaller boot splash if present (no-op outside frozen bootloader)."""
+    try:
+        import pyi_splash  # type: ignore
+
+        try:
+            pyi_splash.update_text("UI Loaded...")
+        except Exception:
+            pass
+        pyi_splash.close()
+    except Exception:
+        pass
+
+
 def main() -> None:
     if "--diagnostics" in sys.argv:
         try:
@@ -189,6 +203,7 @@ def main() -> None:
 
     root = tk.Tk()
     app = CannabisTracker(root)
+    _close_pyinstaller_splash()
     app_ref["app"] = app
     if pending_focus["value"]:
         _on_focus_signal()
