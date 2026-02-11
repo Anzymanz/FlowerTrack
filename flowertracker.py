@@ -79,6 +79,46 @@ def _focus_main_window(app: CannabisTracker) -> None:
         app._restore_from_tray()
     except Exception:
         pass
+
+
+def _show_startup_splash(root: tk.Tk) -> tk.Toplevel | None:
+    banner_path = _resource_path("assets/Banner.png")
+    if not os.path.exists(banner_path):
+        banner_path = _resource_path("assets/banner.png")
+    if not os.path.exists(banner_path):
+        return None
+    try:
+        splash = tk.Toplevel(root)
+        splash.withdraw()
+        splash.overrideredirect(True)
+        splash.attributes("-topmost", True)
+        img = tk.PhotoImage(file=banner_path)
+        splash._banner_img = img  # keep reference alive
+        lbl = tk.Label(splash, image=img, bd=0, highlightthickness=0)
+        lbl.pack()
+        splash.update_idletasks()
+        width = splash.winfo_width()
+        height = splash.winfo_height()
+        screen_w = splash.winfo_screenwidth()
+        screen_h = splash.winfo_screenheight()
+        pos_x = max(0, (screen_w - width) // 2)
+        pos_y = max(0, (screen_h - height) // 2)
+        splash.geometry(f"{width}x{height}+{pos_x}+{pos_y}")
+        splash.deiconify()
+        splash.update_idletasks()
+        return splash
+    except Exception:
+        return None
+
+
+def _close_startup_splash(splash: tk.Toplevel | None) -> None:
+    if splash is None:
+        return
+    try:
+        if tk.Toplevel.winfo_exists(splash):
+            splash.destroy()
+    except Exception:
+        pass
     try:
         app.root.deiconify()
     except Exception:
@@ -188,7 +228,23 @@ def main() -> None:
     focus_listener = _start_focus_listener(_on_focus_signal)
 
     root = tk.Tk()
-    app = CannabisTracker(root)
+    root.withdraw()
+    splash = _show_startup_splash(root)
+    try:
+        root.update_idletasks()
+        root.update()
+    except Exception:
+        pass
+    try:
+        app = CannabisTracker(root)
+    finally:
+        _close_startup_splash(splash)
+    try:
+        root.deiconify()
+        root.lift()
+        root.focus_force()
+    except Exception:
+        pass
     app_ref["app"] = app
     if pending_focus["value"]:
         _on_focus_signal()
