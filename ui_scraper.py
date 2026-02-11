@@ -1935,6 +1935,28 @@ class App(tk.Tk):
     def _stage_diff(self, items: list[dict]) -> dict:
         """Diff stage: compute changes vs previous parse and update counters."""
         prev_items = getattr(self, "prev_items", [])
+        # First run (or after cache clear): seed baseline without emitting "all items are new".
+        if not prev_items:
+            current_keys = {make_identity_key(it) for it in items}
+            diff = {
+                "new_items": [],
+                "removed_items": [],
+                "price_changes": [],
+                "stock_changes": [],
+                "restock_changes": [],
+                "out_of_stock_changes": [],
+                "price_up": 0,
+                "price_down": 0,
+                "stock_change_count": 0,
+                "current_keys": current_keys,
+                "prev_keys": set(),
+            }
+            self._baseline_capture = True
+            self.removed_data = []
+            self.price_up_count = 0
+            self.price_down_count = 0
+            return diff
+        self._baseline_capture = False
         diff = compute_diffs(items, prev_items)
         self.removed_data = diff["removed_items"]
         self.price_up_count = diff["price_up"]
@@ -1943,6 +1965,12 @@ class App(tk.Tk):
 
     def _stage_notify(self, diff: dict, item_count: int, items: list[dict] | None = None) -> None:
         """Notify stage: update UI status/logs and trigger post-process actions."""
+        if bool(getattr(self, "_baseline_capture", False)):
+            baseline_msg = f"Baseline established ({item_count} items). Notifications start next capture."
+            self.status.config(text=baseline_msg)
+            self._log_console(baseline_msg)
+            self._post_process_actions(diff, items or getattr(self, "data", []))
+            return
         new_count = len(diff["new_items"])
         removed_count = len(diff["removed_items"])
         stock_change_count = diff["stock_change_count"]
@@ -1983,6 +2011,7 @@ class App(tk.Tk):
         # Update prev cache for next run after notifications are sent
         self.prev_items = list(items)
         self.prev_keys = diff.get("current_keys", set())
+        self._baseline_capture = False
         self._polling = False
 
     def poll(self):
