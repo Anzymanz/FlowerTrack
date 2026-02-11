@@ -110,7 +110,8 @@ button:hover{background:var(--hover)}
 .card.unread-removed{box-shadow:0 0 0 1px #9c2f2f inset}
 .card.unread-price-up{box-shadow:0 0 0 1px #2f7a46 inset}
 .card.unread-price-down{box-shadow:0 0 0 1px #a13535 inset}
-.card.unread-stock{box-shadow:0 0 0 1px #7b6a2b inset}
+.card.unread-stock-up{box-shadow:0 0 0 1px #2f7a46 inset}
+.card.unread-stock-down{box-shadow:0 0 0 1px #a13535 inset}
 .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--pill);margin:4px 6px 0 0;font-size:13px;color:var(--fg)}
 .pill.stock-up{background:#15331e;color:#b7f0c8}
 .pill.stock-down{background:#3a1a1a;color:#f6c6c6}
@@ -545,7 +546,7 @@ function unreadEntryFor(card) {
 }
 function clearUnreadVisualForCard(card) {
     if (!card) return;
-    card.classList.remove('unread-new', 'unread-removed', 'unread-price-up', 'unread-price-down', 'unread-stock');
+    card.classList.remove('unread-new', 'unread-removed', 'unread-price-up', 'unread-price-down', 'unread-stock-up', 'unread-stock-down');
     card.querySelectorAll('.badge-removed[data-unread-badge=\"1\"]').forEach(el => el.remove());
 }
 function ensureUnreadRemovedBadge(card) {
@@ -580,7 +581,16 @@ function applyUnreadVisualForCard(card) {
         }
     }
     if (entry.stock || entry.out_of_stock || entry.restock) {
-        card.classList.add('unread-stock');
+        const stockDelta = parseFloat(entry.stock_delta);
+        if (Number.isFinite(stockDelta)) {
+            if (stockDelta < 0) {
+                card.classList.add('unread-stock-down');
+            } else {
+                card.classList.add('unread-stock-up');
+            }
+        } else {
+            card.classList.add('unread-stock-up');
+        }
     }
 }
 function unreadItemCount() {
