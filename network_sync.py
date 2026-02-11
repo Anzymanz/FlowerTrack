@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools
 import http.server
 import json
+import os
 import socket
 import threading
 import time
@@ -82,6 +83,14 @@ def start_network_data_server(
             path = self.path.split("?", 1)[0].rstrip("/")
             if path == "/api/network/ping":
                 self._send_json({"ok": True, "ts": time.time()}, status=200)
+                return
+            if path == "/api/network/tracker-meta":
+                with _WRITE_LOCK:
+                    try:
+                        mtime = float(os.path.getmtime(tracker_data_path))
+                    except Exception:
+                        mtime = 0.0
+                self._send_json({"ok": True, "mtime": mtime}, status=200)
                 return
             if path == "/api/network/tracker-data":
                 with _WRITE_LOCK:
@@ -193,6 +202,16 @@ def network_ping(host: str, port: int, timeout: float = 2.0) -> bool:
 def fetch_tracker_data(host: str, port: int, timeout: float = 4.0) -> dict | None:
     try:
         payload = _request_json("GET", host, port, "/api/network/tracker-data", timeout=timeout)
+        if isinstance(payload, dict):
+            return payload
+    except Exception:
+        return None
+    return None
+
+
+def fetch_tracker_meta(host: str, port: int, timeout: float = 2.0) -> dict | None:
+    try:
+        payload = _request_json("GET", host, port, "/api/network/tracker-meta", timeout=timeout)
         if isinstance(payload, dict):
             return payload
     except Exception:

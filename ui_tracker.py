@@ -41,6 +41,7 @@ from network_mode import MODE_CLIENT, MODE_HOST, MODE_STANDALONE, get_mode as ge
 from network_sync import (
     DEFAULT_EXPORT_PORT,
     DEFAULT_NETWORK_PORT,
+    fetch_tracker_meta,
     fetch_library_data,
     fetch_tracker_data,
     network_ping,
@@ -187,6 +188,7 @@ class CannabisTracker:
         self.network_server = None
         self.network_server_thread = None
         self._network_error_shown = False
+        self._network_tracker_mtime = 0.0
         self.tray_thread: threading.Thread | None = None
         self.is_hidden_to_tray = False
         self.tools_window: tk.Toplevel | None = None
@@ -2780,6 +2782,13 @@ class CannabisTracker:
         else:
             self.current_date = date.today()
         self._last_seen_date = self.current_date
+        if self.network_mode == MODE_CLIENT:
+            meta = fetch_tracker_meta(self.network_host, int(self.network_port), timeout=0.9)
+            if isinstance(meta, dict):
+                try:
+                    self._network_tracker_mtime = float(meta.get("mtime") or 0.0)
+                except Exception:
+                    self._network_tracker_mtime = 0.0
         self._update_data_mtime()
     def choose_data_file(self) -> None:
         path = filedialog.askopenfilename(
@@ -3398,6 +3407,20 @@ class CannabisTracker:
             self._data_mtime = None
     def _maybe_reload_external(self) -> None:
         """Reload data if tracker file changed externally (e.g., mix calculator)."""
+        if self.network_mode == MODE_CLIENT:
+            meta = fetch_tracker_meta(self.network_host, int(self.network_port), timeout=0.75)
+            if not isinstance(meta, dict) or not meta.get("ok"):
+                return
+            try:
+                remote_mtime = float(meta.get("mtime") or 0.0)
+            except Exception:
+                remote_mtime = 0.0
+            prev = float(getattr(self, "_network_tracker_mtime", 0.0) or 0.0)
+            if remote_mtime > 0 and remote_mtime > prev:
+                self.load_data()
+                self._refresh_stock()
+                self._refresh_log()
+            return
         try:
             current = os.path.getmtime(self.data_path)
         except OSError:
