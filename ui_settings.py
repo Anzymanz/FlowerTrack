@@ -157,7 +157,7 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
             pass
         tooltip_win = None
     def _bind_tooltip(widget: tk.Widget, text: str) -> None:
-        def on_enter(_e: tk.Event) -> None:
+        def schedule_show() -> None:
             nonlocal tooltip_after_id
             if tooltip_after_id is not None:
                 try:
@@ -167,8 +167,17 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
                 tooltip_after_id = None
             tooltip_after_id = win.after(400, lambda: _show_tooltip(text, None))
 
-        widget.bind("<Enter>", on_enter)
-        widget.bind("<Leave>", lambda _e: _hide_tooltip())
+        def on_enter(_e: tk.Event) -> None:
+            schedule_show()
+
+        def on_motion(_e: tk.Event) -> None:
+            # Some ttk controls can miss <Enter>; motion fallback keeps tooltips reliable.
+            if tooltip_win is None and tooltip_after_id is None:
+                schedule_show()
+
+        widget.bind("<Enter>", on_enter, add="+")
+        widget.bind("<Motion>", on_motion, add="+")
+        widget.bind("<Leave>", lambda _e: _hide_tooltip(), add="+")
     def _make_capture_entry(parent, textvariable, width=40, show: str | None = None):
         colors = compute_colors(app.dark_mode_var.get())
         highlight = colors["fg"]
