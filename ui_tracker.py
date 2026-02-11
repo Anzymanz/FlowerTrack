@@ -37,7 +37,7 @@ from exports import export_html_auto, export_size_warning
 from export_server import start_export_server as srv_start_export_server, stop_export_server as srv_stop_export_server
 from config import load_tracker_config, save_tracker_config
 from inventory import Flower
-from network_mode import MODE_CLIENT, MODE_HOST, get_mode as get_network_mode
+from network_mode import MODE_CLIENT, MODE_HOST, MODE_STANDALONE, get_mode as get_network_mode
 from network_sync import (
     DEFAULT_EXPORT_PORT,
     DEFAULT_NETWORK_PORT,
@@ -212,9 +212,30 @@ class CannabisTracker:
         self._build_ui()
         self._ensure_storage_dirs()
         self._load_config()
-        if self.network_mode == MODE_HOST:
-            self._ensure_network_server()
-        self.load_data()
+        try:
+            if self.network_mode == MODE_HOST:
+                self._ensure_network_server()
+            self.load_data()
+        except Exception as exc:
+            # Never allow network-mode startup failures to crash the tracker UI.
+            print(f"[network] startup fallback: {exc}")
+            traceback.print_exc()
+            try:
+                messagebox.showwarning(
+                    "Networking startup",
+                    f"Network startup failed ({exc}). Falling back to local mode for this session.",
+                )
+            except Exception:
+                pass
+            self.network_mode = MODE_STANDALONE
+            self.network_server = None
+            self.network_server_thread = None
+            try:
+                self.load_data()
+            except Exception:
+                # Leave empty state rather than crashing.
+                self.flowers = {}
+                self.logs = []
         self.root.after(50, lambda: self._set_dark_title_bar(self.dark_var.get()))
         self.apply_theme(self.dark_var.get())
         if self._force_center_on_start:
