@@ -402,21 +402,34 @@ let updateBaselineSet = false;
 let headBaselineSet = false;
 const openModalLocks = new Set();
 let bodyPaddingBeforeModal = "";
+let bodyWidthBeforeModal = "";
+let bodyBoxSizingBeforeModal = "";
 function applyModalLockState() {
     const shouldLock = openModalLocks.size > 0;
     if (shouldLock) {
-        const sbw = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
         if (!document.body.classList.contains('modal-open')) {
             bodyPaddingBeforeModal = document.body.style.paddingRight || "";
+            bodyWidthBeforeModal = document.body.style.width || "";
+            bodyBoxSizingBeforeModal = document.body.style.boxSizing || "";
+            // Freeze body width at current client width so cards/pills do not reflow when modal opens.
+            const stableClientWidth = document.documentElement.clientWidth;
+            if (stableClientWidth > 0) {
+                document.body.style.boxSizing = 'border-box';
+                document.body.style.width = `${stableClientWidth}px`;
+            }
         }
         document.body.classList.add('modal-open');
         document.documentElement.classList.add('modal-open');
-        document.body.style.paddingRight = sbw > 0 ? `${sbw}px` : bodyPaddingBeforeModal;
+        document.body.style.paddingRight = bodyPaddingBeforeModal;
     } else {
         document.body.classList.remove('modal-open');
         document.documentElement.classList.remove('modal-open');
         document.body.style.paddingRight = bodyPaddingBeforeModal;
+        document.body.style.width = bodyWidthBeforeModal;
+        document.body.style.boxSizing = bodyBoxSizingBeforeModal;
         bodyPaddingBeforeModal = "";
+        bodyWidthBeforeModal = "";
+        bodyBoxSizingBeforeModal = "";
     }
 }
 function setModalOpenLock(id, isOpen) {
