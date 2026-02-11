@@ -3478,6 +3478,10 @@ class CannabisTracker:
             self.tools_window.destroy()
     def launch_mix_calculator(self, close_tools: bool = False, mode: str = "dose") -> None:
         try:
+            if self._focus_existing_mix_window(mode):
+                if close_tools and self.tools_window and tk.Toplevel.winfo_exists(self.tools_window):
+                    self.tools_window.destroy()
+                return
             if getattr(sys, "frozen", False):
                 args = [sys.executable, "--run-mixcalc"]
                 cwd = os.path.dirname(sys.executable) or os.getcwd()
@@ -3500,6 +3504,44 @@ class CannabisTracker:
                 pass
         except Exception as exc:
             messagebox.showerror('Mix Calculator', f'Could not launch mix calculator.\n{exc}')
+
+    def _focus_existing_mix_window(self, mode: str) -> bool:
+        """Focus an existing mix-calculator window for the requested mode."""
+        try:
+            import ctypes
+            from ctypes import wintypes
+
+            user32 = ctypes.WinDLL("user32", use_last_error=True)
+            HWND = wintypes.HWND
+            LPARAM = wintypes.LPARAM
+            WNDENUMPROC = ctypes.WINFUNCTYPE(wintypes.BOOL, HWND, LPARAM)
+            mode_normalized = str(mode or "").strip().lower()
+            want_stock = mode_normalized in {"stock", "blend", "stockblend"}
+            target_titles = (
+                ("Blend Calculator (stock)",)
+                if want_stock
+                else ("Mix Calculator",)
+            )
+
+            found = []
+
+            def enum_proc(hwnd, _lparam):
+                buf = ctypes.create_unicode_buffer(512)
+                user32.GetWindowTextW(hwnd, buf, 512)
+                title = (buf.value or "").strip()
+                if title and any(token in title for token in target_titles):
+                    found.append(hwnd)
+                return True
+
+            user32.EnumWindows(WNDENUMPROC(enum_proc), 0)
+            if not found:
+                return False
+            hwnd = found[0]
+            user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+            user32.SetForegroundWindow(hwnd)
+            return True
+        except Exception:
+            return False
     def _watch_mixcalc_process(self, proc: subprocess.Popen) -> None:
         def poll() -> None:
             try:

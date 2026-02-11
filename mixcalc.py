@@ -6,7 +6,13 @@ from pathlib import Path
 from datetime import datetime
 import tkinter as tk
 from tkinter import ttk, messagebox
-from theme import apply_style_theme, apply_rounded_buttons, compute_colors, set_titlebar_dark
+from theme import (
+    apply_style_theme,
+    apply_rounded_buttons,
+    compute_colors,
+    set_palette_overrides,
+    set_titlebar_dark,
+)
 import ctypes
 from config import load_tracker_config, save_tracker_config
 from resources import resource_path
@@ -77,6 +83,19 @@ def load_dark_mode_default() -> bool:
     except Exception:
         pass
     return True
+
+
+def load_theme_palette_overrides() -> None:
+    try:
+        cfg = load_tracker_config(CONFIG_FILE)
+        if not isinstance(cfg, dict):
+            return
+        dark = cfg.get("theme_palette_dark", {})
+        light = cfg.get("theme_palette_light", {})
+        if isinstance(dark, dict) or isinstance(light, dict):
+            set_palette_overrides(dark if isinstance(dark, dict) else {}, light if isinstance(light, dict) else {})
+    except Exception:
+        pass
 
 
 def format_item(it: dict) -> str:
@@ -594,6 +613,7 @@ except Exception:
 main = ttk.Frame(root, padding=10)
 main.pack(fill="both", expand=True)
 
+load_theme_palette_overrides()
 dark_mode = load_dark_mode_default()
 bg, fg = apply_theme(root, dark_mode)
 
