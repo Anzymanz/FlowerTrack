@@ -258,11 +258,11 @@ def _canonical_pastille_name(raw_name: str | None, brand: str | None, unit_count
             count_text = f"{float(unit_count):g}"
 
     if flavor and count_text:
-        return f"{flavor} {count_text} Pastilles"
+        return f"{flavor} Pastilles ({count_text})"
     if flavor:
         return f"{flavor} Pastilles"
     if count_text:
-        return f"{count_text} Pastilles"
+        return f"Pastilles ({count_text})"
     return None
 
 def _is_useful_oil_base_name(value: str | None) -> bool:

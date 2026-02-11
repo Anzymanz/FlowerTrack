@@ -114,7 +114,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(item.get("stock_status"), "IN STOCK")
         self.assertEqual(item.get("unit_count"), 30)
         self.assertAlmostEqual(item.get("price_per_unit") or 0, 0.4)
-        self.assertEqual(item.get("strain"), "Mixed Berries 30 Pastilles")
+        self.assertEqual(item.get("strain"), "Mixed Berries Pastilles (30)")
 
     def test_parse_api_payloads_oil_balance_includes_tc_profile(self):
         payloads = [
