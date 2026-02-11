@@ -278,6 +278,12 @@ def main() -> None:
         root.update_idletasks()
         root.deiconify()
         root.lift()
+        # Force a post-map theme pass so the first painted frame is fully themed,
+        # not the default white Tk background.
+        try:
+            app.apply_theme(app.dark_var.get())
+        except Exception:
+            pass
     except Exception:
         pass
     app_ref["app"] = app
