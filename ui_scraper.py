@@ -868,10 +868,6 @@ class App(tk.Tk):
             self.console.configure(state="disabled")
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
-        try:
-            self.status.config(text=msg)
-        except Exception as exc:
-            self._debug_log(f"Suppressed exception: {exc}")
 
     def _clamp_hidden_log_height(self, height: float | int | None) -> int:
         # Fixed compact height when log is hidden.
