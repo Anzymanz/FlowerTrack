@@ -3289,6 +3289,13 @@ class CannabisTracker:
         except Exception:
             pass
     def _show_tooltip(self, text: str, event: tk.Event | None = None) -> None:
+        try:
+            pending = getattr(self, "_tooltip_after_id", None)
+            if pending is not None:
+                self.root.after_cancel(pending)
+        except Exception:
+            pass
+        self._tooltip_after_id = None
         self._hide_tooltip()
         try:
             self._tooltip_win = tk.Toplevel(self.root)
@@ -3301,12 +3308,35 @@ class CannabisTracker:
         except Exception:
             self._tooltip_win = None
     def _hide_tooltip(self) -> None:
+        try:
+            pending = getattr(self, "_tooltip_after_id", None)
+            if pending is not None:
+                self.root.after_cancel(pending)
+        except Exception:
+            pass
+        self._tooltip_after_id = None
         if self._tooltip_win and tk.Toplevel.winfo_exists(self._tooltip_win):
             self._tooltip_win.destroy()
         self._tooltip_win = None
-    def _bind_tooltip(self, widget: tk.Widget, text: str) -> None:
-        widget.bind("<Enter>", lambda e: self._show_tooltip(text, e))
-        widget.bind("<Leave>", lambda e: self._hide_tooltip())
+    def _bind_tooltip(self, widget: tk.Widget, text: str, delay_ms: int = 400) -> None:
+        def on_enter(e: tk.Event) -> None:
+            try:
+                pending = getattr(self, "_tooltip_after_id", None)
+                if pending is not None:
+                    self.root.after_cancel(pending)
+            except Exception:
+                pass
+            self._tooltip_after_id = None
+            if delay_ms > 0:
+                self._tooltip_after_id = self.root.after(delay_ms, lambda: self._show_tooltip(text, None))
+            else:
+                self._show_tooltip(text, e)
+
+        def on_leave(_e: tk.Event) -> None:
+            self._hide_tooltip()
+
+        widget.bind("<Enter>", on_enter)
+        widget.bind("<Leave>", on_leave)
     def _bind_log_thc_cbd_tooltip(self) -> None:
         if not hasattr(self, "log_tree"):
             return

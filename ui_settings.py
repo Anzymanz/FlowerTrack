@@ -119,8 +119,15 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     outer.pack(fill="both", expand=True)
     outer.pack_propagate(False)
     tooltip_win: tk.Toplevel | None = None
+    tooltip_after_id: str | None = None
     def _show_tooltip(text: str, event: tk.Event | None = None) -> None:
-        nonlocal tooltip_win
+        nonlocal tooltip_win, tooltip_after_id
+        if tooltip_after_id is not None:
+            try:
+                win.after_cancel(tooltip_after_id)
+            except Exception:
+                pass
+            tooltip_after_id = None
         _hide_tooltip()
         try:
             tooltip_win = tk.Toplevel(win)
@@ -134,7 +141,13 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
         except Exception:
             tooltip_win = None
     def _hide_tooltip() -> None:
-        nonlocal tooltip_win
+        nonlocal tooltip_win, tooltip_after_id
+        if tooltip_after_id is not None:
+            try:
+                win.after_cancel(tooltip_after_id)
+            except Exception:
+                pass
+            tooltip_after_id = None
         try:
             if tooltip_win and tk.Toplevel.winfo_exists(tooltip_win):
                 tooltip_win.destroy()
@@ -142,7 +155,17 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
             pass
         tooltip_win = None
     def _bind_tooltip(widget: tk.Widget, text: str) -> None:
-        widget.bind("<Enter>", lambda e: _show_tooltip(text, e))
+        def on_enter(_e: tk.Event) -> None:
+            nonlocal tooltip_after_id
+            if tooltip_after_id is not None:
+                try:
+                    win.after_cancel(tooltip_after_id)
+                except Exception:
+                    pass
+                tooltip_after_id = None
+            tooltip_after_id = win.after(400, lambda: _show_tooltip(text, None))
+
+        widget.bind("<Enter>", on_enter)
         widget.bind("<Leave>", lambda _e: _hide_tooltip())
     def _make_capture_entry(parent, textvariable, width=40, show: str | None = None):
         colors = compute_colors(app.dark_mode_var.get())
