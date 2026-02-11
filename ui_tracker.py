@@ -268,6 +268,8 @@ class CannabisTracker:
                 return
             if getattr(sys, "frozen", False):
                 args = [sys.executable, "--scraper"]
+                if os.getenv("FLOWERTRACK_CONSOLE") == "1":
+                    args.append("--console")
                 if not show_window:
                     args.append("--scraper-hidden")
                 proc = subprocess.Popen(args)
@@ -275,6 +277,8 @@ class CannabisTracker:
                 exe = sys.executable
                 target = Path(__file__).resolve().parent / "flowertracker.py"
                 args = [exe, str(target), "--scraper"]
+                if os.getenv("FLOWERTRACK_CONSOLE") == "1":
+                    args.append("--console")
                 if not show_window:
                     args.append("--scraper-hidden")
                 proc = subprocess.Popen(args)

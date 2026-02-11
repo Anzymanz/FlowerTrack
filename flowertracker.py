@@ -126,9 +126,14 @@ def _enable_optional_console() -> None:
         kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
         # If a console already exists (for example launched from terminal), reuse it.
         if kernel32.GetConsoleWindow():
-            return
-        if not kernel32.AllocConsole():
-            return
+            attached = True
+        else:
+            # Prefer attaching to parent console (single window for parent+child processes).
+            attached = bool(kernel32.AttachConsole(-1))
+            if not attached:
+                attached = bool(kernel32.AllocConsole())
+            if not attached:
+                return
     except Exception:
         return
 
