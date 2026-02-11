@@ -266,12 +266,17 @@ def main() -> None:
     focus_listener = _start_focus_listener(_on_focus_signal, network_mode)
 
     root = tk.Tk()
-    # Prevent the default empty Tk window from flashing before CannabisTracker
-    # finishes constructing/styling the main UI.
+    # Keep the root fully transparent during first paint to avoid Windows/Tk
+    # showing a white client area before themed widgets are ready.
+    alpha_hidden = False
     try:
-        root.withdraw()
+        root.attributes("-alpha", 0.0)
+        alpha_hidden = True
     except Exception:
-        pass
+        try:
+            root.withdraw()
+        except Exception:
+            pass
     app = CannabisTracker(root)
     _close_pyinstaller_splash()
     try:
@@ -283,6 +288,11 @@ def main() -> None:
         root.update_idletasks()
         root.deiconify()
         root.lift()
+        if alpha_hidden:
+            try:
+                root.attributes("-alpha", 1.0)
+            except Exception:
+                pass
     except Exception:
         pass
     app_ref["app"] = app
