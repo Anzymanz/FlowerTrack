@@ -196,6 +196,7 @@ class CannabisTracker:
         self._client_poll_lock = threading.Lock()
         self._client_missed_pings = 0
         self._client_ever_connected = False
+        self._network_bootstrap_ready = False
         self.tray_thread: threading.Thread | None = None
         self.is_hidden_to_tray = False
         self.tools_window: tk.Toplevel | None = None
@@ -221,9 +222,8 @@ class CannabisTracker:
         self._build_ui()
         self._ensure_storage_dirs()
         self._load_config()
-        # Defer network/data startup until the UI is painted so connection work does not
-        # block initial rendering.
-        self.root.after(10, self._startup_data_init)
+        # Defer network/data startup until after first paint to keep window open smooth.
+        self.root.after(1200, self._startup_data_init)
         self.root.after(50, lambda: self._set_dark_title_bar(self.dark_var.get()))
         self.apply_theme(self.dark_var.get())
         if self._force_center_on_start:
@@ -250,9 +250,11 @@ class CannabisTracker:
                 self._ensure_export_server()
             if self.network_mode == MODE_CLIENT:
                 # Non-blocking client bootstrap: populate when network fetch completes.
+                self._network_bootstrap_ready = True
                 self._request_client_network_poll(initial=True)
             else:
                 self.load_data()
+                self._network_bootstrap_ready = True
         except Exception as exc:
             # Never allow network-mode startup failures to crash the tracker UI.
             print(f"[network] startup fallback: {exc}")
@@ -273,6 +275,7 @@ class CannabisTracker:
                 # Leave empty state rather than crashing.
                 self.flowers = {}
                 self.logs = []
+            self._network_bootstrap_ready = True
         # load_data can update theme-affecting values; re-apply after startup load.
         self.apply_theme(self.dark_var.get())
         self._refresh_stock()
@@ -3515,6 +3518,8 @@ class CannabisTracker:
     def _maybe_reload_external(self) -> None:
         """Reload data if tracker file changed externally (e.g., mix calculator)."""
         if self.network_mode == MODE_CLIENT:
+            if not bool(getattr(self, "_network_bootstrap_ready", False)):
+                return
             self._request_client_network_poll(initial=False)
             return
         try:
