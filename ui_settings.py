@@ -133,8 +133,10 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
             tooltip_win = tk.Toplevel(win)
             tooltip_win.wm_overrideredirect(True)
             tooltip_win.attributes("-topmost", True)
-            x = (event.x_root + 12) if event else win.winfo_rootx() + 20
-            y = (event.y_root + 12) if event else win.winfo_rooty() + 20
+            # For delayed tooltips, anchor to the current mouse pointer to avoid
+            # stale top-left placement when no event object is passed.
+            x = (event.x_root + 12) if event else win.winfo_pointerx() + 12
+            y = (event.y_root + 12) if event else win.winfo_pointery() + 12
             tooltip_win.wm_geometry(f"+{x}+{y}")
             label = ttk.Label(tooltip_win, text=text, relief="solid", padding=4)
             label.pack()
