@@ -2290,7 +2290,6 @@ class CannabisTracker:
             "first_time": "N/A",
             "last_time": "N/A",
             "avg_interval": "N/A",
-            "min_interval": "N/A",
             "max_interval": "N/A",
             "max_dose": "N/A",
             "min_dose": "N/A",
@@ -2304,8 +2303,9 @@ class CannabisTracker:
                 intervals = [
                     (t2 - t1).total_seconds() for t1, t2 in zip(times_sorted[:-1], times_sorted[1:])
                 ]
-                stats["avg_interval"] = self._format_interval(sum(intervals) / len(intervals))
-                stats["min_interval"] = self._format_interval(min(intervals))
+                non_zero_intervals = [sec for sec in intervals if sec > 0]
+                if non_zero_intervals:
+                    stats["avg_interval"] = self._format_interval(sum(non_zero_intervals) / len(non_zero_intervals))
                 stats["max_interval"] = self._format_interval(max(intervals))
         if doses:
             stats["max_dose"] = f"{max(doses):.3f} g"
@@ -2378,7 +2378,6 @@ class CannabisTracker:
         avg_daily = thc_total / max(days_count, 1)
         rows = [
             ("Average interval", stats["avg_interval"]),
-            ("Shortest interval", stats["min_interval"]),
             ("Longest interval", stats["max_interval"]),
             ("Largest dose", stats["max_dose"]),
             ("Smallest dose", stats["min_dose"]),
