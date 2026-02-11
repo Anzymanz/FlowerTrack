@@ -95,15 +95,17 @@ def _focus_main_window(app: CannabisTracker) -> None:
 
 def _close_pyinstaller_splash() -> None:
     """Close PyInstaller boot splash if present (no-op outside frozen bootloader)."""
+    if "_PYI_SPLASH_IPC" not in os.environ:
+        return
+    if importlib.util.find_spec("pyi_splash") is None:
+        return
     try:
         import pyi_splash  # type: ignore
 
-        try:
-            pyi_splash.update_text("UI Loaded...")
-        except Exception:
-            pass
+        pyi_splash.update_text("UI Loaded ...")
         pyi_splash.close()
     except Exception:
+        # Keep startup resilient even if splash IPC is unavailable.
         pass
 
 
