@@ -245,6 +245,9 @@ class CannabisTracker:
         try:
             if self.network_mode == MODE_HOST:
                 self._ensure_network_server()
+                # Keep browser endpoint available for clients even if host never
+                # manually opens the browser button.
+                self._ensure_export_server()
             if self.network_mode == MODE_CLIENT:
                 # Non-blocking client bootstrap: populate when network fetch completes.
                 self._request_client_network_poll(initial=True)
