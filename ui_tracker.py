@@ -2377,8 +2377,6 @@ class CannabisTracker:
         )
         avg_daily = thc_total / max(days_count, 1)
         rows = [
-            ("First dose", stats["first_time"]),
-            ("Last dose", stats["last_time"]),
             ("Average interval", stats["avg_interval"]),
             ("Shortest interval", stats["min_interval"]),
             ("Longest interval", stats["max_interval"]),
