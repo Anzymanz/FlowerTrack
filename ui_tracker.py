@@ -189,6 +189,9 @@ class CannabisTracker:
         self.network_server_thread = None
         self._network_error_shown = False
         self._network_tracker_mtime = 0.0
+        self._client_disconnect_since = None
+        self._client_disconnect_timeout_s = 30.0
+        self._client_disconnect_closing = False
         self.tray_thread: threading.Thread | None = None
         self.is_hidden_to_tray = False
         self.tools_window: tk.Toplevel | None = None
@@ -3410,7 +3413,26 @@ class CannabisTracker:
         if self.network_mode == MODE_CLIENT:
             meta = fetch_tracker_meta(self.network_host, int(self.network_port), timeout=0.75)
             if not isinstance(meta, dict) or not meta.get("ok"):
+                now = time.monotonic()
+                since = getattr(self, "_client_disconnect_since", None)
+                if since is None:
+                    self._client_disconnect_since = now
+                elif (now - float(since)) >= float(getattr(self, "_client_disconnect_timeout_s", 30.0)):
+                    if not self._client_disconnect_closing:
+                        self._client_disconnect_closing = True
+                        try:
+                            messagebox.showerror(
+                                "Host disconnected",
+                                "Connection to the host was lost for too long. The client will now close.",
+                            )
+                        except Exception:
+                            pass
+                        try:
+                            self.root.after(0, self._on_main_close)
+                        except Exception:
+                            self._on_main_close()
                 return
+            self._client_disconnect_since = None
             try:
                 remote_mtime = float(meta.get("mtime") or 0.0)
             except Exception:
