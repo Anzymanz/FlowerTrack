@@ -78,7 +78,7 @@ def open_tracker_settings(app) -> None:
     local_style.map(
         tab_style_tab,
         background=[("selected", selected_bg), ("active", ctrl_bg), ("!selected", ctrl_bg)],
-        foreground=[("selected", fg), ("active", fg), ("!selected", fg)],
+        foreground=[("selected", fg), ("active", fg), ("!selected", fg), ("disabled", fg)],
         bordercolor=[("selected", border), ("active", border), ("!selected", border)],
         lightcolor=[("selected", border), ("active", border), ("!selected", border)],
         darkcolor=[("selected", border), ("active", border), ("!selected", border)],
@@ -105,6 +105,15 @@ def open_tracker_settings(app) -> None:
     notebook.add(tab_colors, text="Colour settings")
     notebook.add(tab_theme, text="Theme")
     notebook.add(tab_data, text="Data settings")
+    try:
+        # Re-assert labels to avoid occasional blank tab captions after style/theme refresh.
+        notebook.tab(tab_tracker, text="Tracker settings")
+        notebook.tab(tab_window, text="Window settings")
+        notebook.tab(tab_colors, text="Colour settings")
+        notebook.tab(tab_theme, text="Theme")
+        notebook.tab(tab_data, text="Data settings")
+    except Exception:
+        pass
     notebook.configure(style=tab_style)
 
     for tab in (tab_colors, tab_tracker, tab_data, tab_window, tab_theme):
@@ -400,6 +409,66 @@ def open_tracker_settings(app) -> None:
     app.open_data_folder_btn.grid(
         row=2, column=1, columnspan=2, sticky="w", padx=(4, 0), pady=(2, 4)
     )
+
+    data_row = 3
+    if getattr(app, "network_mode", "standalone") in ("host", "client"):
+        tk.Frame(frame, height=1, bg=border, bd=0, highlightthickness=0).grid(
+            row=data_row, column=0, columnspan=4, sticky="ew", pady=(8, 8)
+        )
+        data_row += 1
+        ttk.Label(frame, text="Networking", font=app.font_bold_small).grid(row=data_row, column=0, sticky="w", pady=(0, 4))
+        data_row += 1
+        ttk.Label(frame, text="Mode").grid(row=data_row, column=0, sticky="w")
+        ttk.Label(frame, text=str(getattr(app, "network_mode", "standalone")).upper()).grid(
+            row=data_row, column=1, sticky="w", padx=(12, 0)
+        )
+        data_row += 1
+        if getattr(app, "network_mode", "standalone") == "client":
+            lbl_host_ip = ttk.Label(frame, text="Host IP")
+            lbl_host_ip.grid(row=data_row, column=0, sticky="w")
+            app.network_host_entry = ttk.Entry(frame, width=18)
+            app.network_host_entry.insert(0, str(getattr(app, "network_host", "127.0.0.1")))
+            app.network_host_entry.grid(row=data_row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+            try:
+                app._bind_tooltip(lbl_host_ip, "Host machine IP that serves shared tracker/library data.")
+                app._bind_tooltip(app.network_host_entry, "Example: 192.168.1.10")
+            except Exception:
+                pass
+            data_row += 1
+        else:
+            lbl_bind_ip = ttk.Label(frame, text="Bind IP")
+            lbl_bind_ip.grid(row=data_row, column=0, sticky="w")
+            app.network_bind_entry = ttk.Entry(frame, width=18)
+            app.network_bind_entry.insert(0, str(getattr(app, "network_bind_host", "0.0.0.0")))
+            app.network_bind_entry.grid(row=data_row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+            try:
+                app._bind_tooltip(lbl_bind_ip, "IP to bind host network services on (0.0.0.0 = all interfaces).")
+                app._bind_tooltip(app.network_bind_entry, "Use 0.0.0.0 for LAN access.")
+            except Exception:
+                pass
+            data_row += 1
+        lbl_data_port = ttk.Label(frame, text="Data port")
+        lbl_data_port.grid(row=data_row, column=0, sticky="w")
+        app.network_port_entry = ttk.Entry(frame, width=8)
+        app.network_port_entry.insert(0, str(getattr(app, "network_port", 8766)))
+        app.network_port_entry.grid(row=data_row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+        try:
+            app._bind_tooltip(lbl_data_port, "HTTP port used for tracker/library JSON sync.")
+            app._bind_tooltip(app.network_port_entry, "Default: 8766")
+        except Exception:
+            pass
+        data_row += 1
+        lbl_browser_port = ttk.Label(frame, text="Browser port")
+        lbl_browser_port.grid(row=data_row, column=0, sticky="w")
+        app.network_export_port_entry = ttk.Entry(frame, width=8)
+        app.network_export_port_entry.insert(0, str(getattr(app, "export_port", 8765)))
+        app.network_export_port_entry.grid(row=data_row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+        try:
+            app._bind_tooltip(lbl_browser_port, "HTTP port used for the shared Flower Browser page.")
+            app._bind_tooltip(app.network_export_port_entry, "Default: 8765")
+        except Exception:
+            pass
+        data_row += 1
 
     frame = tab_window
     ttk.Label(frame, text="Window settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))

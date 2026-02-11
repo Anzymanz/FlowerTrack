@@ -37,6 +37,19 @@ from exports import export_html_auto, export_size_warning
 from export_server import start_export_server as srv_start_export_server, stop_export_server as srv_stop_export_server
 from config import load_tracker_config, save_tracker_config
 from inventory import Flower
+from network_mode import MODE_CLIENT, MODE_HOST, MODE_STANDALONE, get_mode as get_network_mode
+from network_sync import (
+    DEFAULT_EXPORT_PORT,
+    DEFAULT_NETWORK_PORT,
+    fetch_tracker_meta,
+    fetch_library_data,
+    fetch_tracker_data,
+    network_ping,
+    push_library_data,
+    push_tracker_data,
+    start_network_data_server,
+    stop_network_data_server,
+)
 try:
     from PIL import Image, ImageDraw, ImageTk
 except ImportError:  # Pillow may not be installed; tray icon will be disabled
@@ -167,7 +180,22 @@ class CannabisTracker:
         self.tray_icon = None
         self.export_server = None
         self.export_thread = None
-        self.export_port = 8765
+        self.export_port = DEFAULT_EXPORT_PORT
+        self.network_mode = get_network_mode()
+        self.network_host = "127.0.0.1"
+        self.network_bind_host = "0.0.0.0"
+        self.network_port = DEFAULT_NETWORK_PORT
+        self.network_server = None
+        self.network_server_thread = None
+        self._network_error_shown = False
+        self._network_tracker_mtime = 0.0
+        self._client_disconnect_since = None
+        self._client_disconnect_timeout_s = 30.0
+        self._client_disconnect_closing = False
+        self._client_poll_inflight = False
+        self._client_poll_lock = threading.Lock()
+        self._client_missed_pings = 0
+        self._client_ever_connected = False
         self.tray_thread: threading.Thread | None = None
         self.is_hidden_to_tray = False
         self.tools_window: tk.Toplevel | None = None
@@ -193,7 +221,9 @@ class CannabisTracker:
         self._build_ui()
         self._ensure_storage_dirs()
         self._load_config()
-        self.load_data()
+        # Defer network/data startup until the UI is painted so connection work does not
+        # block initial rendering.
+        self.root.after(10, self._startup_data_init)
         self.root.after(50, lambda: self._set_dark_title_bar(self.dark_var.get()))
         self.apply_theme(self.dark_var.get())
         if self._force_center_on_start:
@@ -210,6 +240,124 @@ class CannabisTracker:
         except Exception:
             self._restoring_split = False
         self._update_scraper_status_icon()
+
+    def _startup_data_init(self) -> None:
+        try:
+            if self.network_mode == MODE_HOST:
+                self._ensure_network_server()
+                # Keep browser endpoint available for clients even if host never
+                # manually opens the browser button.
+                self._ensure_export_server()
+            if self.network_mode == MODE_CLIENT:
+                # Non-blocking client bootstrap: populate when network fetch completes.
+                self._request_client_network_poll(initial=True)
+            else:
+                self.load_data()
+        except Exception as exc:
+            # Never allow network-mode startup failures to crash the tracker UI.
+            print(f"[network] startup fallback: {exc}")
+            traceback.print_exc()
+            try:
+                messagebox.showwarning(
+                    "Networking startup",
+                    f"Network startup failed ({exc}). Falling back to local mode for this session.",
+                )
+            except Exception:
+                pass
+            self.network_mode = MODE_STANDALONE
+            self.network_server = None
+            self.network_server_thread = None
+            try:
+                self.load_data()
+            except Exception:
+                # Leave empty state rather than crashing.
+                self.flowers = {}
+                self.logs = []
+        # load_data can update theme-affecting values; re-apply after startup load.
+        self.apply_theme(self.dark_var.get())
+        self._refresh_stock()
+        self._refresh_log()
+
+    def _request_client_network_poll(self, initial: bool = False) -> None:
+        if self.network_mode != MODE_CLIENT:
+            return
+        with self._client_poll_lock:
+            if self._client_poll_inflight:
+                return
+            self._client_poll_inflight = True
+        host = (self.network_host or "").strip()
+        port = int(self.network_port)
+        prev_mtime = float(getattr(self, "_network_tracker_mtime", 0.0) or 0.0)
+
+        def worker() -> None:
+            result: dict[str, object] = {"ok": False, "initial": initial}
+            try:
+                meta = fetch_tracker_meta(host, port, timeout=0.75)
+                if not isinstance(meta, dict) or not meta.get("ok"):
+                    result = {"ok": False, "initial": initial}
+                else:
+                    try:
+                        remote_mtime = float(meta.get("mtime") or 0.0)
+                    except Exception:
+                        remote_mtime = 0.0
+                    result = {"ok": True, "mtime": remote_mtime, "initial": initial}
+                    if initial or (remote_mtime > 0 and remote_mtime > prev_mtime):
+                        data = fetch_tracker_data(host, port, timeout=1.5 if initial else 1.0)
+                        if isinstance(data, dict):
+                            result["data"] = data
+                        else:
+                            result = {"ok": False, "initial": initial}
+            except Exception:
+                result = {"ok": False, "initial": initial}
+            finally:
+                with self._client_poll_lock:
+                    self._client_poll_inflight = False
+                try:
+                    self.root.after(0, lambda r=result: self._consume_client_network_result(r))
+                except Exception:
+                    pass
+
+        threading.Thread(target=worker, daemon=True, name="flowertrack-client-poll").start()
+
+    def _consume_client_network_result(self, result: dict[str, object]) -> None:
+        if self.network_mode != MODE_CLIENT:
+            return
+        if not bool(result.get("ok")):
+            self._client_missed_pings = int(getattr(self, "_client_missed_pings", 0) or 0) + 1
+            now = time.monotonic()
+            since = getattr(self, "_client_disconnect_since", None)
+            if since is None:
+                self._client_disconnect_since = now
+            elif (now - float(since)) >= float(getattr(self, "_client_disconnect_timeout_s", 30.0)):
+                if not self._client_disconnect_closing:
+                    self._client_disconnect_closing = True
+                    try:
+                        messagebox.showerror(
+                            "Host disconnected",
+                            "Connection to the host was lost for too long. The client will now close.",
+                        )
+                    except Exception:
+                        pass
+                    try:
+                        self.root.after(0, self._on_main_close)
+                    except Exception:
+                        self._on_main_close()
+            return
+
+        self._client_ever_connected = True
+        self._client_missed_pings = 0
+        self._client_disconnect_since = None
+        try:
+            remote_mtime = float(result.get("mtime") or 0.0)
+        except Exception:
+            remote_mtime = 0.0
+        if remote_mtime > 0:
+            self._network_tracker_mtime = remote_mtime
+        data = result.get("data")
+        if isinstance(data, dict):
+            self._apply_loaded_tracker_data(data, remote_mtime=remote_mtime)
+            self._refresh_stock()
+            self._refresh_log()
     def _scraper_process_alive_from_state(self) -> bool:
         try:
             state = read_scraper_state(SCRAPER_STATE_FILE)
@@ -233,6 +381,12 @@ class CannabisTracker:
 
     def open_parser(self, show_window: bool = True) -> None:
         """Launch the scraper UI in a separate process."""
+        if self.network_mode == MODE_CLIENT:
+            try:
+                messagebox.showinfo("Client mode", "Medicann Scraper is disabled in client mode.")
+            except Exception:
+                pass
+            return
         def focus_existing() -> bool:
             try:
                 import ctypes
@@ -290,6 +444,14 @@ class CannabisTracker:
         except Exception as exc:
             messagebox.showerror("Open Scraper", f"Could not launch parser:\n{exc}")
     def open_flower_browser(self) -> None:
+        if self.network_mode == MODE_CLIENT:
+            host = (self.network_host or "127.0.0.1").strip() or "127.0.0.1"
+            url = f"http://{host}:{int(self.export_port)}/flowerbrowser"
+            try:
+                webbrowser.open(url)
+            except Exception as exc:
+                messagebox.showerror("Flower Browser", f"Could not open host browser page:\n{exc}")
+            return
         exports_dir = Path(EXPORTS_DIR_DEFAULT)
         exports_dir.mkdir(parents=True, exist_ok=True)
         html_files = sorted(exports_dir.glob("export-*.html"), key=lambda p: p.stat().st_mtime, reverse=True)
@@ -324,7 +486,10 @@ class CannabisTracker:
                 pass
         url = latest.as_uri()
         if self._ensure_export_server() and self.export_port:
-            url = f"http://127.0.0.1:{self.export_port}/flowerbrowser"
+            browser_host = "127.0.0.1"
+            if self.network_mode == MODE_HOST:
+                browser_host = (self.network_host or "127.0.0.1").strip() or "127.0.0.1"
+            url = f"http://{browser_host}:{self.export_port}/flowerbrowser"
         try:
             webbrowser.open(url)
         except Exception:
@@ -337,12 +502,97 @@ class CannabisTracker:
             print(msg)
         except Exception:
             pass
+
+    def _log_network(self, msg: str) -> None:
+        try:
+            print(msg)
+        except Exception:
+            pass
+
+    def _ensure_network_server(self) -> bool:
+        if self.network_mode != MODE_HOST:
+            return False
+        try:
+            if self.network_server and self.network_port:
+                return True
+            tracker_path = Path(self.data_path or TRACKER_DATA_FILE)
+            library_path = Path(self.library_data_path or TRACKER_LIBRARY_FILE)
+            httpd, thread, port = start_network_data_server(
+                bind_host=self.network_bind_host,
+                preferred_port=self.network_port,
+                tracker_data_path=tracker_path,
+                library_data_path=library_path,
+                log=self._log_network,
+            )
+            if httpd and port:
+                self.network_server = httpd
+                self.network_server_thread = thread
+                self.network_port = int(port)
+                return True
+        except Exception as exc:
+            self._log_network(f"[network] failed to start: {exc}")
+        return False
+
+    def _stop_network_server(self) -> None:
+        try:
+            stop_network_data_server(self.network_server, self.network_server_thread, self._log_network)
+        except Exception:
+            pass
+        self.network_server = None
+        self.network_server_thread = None
+
+    def _fetch_network_tracker_data(self) -> dict | None:
+        host = (self.network_host or "").strip()
+        if not host:
+            return None
+        data = fetch_tracker_data(host, int(self.network_port))
+        if isinstance(data, dict):
+            self._network_error_shown = False
+            return data
+        return None
+
+    def _push_network_tracker_data(self, data: dict) -> bool:
+        host = (self.network_host or "").strip()
+        if not host:
+            return False
+        ok = push_tracker_data(host, int(self.network_port), data)
+        if ok:
+            self._network_error_shown = False
+        return ok
+
+    def _fetch_network_library_data(self) -> list[dict] | None:
+        host = (self.network_host or "").strip()
+        if not host:
+            return None
+        data = fetch_library_data(host, int(self.network_port))
+        if isinstance(data, list):
+            self._network_error_shown = False
+            return data
+        return None
+
+    def _push_network_library_data(self, data: list[dict]) -> bool:
+        host = (self.network_host or "").strip()
+        if not host:
+            return False
+        ok = push_library_data(host, int(self.network_port), data)
+        if ok:
+            self._network_error_shown = False
+        return ok
+
     def _ensure_export_server(self) -> bool:
         try:
             if self.export_server and self.export_port:
                 return True
             exports_dir = Path(EXPORTS_DIR_DEFAULT)
-            httpd, thread, port = srv_start_export_server(self.export_port, exports_dir, self._log_export)
+            bind_host = "127.0.0.1"
+            if self.network_mode == MODE_HOST:
+                bind_host = self.network_bind_host
+            httpd, thread, port = srv_start_export_server(
+                self.export_port,
+                exports_dir,
+                self._log_export,
+                bind_host=bind_host,
+            )
             if httpd and port:
                 self.export_server = httpd
                 self.export_thread = thread
@@ -1587,9 +1837,10 @@ class CannabisTracker:
         frame.rowconfigure(3, weight=0)
         frame.rowconfigure(4, weight=0)
         ttk.Label(frame, text="Tools", font=self.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
-        ttk.Button(frame, text="Medicann Scraper", command=lambda: self._open_scraper_from_tools()).grid(
-            row=1, column=0, sticky="w", pady=(0, 6)
-        )
+        if self.network_mode != MODE_CLIENT:
+            ttk.Button(frame, text="Medicann Scraper", command=lambda: self._open_scraper_from_tools()).grid(
+                row=1, column=0, sticky="w", pady=(0, 6)
+            )
         ttk.Button(frame, text="Flower Library", command=lambda: self.launch_flower_library(close_tools=True)).grid(
             row=2, column=0, sticky="w", pady=(0, 6)
         )
@@ -1647,6 +1898,26 @@ class CannabisTracker:
                 allow_empty=True,
                 default=0,
             )
+            network_host = str(getattr(self, "network_host", "127.0.0.1")).strip() or "127.0.0.1"
+            network_bind_host = str(getattr(self, "network_bind_host", "0.0.0.0")).strip() or "0.0.0.0"
+            network_port = int(getattr(self, "network_port", DEFAULT_NETWORK_PORT))
+            network_export_port = int(getattr(self, "export_port", DEFAULT_EXPORT_PORT))
+            if getattr(self, "network_mode", MODE_HOST) == MODE_CLIENT:
+                if hasattr(self, "network_host_entry"):
+                    network_host = str(self.network_host_entry.get()).strip()
+                if not network_host:
+                    raise ValueError("Host IP is required in client mode.")
+            if getattr(self, "network_mode", MODE_CLIENT) == MODE_HOST:
+                if hasattr(self, "network_bind_entry"):
+                    network_bind_host = str(self.network_bind_entry.get()).strip() or "0.0.0.0"
+            if hasattr(self, "network_port_entry"):
+                network_port = _parse_int("Data port", self.network_port_entry.get())
+            if hasattr(self, "network_export_port_entry"):
+                network_export_port = _parse_int("Browser port", self.network_export_port_entry.get())
+            if network_port < 1 or network_port > 65535:
+                raise ValueError("Data port must be between 1 and 65535.")
+            if network_export_port < 1 or network_export_port > 65535:
+                raise ValueError("Browser port must be between 1 and 65535.")
             track_cbd_flower = bool(self.track_cbd_flower_var.get())
             enable_stock_coloring = bool(self.enable_stock_color_var.get())
             enable_usage_coloring = bool(self.enable_usage_color_var.get())
@@ -1695,6 +1966,16 @@ class CannabisTracker:
         self.target_daily_grams = target_daily
         self.target_daily_cbd_grams = target_daily_cbd
         self.avg_usage_days = avg_usage_days
+        network_changed = (
+            str(self.network_host).strip() != str(network_host).strip()
+            or str(self.network_bind_host).strip() != str(network_bind_host).strip()
+            or int(self.network_port) != int(network_port)
+            or int(self.export_port) != int(network_export_port)
+        )
+        self.network_host = str(network_host).strip() or "127.0.0.1"
+        self.network_bind_host = str(network_bind_host).strip() or "0.0.0.0"
+        self.network_port = int(network_port)
+        self.export_port = int(network_export_port)
         self.track_cbd_flower = track_cbd_flower
         self.enable_stock_coloring = enable_stock_coloring
         self.enable_usage_coloring = enable_usage_coloring
@@ -1735,6 +2016,18 @@ class CannabisTracker:
             self.root.after(0, self._refresh_stock)
         except Exception:
             pass
+        if network_changed and self.network_mode == MODE_HOST:
+            self._stop_export_server()
+            self._stop_network_server()
+            self._ensure_network_server()
+            self._ensure_export_server()
+        if network_changed and self.network_mode == MODE_CLIENT:
+            if not network_ping(self.network_host, int(self.network_port), timeout=1.5):
+                messagebox.showwarning(
+                    "Client connectivity",
+                    f"Could not reach host {self.network_host}:{self.network_port}.",
+                )
+            self.load_data()
         self.save_data()
         if self.settings_window:
             self.settings_window.destroy()
@@ -2141,11 +2434,22 @@ class CannabisTracker:
         local_style.map(
             tab_style,
             background=[("selected", selected_bg), ("!selected", ctrl_bg)],
-            foreground=[("selected", fg), ("!selected", fg)],
+            foreground=[("selected", fg), ("!selected", fg), ("disabled", fg)],
         )
         local_style.configure(sep_style, background=border)
         try:
             notebook.configure(style=style_name)
+            tabs = notebook.tabs()
+            labels = [
+                "Tracker settings",
+                "Window settings",
+                "Colour settings",
+                "Theme",
+                "Data settings",
+            ]
+            for idx, tab_id in enumerate(tabs):
+                if idx < len(labels):
+                    notebook.tab(tab_id, text=labels[idx])
             current = notebook.index("current")
             notebook.select(current)
         except Exception:
@@ -2463,19 +2767,49 @@ class CannabisTracker:
             "enable_stock_coloring": self.enable_stock_coloring,
             "enable_usage_coloring": self.enable_usage_coloring,
         }
+        if self.network_mode == MODE_CLIENT:
+            ok = self._push_network_tracker_data(data)
+            if not ok:
+                if not self._network_error_shown:
+                    self._network_error_shown = True
+                    messagebox.showerror(
+                        "Network save failed",
+                        f"Could not save tracker data to host {self.network_host}:{self.network_port}.",
+                    )
+            else:
+                self._update_data_mtime(reset=True)
+            self._save_config()
+            return
         save_tracker_data(data, path=Path(self.data_path), logger=lambda m: print(m))
         self._update_data_mtime()
         self._save_config()
     def load_data(self) -> None:
-        data = load_tracker_data(path=Path(self.data_path), logger=lambda m: print(m))
+        if self.network_mode == MODE_CLIENT:
+            data = self._fetch_network_tracker_data()
+            if not data:
+                self.flowers = {}
+                self.logs = []
+                self._update_data_mtime(reset=True)
+                if not self._network_error_shown:
+                    self._network_error_shown = True
+                    messagebox.showwarning(
+                        "Network data unavailable",
+                        f"Could not load tracker data from host {self.network_host}:{self.network_port}.",
+                    )
+                return
+        else:
+            data = load_tracker_data(path=Path(self.data_path), logger=lambda m: print(m))
         if not data:
             messagebox.showwarning("No data", f"No tracker data found at {self.data_path}")
             self._update_data_mtime(reset=True)
             return
-        self.flowers = {}
-        loaded = load_tracker_data(path=Path(self.data_path), logger=lambda m: print(m))
-        if loaded:
-            data = loaded
+        if self.network_mode != MODE_CLIENT:
+            loaded = load_tracker_data(path=Path(self.data_path), logger=lambda m: print(m))
+            if loaded:
+                data = loaded
+        self._apply_loaded_tracker_data(data)
+
+    def _apply_loaded_tracker_data(self, data: dict, remote_mtime: float | None = None) -> None:
         self.flowers = {}
         for item in data.get("flowers", []):
             self.flowers[item["name"]] = Flower(
@@ -2552,6 +2886,16 @@ class CannabisTracker:
         else:
             self.current_date = date.today()
         self._last_seen_date = self.current_date
+        if self.network_mode == MODE_CLIENT:
+            if remote_mtime is not None:
+                self._network_tracker_mtime = float(remote_mtime or 0.0)
+            else:
+                meta = fetch_tracker_meta(self.network_host, int(self.network_port), timeout=0.9)
+                if isinstance(meta, dict):
+                    try:
+                        self._network_tracker_mtime = float(meta.get("mtime") or 0.0)
+                    except Exception:
+                        self._network_tracker_mtime = 0.0
         self._update_data_mtime()
     def choose_data_file(self) -> None:
         path = filedialog.askopenfilename(
@@ -2607,6 +2951,16 @@ class CannabisTracker:
         self.scraper_status_stopped_color = str(cfg.get("scraper_status_stopped_color", self.scraper_status_stopped_color))
         self.scraper_status_error_color = str(cfg.get("scraper_status_error_color", self.scraper_status_error_color))
         self.show_scraper_buttons = bool(cfg.get("show_scraper_buttons", self.show_scraper_buttons))
+        self.network_host = str(cfg.get("network_host", self.network_host)).strip() or "127.0.0.1"
+        self.network_bind_host = str(cfg.get("network_bind_host", self.network_bind_host)).strip() or "0.0.0.0"
+        try:
+            self.network_port = max(1, min(65535, int(cfg.get("network_port", self.network_port))))
+        except Exception:
+            self.network_port = DEFAULT_NETWORK_PORT
+        try:
+            self.export_port = max(1, min(65535, int(cfg.get("network_export_port", self.export_port))))
+        except Exception:
+            self.export_port = DEFAULT_EXPORT_PORT
         try:
             cap_cfg = _load_capture_config()
             self.scraper_notify_windows = bool(cap_cfg.get("notify_windows", self.scraper_notify_windows))
@@ -2761,6 +3115,10 @@ class CannabisTracker:
             "scraper_status_stopped_color": self.scraper_status_stopped_color,
             "scraper_status_error_color": self.scraper_status_error_color,
             "show_scraper_buttons": self.show_scraper_buttons,
+            "network_host": self.network_host,
+            "network_bind_host": self.network_bind_host,
+            "network_port": int(self.network_port),
+            "network_export_port": int(self.export_port),
         }
         save_tracker_config(Path(TRACKER_CONFIG_FILE), cfg)
     def _settings_choose_data(self) -> None:
@@ -3156,6 +3514,9 @@ class CannabisTracker:
             self._data_mtime = None
     def _maybe_reload_external(self) -> None:
         """Reload data if tracker file changed externally (e.g., mix calculator)."""
+        if self.network_mode == MODE_CLIENT:
+            self._request_client_network_poll(initial=False)
+            return
         try:
             current = os.path.getmtime(self.data_path)
         except OSError:
@@ -3508,6 +3869,7 @@ class CannabisTracker:
             pass
         self._shutdown_children()
         self._destroy_child_windows()
+        self._stop_network_server()
         self._stop_export_server()
         self._stop_tray_icon()
         self.root.destroy()
@@ -3704,6 +4066,19 @@ class CannabisTracker:
                     return
             except Exception:
                 pass
+            if self.network_mode == MODE_CLIENT:
+                # Client mode ignores stale local library data; refresh from host before opening.
+                try:
+                    remote_entries = self._fetch_network_library_data()
+                    if isinstance(remote_entries, list):
+                        lib_path = Path(self.library_data_path or TRACKER_LIBRARY_FILE)
+                        lib_path.parent.mkdir(parents=True, exist_ok=True)
+                        lib_path.write_text(
+                            json.dumps(remote_entries, ensure_ascii=False, indent=2),
+                            encoding="utf-8",
+                        )
+                except Exception:
+                    pass
             if getattr(sys, "frozen", False):
                 args = [sys.executable, "--run-library"]
                 cwd = os.path.dirname(sys.executable) or os.getcwd()
@@ -3713,11 +4088,37 @@ class CannabisTracker:
                     entry = Path(__file__).resolve()
                 args = [sys.executable, str(entry), "--run-library"]
                 cwd = os.path.dirname(str(entry)) or os.getcwd()
-            subprocess.Popen(args, cwd=cwd)
+            proc = subprocess.Popen(args, cwd=cwd)
+            if self.network_mode == MODE_CLIENT:
+                self._watch_library_process(proc)
             if close_tools and self.tools_window and tk.Toplevel.winfo_exists(self.tools_window):
                 self.tools_window.destroy()
         except Exception as exc:
             messagebox.showerror("Cannot launch", f"Failed to launch flower library:\n{exc}")
+
+    def _watch_library_process(self, proc: subprocess.Popen) -> None:
+        def poll() -> None:
+            try:
+                if proc.poll() is None:
+                    self.root.after(700, poll)
+                    return
+            except Exception:
+                return
+            try:
+                if self.network_mode != MODE_CLIENT:
+                    return
+                lib_path = Path(self.library_data_path or TRACKER_LIBRARY_FILE)
+                if not lib_path.exists():
+                    return
+                payload = json.loads(lib_path.read_text(encoding="utf-8"))
+                if isinstance(payload, list):
+                    self._push_network_library_data(payload)
+            except Exception:
+                pass
+        try:
+            self.root.after(700, poll)
+        except Exception:
+            pass
     def _restore_from_tray(self) -> None:
         self.is_hidden_to_tray = False
         self._stop_tray_icon()
@@ -3775,7 +4176,8 @@ class CannabisTracker:
         btn = getattr(self, 'scraper_button', None)
         if btn:
             try:
-                (btn.grid if self.show_scraper_buttons else btn.grid_remove)()
+                show_scraper_btn = self.show_scraper_buttons and self.network_mode != MODE_CLIENT
+                (btn.grid if show_scraper_btn else btn.grid_remove)()
             except Exception:
                 pass
         btn = getattr(self, 'flower_browser_button', None)
@@ -4077,6 +4479,18 @@ class CannabisTracker:
             pass
 
     def _status_tooltip_text(self) -> str:
+        if self.network_mode == MODE_CLIENT:
+            state, missed = self._client_connection_state()
+            label = {
+                "good": "Connected",
+                "interrupted": "Connection interrupted",
+                "down": "Disconnected",
+            }.get(state, "Unknown")
+            return (
+                f"Client connection: {label}\n"
+                f"Missed polls: {missed}\n"
+                "Green: connected | Orange: interrupted | Red: disconnected"
+            )
         muted = bool(getattr(self, "scraper_notifications_muted", False))
         muted_txt = "Muted" if muted else "Unmuted"
         state_txt = "Stopped"
@@ -4116,6 +4530,8 @@ class CannabisTracker:
         self._hide_tooltip()
 
     def _on_status_double_click(self, _event: tk.Event | None = None) -> None:
+        if self.network_mode == MODE_CLIENT:
+            return
         try:
             running, _warn = resolve_scraper_status(getattr(self, "child_procs", []))
             if running:
@@ -4183,6 +4599,8 @@ class CannabisTracker:
             pass
 
     def _on_status_right_click(self, _event: tk.Event | None = None) -> None:
+        if self.network_mode == MODE_CLIENT:
+            return
         self._toggle_scraper_notifications_mute()
 
     def _toggle_scraper_notifications_mute(self) -> None:
@@ -4261,6 +4679,9 @@ class CannabisTracker:
         try:
             self._prune_child_procs()
             running, warn = resolve_scraper_status(getattr(self, "child_procs", []))
+            client_state = None
+            if self.network_mode == MODE_CLIENT:
+                client_state, _missed = self._client_connection_state()
             if getattr(self, "tray_icon", None):
                 if not getattr(self, "show_scraper_buttons", True):
                     icon_path = self._resource_path('icon.png')
@@ -4277,7 +4698,7 @@ class CannabisTracker:
                 self._apply_scraper_controls_visibility()
                 return
             target_size = 32
-            img = self._build_status_image(running, warn, size=target_size)
+            img = self._build_status_image(running, warn, size=target_size, client_state=client_state)
             try:
                 if img is not None and Image is not None and hasattr(img, "size") and tuple(img.size) != (target_size, target_size):
                     img = img.copy()
@@ -4300,11 +4721,23 @@ class CannabisTracker:
             except Exception:
                 pass
 
-    def _build_status_image(self, running: bool, warn: bool, size: int = 64):
+    def _build_status_image(
+        self,
+        running: bool,
+        warn: bool,
+        size: int = 64,
+        client_state: str | None = None,
+    ):
         if Image is None or ImageDraw is None:
             return _build_scraper_status_image(getattr(self, "child_procs", []))
         try:
-            if warn:
+            if client_state == "good":
+                color_hex = self.scraper_status_running_color
+            elif client_state == "interrupted":
+                color_hex = self.scraper_status_error_color
+            elif client_state == "down":
+                color_hex = self.scraper_status_stopped_color
+            elif warn:
                 color_hex = self.scraper_status_error_color
             elif running:
                 color_hex = self.scraper_status_running_color
@@ -4325,3 +4758,14 @@ class CannabisTracker:
             return img
         except Exception:
             return _build_scraper_status_image(getattr(self, "child_procs", []))
+
+    def _client_connection_state(self) -> tuple[str, int]:
+        missed = int(getattr(self, "_client_missed_pings", 0) or 0)
+        ever = bool(getattr(self, "_client_ever_connected", False))
+        if not ever:
+            return ("down" if missed >= 3 else "interrupted", missed)
+        if missed <= 0:
+            return ("good", 0)
+        if missed >= 3:
+            return ("down", missed)
+        return ("interrupted", missed)
