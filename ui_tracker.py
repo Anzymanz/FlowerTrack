@@ -2321,11 +2321,22 @@ class CannabisTracker:
         local_style.map(
             tab_style,
             background=[("selected", selected_bg), ("!selected", ctrl_bg)],
-            foreground=[("selected", fg), ("!selected", fg)],
+            foreground=[("selected", fg), ("!selected", fg), ("disabled", fg)],
         )
         local_style.configure(sep_style, background=border)
         try:
             notebook.configure(style=style_name)
+            tabs = notebook.tabs()
+            labels = [
+                "Tracker settings",
+                "Window settings",
+                "Colour settings",
+                "Theme",
+                "Data settings",
+            ]
+            for idx, tab_id in enumerate(tabs):
+                if idx < len(labels):
+                    notebook.tab(tab_id, text=labels[idx])
             current = notebook.index("current")
             notebook.select(current)
         except Exception:

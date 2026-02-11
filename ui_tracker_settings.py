@@ -78,7 +78,7 @@ def open_tracker_settings(app) -> None:
     local_style.map(
         tab_style_tab,
         background=[("selected", selected_bg), ("active", ctrl_bg), ("!selected", ctrl_bg)],
-        foreground=[("selected", fg), ("active", fg), ("!selected", fg)],
+        foreground=[("selected", fg), ("active", fg), ("!selected", fg), ("disabled", fg)],
         bordercolor=[("selected", border), ("active", border), ("!selected", border)],
         lightcolor=[("selected", border), ("active", border), ("!selected", border)],
         darkcolor=[("selected", border), ("active", border), ("!selected", border)],
@@ -105,6 +105,15 @@ def open_tracker_settings(app) -> None:
     notebook.add(tab_colors, text="Colour settings")
     notebook.add(tab_theme, text="Theme")
     notebook.add(tab_data, text="Data settings")
+    try:
+        # Re-assert labels to avoid occasional blank tab captions after style/theme refresh.
+        notebook.tab(tab_tracker, text="Tracker settings")
+        notebook.tab(tab_window, text="Window settings")
+        notebook.tab(tab_colors, text="Colour settings")
+        notebook.tab(tab_theme, text="Theme")
+        notebook.tab(tab_data, text="Data settings")
+    except Exception:
+        pass
     notebook.configure(style=tab_style)
 
     for tab in (tab_colors, tab_tracker, tab_data, tab_window, tab_theme):
