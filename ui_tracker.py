@@ -373,6 +373,12 @@ class CannabisTracker:
 
     def open_parser(self, show_window: bool = True) -> None:
         """Launch the scraper UI in a separate process."""
+        if self.network_mode == MODE_CLIENT:
+            try:
+                messagebox.showinfo("Client mode", "Medicann Scraper is disabled in client mode.")
+            except Exception:
+                pass
+            return
         def focus_existing() -> bool:
             try:
                 import ctypes
@@ -1823,9 +1829,10 @@ class CannabisTracker:
         frame.rowconfigure(3, weight=0)
         frame.rowconfigure(4, weight=0)
         ttk.Label(frame, text="Tools", font=self.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))
-        ttk.Button(frame, text="Medicann Scraper", command=lambda: self._open_scraper_from_tools()).grid(
-            row=1, column=0, sticky="w", pady=(0, 6)
-        )
+        if self.network_mode != MODE_CLIENT:
+            ttk.Button(frame, text="Medicann Scraper", command=lambda: self._open_scraper_from_tools()).grid(
+                row=1, column=0, sticky="w", pady=(0, 6)
+            )
         ttk.Button(frame, text="Flower Library", command=lambda: self.launch_flower_library(close_tools=True)).grid(
             row=2, column=0, sticky="w", pady=(0, 6)
         )
@@ -4161,7 +4168,8 @@ class CannabisTracker:
         btn = getattr(self, 'scraper_button', None)
         if btn:
             try:
-                (btn.grid if self.show_scraper_buttons else btn.grid_remove)()
+                show_scraper_btn = self.show_scraper_buttons and self.network_mode != MODE_CLIENT
+                (btn.grid if show_scraper_btn else btn.grid_remove)()
             except Exception:
                 pass
         btn = getattr(self, 'flower_browser_button', None)
@@ -4463,6 +4471,8 @@ class CannabisTracker:
             pass
 
     def _status_tooltip_text(self) -> str:
+        if self.network_mode == MODE_CLIENT:
+            return "Scraper controls are disabled in client mode."
         muted = bool(getattr(self, "scraper_notifications_muted", False))
         muted_txt = "Muted" if muted else "Unmuted"
         state_txt = "Stopped"
@@ -4502,6 +4512,8 @@ class CannabisTracker:
         self._hide_tooltip()
 
     def _on_status_double_click(self, _event: tk.Event | None = None) -> None:
+        if self.network_mode == MODE_CLIENT:
+            return
         try:
             running, _warn = resolve_scraper_status(getattr(self, "child_procs", []))
             if running:
@@ -4569,6 +4581,8 @@ class CannabisTracker:
             pass
 
     def _on_status_right_click(self, _event: tk.Event | None = None) -> None:
+        if self.network_mode == MODE_CLIENT:
+            return
         self._toggle_scraper_notifications_mute()
 
     def _toggle_scraper_notifications_mute(self) -> None:
