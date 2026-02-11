@@ -1402,9 +1402,9 @@ document.addEventListener('DOMContentLoaded', () => {
             );
         }
         parts.push(
-            `${flowerCount} flower` +
-            ` - ${oilCount} oil` +
-            ` - ${vapeCount} vape` +
+            `${flowerCount} flowers` +
+            ` - ${oilCount} oils` +
+            ` - ${vapeCount} vapes` +
             ` - ${pastilleCount} pastilles`
         );
         if (ts) parts.push(`Updated ${ts}`);
