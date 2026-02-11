@@ -2394,8 +2394,8 @@ class CannabisTracker:
             cbd_avg_daily = cbd_total / max(days_count, 1)
             rows.extend(
                 [
-                    ("Total CBD usage", f"{cbd_total:.3f} g"),
                     ("Average daily CBD usage", f"{cbd_avg_daily:.3f} g"),
+                    ("Total CBD usage", f"{cbd_total:.3f} g"),
                 ]
             )
         body = "\n".join(f"{k}: {v}" for k, v in rows)
