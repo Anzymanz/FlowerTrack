@@ -3915,7 +3915,7 @@ class CannabisTracker:
             label.bind("<Double-Button-1>", self._on_status_double_click)
             label.bind("<Button-3>", self._on_status_right_click)
             label.bind("<Enter>", self._on_status_enter)
-            label.bind("<Leave>", lambda _e: self._hide_tooltip())
+            label.bind("<Leave>", self._on_status_leave)
         except Exception:
             pass
 
@@ -3939,9 +3939,24 @@ class CannabisTracker:
 
     def _on_status_enter(self, event: tk.Event | None = None) -> None:
         try:
-            self._show_tooltip(self._status_tooltip_text(), event)
+            pending = getattr(self, "_status_tooltip_after_id", None)
+            if pending is not None:
+                self.root.after_cancel(pending)
+            self._status_tooltip_after_id = self.root.after(
+                400, lambda: self._show_tooltip(self._status_tooltip_text(), None)
+            )
         except Exception:
             pass
+
+    def _on_status_leave(self, _event: tk.Event | None = None) -> None:
+        try:
+            pending = getattr(self, "_status_tooltip_after_id", None)
+            if pending is not None:
+                self.root.after_cancel(pending)
+        except Exception:
+            pass
+        self._status_tooltip_after_id = None
+        self._hide_tooltip()
 
     def _on_status_double_click(self, _event: tk.Event | None = None) -> None:
         try:
