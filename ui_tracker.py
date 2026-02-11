@@ -2377,13 +2377,13 @@ class CannabisTracker:
         )
         avg_daily = thc_total / max(days_count, 1)
         rows = [
-            ("Average interval", stats["avg_interval"]),
+            ("Avg interval", stats["avg_interval"]),
             ("Longest interval", stats["max_interval"]),
+            ("Avg dose", stats["avg_dose"]),
             ("Largest dose", stats["max_dose"]),
             ("Smallest dose", stats["min_dose"]),
-            ("Average dose", stats["avg_dose"]),
-            ("Total THC usage", f"{thc_total:.3f} g"),
             ("Average daily THC usage", f"{avg_daily:.3f} g"),
+            ("Total THC usage", f"{thc_total:.3f} g"),
         ]
         if getattr(self, "track_cbd_flower", False):
             cbd_total = sum(
