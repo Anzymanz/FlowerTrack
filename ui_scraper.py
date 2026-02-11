@@ -11,6 +11,7 @@ import webbrowser
 import time
 import ctypes
 import threading
+import re
 from pathlib import Path
 from datetime import datetime, timezone
 from queue import Queue, Empty
@@ -162,6 +163,8 @@ class App(tk.Tk):
         self.pagination_label = ttk.Label(self, text="", font=("", 9))
         self.pagination_label.pack()
         self._pagination_busy = False
+        self._pagination_pages_seen = 0
+        self._pagination_pages_expected = 0
         # Capture status bookkeeping
         self.capture_status = "idle"
         self._write_scraper_state("idle")
@@ -574,6 +577,7 @@ class App(tk.Tk):
             messagebox.showerror("History", f"Could not open history:\n{exc}")
 
     def _capture_log(self, msg: str):
+        self._update_pagination_progress_from_log(msg)
         if hasattr(self, "logger") and self.logger:
             self.logger.info(msg)
         else:
@@ -676,13 +680,54 @@ class App(tk.Tk):
         if self._pagination_busy == busy:
             return
         self._pagination_busy = busy
+        if not busy:
+            self._pagination_pages_seen = 0
+            self._pagination_pages_expected = 0
         try:
-            if busy:
-                self.pagination_label.config(text="Fetching pages...")
-            else:
-                self.pagination_label.config(text="")
+            self.pagination_label.config(text=self._pagination_progress_text() if busy else "")
         except Exception as exc:
             self._debug_log(f"Suppressed exception: {exc}")
+
+    def _pagination_progress_text(self) -> str:
+        if not self._pagination_busy:
+            return ""
+        seen = max(0, int(self._pagination_pages_seen or 0))
+        expected = max(0, int(self._pagination_pages_expected or 0))
+        if expected > 0:
+            return f"Fetching pages... {min(seen, expected)}/{expected}"
+        if seen > 0:
+            return f"Fetching pages... {seen}"
+        return "Fetching pages..."
+
+    def _update_pagination_progress_from_log(self, msg: str) -> None:
+        text = str(msg or "")
+        if not text:
+            return
+        lower = text.lower()
+        # Base pagination announcement: API pagination: base=50 total=430 take=50
+        if "api pagination:" in lower:
+            m = re.search(r"total=(\d+)\s+take=(\d+)", text, flags=re.IGNORECASE)
+            if m:
+                total = max(0, int(m.group(1)))
+                take = max(1, int(m.group(2)))
+                expected = max(1, (total + take - 1) // take)
+                self._pagination_pages_expected = expected
+                self._pagination_pages_seen = 1  # base page is already fetched
+                self._set_pagination_busy(True)
+                try:
+                    self.pagination_label.config(text=self._pagination_progress_text())
+                except Exception:
+                    pass
+            return
+        # Follow-up page fetches: API pagination fetch skip=200 status=200
+        if "api pagination fetch skip=" in lower:
+            if "status=error" not in lower:
+                self._pagination_pages_seen = max(1, int(self._pagination_pages_seen or 0)) + 1
+            self._set_pagination_busy(True)
+            try:
+                self.pagination_label.config(text=self._pagination_progress_text())
+            except Exception:
+                pass
     def _generate_change_export(self, items: list[dict] | None = None, silent: bool = False):
         """Generate an HTML snapshot for the latest items and keep only recent ones."""
         data = items if items is not None else self._get_export_items()
