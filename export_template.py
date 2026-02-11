@@ -548,6 +548,21 @@ function clearUnreadVisualForCard(card) {
     if (!card) return;
     card.classList.remove('unread-new', 'unread-removed', 'unread-price-up', 'unread-price-down', 'unread-stock-up', 'unread-stock-down');
     card.querySelectorAll('.badge-removed[data-unread-badge=\"1\"]').forEach(el => el.remove());
+    const stockPill = findStockPill(card);
+    if (stockPill) {
+        stockPill.classList.remove('stock-up', 'stock-down', 'stock-change');
+    }
+}
+function findStockPill(card) {
+    if (!card) return null;
+    let pill = card.querySelector('.stock-pill');
+    if (pill) return pill;
+    const pills = card.querySelectorAll('.pill');
+    for (const el of pills) {
+        const txt = (el.textContent || '').trim();
+        if (txt.startsWith('📊')) return el;
+    }
+    return null;
 }
 function ensureUnreadRemovedBadge(card) {
     if (!card) return;
@@ -581,15 +596,19 @@ function applyUnreadVisualForCard(card) {
         }
     }
     if (entry.stock || entry.out_of_stock || entry.restock) {
+        const stockPill = findStockPill(card);
         const stockDelta = parseFloat(entry.stock_delta);
         if (Number.isFinite(stockDelta)) {
             if (stockDelta < 0) {
                 card.classList.add('unread-stock-down');
+                if (stockPill) stockPill.classList.add('stock-down');
             } else {
                 card.classList.add('unread-stock-up');
+                if (stockPill) stockPill.classList.add('stock-up');
             }
         } else {
             card.classList.add('unread-stock-up');
+            if (stockPill) stockPill.classList.add('stock-change');
         }
     }
 }

@@ -507,7 +507,7 @@ def export_html(data, path, fetch_images=False):
                 stock_text = "15+ remaining"
             else:
                 stock_text = f"{remaining_val} remaining"
-        stock_pill_class = 'pill'
+        stock_pill_class = 'pill stock-pill'
         stock_pill = f"<span class='{stock_pill_class}'>📊 {esc(stock_text)}</span>" if stock_text else ""
         stock_indicator = (
             f"<span class='stock-indicator "
