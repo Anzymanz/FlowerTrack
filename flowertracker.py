@@ -169,6 +169,9 @@ def _enable_optional_console() -> None:
 def main() -> None:
     network_mode = consume_mode_flags()
     _enable_optional_console()
+    # Close boot splash as early as possible so long startup work (e.g. network init)
+    # does not leave the splash hanging in host/client modes.
+    _close_pyinstaller_splash()
     if "--diagnostics" in sys.argv:
         try:
             cfg = load_unified_config(Path(CONFIG_FILE), decrypt_scraper_keys=[], write_back=False)

@@ -212,6 +212,27 @@ class CannabisTracker:
         self._build_ui()
         self._ensure_storage_dirs()
         self._load_config()
+        # Defer network/data startup until the UI is painted so client-mode connection
+        # attempts do not make the initial window load feel choppy.
+        self.root.after(10, self._startup_data_init)
+        self.root.after(50, lambda: self._set_dark_title_bar(self.dark_var.get()))
+        self.apply_theme(self.dark_var.get())
+        if self._force_center_on_start:
+            try:
+                self._center_window_on_screen(self.root)
+            except Exception:
+                pass
+        self._refresh_stock()
+        self._refresh_log()
+        try:
+            # Run a short startup stabilization so late child geometry requests
+            # cannot permanently displace the restored center sash.
+            self.root.after(120, self._finalize_split_restore)
+        except Exception:
+            self._restoring_split = False
+        self._update_scraper_status_icon()
+
+    def _startup_data_init(self) -> None:
         try:
             if self.network_mode == MODE_HOST:
                 self._ensure_network_server()
@@ -236,22 +257,10 @@ class CannabisTracker:
                 # Leave empty state rather than crashing.
                 self.flowers = {}
                 self.logs = []
-        self.root.after(50, lambda: self._set_dark_title_bar(self.dark_var.get()))
+        # load_data can update theme-affecting values; re-apply after startup load.
         self.apply_theme(self.dark_var.get())
-        if self._force_center_on_start:
-            try:
-                self._center_window_on_screen(self.root)
-            except Exception:
-                pass
         self._refresh_stock()
         self._refresh_log()
-        try:
-            # Run a short startup stabilization so late child geometry requests
-            # cannot permanently displace the restored center sash.
-            self.root.after(120, self._finalize_split_restore)
-        except Exception:
-            self._restoring_split = False
-        self._update_scraper_status_icon()
     def _scraper_process_alive_from_state(self) -> bool:
         try:
             state = read_scraper_state(SCRAPER_STATE_FILE)
