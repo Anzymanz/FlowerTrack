@@ -2894,8 +2894,12 @@ class CannabisTracker:
         lines = ["This backup will overwrite the following:"]
         if _has("data/"):
             lines.append("- Tracker data (data/)")
-        if _has("logs/", "changes.ndjson"):
-            lines.append("- Change history log (logs/changes.ndjson)")
+        if _has("logs/"):
+            lines.append("- Logs (logs/)")
+        if _has("dumps/"):
+            lines.append("- Dumps (dumps/)")
+        if _has("Exports/") or _has("exports/"):
+            lines.append("- Flower Browser exports (Exports/)")
         if any(name.endswith(Path(TRACKER_CONFIG_FILE).name) for name in names):
             lines.append("- Tracker config (flowertrack_config.json)")
         if len(lines) == 1:
@@ -2940,35 +2944,105 @@ class CannabisTracker:
         app_dir = Path(APP_DIR)
         data_dir = app_dir / "data"
         logs_dir = app_dir / "logs"
+        dumps_dir = app_dir / "dumps"
+        exports_dir = Path(EXPORTS_DIR_DEFAULT)
+        backups_dir = app_dir / "backups"
         config_path = Path(TRACKER_CONFIG_FILE)
-        changes_path = logs_dir / "changes.ndjson"
-        paths = set()
-        if data_dir.exists():
-            for path in data_dir.rglob("*"):
-                if path.is_file():
-                    paths.add(path)
+        paths: set[Path] = set()
+
+        def _is_auth_token_file(path: Path) -> bool:
+            try:
+                name = path.name.lower()
+            except Exception:
+                return False
+            if name in {"api_auth.json", "api_auth.json.bak", "api_auth.json.tmp"}:
+                return True
+            return False
+
+        def _collect_tree(root: Path) -> None:
+            if not root.exists():
+                return
+            for path in root.rglob("*"):
+                if not path.is_file():
+                    continue
+                if backups_dir in path.parents:
+                    continue
+                if _is_auth_token_file(path):
+                    continue
+                paths.add(path)
+
+        _collect_tree(data_dir)
+        _collect_tree(logs_dir)
+        _collect_tree(dumps_dir)
+        _collect_tree(exports_dir)
         if config_path.exists():
             paths.add(config_path)
-        if changes_path.exists():
-            paths.add(changes_path)
         # Include current tracker/library files if they live outside the app data dir.
         for extra in (Path(self.data_path), Path(self.library_data_path)):
             try:
-                if extra.exists() and app_dir not in extra.parents:
+                if extra.exists() and app_dir not in extra.parents and not _is_auth_token_file(extra):
                     paths.add(extra)
             except Exception:
                 pass
+
+        def _backup_arcname(path: Path) -> str:
+            if path == config_path:
+                return config_path.name
+            try:
+                if app_dir in path.parents:
+                    return path.relative_to(app_dir).as_posix()
+            except Exception:
+                pass
+            return (Path("external") / path.name).as_posix()
+
+        def _sanitized_config_bytes() -> bytes:
+            try:
+                raw = _read_json_file(config_path)
+                if not isinstance(raw, dict):
+                    raise ValueError("invalid config")
+                scraper = raw.get("scraper")
+                if isinstance(scraper, dict):
+                    # Keep credentials/settings, but strip token fields from backup.
+                    for key in ("ha_token", "api_token", "access_token", "refresh_token", "auth_token", "authorization"):
+                        if key in scraper:
+                            scraper[key] = ""
+                return json.dumps(raw, ensure_ascii=False, indent=2).encode("utf-8")
+            except Exception:
+                try:
+                    return config_path.read_bytes()
+                except Exception:
+                    return b"{}"
+
+        def _read_json_file(path: Path):
+            try:
+                return json.loads(path.read_text(encoding="utf-8"))
+            except Exception:
+                return {}
+
+        written = 0
+        used_names: set[str] = set()
         with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
             for path in sorted(paths):
                 try:
-                    if app_dir in path.parents:
-                        arcname = path.relative_to(app_dir)
+                    arcname = _backup_arcname(path)
+                    if arcname in used_names:
+                        base = Path(arcname)
+                        idx = 2
+                        while True:
+                            alt = (base.parent / f"{base.stem}-{idx}{base.suffix}").as_posix()
+                            if alt not in used_names:
+                                arcname = alt
+                                break
+                            idx += 1
+                    used_names.add(arcname)
+                    if path == config_path:
+                        zf.writestr(arcname, _sanitized_config_bytes())
                     else:
-                        arcname = Path("external") / path.name
-                    zf.write(path, arcname.as_posix())
+                        zf.write(path, arcname)
+                    written += 1
                 except Exception:
                     pass
-        return len(paths)
+        return written
 
     def _snapshot_data_json_backups(self, stamp: str) -> tuple[int, Path]:
         app_dir = Path(APP_DIR)
@@ -2995,22 +3069,59 @@ class CannabisTracker:
         app_dir = Path(APP_DIR)
         data_dir = app_dir / "data"
         logs_dir = app_dir / "logs"
+        dumps_dir = app_dir / "dumps"
+        exports_dir = Path(EXPORTS_DIR_DEFAULT)
         tmp_dir = Path(tempfile.mkdtemp(prefix="ft-backup-"))
         try:
             with zipfile.ZipFile(zip_path, "r") as zf:
                 zf.extractall(tmp_dir)
             src_data = tmp_dir / "data"
+            src_logs = tmp_dir / "logs"
+            src_dumps = tmp_dir / "dumps"
+            src_exports = tmp_dir / "Exports"
+            src_exports_lower = tmp_dir / "exports"
             src_config = tmp_dir / Path(TRACKER_CONFIG_FILE).name
-            src_changes = tmp_dir / "logs" / "changes.ndjson"
-            if src_data.exists():
+            src_external = tmp_dir / "external"
+            if src_data.exists() and src_data.is_dir():
                 if data_dir.exists():
                     shutil.rmtree(data_dir, ignore_errors=True)
                 shutil.copytree(src_data, data_dir)
+                # Never restore API auth tokens from backup archives.
+                for token_file in ("api_auth.json", "api_auth.json.bak", "api_auth.json.tmp"):
+                    try:
+                        (data_dir / token_file).unlink(missing_ok=True)
+                    except Exception:
+                        pass
+            if src_logs.exists() and src_logs.is_dir():
+                if logs_dir.exists():
+                    shutil.rmtree(logs_dir, ignore_errors=True)
+                shutil.copytree(src_logs, logs_dir)
+            if src_dumps.exists() and src_dumps.is_dir():
+                if dumps_dir.exists():
+                    shutil.rmtree(dumps_dir, ignore_errors=True)
+                shutil.copytree(src_dumps, dumps_dir)
+            restore_exports_src = src_exports if src_exports.exists() else src_exports_lower
+            if restore_exports_src.exists() and restore_exports_src.is_dir():
+                if exports_dir.exists():
+                    shutil.rmtree(exports_dir, ignore_errors=True)
+                shutil.copytree(restore_exports_src, exports_dir)
             if src_config.exists():
                 shutil.copy2(src_config, Path(TRACKER_CONFIG_FILE))
-            if src_changes.exists():
-                logs_dir.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(src_changes, logs_dir / "changes.ndjson")
+            if src_external.exists() and src_external.is_dir():
+                try:
+                    data_target = Path(self.data_path) if self.data_path else None
+                    library_target = Path(self.library_data_path) if self.library_data_path else None
+                    for ext_file in src_external.rglob("*"):
+                        if not ext_file.is_file():
+                            continue
+                        if data_target and ext_file.name == data_target.name:
+                            data_target.parent.mkdir(parents=True, exist_ok=True)
+                            shutil.copy2(ext_file, data_target)
+                        elif library_target and ext_file.name == library_target.name:
+                            library_target.parent.mkdir(parents=True, exist_ok=True)
+                            shutil.copy2(ext_file, library_target)
+                except Exception:
+                    pass
         finally:
             try:
                 shutil.rmtree(tmp_dir, ignore_errors=True)
