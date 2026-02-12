@@ -4596,6 +4596,17 @@ class CannabisTracker:
             pass
 
     def _status_tooltip_text(self) -> str:
+        muted = bool(getattr(self, "scraper_notifications_muted", False))
+        muted_txt = "Muted" if muted else "Unmuted"
+        state_txt = "Stopped"
+        try:
+            running, warn = resolve_scraper_status(getattr(self, "child_procs", []))
+            if running:
+                state_txt = "Running"
+            elif warn:
+                state_txt = "Errored"
+        except Exception:
+            pass
         if self.network_mode == MODE_CLIENT:
             state, missed = self._client_connection_state()
             label = {
@@ -4612,20 +4623,10 @@ class CannabisTracker:
             active = self._host_active_connections_count()
             return (
                 f"Host mode | Active clients: {active}\n"
-                "Scraper indicator:\n"
-                "Green: running | Orange: errored | Red: stopped"
+                f"Scraper: {state_txt} | Notifications: {muted_txt}\n"
+                "Double-click: Start/Stop scraper\n"
+                "Right-click: Mute/Unmute notifications"
             )
-        muted = bool(getattr(self, "scraper_notifications_muted", False))
-        muted_txt = "Muted" if muted else "Unmuted"
-        state_txt = "Stopped"
-        try:
-            running, warn = resolve_scraper_status(getattr(self, "child_procs", []))
-            if running:
-                state_txt = "Running"
-            elif warn:
-                state_txt = "Errored"
-        except Exception:
-            pass
         return (
             f"Scraper: {state_txt} | Notifications: {muted_txt}\n"
             "Double-click: Start/Stop scraper\n"
