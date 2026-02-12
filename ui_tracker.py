@@ -33,6 +33,16 @@ from ui_tracker_status import (
     show_tooltip as _status_show_tooltip,
     status_tooltip_text as _status_tooltip_text_helper,
 )
+from ui_tracker_layout import (
+    apply_split_ratio as _layout_apply_split_ratio,
+    apply_stock_form_visibility as _layout_apply_stock_form_visibility,
+    finalize_split_restore as _layout_finalize_split_restore,
+    on_split_release as _layout_on_split_release,
+    persist_split_ratio as _layout_persist_split_ratio,
+    schedule_split_apply as _layout_schedule_split_apply,
+    schedule_split_persist as _layout_schedule_split_persist,
+    toggle_stock_form as _layout_toggle_stock_form,
+)
 from resources import resource_path as _resource_path
 from inventory import (
     TRACKER_DATA_FILE,
@@ -4255,155 +4265,28 @@ class CannabisTracker:
         self._apply_mix_button_visibility()
 
     def _toggle_stock_form(self) -> None:
-        prev_root_w = None
-        prev_root_h = None
-        prev_sash_x = None
-        try:
-            self.root.update_idletasks()
-            prev_root_w = int(self.root.winfo_width())
-            prev_root_h = int(self.root.winfo_height())
-            split = getattr(self, "main_split", None)
-            if split is not None:
-                prev_sash_x = int(split.sash_coord(0)[0])
-        except Exception:
-            pass
-        setattr(self, "_suspend_stock_width_save", True)
-        self.show_stock_form = not bool(getattr(self, "show_stock_form", True))
-        self._apply_stock_form_visibility()
-        try:
-            split = getattr(self, "main_split", None)
-            if split is not None and prev_sash_x is not None and prev_sash_x > 0:
-                def _restore_sash():
-                    try:
-                        split.sash_place(0, prev_sash_x, 0)
-                    except Exception:
-                        pass
-                    self._persist_split_ratio()
-                    setattr(self, "_suspend_stock_width_save", False)
-                self.root.after(220, _restore_sash)
-            else:
-                self.root.after(220, lambda: setattr(self, "_suspend_stock_width_save", False))
-            if prev_root_w and prev_root_w > 0 and prev_root_h and prev_root_h > 0:
-                # Prevent temporary width growth of the whole tracker window.
-                self.root.geometry(f"{prev_root_w}x{prev_root_h}")
-        except Exception:
-            setattr(self, "_suspend_stock_width_save", False)
-        try:
-            self._save_config()
-        except Exception:
-            pass
+        _layout_toggle_stock_form(self)
 
     def _persist_split_ratio(self) -> None:
-        try:
-            if getattr(self, "_restoring_split", False):
-                return
-            split = getattr(self, "main_split", None)
-            if split is None:
-                return
-            self.root.update_idletasks()
-            total_w = int(split.winfo_width())
-            if total_w <= 0:
-                return
-            sash_x = int(split.sash_coord(0)[0])
-            sash_w = int(split.cget("sashwidth") or 0)
-            usable = max(total_w - sash_w, 1)
-            ratio = sash_x / float(usable)
-            self.main_split_ratio = min(0.85, max(0.15, ratio))
-        except Exception:
-            pass
+        _layout_persist_split_ratio(self)
 
     def _finalize_split_restore(self) -> None:
-        def _tick(remaining: int) -> None:
-            try:
-                if not getattr(self, "_split_dragging", False):
-                    self._apply_split_ratio()
-            except Exception:
-                pass
-            if remaining > 0:
-                try:
-                    self._split_stabilize_job = self.root.after(140, lambda: _tick(remaining - 1))
-                except Exception:
-                    self._restoring_split = False
-                return
-            self._restoring_split = False
-
-        try:
-            _tick(7)
-        except Exception:
-            self._restoring_split = False
+        _layout_finalize_split_restore(self)
 
     def _schedule_split_persist(self) -> None:
-        try:
-            self._split_dragging = False
-            if self._split_save_job is not None:
-                try:
-                    self.root.after_cancel(self._split_save_job)
-                except Exception:
-                    pass
-            self._split_save_job = self.root.after(150, self._persist_split_ratio)
-        except Exception:
-            self._persist_split_ratio()
+        _layout_schedule_split_persist(self)
 
     def _on_split_release(self) -> None:
-        try:
-            self._split_dragging = False
-            self._persist_split_ratio()
-            self._schedule_split_persist()
-        except Exception:
-            pass
+        _layout_on_split_release(self)
 
     def _schedule_split_apply(self) -> None:
-        try:
-            if self._split_dragging:
-                return
-            if self._split_apply_job is not None:
-                try:
-                    self.root.after_cancel(self._split_apply_job)
-                except Exception:
-                    pass
-            self._split_apply_job = self.root.after(10, self._apply_split_ratio)
-        except Exception:
-            pass
+        _layout_schedule_split_apply(self)
 
     def _apply_split_ratio(self) -> None:
-        try:
-            split = getattr(self, "main_split", None)
-            if split is None:
-                return
-            self.root.update_idletasks()
-            total_w = int(split.winfo_width())
-            if total_w <= 0:
-                return
-            ratio = float(getattr(self, "main_split_ratio", 0.48) or 0.48)
-            ratio = min(0.85, max(0.15, ratio))
-            sash_w = int(split.cget("sashwidth") or 0)
-            usable = max(total_w - sash_w, 1)
-            x = int(usable * ratio)
-            left_w = x
-            right_w = max(total_w - sash_w - left_w, 1)
-            try:
-                split.paneconfigure(self.stock_wrap, width=left_w, minsize=220, stretch="always")
-                split.paneconfigure(self.right_content, width=right_w, minsize=260, stretch="always")
-            except Exception:
-                pass
-            split.sash_place(0, x, 0)
-        except Exception:
-            pass
+        _layout_apply_split_ratio(self)
 
     def _apply_stock_form_visibility(self) -> None:
-        frame = getattr(self, "stock_form_frame", None)
-        btn = getattr(self, "stock_form_toggle", None)
-        if frame:
-            try:
-                (frame.grid if self.show_stock_form else frame.grid_remove)()
-            except Exception:
-                pass
-        if btn:
-            try:
-                btn.configure(text="˅" if self.show_stock_form else "˄")
-            except Exception:
-                pass
-        self._apply_mix_button_visibility()
+        _layout_apply_stock_form_visibility(self)
 
     def _apply_mix_button_visibility(self) -> None:
         try:
