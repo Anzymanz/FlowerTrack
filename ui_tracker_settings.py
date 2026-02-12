@@ -491,6 +491,24 @@ def open_tracker_settings(app) -> None:
         except Exception:
             pass
         data_row += 1
+        if getattr(app, "network_mode", "standalone") == "host":
+            lbl_rate_limit = ttk.Label(frame, text="Rate limit (req/min)")
+            lbl_rate_limit.grid(row=data_row, column=0, sticky="w")
+            app.network_rate_limit_entry = ttk.Entry(frame, width=8)
+            app.network_rate_limit_entry.insert(
+                0,
+                str(getattr(app, "network_rate_limit_requests_per_minute", 0)),
+            )
+            app.network_rate_limit_entry.grid(row=data_row, column=1, sticky="w", padx=(12, 0), pady=(2, 0))
+            try:
+                app._bind_tooltip(
+                    lbl_rate_limit,
+                    "Optional per-client cap for /api/network requests. Set 0 to disable.",
+                )
+                app._bind_tooltip(app.network_rate_limit_entry, "Examples: 60, 120. 0 = unlimited.")
+            except Exception:
+                pass
+            data_row += 1
 
     frame = tab_window
     ttk.Label(frame, text="Window settings", font=app.font_bold_small).grid(row=0, column=0, sticky="w", pady=(0, 6))

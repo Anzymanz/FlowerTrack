@@ -55,12 +55,19 @@ def start_network_data_server(
     log: Callable[[str], None],
     access_key: str = "",
     allow_public_clients: bool = False,
+    rate_limit_requests_per_minute: int = 0,
+    rate_limit_window_seconds: float = 60.0,
 ) -> Tuple[Optional[http.server.ThreadingHTTPServer], Optional[threading.Thread], Optional[int]]:
     """Start host-mode JSON API server for shared tracker/library data."""
     bind = (bind_host or DEFAULT_BIND_HOST).strip() or DEFAULT_BIND_HOST
     port = int(preferred_port or DEFAULT_NETWORK_PORT)
     expected_key = str(access_key or "").strip()
     client_ttl_s = 20.0
+    rate_limit = max(0, int(rate_limit_requests_per_minute or 0))
+    try:
+        rate_window_s = max(1.0, float(rate_limit_window_seconds or 60.0))
+    except Exception:
+        rate_window_s = 60.0
 
     def _client_allowed(host: str) -> bool:
         try:
@@ -74,6 +81,37 @@ def start_network_data_server(
         return False
 
     class Handler(http.server.BaseHTTPRequestHandler):
+        def _check_rate_limit(self) -> bool:
+            if rate_limit <= 0:
+                return True
+            client_ip = ""
+            try:
+                client_ip = str(self.client_address[0] or "").strip()
+            except Exception:
+                client_ip = ""
+            if not client_ip:
+                return True
+            now = time.monotonic()
+            lock = getattr(self.server, "_ft_rate_lock", None)
+            buckets = getattr(self.server, "_ft_rate_buckets", None)
+            if lock is None or buckets is None:
+                return True
+            with lock:
+                hits = buckets.get(client_ip, [])
+                cutoff = now - rate_window_s
+                hits = [ts for ts in hits if float(ts) >= cutoff]
+                if len(hits) >= rate_limit:
+                    buckets[client_ip] = hits
+                    retry_after = max(1, int((hits[0] + rate_window_s) - now)) if hits else int(rate_window_s)
+                    self._send_json(
+                        {"ok": False, "error": "rate_limited", "retry_after_seconds": retry_after},
+                        status=429,
+                    )
+                    return False
+                hits.append(now)
+                buckets[client_ip] = hits
+            return True
+
         def _touch_client(self) -> None:
             try:
                 client_ip = str(self.client_address[0] or "").strip()
@@ -141,6 +179,8 @@ def start_network_data_server(
         def do_GET(self) -> None:  # noqa: N802
             if not self._check_access():
                 return
+            if not self._check_rate_limit():
+                return
             path = self.path.split("?", 1)[0].rstrip("/")
             if path == "/api/network/ping":
                 self._send_json({"ok": True, "ts": time.time()}, status=200)
@@ -169,6 +209,8 @@ def start_network_data_server(
 
         def do_PUT(self) -> None:  # noqa: N802
             if not self._check_access():
+                return
+            if not self._check_rate_limit():
                 return
             path = self.path.split("?", 1)[0].rstrip("/")
             body = self._read_json_body()
@@ -214,6 +256,8 @@ def start_network_data_server(
         setattr(httpd, "_ft_clients", {})
         setattr(httpd, "_ft_clients_lock", threading.Lock())
         setattr(httpd, "_ft_client_ttl", float(client_ttl_s))
+        setattr(httpd, "_ft_rate_buckets", {})
+        setattr(httpd, "_ft_rate_lock", threading.Lock())
     except Exception:
         pass
 

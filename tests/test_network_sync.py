@@ -23,7 +23,7 @@ def _free_port() -> int:
         sock.close()
 
 
-def _start_server(tmp_path: Path, access_key: str = ""):
+def _start_server(tmp_path: Path, access_key: str = "", **kwargs):
     tracker_data_path = tmp_path / "tracker_data.json"
     library_data_path = tmp_path / "library_data.json"
     logs: list[str] = []
@@ -34,6 +34,7 @@ def _start_server(tmp_path: Path, access_key: str = ""):
         library_data_path=library_data_path,
         log=logs.append,
         access_key=access_key,
+        **kwargs,
     )
     return httpd, thread, int(port or 0), tracker_data_path, library_data_path
 
@@ -136,5 +137,26 @@ def test_conflicting_network_writes_remain_consistent(tmp_path):
         assert library_final == library_a or library_final == library_b
         library_raw = json.loads(library_path.read_text(encoding="utf-8"))
         assert library_raw == library_a or library_raw == library_b
+    finally:
+        stop_network_data_server(httpd, thread, lambda _m: None)
+
+
+def test_network_sync_rate_limit_blocks_and_recovers(tmp_path):
+    httpd = thread = None
+    try:
+        httpd, thread, port, _, _ = _start_server(
+            tmp_path,
+            rate_limit_requests_per_minute=2,
+            rate_limit_window_seconds=1.0,
+        )
+        assert port > 0
+        assert network_ping("127.0.0.1", port, timeout=1.0)
+        assert network_ping("127.0.0.1", port, timeout=1.0)
+        assert not network_ping("127.0.0.1", port, timeout=1.0)
+        # Window elapsed -> client can request again.
+        import time as _time
+
+        _time.sleep(1.05)
+        assert network_ping("127.0.0.1", port, timeout=1.0)
     finally:
         stop_network_data_server(httpd, thread, lambda _m: None)

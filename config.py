@@ -244,6 +244,7 @@ DEFAULT_TRACKER_CONFIG = {
     "network_port": 8766,
     "network_export_port": 8765,
     "network_access_key": "",
+    "network_rate_limit_requests_per_minute": 0,
     "mixcalc_geometry": "",
     "mixcalc_stock_geometry": "",
     "stock_column_widths": {},
@@ -400,6 +401,7 @@ def _validate_tracker_config(raw: dict) -> dict:
     int_keys = {
         "network_port",
         "network_export_port",
+        "network_rate_limit_requests_per_minute",
     }
     palette_keys = {
         "bg",
@@ -470,6 +472,13 @@ def _validate_tracker_config(raw: dict) -> dict:
     cfg["network_host"] = str(cfg.get("network_host", "127.0.0.1") or "127.0.0.1").strip()
     cfg["network_bind_host"] = str(cfg.get("network_bind_host", "0.0.0.0") or "0.0.0.0").strip()
     cfg["network_access_key"] = str(cfg.get("network_access_key", "") or "").strip()
+    try:
+        cfg["network_rate_limit_requests_per_minute"] = max(
+            0,
+            int(cfg.get("network_rate_limit_requests_per_minute", 0)),
+        )
+    except Exception:
+        cfg["network_rate_limit_requests_per_minute"] = 0
     if not cfg.get("data_path"):
         cfg["data_path"] = _default_tracker_data_path()
     if not cfg.get("library_data_path"):

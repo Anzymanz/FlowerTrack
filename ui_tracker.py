@@ -243,6 +243,7 @@ class CannabisTracker:
         self.network_bind_host = "0.0.0.0"
         self.network_port = DEFAULT_NETWORK_PORT
         self.network_access_key = ""
+        self.network_rate_limit_requests_per_minute = 0
         self.network_server = None
         self.network_server_thread = None
         self._network_error_shown = False
@@ -630,6 +631,9 @@ class CannabisTracker:
                 library_data_path=library_path,
                 log=self._log_network,
                 access_key=str(getattr(self, "network_access_key", "") or ""),
+                rate_limit_requests_per_minute=int(
+                    max(0, int(getattr(self, "network_rate_limit_requests_per_minute", 0) or 0))
+                ),
             )
             if httpd and port:
                 self.network_server = httpd
@@ -1538,6 +1542,9 @@ class CannabisTracker:
             network_port = int(getattr(self, "network_port", DEFAULT_NETWORK_PORT))
             network_export_port = int(getattr(self, "export_port", DEFAULT_EXPORT_PORT))
             network_access_key = str(getattr(self, "network_access_key", "") or "").strip()
+            network_rate_limit_requests_per_minute = int(
+                max(0, int(getattr(self, "network_rate_limit_requests_per_minute", 0) or 0))
+            )
             if getattr(self, "network_mode", MODE_HOST) == MODE_CLIENT:
                 if hasattr(self, "network_host_entry"):
                     network_host = str(self.network_host_entry.get()).strip()
@@ -1558,10 +1565,19 @@ class CannabisTracker:
                 network_port = _parse_int("Data port", self.network_port_entry.get())
             if hasattr(self, "network_export_port_entry"):
                 network_export_port = _parse_int("Browser port", self.network_export_port_entry.get())
+            if hasattr(self, "network_rate_limit_entry"):
+                network_rate_limit_requests_per_minute = _parse_int(
+                    "Rate limit (req/min)",
+                    self.network_rate_limit_entry.get(),
+                    allow_empty=True,
+                    default=0,
+                )
             if network_port < 1 or network_port > 65535:
                 raise ValueError("Data port must be between 1 and 65535.")
             if network_export_port < 1 or network_export_port > 65535:
                 raise ValueError("Browser port must be between 1 and 65535.")
+            if network_rate_limit_requests_per_minute < 0:
+                raise ValueError("Rate limit (req/min) cannot be negative.")
             track_cbd_flower = bool(self.track_cbd_flower_var.get())
             enable_stock_coloring = bool(self.enable_stock_color_var.get())
             enable_usage_coloring = bool(self.enable_usage_color_var.get())
@@ -1616,12 +1632,15 @@ class CannabisTracker:
             or int(self.network_port) != int(network_port)
             or int(self.export_port) != int(network_export_port)
             or str(self.network_access_key).strip() != str(network_access_key).strip()
+            or int(getattr(self, "network_rate_limit_requests_per_minute", 0))
+            != int(network_rate_limit_requests_per_minute)
         )
         self.network_host = str(network_host).strip() or "127.0.0.1"
         self.network_bind_host = str(network_bind_host).strip() or "0.0.0.0"
         self.network_port = int(network_port)
         self.export_port = int(network_export_port)
         self.network_access_key = str(network_access_key).strip()
+        self.network_rate_limit_requests_per_minute = int(max(0, network_rate_limit_requests_per_minute))
         self.track_cbd_flower = track_cbd_flower
         self.enable_stock_coloring = enable_stock_coloring
         self.enable_usage_coloring = enable_usage_coloring
@@ -2520,6 +2539,13 @@ class CannabisTracker:
         self.network_bind_host = str(cfg.get("network_bind_host", self.network_bind_host)).strip() or "0.0.0.0"
         self.network_access_key = str(cfg.get("network_access_key", self.network_access_key)).strip()
         try:
+            self.network_rate_limit_requests_per_minute = max(
+                0,
+                int(cfg.get("network_rate_limit_requests_per_minute", self.network_rate_limit_requests_per_minute)),
+            )
+        except Exception:
+            self.network_rate_limit_requests_per_minute = 0
+        try:
             self.network_port = max(1, min(65535, int(cfg.get("network_port", self.network_port))))
         except Exception:
             self.network_port = DEFAULT_NETWORK_PORT
@@ -2684,6 +2710,9 @@ class CannabisTracker:
             "network_host": self.network_host,
             "network_bind_host": self.network_bind_host,
             "network_access_key": self.network_access_key,
+            "network_rate_limit_requests_per_minute": int(
+                max(0, int(getattr(self, "network_rate_limit_requests_per_minute", 0) or 0))
+            ),
             "network_port": int(self.network_port),
             "network_export_port": int(self.export_port),
         }
