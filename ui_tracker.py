@@ -24,6 +24,15 @@ from tray import tray_supported, update_tray_icon, stop_tray_icon, make_tray_ima
 from scraper_state import resolve_scraper_status as resolve_scraper_status_core, read_scraper_state
 from theme import apply_style_theme, compute_colors, set_titlebar_dark, set_palette_overrides, get_default_palettes
 from ui_tracker_settings import open_tracker_settings
+from ui_tracker_status import (
+    bind_log_thc_cbd_tooltip as _status_bind_log_thc_cbd_tooltip,
+    bind_tooltip as _status_bind_tooltip,
+    hide_tooltip as _status_hide_tooltip,
+    on_status_enter as _status_on_enter,
+    on_status_leave as _status_on_leave,
+    show_tooltip as _status_show_tooltip,
+    status_tooltip_text as _status_tooltip_text_helper,
+)
 from resources import resource_path as _resource_path
 from inventory import (
     TRACKER_DATA_FILE,
@@ -3858,75 +3867,13 @@ class CannabisTracker:
         except Exception:
             pass
     def _show_tooltip(self, text: str, event: tk.Event | None = None) -> None:
-        try:
-            pending = getattr(self, "_tooltip_after_id", None)
-            if pending is not None:
-                self.root.after_cancel(pending)
-        except Exception:
-            pass
-        self._tooltip_after_id = None
-        self._hide_tooltip()
-        try:
-            self._tooltip_win = tk.Toplevel(self.root)
-            self._tooltip_win.wm_overrideredirect(True)
-            x = event.x_root + 10 if event else self.root.winfo_pointerx() + 10
-            y = event.y_root + 10 if event else self.root.winfo_pointery() + 10
-            self._tooltip_win.wm_geometry(f"+{x}+{y}")
-            label = ttk.Label(self._tooltip_win, text=text, relief="solid", padding=4)
-            label.pack()
-        except Exception:
-            self._tooltip_win = None
+        _status_show_tooltip(self, text, event)
     def _hide_tooltip(self) -> None:
-        try:
-            pending = getattr(self, "_tooltip_after_id", None)
-            if pending is not None:
-                self.root.after_cancel(pending)
-        except Exception:
-            pass
-        self._tooltip_after_id = None
-        if self._tooltip_win and tk.Toplevel.winfo_exists(self._tooltip_win):
-            self._tooltip_win.destroy()
-        self._tooltip_win = None
+        _status_hide_tooltip(self)
     def _bind_tooltip(self, widget: tk.Widget, text: str, delay_ms: int = 400) -> None:
-        def on_enter(e: tk.Event) -> None:
-            try:
-                pending = getattr(self, "_tooltip_after_id", None)
-                if pending is not None:
-                    self.root.after_cancel(pending)
-            except Exception:
-                pass
-            self._tooltip_after_id = None
-            if delay_ms > 0:
-                self._tooltip_after_id = self.root.after(delay_ms, lambda: self._show_tooltip(text, None))
-            else:
-                self._show_tooltip(text, e)
-
-        def on_leave(_e: tk.Event) -> None:
-            self._hide_tooltip()
-
-        widget.bind("<Enter>", on_enter)
-        widget.bind("<Leave>", on_leave)
+        _status_bind_tooltip(self, widget, text, delay_ms)
     def _bind_log_thc_cbd_tooltip(self) -> None:
-        if not hasattr(self, "log_tree"):
-            return
-        message = (
-            "THC/CBD values are estimates based on flower potency and selected RoA efficiency."
-        )
-        def on_motion(event):
-            try:
-                region = self.log_tree.identify_region(event.x, event.y)
-                if region != "heading":
-                    self._hide_tooltip()
-                    return
-                col = self.log_tree.identify_column(event.x)
-                if col in ("#5", "#6"):
-                    self._show_tooltip(message, event)
-                else:
-                    self._hide_tooltip()
-            except Exception:
-                pass
-        self.log_tree.bind("<Motion>", on_motion)
-        self.log_tree.bind("<Leave>", lambda e: self._hide_tooltip())
+        _status_bind_log_thc_cbd_tooltip(self)
     def _clear_combo_selection(self, event: tk.Event | None = None) -> None:
         widget = getattr(event, "widget", None)
         if widget is None:
@@ -4596,63 +4543,13 @@ class CannabisTracker:
             pass
 
     def _status_tooltip_text(self) -> str:
-        muted = bool(getattr(self, "scraper_notifications_muted", False))
-        muted_txt = "Muted" if muted else "Unmuted"
-        state_txt = "Stopped"
-        try:
-            running, warn = resolve_scraper_status(getattr(self, "child_procs", []))
-            if running:
-                state_txt = "Running"
-            elif warn:
-                state_txt = "Errored"
-        except Exception:
-            pass
-        if self.network_mode == MODE_CLIENT:
-            state, missed = self._client_connection_state()
-            label = {
-                "good": "Connected",
-                "interrupted": "Connection interrupted",
-                "down": "Disconnected",
-            }.get(state, "Unknown")
-            return (
-                f"Client connection: {label}\n"
-                f"Missed polls: {missed}\n"
-                "Green: connected | Orange: interrupted | Red: disconnected"
-            )
-        if self.network_mode == MODE_HOST:
-            active = self._host_active_connections_count()
-            return (
-                f"Host mode | Active clients: {active}\n"
-                f"Scraper: {state_txt} | Notifications: {muted_txt}\n"
-                "Double-click: Start/Stop scraper\n"
-                "Right-click: Mute/Unmute notifications"
-            )
-        return (
-            f"Scraper: {state_txt} | Notifications: {muted_txt}\n"
-            "Double-click: Start/Stop scraper\n"
-            "Right-click: Mute/Unmute notifications"
-        )
+        return _status_tooltip_text_helper(self, resolve_scraper_status)
 
     def _on_status_enter(self, event: tk.Event | None = None) -> None:
-        try:
-            pending = getattr(self, "_status_tooltip_after_id", None)
-            if pending is not None:
-                self.root.after_cancel(pending)
-            self._status_tooltip_after_id = self.root.after(
-                400, lambda: self._show_tooltip(self._status_tooltip_text(), None)
-            )
-        except Exception:
-            pass
+        _status_on_enter(self, delay_ms=400)
 
     def _on_status_leave(self, _event: tk.Event | None = None) -> None:
-        try:
-            pending = getattr(self, "_status_tooltip_after_id", None)
-            if pending is not None:
-                self.root.after_cancel(pending)
-        except Exception:
-            pass
-        self._status_tooltip_after_id = None
-        self._hide_tooltip()
+        _status_on_leave(self)
 
     def _on_status_double_click(self, _event: tk.Event | None = None) -> None:
         if self.network_mode == MODE_CLIENT:
