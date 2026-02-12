@@ -12,9 +12,11 @@ FlowerTrack is a Windows desktop app for tracking medical cannabis usage and sto
 - Medicann scraper with API pagination and change detection (new/removed items, price/stock changes, restocks, out-of-stock).
 - API auth bootstrap flow (including manual login bootstrap on first run when credentials are missing).
 - Home Assistant webhook notifications and optional Windows desktop notifications.
-- Local Flower Browser with fixed URL (`/flowerbrowser`), filters, badges, favorites, basket, and image previews.
+- Flower Browser served at fixed endpoint (`/flowerbrowser`) with filters, badges, favorites, basket, and image previews.
 - Change history viewer in both scraper UI and Flower Browser.
 - Theme customization with colour pickers (including tracker thresholds and dark/light palette overrides).
+- Optional network modes (`-host` / `-client`) to share tracker/library data and the Flower Browser over LAN.
+- Optional console mode (`-console`) for live stdout/stderr output from the built exe.
 
 ## Screenshots
 ### Tracker dashboard
@@ -62,16 +64,21 @@ Calculator view for combining stock entries.
 
 <img src="docs/StockMixcalcSS.png?v=20260210d" width="500" />
 
-## The Flower Browser (local webpage)
-The scraper generates a local HTML page that you can open from the app. It is served from a fixed local path on the local export server:
+## The Flower Browser (webpage)
+The scraper generates HTML that is served from a fixed endpoint:
 
 `http://127.0.0.1:<port>/flowerbrowser` (default port: `8765`)
+
+In `-client` mode, the app opens the host endpoint instead:
+
+`http://<host-ip>:<browser-port>/flowerbrowser`
 
 It is designed for fast scanning and filtering of the live product list.
 
 Key features:
 - Search, filter, and sort by brand, strain, type, stock, THC, and CBD.
 - Dedicated irradiation filters (`β` and `γ`) for quick beta/gamma product filtering.
+- Category filters for flower, oil, vape, and pastille products.
 - Visual badges for new/removed items, price movement, out‑of‑stock, and restock highlights.
 - Per‑gram pricing and THC/CBD normalization.
 - Flags for origin country and irradiation type (where available).
@@ -86,6 +93,14 @@ Key features:
 - Uses cached auth tokens and refreshes via Playwright bootstrap when required.
 - Supports manual visible-browser bootstrap when credentials are incomplete on first run.
 - Sends notifications only when changes are detected (per notification toggles).
+- In `-client` mode, scraper controls are disabled and data is read from host sync.
+
+## Run modes and flags
+- `FlowerTrack.exe` (or `py .\flowertracker.py`): standalone mode.
+- `FlowerTrack.exe -host`: host mode (runs local tracker + data sync API + browser endpoint for clients).
+- `FlowerTrack.exe -client`: client mode (reads tracker/library data from host, disables local scraper controls).
+- `FlowerTrack.exe -console`: opens a console window and mirrors runtime logs to stdout/stderr.
+- `FlowerTrack.exe --diagnostics`: prints diagnostic JSON and exits.
 
 ## Home Assistant setup
 1. In Home Assistant, create a webhook automation (Settings → Automations → Create → Webhook).
@@ -186,7 +201,7 @@ py .\flowertracker.py
 ## Build (single exe)
 Use the one-liner in `buildline.txt`, or:
 ```powershell
-pyinstaller --onefile --windowed --icon assets/icon.ico --add-data "assets;assets" --add-data "flowerlibrary.py;." --add-data "mixcalc.py;." --add-data "mix_utils.py;." --exclude-module setuptools.msvc --name FlowerTrack flowertracker.py
+Remove-Item -Recurse -Force dist, build, FlowerTrack.spec -ErrorAction SilentlyContinue; $env:PYTHONWARNINGS="ignore"; pyinstaller --onefile --windowed --icon assets/icon.ico --add-data "assets;assets" --add-data "flowerlibrary.py;." --add-data "mixcalc.py;." --add-data "mix_utils.py;." --splash assets/BannerRound.png --exclude-module setuptools.msvc --name FlowerTrack flowertracker.py
 ```
 
 ## Tests
@@ -207,6 +222,7 @@ py -m pytest
   The app uses certifi for API/HA HTTPS validation; missing roots on Windows can cause fetch failures.
 - If scraper settings look blank or defaults are missing, delete `%APPDATA%\FlowerTrack\flowertrack_config.json` and relaunch to re-seed defaults.
 - Use the console log in-app for detailed scrape output.
+- In `-client` mode, confirm host IP/ports in settings and ensure host is reachable on the LAN.
 
 ## Repository layout
 - `flowertracker.py` entry point
