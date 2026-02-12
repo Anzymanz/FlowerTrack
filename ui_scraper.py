@@ -15,7 +15,7 @@ import re
 from pathlib import Path
 from datetime import datetime, timezone
 from queue import Queue, Empty
-from capture import ensure_browser_available, install_playwright_browsers, start_capture_worker, CaptureWorker
+from capture import install_playwright_browsers, CaptureWorker
 from exports import export_html_auto, export_size_warning, init_exports, set_exports_dir
 from export_server import start_export_server as srv_start_export_server, stop_export_server as srv_stop_export_server
 from ui_settings import open_settings_window
@@ -66,6 +66,13 @@ from ui_scraper_status import (
     pagination_progress_text as _status_pagination_progress_text,
     set_pagination_busy as _status_set_pagination_busy,
     update_pagination_progress_from_log as _status_update_pagination_progress_from_log,
+)
+from ui_scraper_capture import (
+    collect_capture_cfg as _capture_collect_capture_cfg,
+    prompt_manual_login as _capture_prompt_manual_login,
+    set_next_capture_timer as _capture_set_next_capture_timer,
+    start_auto_capture as _capture_start_auto_capture,
+    stop_auto_capture as _capture_stop_auto_capture,
 )
 from ui_scraper_maintenance import (
     clear_auth_cache as _maintenance_clear_auth_cache,
@@ -397,171 +404,19 @@ class App(tk.Tk):
         self.close_to_tray = tk.BooleanVar(value=bool(cfg.get("close_to_tray", False)))
 
     def _collect_capture_cfg(self) -> dict:
-        def _parse_float(raw: str | None, default: float, label: str) -> float:
-            if raw is None:
-                return float(default)
-            text = str(raw).strip()
-            if not text:
-                return float(default)
-            try:
-                return float(text)
-            except Exception:
-                self._log_console(f"Invalid {label} value '{raw}'; using {default}.")
-                return float(default)
-        def _parse_int(raw: str | None, default: int, label: str) -> int:
-            if raw is None:
-                return int(default)
-            text = str(raw).strip()
-            if not text:
-                return int(default)
-            try:
-                return int(float(text))
-            except Exception:
-                self._log_console(f"Invalid {label} value '{raw}'; using {default}.")
-                return int(default)
-        def _get_bool_var(name: str, default: bool = False) -> bool:
-            var = getattr(self, name, None)
-            if var is None:
-                return bool(default)
-            try:
-                return bool(var.get())
-            except Exception:
-                return bool(var)
-        return {
-            "url": self.cap_url.get(),
-            "interval_seconds": _parse_float(self.cap_interval.get(), DEFAULT_CAPTURE_CONFIG["interval_seconds"], "interval_seconds"),
-            "login_wait_seconds": _parse_float(self.cap_login_wait.get(), DEFAULT_CAPTURE_CONFIG["login_wait_seconds"], "login_wait_seconds"),
-            "post_nav_wait_seconds": _parse_float(self.cap_post_wait.get(), DEFAULT_CAPTURE_CONFIG["post_nav_wait_seconds"], "post_nav_wait_seconds"),
-            "retry_attempts": _parse_int(self.cap_retry_attempts.get(), DEFAULT_CAPTURE_CONFIG["retry_attempts"], "retry_attempts"),
-            "retry_wait_seconds": _parse_float(self.cap_retry_wait.get(), DEFAULT_CAPTURE_CONFIG["retry_wait_seconds"], "retry_wait_seconds"),
-            "retry_backoff_max": _parse_float(self.cap_retry_backoff.get(), DEFAULT_CAPTURE_CONFIG["retry_backoff_max"], "retry_backoff_max"),
-            "dump_capture_html": bool(self.cap_dump_html.get()),
-            "dump_html_keep_files": _parse_int(self.cap_dump_html_keep.get(), DEFAULT_CAPTURE_CONFIG["dump_html_keep_files"], "dump_html_keep_files"),
-            "dump_api_json": bool(self.cap_dump_api.get()),
-            "dump_api_keep_files": _parse_int(self.cap_dump_api_keep.get(), DEFAULT_CAPTURE_CONFIG["dump_api_keep_files"], "dump_api_keep_files"),
-            # Keep writing legacy key so older imports/versions continue to read the same state.
-            "dump_api_full": bool(self.cap_dump_api.get()),
-            "show_log_window": bool(self.cap_show_log_window.get()),
-            "username": self.cap_user.get(),
-            "password": self.cap_pass.get(),
-            "username_selector": self.cap_user_sel.get(),
-            "password_selector": self.cap_pass_sel.get(),
-            "login_button_selector": self.cap_btn_sel.get(),
-            "organization": self.cap_org.get(),
-            "organization_selector": self.cap_org_sel.get(),
-            "headless": bool(self.cap_headless.get()),
-            "auto_notify_ha": bool(self.cap_auto_notify_ha.get()),
-            "ha_webhook_url": self.cap_ha_webhook.get(),
-            "ha_token": self.cap_ha_token.get(),
-            "notify_price_changes": bool(self.notify_price_changes.get()),
-            "notify_stock_changes": bool(self.notify_stock_changes.get()),
-            "notify_out_of_stock": bool(self.notify_out_of_stock.get()),
-            "notify_restock": bool(self.notify_restock.get()),
-            "notify_new_items": bool(self.notify_new_items.get()),
-            "notify_removed_items": bool(self.notify_removed_items.get()),
-            "notify_windows": bool(self.notify_windows.get()),
-            "log_window_hidden_height": float(getattr(self, "scraper_log_hidden_height", 210.0) or 210.0),
-            "quiet_hours_enabled": bool(self.cap_quiet_hours_enabled.get()),
-            "quiet_hours_start": self.cap_quiet_start.get(),
-            "quiet_hours_end": self.cap_quiet_end.get(),
-            "quiet_hours_interval_seconds": _parse_float(
-                self.cap_quiet_interval.get(),
-                DEFAULT_CAPTURE_CONFIG["quiet_hours_interval_seconds"],
-                "quiet_hours_interval_seconds",
-            ),
-            "include_inactive": bool(self.cap_include_inactive.get()),
-            "requestable_only": bool(self.cap_requestable_only.get()),
-            "in_stock_only": bool(self.cap_in_stock_only.get()),
-            "filter_flower": _get_bool_var("cap_filter_flower", False),
-            "filter_oil": _get_bool_var("cap_filter_oil", False),
-            "filter_vape": _get_bool_var("cap_filter_vape", False),
-            "filter_pastille": _get_bool_var("cap_filter_pastille", False),
-            "notification_detail": self.cap_notify_detail.get(),
-            "minimize_to_tray": bool(self.minimize_to_tray.get()),
-            "close_to_tray": bool(self.close_to_tray.get()),
-            "window_geometry": self.geometry(),
-            "settings_geometry": (self.settings_window.geometry() if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window) else self.scraper_settings_geometry),
-            "history_window_geometry": (
-                self.history_window.geometry()
-                if getattr(self, "history_window", None) and tk.Toplevel.winfo_exists(self.history_window)
-                else getattr(self, "history_window_geometry", "900x600")
-            ),
-            "screen_resolution": (
-                self._current_screen_resolution() if hasattr(self, "_current_screen_resolution") else ""
-            ),
-        }
+        return _capture_collect_capture_cfg(self)
 
     def start_auto_capture(self):
-        if self._is_capture_running():
-            self._capture_log("Auto-capture already running.")
-            return
-        try:
-            self._save_capture_window()
-        except Exception as exc:
-            self._debug_log(f"Suppressed exception: {exc}")
-        cfg = self._collect_capture_cfg()
-        if not cfg.get("url"):
-            messagebox.showwarning("Auto-capture", "Please set the target URL before starting.")
-            return
-        self.capture_stop.clear()
-        self._manual_bootstrap_prompt_shown = False
-        self.error_count = 0
-        self._empty_retry_pending = False
-        self._update_tray_status()
-        self._write_scraper_state("running")
-        def install_cb():
-            return install_playwright_browsers(Path(APP_DIR), self._capture_log)
-        if not cfg.get("api_only", True):
-            req = ensure_browser_available(Path(APP_DIR), self._capture_log, install_cb=install_cb)
-            if not req:
-                messagebox.showerror("Auto-capture", "Playwright is not available. See logs for details.")
-                return
-            self._playwright_available = req
-        callbacks = {
-            "capture_log": self._capture_log,
-            "apply_text": self._apply_captured_text,
-            "on_status": self._on_capture_status,
-            "responsive_wait": self._responsive_wait,
-            "stop_event": self.capture_stop,
-            "prompt_manual_login": self._prompt_manual_login,
-        }
-        self.capture_thread = start_capture_worker(cfg, callbacks, app_dir=Path(APP_DIR), install_fn=install_cb)
-        self._capture_log("Auto-capture running...")
-        self._update_tray_status()
+        _capture_start_auto_capture(self)
 
     def _prompt_manual_login(self) -> None:
-        # Show once per auto-capture session to avoid repetitive popups while retrying.
-        if getattr(self, "_manual_bootstrap_prompt_shown", False):
-            return
-        self._manual_bootstrap_prompt_shown = True
-        self._capture_log("Manual login required: complete login in the opened browser window.")
-        try:
-            self.after(
-                0,
-                lambda: messagebox.showinfo(
-                    "Manual Login Required",
-                    "Credentials are missing or incomplete.\n\n"
-                    "A browser has been opened.\n"
-                    "Please log in manually, then wait for token capture to complete.",
-                ),
-            )
-        except Exception as exc:
-            self._debug_log(f"Suppressed exception: {exc}")
+        _capture_prompt_manual_login(self)
 
     def stop_auto_capture(self):
-        if not self.capture_stop.is_set():
-            self.capture_stop.set()
-        self._capture_log("Auto-capture stopped.")
-        self._set_pagination_busy(False)
-        self._update_tray_status()
-        self._write_scraper_state("stopped")
+        _capture_stop_auto_capture(self)
 
     def _set_next_capture_timer(self, seconds: float) -> None:
-        try:
-            if seconds and seconds > 0:
-                self.status.config(text=f"Next capture in {int(seconds)}s")
-        except Exception as exc:
-            self._debug_log(f"Suppressed exception: {exc}")
+        _capture_set_next_capture_timer(self, seconds)
     def _open_settings_window(self):
         if self.settings_window and tk.Toplevel.winfo_exists(self.settings_window):
             try:
