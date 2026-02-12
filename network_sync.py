@@ -57,6 +57,8 @@ def start_network_data_server(
     allow_public_clients: bool = False,
     rate_limit_requests_per_minute: int = 0,
     rate_limit_window_seconds: float = 60.0,
+    audit_log_burst: int = 8,
+    audit_log_window_seconds: float = 30.0,
 ) -> Tuple[Optional[http.server.ThreadingHTTPServer], Optional[threading.Thread], Optional[int]]:
     """Start host-mode JSON API server for shared tracker/library data."""
     bind = (bind_host or DEFAULT_BIND_HOST).strip() or DEFAULT_BIND_HOST
@@ -68,6 +70,14 @@ def start_network_data_server(
         rate_window_s = max(1.0, float(rate_limit_window_seconds or 60.0))
     except Exception:
         rate_window_s = 60.0
+    try:
+        audit_burst = max(1, int(audit_log_burst or 8))
+    except Exception:
+        audit_burst = 8
+    try:
+        audit_window_s = max(1.0, float(audit_log_window_seconds or 30.0))
+    except Exception:
+        audit_window_s = 30.0
 
     def _client_allowed(host: str) -> bool:
         try:
@@ -81,6 +91,49 @@ def start_network_data_server(
         return False
 
     class Handler(http.server.BaseHTTPRequestHandler):
+        def _audit_deny(self, reason: str, detail: str = "") -> None:
+            # Keep denied-request logs bounded per reason+client to avoid log floods.
+            try:
+                client_ip = str(self.client_address[0] or "").strip()
+            except Exception:
+                client_ip = "unknown"
+            key = f"{client_ip}|{reason}"
+            now = time.monotonic()
+            lock = getattr(self.server, "_ft_audit_lock", None)
+            state = getattr(self.server, "_ft_audit_state", None)
+            if lock is None or state is None:
+                try:
+                    log(f"[network] denied {reason} from {client_ip}{detail}")
+                except Exception:
+                    pass
+                return
+            with lock:
+                bucket = state.get(key)
+                if not isinstance(bucket, dict):
+                    bucket = {"start": now, "count": 0, "suppressed": 0}
+                start = float(bucket.get("start", now))
+                count = int(bucket.get("count", 0))
+                suppressed = int(bucket.get("suppressed", 0))
+                if (now - start) > audit_window_s:
+                    if suppressed > 0:
+                        try:
+                            log(
+                                f"[network] denied {reason} from {client_ip}: suppressed {suppressed} similar events"
+                            )
+                        except Exception:
+                            pass
+                    bucket = {"start": now, "count": 0, "suppressed": 0}
+                    count = 0
+                if count < audit_burst:
+                    try:
+                        log(f"[network] denied {reason} from {client_ip}{detail}")
+                    except Exception:
+                        pass
+                    bucket["count"] = count + 1
+                else:
+                    bucket["suppressed"] = int(bucket.get("suppressed", 0)) + 1
+                state[key] = bucket
+
         def _check_rate_limit(self) -> bool:
             if rate_limit <= 0:
                 return True
@@ -139,16 +192,20 @@ def start_network_data_server(
             except Exception:
                 client_ip = ""
             if not _client_allowed(client_ip):
+                self._audit_deny("client_not_allowed")
                 self._send_forbidden("client_not_allowed")
                 return False
             if not expected_key:
                 # No key configured: only allow strict localhost access.
                 if client_ip not in {"127.0.0.1", "::1"}:
+                    self._audit_deny("missing_access_key")
                     self._send_forbidden("missing_access_key")
                     return False
                 return True
             got_key = str(self.headers.get("X-FlowerTrack-Key", "") or "").strip()
             if not got_key or not hmac.compare_digest(got_key, expected_key):
+                detail = f" (provided_key_len={len(got_key)})"
+                self._audit_deny("invalid_access_key", detail)
                 self._send_forbidden("invalid_access_key")
                 return False
             self._touch_client()
@@ -216,6 +273,7 @@ def start_network_data_server(
             body = self._read_json_body()
             if path == "/api/network/tracker-data":
                 if not isinstance(body, dict):
+                    self._audit_deny("invalid_tracker_payload", f" (type={type(body).__name__})")
                     self._send_json({"ok": False, "error": "invalid_tracker_payload"}, status=400)
                     return
                 with _WRITE_LOCK:
@@ -224,6 +282,7 @@ def start_network_data_server(
                 return
             if path == "/api/network/library-data":
                 if not isinstance(body, list):
+                    self._audit_deny("invalid_library_payload", f" (type={type(body).__name__})")
                     self._send_json({"ok": False, "error": "invalid_library_payload"}, status=400)
                     return
                 with _WRITE_LOCK:
@@ -258,6 +317,8 @@ def start_network_data_server(
         setattr(httpd, "_ft_client_ttl", float(client_ttl_s))
         setattr(httpd, "_ft_rate_buckets", {})
         setattr(httpd, "_ft_rate_lock", threading.Lock())
+        setattr(httpd, "_ft_audit_state", {})
+        setattr(httpd, "_ft_audit_lock", threading.Lock())
     except Exception:
         pass
 

@@ -160,3 +160,58 @@ def test_network_sync_rate_limit_blocks_and_recovers(tmp_path):
         assert network_ping("127.0.0.1", port, timeout=1.0)
     finally:
         stop_network_data_server(httpd, thread, lambda _m: None)
+
+
+def test_network_denied_access_logs_are_bounded(tmp_path):
+    httpd = thread = None
+    logs: list[str] = []
+    try:
+        tracker_data_path = tmp_path / "tracker_data.json"
+        library_data_path = tmp_path / "library_data.json"
+        httpd, thread, port = start_network_data_server(
+            bind_host="127.0.0.1",
+            preferred_port=_free_port(),
+            tracker_data_path=tracker_data_path,
+            library_data_path=library_data_path,
+            log=logs.append,
+            access_key="secret-key",
+            audit_log_burst=2,
+            audit_log_window_seconds=1.0,
+        )
+        assert port and int(port) > 0
+        # Repeated denied requests should be bounded by burst within window.
+        assert not network_ping("127.0.0.1", int(port), timeout=1.0, access_key="")
+        assert not network_ping("127.0.0.1", int(port), timeout=1.0, access_key="")
+        assert not network_ping("127.0.0.1", int(port), timeout=1.0, access_key="")
+        denied_logs = [m for m in logs if "denied invalid_access_key" in str(m)]
+        assert len(denied_logs) <= 2
+    finally:
+        stop_network_data_server(httpd, thread, lambda _m: None)
+
+
+def test_network_invalid_payload_type_is_audited(tmp_path):
+    httpd = thread = None
+    logs: list[str] = []
+    try:
+        tracker_data_path = tmp_path / "tracker_data.json"
+        library_data_path = tmp_path / "library_data.json"
+        httpd, thread, port = start_network_data_server(
+            bind_host="127.0.0.1",
+            preferred_port=_free_port(),
+            tracker_data_path=tracker_data_path,
+            library_data_path=library_data_path,
+            log=logs.append,
+            access_key="secret-key",
+        )
+        assert port and int(port) > 0
+        # Wrong type for tracker endpoint (expects dict)
+        assert not push_tracker_data(
+            "127.0.0.1",
+            int(port),
+            data=[],  # type: ignore[arg-type]
+            timeout=1.0,
+            access_key="secret-key",
+        )
+        assert any("denied invalid_tracker_payload" in str(m) for m in logs)
+    finally:
+        stop_network_data_server(httpd, thread, lambda _m: None)
