@@ -42,7 +42,7 @@ from app_core import (  # shared globals/imports
     SCRAPER_STATE_FILE,
 )
 from config import decrypt_secret, encrypt_secret, load_capture_config, save_capture_config, load_tracker_config
-from scraper_state import write_scraper_state, get_last_change, get_last_scrape, update_scraper_state
+from scraper_state import write_scraper_state, get_last_change, get_last_scrape
 from parser import (
     parse_api_payloads,
     make_item_key,
@@ -67,11 +67,14 @@ from ui_scraper_status import (
     set_pagination_busy as _status_set_pagination_busy,
     update_pagination_progress_from_log as _status_update_pagination_progress_from_log,
 )
-from unread_changes import (
-    clear_unread_changes,
-    merge_unread_changes,
-    unread_removed_items_for_export,
+from ui_scraper_maintenance import (
+    clear_auth_cache as _maintenance_clear_auth_cache,
+    clear_cache as _maintenance_clear_cache,
+    clear_change_history as _maintenance_clear_change_history,
+    clear_parse_cache as _maintenance_clear_parse_cache,
+    clear_scraper_state_cache as _maintenance_clear_scraper_state_cache,
 )
+from unread_changes import merge_unread_changes, unread_removed_items_for_export
 
 # Scraper UI constants
 SCRAPER_TITLE = "Medicann Scraper"
@@ -1998,79 +2001,18 @@ class App(tk.Tk):
         return combined
     # Export functions removed (no longer used)
     def _clear_parse_cache(self, notify: bool = True) -> bool:
-        cleared = False
-        self.data.clear()
-        self.prev_items = []
-        self.prev_keys = set()
-        self.removed_data = []
-        try:
-            if LAST_PARSE_FILE.exists():
-                LAST_PARSE_FILE.unlink()
-                cleared = True
-        except Exception as exc:
-            self._debug_log(f"Suppressed exception: {exc}")
-        try:
-            if clear_unread_changes():
-                cleared = True
-        except Exception as exc:
-            self._debug_log(f"Suppressed exception: {exc}")
-        if notify:
-            self.status.config(text="Parse cache cleared")
-            messagebox.showinfo("Cleared", "Parsed cache cleared.")
-        return cleared
+        return _maintenance_clear_parse_cache(self, notify=notify)
 
     def _clear_change_history(self, notify: bool = True) -> bool:
-        cleared = False
-        try:
-            if CHANGES_LOG_FILE.exists():
-                CHANGES_LOG_FILE.unlink()
-                cleared = True
-        except Exception as exc:
-            self._debug_log(f"Suppressed exception: {exc}")
-        if notify:
-            self.status.config(text="Change history cleared")
-            messagebox.showinfo("Cleared", "Change history log cleared.")
-        return cleared
+        return _maintenance_clear_change_history(self, notify=notify)
 
     def _clear_scraper_state_cache(self, notify: bool = True) -> bool:
-        try:
-            self.progress['value'] = 0
-        except Exception as exc:
-            self._debug_log(f"Suppressed exception: {exc}")
-        try:
-            self.last_change_label.config(text="Last change detected: none")
-            self.last_scrape_label.config(text="Last successful scrape: none")
-        except Exception as exc:
-            self._debug_log(f"Suppressed exception: {exc}")
-        update_scraper_state(SCRAPER_STATE_FILE, last_change=None, last_scrape=None)
-        if notify:
-            self.status.config(text="Scraper state cleared")
-            messagebox.showinfo("Cleared", "Scraper state markers cleared.")
-        return True
+        return _maintenance_clear_scraper_state_cache(self, notify=notify)
 
     def clear_cache(self):
-        self._clear_parse_cache(notify=False)
-        self._clear_change_history(notify=False)
-        self._clear_scraper_state_cache(notify=False)
-        self.status.config(text="Cache cleared")
-        messagebox.showinfo("Cleared", "Cleared parsed cache, change history, and scraper state.")
+        _maintenance_clear_cache(self)
     def _clear_auth_cache(self) -> None:
-        if self.capture_thread and self.capture_thread.is_alive():
-            messagebox.showwarning("Auth Cache", "Stop auto-capture before clearing auth cache.")
-            return
-        try:
-            worker = CaptureWorker.__new__(CaptureWorker)
-            worker.app_dir = APP_DIR
-            worker.callbacks = {"capture_log": self._log_console}
-            cleared = worker.clear_auth_cache()
-        except Exception as exc:
-            self._log_console(f"Auth cache clear failed: {exc}")
-            cleared = False
-        if cleared:
-            self._log_console("Auth cache cleared; next capture will bootstrap auth.")
-            messagebox.showinfo("Auth Cache", "Auth cache cleared; next capture will re-authenticate.")
-        else:
-            messagebox.showinfo("Auth Cache", "No auth cache found to clear.")
+        _maintenance_clear_auth_cache(self)
     def _run_auth_bootstrap(self) -> None:
         if self.capture_thread and self.capture_thread.is_alive():
             self._auth_bootstrap_log("Stop auto-capture before bootstrapping auth.", level="warning")
