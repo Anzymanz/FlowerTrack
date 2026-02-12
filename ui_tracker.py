@@ -59,6 +59,18 @@ from ui_tracker_visibility import (
     apply_scraper_status_visibility as _visibility_apply_scraper_status_visibility,
     bind_scraper_status_actions as _visibility_bind_scraper_status_actions,
 )
+from ui_tracker_stock import (
+    add_stock as _stock_add_stock,
+    apply_stock_sort as _stock_apply_stock_sort,
+    clear_stock_inputs as _stock_clear_stock_inputs,
+    delete_stock as _stock_delete_stock,
+    mark_stock_form_dirty as _stock_mark_stock_form_dirty,
+    maybe_clear_log_selection as _stock_maybe_clear_log_selection,
+    maybe_clear_stock_selection as _stock_maybe_clear_stock_selection,
+    on_stock_select as _stock_on_stock_select,
+    refresh_stock as _stock_refresh_stock,
+    sort_stock as _stock_sort_stock,
+)
 from resources import resource_path as _resource_path
 from inventory import (
     TRACKER_DATA_FILE,
@@ -68,7 +80,7 @@ from inventory import (
     save_tracker_data,
 )
 from storage import load_last_parse
-from inventory import add_stock_entry, log_dose_entry, is_cbd_dominant
+from inventory import log_dose_entry, is_cbd_dominant
 from exports import export_html_auto, export_size_warning
 from export_server import start_export_server as srv_start_export_server, stop_export_server as srv_stop_export_server
 from config import load_tracker_config, save_tracker_config
@@ -997,102 +1009,22 @@ class CannabisTracker:
         self.log_tree.bind("<ButtonRelease-1>", self._maybe_clear_log_selection)
         self._update_clock()
     def _on_stock_select(self, event: tk.Event) -> None:
-        selection = self.stock_tree.selection()
-        if not selection:
-            return
-        name = self.stock_tree.set(selection[0], "name")
-        if not name:
-            return
-        flower = self.flowers.get(name)
-        if flower:
-            self.name_entry.delete(0, tk.END)
-            self.name_entry.insert(0, flower.name)
-            self.thc_entry.delete(0, tk.END)
-            self.thc_entry.insert(0, f"{flower.thc_pct:.1f}")
-            self.cbd_entry.delete(0, tk.END)
-            self.cbd_entry.insert(0, f"{flower.cbd_pct:.1f}")
-            self.grams_entry.delete(0, tk.END)
-            self.grams_entry.insert(0, f"{flower.grams_remaining:.3f}")
-            self.stock_form_source = flower.name
-            self.stock_form_dirty = False
-        if name in self.flower_choice["values"]:
-            self.flower_choice.set(name)
+        _stock_on_stock_select(self, event)
+
     def _maybe_clear_stock_selection(self, event: tk.Event) -> None:
-        # If click is on empty space, clear selection
-        if not self.stock_tree.identify_row(event.y):
-            self.stock_tree.selection_remove(self.stock_tree.selection())
-            if self.stock_form_source and not self.stock_form_dirty:
-                self._clear_stock_inputs()
-        else:
-            # user clicked a row; keep selection and do nothing else
-            pass
+        _stock_maybe_clear_stock_selection(self, event)
+
     def _maybe_clear_log_selection(self, event: tk.Event) -> None:
-        if not self.log_tree.identify_row(event.y):
-            self.log_tree.selection_remove(self.log_tree.selection())
+        _stock_maybe_clear_log_selection(self, event)
+
     def add_stock(self) -> None:
-        name = self.name_entry.get().strip()
-        thc_text = self.thc_entry.get().strip()
-        cbd_text = self.cbd_entry.get().strip()
-        grams_text = self.grams_entry.get().strip()
-        if not name or not thc_text or not grams_text:
-            messagebox.showwarning("Missing info", "Enter name, THC %, and grams. CBD % can be 0.")
-            return
-        try:
-            thc_pct = float(thc_text)
-            cbd_pct = float(cbd_text) if cbd_text else 0.0
-            grams = float(grams_text)
-        except ValueError:
-            messagebox.showerror("Invalid input", "Potency and grams must be numbers.")
-            return
-        if thc_pct < 0 or cbd_pct < 0 or grams <= 0:
-            messagebox.showerror("Invalid input", "Potency must be non-negative and grams must be positive.")
-            return
-        try:
-            add_stock_entry(self.flowers, name=name, grams=grams, thc_pct=thc_pct, cbd_pct=cbd_pct)
-        except ValueError as exc:
-            messagebox.showerror("Cannot add stock", str(exc))
-            return
-        self._refresh_stock()
-        self._clear_stock_inputs()
-        self.save_data()
-        self._save_config()
+        _stock_add_stock(self)
+
     def delete_stock(self) -> None:
-        selection = self.stock_tree.selection()
-        if not selection:
-            messagebox.showwarning("Select flower", "Select a flower row to delete.")
-            return
-        # Get the name from the selected row explicitly by column id
-        name = self.stock_tree.set(selection[0], "name")
-        if not name:
-            messagebox.showerror("Not found", "Could not determine selected flower name.")
-            return
-        has_logs = any(log.get("flower") == name for log in self.logs)
-        msg = f"Delete '{name}' from stock?"
-        if has_logs:
-            msg += "\nLogs exist for this flower; they will remain but stock will be removed."
-        if not messagebox.askokcancel("Confirm delete", msg):
-            return
-        self.flowers.pop(name, None)
-        self._refresh_stock()
-        self._refresh_log()
-        self.save_data()
-        self._save_config()
-        self._clear_stock_inputs()
-        try:
-            self.stock_tree.selection_remove(selection)
-        except tk.TclError:
-            # Tree was rebuilt; selected item IDs can be stale after refresh.
-            try:
-                self.stock_tree.selection_set(())
-            except Exception:
-                pass
+        _stock_delete_stock(self)
+
     def _clear_stock_inputs(self) -> None:
-        self.name_entry.delete(0, tk.END)
-        self.thc_entry.delete(0, tk.END)
-        self.cbd_entry.delete(0, tk.END)
-        self.grams_entry.delete(0, tk.END)
-        self.stock_form_source = None
-        self.stock_form_dirty = False
+        _stock_clear_stock_inputs(self)
     def log_dose(self) -> None:
         name = self.flower_choice.get().strip()
         grams_text = self.dose_entry.get().strip()
@@ -1311,155 +1243,7 @@ class CannabisTracker:
         self._refresh_log()
         self.save_data()
     def _refresh_stock(self) -> None:
-        for item in self.stock_tree.get_children():
-            self.stock_tree.delete(item)
-        total_all = 0.0
-        total_counted = 0.0
-        cbd_total = 0.0
-        for flower in sorted(self.flowers.values(), key=lambda f: f.name.lower()):
-            total_all += flower.grams_remaining
-            if self._should_count_flower(flower):
-                total_counted += flower.grams_remaining
-            if self._is_cbd_dominant(flower):
-                cbd_total += flower.grams_remaining
-            if self.enable_stock_coloring:
-                if self._is_cbd_dominant(flower):
-                    green_thr = getattr(self, "cbd_single_green_threshold", self.single_green_threshold)
-                    red_thr = getattr(self, "cbd_single_red_threshold", self.single_red_threshold)
-                    high_color = self.single_cbd_high_color
-                    low_color = self.single_cbd_low_color
-                else:
-                    green_thr = self.single_green_threshold
-                    red_thr = self.single_red_threshold
-                    high_color = self.single_thc_high_color
-                    low_color = self.single_thc_low_color
-                row_color = self._color_for_value(flower.grams_remaining, green_thr, red_thr, high_color, low_color)
-            else:
-                row_color = self.text_color
-            if flower.grams_remaining <= 1e-6:
-                row_color = self.muted_color
-            tag = f"stock_{flower.name}"
-            self.stock_tree.tag_configure(tag, foreground=row_color)
-            self.stock_tree.insert(
-                "",
-                tk.END,
-                tags=(tag,),
-                values=(
-                    flower.name,
-                    f"{flower.thc_pct:.1f}",
-                    f"{flower.cbd_pct:.1f}",
-                    f"{flower.grams_remaining:.3f}",
-                ),
-            )
-        track_cbd = getattr(self, "track_cbd_flower", False)
-        combined_total = total_counted
-        if track_cbd:
-            self.total_label.config(text=f"Total THC stock: {total_counted:.2f} g")
-            self.total_cbd_label.config(text=f"Total CBD stock: {cbd_total:.2f} g")
-            if not self.total_cbd_label.winfo_ismapped():
-                self.total_cbd_label.pack(side="left")
-        else:
-            self.total_label.config(text=f"Total flower stock: {combined_total:.2f} g")
-            try:
-                self.total_cbd_label.pack_forget()
-            except Exception:
-                pass
-        total_color = (
-            self._color_for_value(
-                combined_total,
-                self.total_green_threshold,
-                self.total_red_threshold,
-                self.total_thc_high_color,
-                self.total_thc_low_color,
-            )
-            if self.enable_stock_coloring
-            else self.text_color
-        )
-        self.total_label.configure(foreground=total_color)
-        if track_cbd:
-            cbd_total_color = (
-                self._color_for_value(
-                    cbd_total,
-                    getattr(self, "cbd_total_green_threshold", self.total_green_threshold),
-                    getattr(self, "cbd_total_red_threshold", self.total_red_threshold),
-                    self.total_cbd_high_color,
-                    self.total_cbd_low_color,
-                )
-                if self.enable_stock_coloring
-                else self.text_color
-            )
-            self.total_cbd_label.configure(foreground=cbd_total_color)
-        used_today = self._grams_used_on_day(self.current_date)
-        used_today_cbd = self._grams_used_on_day_cbd(self.current_date) if getattr(self, "track_cbd_flower", False) else 0.0
-        if self.target_daily_grams > 0:
-            remaining_today = self.target_daily_grams - used_today
-            self.remaining_today_label.config(
-                text=f"Remaining today (THC): {remaining_today:.2f} g / {self.target_daily_grams:.2f} g",
-                foreground=(
-                    self.remaining_thc_high_color
-                    if (self.target_daily_grams - used_today) >= 0
-                    else self.remaining_thc_low_color
-                )
-                if self.enable_usage_coloring
-                else self.text_color,
-            )
-        else:
-            self.remaining_today_label.config(text="Remaining today (THC): N/A", foreground=self.text_color)
-        if getattr(self, "track_cbd_flower", False):
-            target_cbd = getattr(self, "target_daily_cbd_grams", 0.0)
-            if target_cbd > 0:
-                remaining_cbd = target_cbd - used_today_cbd
-                self.remaining_today_cbd_label.config(
-                    text=f"Remaining today (CBD): {remaining_cbd:.2f} g / {target_cbd:.2f} g",
-                    foreground=(
-                        self.remaining_cbd_high_color if remaining_cbd >= 0 else self.remaining_cbd_low_color
-                    )
-                    if self.enable_usage_coloring
-                    else self.text_color,
-                )
-            else:
-                self.remaining_today_cbd_label.config(text="Remaining today (CBD): N/A", foreground=self.text_color)
-            self.remaining_today_cbd_label.grid()
-        else:
-            self.remaining_today_cbd_label.grid_remove()
-        remaining_stock = max(combined_total, 0.0)
-        days_target = "N/A"
-        days_target_val: float | None = None
-        if self.target_daily_grams > 0:
-            days_target_val = remaining_stock / self.target_daily_grams
-            days_target = f"{days_target_val:.1f}"
-        avg_daily = self._average_daily_usage()
-        days_actual_val = None if avg_daily is None or avg_daily <= 0 else remaining_stock / avg_daily
-        days_actual = "N/A" if days_actual_val is None else f"{days_actual_val:.1f}"
-        actual_color = self.text_color
-        if self.enable_usage_coloring and days_actual_val is not None and days_target_val is not None:
-            actual_color = self.days_thc_high_color if days_actual_val >= days_target_val else self.days_thc_low_color
-        if track_cbd:
-            self.days_label.config(text=f"Days of THC flower left - target: {days_target} | actual: {days_actual}", foreground=actual_color)
-        else:
-            self.days_label.config(text=f"Days of flower left - target: {days_target} | actual: {days_actual}", foreground=actual_color)
-        if not track_cbd:
-            self.days_label_cbd.grid_remove()
-        elif getattr(self, "track_cbd_flower", False):
-            days_target_cbd = "N/A"
-            days_target_val_cbd: float | None = None
-            if getattr(self, "target_daily_cbd_grams", 0.0) > 0:
-                days_target_val_cbd = cbd_total / max(self.target_daily_cbd_grams, 1e-9)
-                days_target_cbd = f"{days_target_val_cbd:.1f}"
-            avg_daily_cbd = self._average_daily_usage_cbd()
-            days_actual_val_cbd = None if avg_daily_cbd is None or avg_daily_cbd <= 0 else cbd_total / avg_daily_cbd
-            days_actual_cbd = "N/A" if days_actual_val_cbd is None else f"{days_actual_val_cbd:.1f}"
-            color_cbd = self.text_color
-            if self.enable_usage_coloring and days_actual_val_cbd is not None and days_target_val_cbd is not None:
-                color_cbd = self.days_cbd_high_color if days_actual_val_cbd >= days_target_val_cbd else self.days_cbd_low_color
-            self.days_label_cbd.config(
-                text=f"Days of CBD flower left - target: {days_target_cbd} | actual: {days_actual_cbd}", foreground=color_cbd
-            )
-            self.days_label_cbd.grid()
-        else:
-            self.days_label_cbd.grid_remove()
-        self.flower_choice["values"] = [f.name for f in sorted(self.flowers.values(), key=lambda f: f.name.lower())]
-        self._apply_stock_sort()
+        _stock_refresh_stock(self)
     def _refresh_log(self) -> None:
         for item in self.log_tree.get_children():
             self.log_tree.delete(item)
@@ -2155,8 +1939,7 @@ class CannabisTracker:
             self.settings_window.destroy()
             self.settings_window = None
     def _mark_stock_form_dirty(self, event: tk.Event) -> None:
-        # Any user typing marks the form dirty
-        self.stock_form_dirty = True
+        _stock_mark_stock_form_dirty(self, event)
     def _bind_tree_resize(self, tree: ttk.Treeview, key: str) -> None:
         tree.bind("<ButtonRelease-1>", lambda e, t=tree, k=key: self._store_tree_widths(t, k))
         tree.bind("<ButtonRelease-2>", lambda e, t=tree, k=key: self._store_tree_widths(t, k))
@@ -2534,40 +2317,10 @@ class CannabisTracker:
         # Reapply stock colors after theme change
         self._refresh_stock()
     def _sort_stock(self, column: str, numeric: bool) -> None:
-        if self.stock_sort_column == column:
-            self.stock_sort_reverse = not self.stock_sort_reverse
-        else:
-            self.stock_sort_column = column
-            self.stock_sort_reverse = False
-        self._apply_stock_sort()
+        _stock_sort_stock(self, column, numeric)
+
     def _apply_stock_sort(self) -> None:
-        # Update heading text with arrow
-        arrows = {"asc": " ^", "desc": " v"}
-        for col in ("name", "thc", "cbd", "grams"):
-            base = {
-                "name": "Name",
-                "thc": "THC (%)",
-                "cbd": "CBD (%)",
-                "grams": "Remaining (g)",
-            }[col]
-            if col == self.stock_sort_column:
-                suffix = arrows["desc"] if self.stock_sort_reverse else arrows["asc"]
-            else:
-                suffix = ""
-            self.stock_tree.heading(col, text=base + suffix)
-        children = list(self.stock_tree.get_children())
-        if not children:
-            return
-        def sort_key(item: str) -> tuple:
-            value = self.stock_tree.set(item, self.stock_sort_column)
-            if self.stock_sort_column in {"thc", "cbd", "grams"}:
-                try:
-                    return (float(value), value)
-                except ValueError:
-                    return (0.0, value)
-            return (value.lower(), value)
-        for index, iid in enumerate(sorted(children, key=sort_key, reverse=self.stock_sort_reverse)):
-            self.stock_tree.move(iid, "", index)
+        _stock_apply_stock_sort(self)
     def _grams_used_on_day(self, day: date) -> float:
         day_str = day.isoformat()
         return sum(
