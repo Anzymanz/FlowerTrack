@@ -60,6 +60,7 @@ def start_network_data_server(
     bind = (bind_host or DEFAULT_BIND_HOST).strip() or DEFAULT_BIND_HOST
     port = int(preferred_port or DEFAULT_NETWORK_PORT)
     expected_key = str(access_key or "").strip()
+    client_ttl_s = 20.0
 
     def _client_allowed(host: str) -> bool:
         try:
@@ -73,6 +74,23 @@ def start_network_data_server(
         return False
 
     class Handler(http.server.BaseHTTPRequestHandler):
+        def _touch_client(self) -> None:
+            try:
+                client_ip = str(self.client_address[0] or "").strip()
+                now = time.monotonic()
+                lock = getattr(self.server, "_ft_clients_lock", None)
+                clients = getattr(self.server, "_ft_clients", None)
+                if lock is None or clients is None:
+                    return
+                with lock:
+                    # prune stale entries on each touch
+                    stale = [ip for ip, ts in clients.items() if (now - float(ts)) > float(client_ttl_s)]
+                    for ip in stale:
+                        clients.pop(ip, None)
+                    clients[client_ip] = now
+            except Exception:
+                pass
+
         def _send_forbidden(self, reason: str) -> None:
             self._send_json({"ok": False, "error": reason}, status=403)
 
@@ -95,6 +113,7 @@ def start_network_data_server(
             if not got_key or not hmac.compare_digest(got_key, expected_key):
                 self._send_forbidden("invalid_access_key")
                 return False
+            self._touch_client()
             return True
 
         def _send_json(self, payload: Any, status: int = 200) -> None:
@@ -191,6 +210,12 @@ def start_network_data_server(
     if not httpd or not chosen_port:
         log("[network] failed to start data server")
         return None, None, None
+    try:
+        setattr(httpd, "_ft_clients", {})
+        setattr(httpd, "_ft_clients_lock", threading.Lock())
+        setattr(httpd, "_ft_client_ttl", float(client_ttl_s))
+    except Exception:
+        pass
 
     thread = threading.Thread(target=httpd.serve_forever, daemon=True, name="flowertrack-network-server")
     thread.start()

@@ -702,9 +702,11 @@ class CannabisTracker:
         self.clock_label.grid(row=0, column=4, sticky="e", padx=(12, 0))
         self.top_date_label = ttk.Label(top_bar, text="", font=time_font)
         self.top_date_label.grid(row=0, column=5, sticky="e", padx=(6, 0))
+        self.host_clients_label = ttk.Label(top_bar, text="", font=("", 10, "bold"))
+        self.host_clients_label.grid(row=0, column=6, sticky="e", padx=(8, 0))
         self.scraper_status_img = None
         self.scraper_status_label = ttk.Label(top_bar, text="", padding=0)
-        self.scraper_status_label.grid(row=0, column=6, sticky="e", padx=(6, 0))
+        self.scraper_status_label.grid(row=0, column=7, sticky="e", padx=(6, 0))
         self._bind_scraper_status_actions()
         self._apply_scraper_controls_visibility()
         top_bar.columnconfigure(4, weight=1)
@@ -4554,11 +4556,32 @@ class CannabisTracker:
         label = getattr(self, 'scraper_status_label', None)
         if not label:
             return
+        host_clients = getattr(self, "host_clients_label", None)
         if self.show_scraper_status_icon and self.show_scraper_buttons:
             try:
                 label.grid()
             except Exception:
                 pass
+        else:
+            try:
+                label.grid_remove()
+            except Exception:
+                pass
+        if host_clients:
+            if (
+                self.network_mode == MODE_HOST
+                and self.show_scraper_status_icon
+                and self.show_scraper_buttons
+            ):
+                try:
+                    host_clients.grid()
+                except Exception:
+                    pass
+            else:
+                try:
+                    host_clients.grid_remove()
+                except Exception:
+                    pass
 
     def _bind_scraper_status_actions(self) -> None:
         label = getattr(self, "scraper_status_label", None)
@@ -4584,6 +4607,13 @@ class CannabisTracker:
                 f"Client connection: {label}\n"
                 f"Missed polls: {missed}\n"
                 "Green: connected | Orange: interrupted | Red: disconnected"
+            )
+        if self.network_mode == MODE_HOST:
+            active = self._host_active_connections_count()
+            return (
+                f"Host mode | Active clients: {active}\n"
+                "Scraper indicator:\n"
+                "Green: running | Orange: errored | Red: stopped"
             )
         muted = bool(getattr(self, "scraper_notifications_muted", False))
         muted_txt = "Muted" if muted else "Unmuted"
@@ -4774,8 +4804,11 @@ class CannabisTracker:
             self._prune_child_procs()
             running, warn = resolve_scraper_status(getattr(self, "child_procs", []))
             client_state = None
+            host_clients = 0
             if self.network_mode == MODE_CLIENT:
                 client_state, _missed = self._client_connection_state()
+            elif self.network_mode == MODE_HOST:
+                host_clients = self._host_active_connections_count()
             if getattr(self, "tray_icon", None):
                 if not getattr(self, "show_scraper_buttons", True):
                     icon_path = self._resource_path('icon.png')
@@ -4789,6 +4822,10 @@ class CannabisTracker:
                 else:
                     update_tray_icon(self.tray_icon, running, warn)
             if not self.show_scraper_status_icon or not self.show_scraper_buttons:
+                try:
+                    self.host_clients_label.configure(text="")
+                except Exception:
+                    pass
                 self._apply_scraper_controls_visibility()
                 return
             target_size = 32
@@ -4807,6 +4844,16 @@ class CannabisTracker:
                 self.scraper_status_label.configure(image=tk_img, text="")
             else:
                 self.scraper_status_label.configure(image="", text="")
+            try:
+                if self.network_mode == MODE_HOST:
+                    self.host_clients_label.configure(
+                        text=f"Clients: {host_clients}",
+                        foreground=getattr(self, "muted_color", "#999"),
+                    )
+                else:
+                    self.host_clients_label.configure(text="")
+            except Exception:
+                pass
         except Exception:
             self.scraper_status_label.configure(image="", text="")
         finally:
@@ -4863,3 +4910,24 @@ class CannabisTracker:
         if missed >= 3:
             return ("down", missed)
         return ("interrupted", missed)
+
+    def _host_active_connections_count(self) -> int:
+        if self.network_mode != MODE_HOST:
+            return 0
+        server = getattr(self, "network_server", None)
+        if not server:
+            return 0
+        try:
+            lock = getattr(server, "_ft_clients_lock", None)
+            clients = getattr(server, "_ft_clients", None)
+            ttl = float(getattr(server, "_ft_client_ttl", 20.0) or 20.0)
+            if lock is None or clients is None:
+                return 0
+            now = time.monotonic()
+            with lock:
+                stale = [ip for ip, ts in clients.items() if (now - float(ts)) > ttl]
+                for ip in stale:
+                    clients.pop(ip, None)
+                return len(clients)
+        except Exception:
+            return 0
