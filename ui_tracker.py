@@ -53,6 +53,12 @@ from ui_tracker_window_persistence import (
     persist_tree_widths as _persist_persist_tree_widths,
     schedule_settings_geometry as _persist_schedule_settings_geometry,
 )
+from ui_tracker_visibility import (
+    apply_mix_button_visibility as _visibility_apply_mix_button_visibility,
+    apply_roa_visibility as _visibility_apply_roa_visibility,
+    apply_scraper_status_visibility as _visibility_apply_scraper_status_visibility,
+    bind_scraper_status_actions as _visibility_bind_scraper_status_actions,
+)
 from resources import resource_path as _resource_path
 from inventory import (
     TRACKER_DATA_FILE,
@@ -4191,28 +4197,7 @@ class CannabisTracker:
                 pass
 
     def _apply_roa_visibility(self) -> None:
-        hide = bool(getattr(self, "hide_roa_options", False))
-        try:
-            if hasattr(self, "log_tree"):
-                cols = list(self.log_tree["columns"])
-                display = tuple(c for c in cols if c not in ("roa", "thc_mg", "cbd_mg")) if hide else cols
-                self.log_tree["displaycolumns"] = display
-        except Exception:
-            pass
-        try:
-            if hide:
-                if hasattr(self, "roa_label"):
-                    self.roa_label.grid_remove()
-                if hasattr(self, "roa_choice"):
-                    self.roa_choice.grid_remove()
-            else:
-                if hasattr(self, "roa_label"):
-                    self.roa_label.grid()
-                if hasattr(self, "roa_choice"):
-                    self.roa_choice.grid()
-        except Exception:
-            pass
-        self._apply_mix_button_visibility()
+        _visibility_apply_roa_visibility(self)
 
     def _toggle_stock_form(self) -> None:
         _layout_toggle_stock_form(self)
@@ -4239,141 +4224,13 @@ class CannabisTracker:
         _layout_apply_stock_form_visibility(self)
 
     def _apply_mix_button_visibility(self) -> None:
-        try:
-            btn = getattr(self, "mixed_dose_button", None)
-            if btn:
-                if getattr(self, "hide_mixed_dose", False):
-                    btn.grid_remove()
-                else:
-                    info = getattr(self, "_mixed_dose_grid", None)
-                    btn.grid(**info) if isinstance(info, dict) else btn.grid()
-        except Exception:
-            pass
-        try:
-            btn = getattr(self, "mix_stock_button", None)
-            if btn:
-                if getattr(self, "hide_mix_stock", False):
-                    btn.grid_remove()
-                else:
-                    info = getattr(self, "_mix_stock_grid", None)
-                    btn.grid(**info) if isinstance(info, dict) else btn.grid()
-        except Exception:
-            pass
-        try:
-            if hasattr(self, "log_tree"):
-                cols = list(self.log_tree["columns"])
-                widths = self.log_column_widths or {
-                    col: int(self.log_tree.column(col, option="width")) for col in cols
-                }
-                has_prefs = bool(self.log_column_widths)
-                display = cols
-                if hide:
-                    display = tuple(c for c in cols if c not in ("roa", "thc_mg", "cbd_mg"))
-                try:
-                    self.log_tree["displaycolumns"] = display
-                    self.log_tree.configure(displaycolumns=display)
-                except Exception:
-                    pass
-                if hide:
-                    if has_prefs:
-                        adjusted = dict(widths)
-                    if not has_prefs:
-                        if not hasattr(self, "_log_widths_before_hide"):
-                            self._log_widths_before_hide = dict(widths)
-                        hidden_total = sum(
-                            widths.get(col, int(self.log_tree.column(col, option="width")))
-                            for col in cols
-                            if col not in display
-                        )
-                        adjusted = dict(widths)
-                        visible = [c for c in display]
-                        base_total = sum(adjusted.get(c, 0) for c in visible) or 1
-                        min_widths = {
-                            "time": 70,
-                            "flower": 160,
-                            "grams": 80,
-                        }
-                        for col in visible:
-                            share = adjusted.get(col, 0) / base_total
-                            adjusted[col] = max(min_widths.get(col, 50), adjusted.get(col, 0) + int(hidden_total * share))
-                else:
-                    display = cols
-                    restore = getattr(self, "_log_widths_before_hide", None)
-                    adjusted = dict(restore or widths)
-                    if hasattr(self, "_log_widths_before_hide"):
-                        delattr(self, "_log_widths_before_hide")
-                self._suspend_log_width_save = True
-                for col, width in adjusted.items():
-                    try:
-                        self.log_tree.column(col, width=width)
-                    except Exception:
-                        continue
-                try:
-                    self.log_tree.update_idletasks()
-                    self.log_tree["displaycolumns"] = display
-                except Exception:
-                    pass
-                try:
-                    self.root.after(300, lambda: setattr(self, "_suspend_log_width_save", False))
-                except Exception:
-                    self._suspend_log_width_save = False
-        except Exception:
-            pass
-
-        # Final fallback to ensure ROA/THC/CBD columns are hidden when requested.
-        try:
-            if hasattr(self, "log_tree"):
-                cols = list(self.log_tree["columns"])
-                if hide:
-                    display = tuple(c for c in cols if c not in ("roa", "thc_mg", "cbd_mg"))
-                else:
-                    display = cols
-                self.log_tree["displaycolumns"] = display
-        except Exception:
-            pass
+        _visibility_apply_mix_button_visibility(self)
 
     def _apply_scraper_status_visibility(self) -> None:
-        label = getattr(self, 'scraper_status_label', None)
-        if not label:
-            return
-        host_clients = getattr(self, "host_clients_label", None)
-        if self.show_scraper_status_icon and self.show_scraper_buttons:
-            try:
-                label.grid()
-            except Exception:
-                pass
-        else:
-            try:
-                label.grid_remove()
-            except Exception:
-                pass
-        if host_clients:
-            if (
-                self.network_mode == MODE_HOST
-                and self.show_scraper_status_icon
-                and self.show_scraper_buttons
-            ):
-                try:
-                    host_clients.grid()
-                except Exception:
-                    pass
-            else:
-                try:
-                    host_clients.grid_remove()
-                except Exception:
-                    pass
+        _visibility_apply_scraper_status_visibility(self)
 
     def _bind_scraper_status_actions(self) -> None:
-        label = getattr(self, "scraper_status_label", None)
-        if not label:
-            return
-        try:
-            label.bind("<Double-Button-1>", self._on_status_double_click)
-            label.bind("<Button-3>", self._on_status_right_click)
-            label.bind("<Enter>", self._on_status_enter)
-            label.bind("<Leave>", self._on_status_leave)
-        except Exception:
-            pass
+        _visibility_bind_scraper_status_actions(self)
 
     def _status_tooltip_text(self) -> str:
         return _status_tooltip_text_helper(self, resolve_scraper_status)
