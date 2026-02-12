@@ -43,6 +43,16 @@ from ui_tracker_layout import (
     schedule_split_persist as _layout_schedule_split_persist,
     toggle_stock_form as _layout_toggle_stock_form,
 )
+from ui_tracker_window_persistence import (
+    apply_resolution_safety as _persist_apply_resolution_safety,
+    current_screen_resolution as _persist_current_screen_resolution,
+    on_root_configure as _persist_on_root_configure,
+    parse_resolution as _persist_parse_resolution,
+    persist_geometry as _persist_persist_geometry,
+    persist_settings_geometry as _persist_persist_settings_geometry,
+    persist_tree_widths as _persist_persist_tree_widths,
+    schedule_settings_geometry as _persist_schedule_settings_geometry,
+)
 from resources import resource_path as _resource_path
 from inventory import (
     TRACKER_DATA_FILE,
@@ -2178,87 +2188,27 @@ class CannabisTracker:
             self.log_column_widths = widths
         self._save_config()
     def _persist_tree_widths(self) -> None:
-        try:
-            if hasattr(self, "stock_tree"):
-                self.stock_column_widths = {
-                    col: int(self.stock_tree.column(col, option="width")) for col in self.stock_tree["columns"]
-                }
-            if hasattr(self, "log_tree"):
-                self.log_column_widths = {
-                    col: int(self.log_tree.column(col, option="width")) for col in self.log_tree["columns"]
-                }
-        except Exception:
-            pass
+        _persist_persist_tree_widths(self)
     def _on_root_configure(self, event: tk.Event) -> None:
-        if event.widget is not self.root:
-            return
-        if self._geometry_save_job is not None:
-            try:
-                self.root.after_cancel(self._geometry_save_job)
-            except Exception:
-                pass
-        self._geometry_save_job = self.root.after(500, self._persist_geometry)
+        _persist_on_root_configure(self, event)
     def _persist_geometry(self) -> None:
-        try:
-            self.window_geometry = self.root.geometry()
-            self._persist_tree_widths()
-            self._save_config()
-        except Exception:
-            pass
+        _persist_persist_geometry(self)
 
     def _schedule_settings_geometry(self, win: tk.Toplevel) -> None:
-        try:
-            if getattr(self, "_settings_geometry_job", None) is not None:
-                try:
-                    self.root.after_cancel(self._settings_geometry_job)
-                except Exception:
-                    pass
-            self._settings_geometry_job = self.root.after(500, lambda: self._persist_settings_geometry(win))
-        except Exception:
-            self._persist_settings_geometry(win)
+        _persist_schedule_settings_geometry(self, win)
 
     def _persist_settings_geometry(self, win: tk.Toplevel) -> None:
-        try:
-            if win and tk.Toplevel.winfo_exists(win):
-                self.settings_window_geometry = win.geometry()
-                self._save_config()
-        except Exception:
-            pass
+        _persist_persist_settings_geometry(self, win)
 
     def _current_screen_resolution(self) -> str:
-        try:
-            return f"{self.root.winfo_screenwidth()}x{self.root.winfo_screenheight()}"
-        except Exception:
-            return ""
+        return _persist_current_screen_resolution(self)
 
     @staticmethod
     def _parse_resolution(value: str) -> tuple[int, int] | None:
-        if not value:
-            return None
-        text = str(value).lower().replace(" ", "")
-        if "x" not in text:
-            return None
-        try:
-            w_str, h_str = text.split("x", 1)
-            return int(float(w_str)), int(float(h_str))
-        except Exception:
-            return None
+        return _persist_parse_resolution(value)
 
     def _apply_resolution_safety(self) -> None:
-        try:
-            current = self._parse_resolution(self._current_screen_resolution())
-            saved = self._parse_resolution(self.screen_resolution)
-            if not current or not saved:
-                self.screen_resolution = self._current_screen_resolution()
-                return
-            if current[0] < saved[0] or current[1] < saved[1]:
-                self.window_geometry = ""
-                self.settings_window_geometry = ""
-                self._force_center_on_start = True
-                self._force_center_settings = True
-                self.screen_resolution = self._current_screen_resolution()
-        except Exception:
-            pass
+        _persist_apply_resolution_safety(self)
     def apply_theme(self, dark: bool) -> None:
         colors = compute_colors(dark)
         base = colors["bg"]
