@@ -58,6 +58,15 @@ from notifications import NotificationService
 from theme import apply_style_theme, set_titlebar_dark, compute_colors, set_palette_overrides
 from resources import resource_path
 from history_viewer import open_history_window
+from ui_scraper_status import (
+    append_auth_bootstrap_log as _status_append_auth_bootstrap_log,
+    auth_bootstrap_log as _status_auth_bootstrap_log,
+    capture_log as _status_capture_log,
+    friendly_status_text as _status_friendly_status_text,
+    pagination_progress_text as _status_pagination_progress_text,
+    set_pagination_busy as _status_set_pagination_busy,
+    update_pagination_progress_from_log as _status_update_pagination_progress_from_log,
+)
 from unread_changes import (
     clear_unread_changes,
     merge_unread_changes,
@@ -582,157 +591,25 @@ class App(tk.Tk):
             messagebox.showerror("History", f"Could not open history:\n{exc}")
 
     def _capture_log(self, msg: str):
-        self._update_pagination_progress_from_log(msg)
-        if hasattr(self, "logger") and self.logger:
-            self.logger.info(msg)
-        else:
-            self._log_console(msg)
-        # Update status label for capture-related messages
-        try:
-            status_msg = self._friendly_status_text(msg)
-            if status_msg:
-                self.status.config(text=status_msg)
-        except Exception as exc:
-            self._debug_log(f"Suppressed exception: {exc}")
-        lower = str(msg or "").lower()
-        if "api pagination" in lower or "pagination fetch" in lower:
-            self._set_pagination_busy(True)
-        elif (
-            "api capture fetched" in lower
-            or "api items parsed" in lower
-            or "no api data found" in lower
-            or "api capture failed" in lower
-        ):
-            self._set_pagination_busy(False)
+        _status_capture_log(self, msg)
 
     def _friendly_status_text(self, msg: str) -> str:
-        text = str(msg or "").strip()
-        if not text:
-            return ""
-        lower = text.lower()
-        if "external command: show scraper window" in lower:
-            return ""
-        if "external command: start queued" in lower:
-            return "Start requested; waiting for current run to finish."
-        if "external command: start auto-capture" in lower:
-            return "Starting auto-capture..."
-        if "external command: stop auto-capture" in lower:
-            return "Stopping auto-capture..."
-        if "applying api capture" in lower:
-            return "Processing latest data..."
-        # Pagination/count progress is already shown by the dedicated pagination label.
-        if (
-            "api pagination fetch" in lower
-            or "pagination fetch" in lower
-            or "pagination:" in lower
-            or "count fetch status" in lower
-        ):
-            return ""
-        if lower.startswith("saved last parse to "):
-            return "Latest parse saved."
-        if "no api data found" in lower:
-            return "No data found this run."
-        if lower.startswith("sending windows notification:"):
-            return "Sending desktop notification..."
-        return text
+        return _status_friendly_status_text(self, msg)
 
     def _append_auth_bootstrap_log(self, msg: str, level: str = "info") -> None:
-        widget = getattr(self, "auth_bootstrap_log_widget", None)
-        if not widget:
-            return
-        try:
-            if not tk.Text.winfo_exists(widget):
-                self.auth_bootstrap_log_widget = None
-                return
-        except Exception:
-            self.auth_bootstrap_log_widget = None
-            return
-        line = f"{msg}\n"
-        try:
-            colors = compute_colors(bool(self.dark_mode_var.get()))
-            success_fg = "#2ecc71" if bool(self.dark_mode_var.get()) else "#1f7a1f"
-            warn_fg = "#f39c12" if bool(self.dark_mode_var.get()) else "#9a6500"
-            error_fg = "#e74c3c" if bool(self.dark_mode_var.get()) else "#a32020"
-            widget.tag_configure("log_info", foreground=colors["fg"])
-            widget.tag_configure("log_success", foreground=success_fg)
-            widget.tag_configure("log_warning", foreground=warn_fg)
-            widget.tag_configure("log_error", foreground=error_fg)
-            tag = {
-                "success": "log_success",
-                "warning": "log_warning",
-                "error": "log_error",
-            }.get(str(level).lower(), "log_info")
-            widget.configure(state="normal")
-            widget.insert("end", line, tag)
-            widget.see("end")
-            widget.yview_moveto(1.0)
-            widget.configure(state="disabled")
-            widget.update_idletasks()
-        except Exception:
-            pass
+        _status_append_auth_bootstrap_log(self, msg, level)
 
     def _auth_bootstrap_log(self, msg: str, level: str = "info") -> None:
-        self._capture_log(msg)
-        try:
-            if threading.current_thread() is self._ui_thread:
-                self._append_auth_bootstrap_log(msg, level=level)
-            else:
-                self.after(0, lambda m=msg, lvl=level: self._append_auth_bootstrap_log(m, level=lvl))
-        except Exception:
-            pass
+        _status_auth_bootstrap_log(self, msg, level)
 
     def _set_pagination_busy(self, busy: bool) -> None:
-        if self._pagination_busy == busy:
-            return
-        self._pagination_busy = busy
-        if not busy:
-            self._pagination_pages_seen = 0
-            self._pagination_pages_expected = 0
-        try:
-            self.pagination_label.config(text=self._pagination_progress_text() if busy else "")
-        except Exception as exc:
-            self._debug_log(f"Suppressed exception: {exc}")
+        _status_set_pagination_busy(self, busy)
 
     def _pagination_progress_text(self) -> str:
-        if not self._pagination_busy:
-            return ""
-        seen = max(0, int(self._pagination_pages_seen or 0))
-        expected = max(0, int(self._pagination_pages_expected or 0))
-        if expected > 0:
-            return f"Fetching pages... {min(seen, expected)}/{expected}"
-        if seen > 0:
-            return f"Fetching pages... {seen}"
-        return "Fetching pages..."
+        return _status_pagination_progress_text(self)
 
     def _update_pagination_progress_from_log(self, msg: str) -> None:
-        text = str(msg or "")
-        if not text:
-            return
-        lower = text.lower()
-        # Base pagination announcement: API pagination: base=50 total=430 take=50
-        if "api pagination:" in lower:
-            m = re.search(r"total=(\d+)\s+take=(\d+)", text, flags=re.IGNORECASE)
-            if m:
-                total = max(0, int(m.group(1)))
-                take = max(1, int(m.group(2)))
-                expected = max(1, (total + take - 1) // take)
-                self._pagination_pages_expected = expected
-                self._pagination_pages_seen = 1  # base page is already fetched
-                self._set_pagination_busy(True)
-                try:
-                    self.pagination_label.config(text=self._pagination_progress_text())
-                except Exception:
-                    pass
-            return
-        # Follow-up page fetches: API pagination fetch skip=200 status=200
-        if "api pagination fetch skip=" in lower:
-            if "status=error" not in lower:
-                self._pagination_pages_seen = max(1, int(self._pagination_pages_seen or 0)) + 1
-            self._set_pagination_busy(True)
-            try:
-                self.pagination_label.config(text=self._pagination_progress_text())
-            except Exception:
-                pass
+        _status_update_pagination_progress_from_log(self, msg)
     def _generate_change_export(self, items: list[dict] | None = None, silent: bool = False):
         """Generate an HTML snapshot for the latest items and keep only recent ones."""
         data = items if items is not None else self._get_export_items()
