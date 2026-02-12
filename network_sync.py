@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import functools
+import hmac
 import http.server
+import ipaddress
 import json
 import os
 import socket
@@ -51,12 +53,50 @@ def start_network_data_server(
     tracker_data_path: Path,
     library_data_path: Path,
     log: Callable[[str], None],
+    access_key: str = "",
+    allow_public_clients: bool = False,
 ) -> Tuple[Optional[http.server.ThreadingHTTPServer], Optional[threading.Thread], Optional[int]]:
     """Start host-mode JSON API server for shared tracker/library data."""
     bind = (bind_host or DEFAULT_BIND_HOST).strip() or DEFAULT_BIND_HOST
     port = int(preferred_port or DEFAULT_NETWORK_PORT)
+    expected_key = str(access_key or "").strip()
+
+    def _client_allowed(host: str) -> bool:
+        try:
+            addr = ipaddress.ip_address((host or "").strip())
+        except Exception:
+            return False
+        if allow_public_clients:
+            return True
+        if addr.is_loopback or addr.is_private or addr.is_link_local:
+            return True
+        return False
 
     class Handler(http.server.BaseHTTPRequestHandler):
+        def _send_forbidden(self, reason: str) -> None:
+            self._send_json({"ok": False, "error": reason}, status=403)
+
+        def _check_access(self) -> bool:
+            client_ip = ""
+            try:
+                client_ip = str(self.client_address[0] or "").strip()
+            except Exception:
+                client_ip = ""
+            if not _client_allowed(client_ip):
+                self._send_forbidden("client_not_allowed")
+                return False
+            if not expected_key:
+                # No key configured: only allow strict localhost access.
+                if client_ip not in {"127.0.0.1", "::1"}:
+                    self._send_forbidden("missing_access_key")
+                    return False
+                return True
+            got_key = str(self.headers.get("X-FlowerTrack-Key", "") or "").strip()
+            if not got_key or not hmac.compare_digest(got_key, expected_key):
+                self._send_forbidden("invalid_access_key")
+                return False
+            return True
+
         def _send_json(self, payload: Any, status: int = 200) -> None:
             raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")
             self.send_response(status)
@@ -80,6 +120,8 @@ def start_network_data_server(
                 return None
 
         def do_GET(self) -> None:  # noqa: N802
+            if not self._check_access():
+                return
             path = self.path.split("?", 1)[0].rstrip("/")
             if path == "/api/network/ping":
                 self._send_json({"ok": True, "ts": time.time()}, status=200)
@@ -107,6 +149,8 @@ def start_network_data_server(
             self._send_json({"ok": False, "error": "not_found"}, status=404)
 
         def do_PUT(self) -> None:  # noqa: N802
+            if not self._check_access():
+                return
             path = self.path.split("?", 1)[0].rstrip("/")
             body = self._read_json_body()
             if path == "/api/network/tracker-data":
@@ -176,10 +220,14 @@ def _request_json(
     path: str,
     payload: Any = None,
     timeout: float = 4.0,
+    access_key: str = "",
 ) -> Any:
     base = f"http://{host}:{int(port)}{path}"
     body = None
     headers = {}
+    key = str(access_key or "").strip()
+    if key:
+        headers["X-FlowerTrack-Key"] = key
     if payload is not None:
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         headers["Content-Type"] = "application/json; charset=utf-8"
@@ -191,17 +239,24 @@ def _request_json(
     return json.loads(raw.decode("utf-8"))
 
 
-def network_ping(host: str, port: int, timeout: float = 2.0) -> bool:
+def network_ping(host: str, port: int, timeout: float = 2.0, access_key: str = "") -> bool:
     try:
-        payload = _request_json("GET", host, port, "/api/network/ping", timeout=timeout)
+        payload = _request_json("GET", host, port, "/api/network/ping", timeout=timeout, access_key=access_key)
         return bool(isinstance(payload, dict) and payload.get("ok"))
     except Exception:
         return False
 
 
-def fetch_tracker_data(host: str, port: int, timeout: float = 4.0) -> dict | None:
+def fetch_tracker_data(host: str, port: int, timeout: float = 4.0, access_key: str = "") -> dict | None:
     try:
-        payload = _request_json("GET", host, port, "/api/network/tracker-data", timeout=timeout)
+        payload = _request_json(
+            "GET",
+            host,
+            port,
+            "/api/network/tracker-data",
+            timeout=timeout,
+            access_key=access_key,
+        )
         if isinstance(payload, dict):
             return payload
     except Exception:
@@ -209,9 +264,16 @@ def fetch_tracker_data(host: str, port: int, timeout: float = 4.0) -> dict | Non
     return None
 
 
-def fetch_tracker_meta(host: str, port: int, timeout: float = 2.0) -> dict | None:
+def fetch_tracker_meta(host: str, port: int, timeout: float = 2.0, access_key: str = "") -> dict | None:
     try:
-        payload = _request_json("GET", host, port, "/api/network/tracker-meta", timeout=timeout)
+        payload = _request_json(
+            "GET",
+            host,
+            port,
+            "/api/network/tracker-meta",
+            timeout=timeout,
+            access_key=access_key,
+        )
         if isinstance(payload, dict):
             return payload
     except Exception:
@@ -219,17 +281,32 @@ def fetch_tracker_meta(host: str, port: int, timeout: float = 2.0) -> dict | Non
     return None
 
 
-def push_tracker_data(host: str, port: int, data: dict, timeout: float = 4.0) -> bool:
+def push_tracker_data(host: str, port: int, data: dict, timeout: float = 4.0, access_key: str = "") -> bool:
     try:
-        payload = _request_json("PUT", host, port, "/api/network/tracker-data", payload=data, timeout=timeout)
+        payload = _request_json(
+            "PUT",
+            host,
+            port,
+            "/api/network/tracker-data",
+            payload=data,
+            timeout=timeout,
+            access_key=access_key,
+        )
         return bool(isinstance(payload, dict) and payload.get("ok"))
     except Exception:
         return False
 
 
-def fetch_library_data(host: str, port: int, timeout: float = 4.0) -> list[dict] | None:
+def fetch_library_data(host: str, port: int, timeout: float = 4.0, access_key: str = "") -> list[dict] | None:
     try:
-        payload = _request_json("GET", host, port, "/api/network/library-data", timeout=timeout)
+        payload = _request_json(
+            "GET",
+            host,
+            port,
+            "/api/network/library-data",
+            timeout=timeout,
+            access_key=access_key,
+        )
         if isinstance(payload, list):
             return payload
     except Exception:
@@ -237,9 +314,17 @@ def fetch_library_data(host: str, port: int, timeout: float = 4.0) -> list[dict]
     return None
 
 
-def push_library_data(host: str, port: int, data: list[dict], timeout: float = 4.0) -> bool:
+def push_library_data(host: str, port: int, data: list[dict], timeout: float = 4.0, access_key: str = "") -> bool:
     try:
-        payload = _request_json("PUT", host, port, "/api/network/library-data", payload=data, timeout=timeout)
+        payload = _request_json(
+            "PUT",
+            host,
+            port,
+            "/api/network/library-data",
+            payload=data,
+            timeout=timeout,
+            access_key=access_key,
+        )
         return bool(isinstance(payload, dict) and payload.get("ok"))
     except Exception:
         return False

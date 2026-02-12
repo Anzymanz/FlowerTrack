@@ -243,6 +243,7 @@ DEFAULT_TRACKER_CONFIG = {
     "network_bind_host": "0.0.0.0",
     "network_port": 8766,
     "network_export_port": 8765,
+    "network_access_key": "",
     "mixcalc_geometry": "",
     "mixcalc_stock_geometry": "",
     "stock_column_widths": {},
@@ -468,6 +469,7 @@ def _validate_tracker_config(raw: dict) -> dict:
         cfg["network_export_port"] = 8765
     cfg["network_host"] = str(cfg.get("network_host", "127.0.0.1") or "127.0.0.1").strip()
     cfg["network_bind_host"] = str(cfg.get("network_bind_host", "0.0.0.0") or "0.0.0.0").strip()
+    cfg["network_access_key"] = str(cfg.get("network_access_key", "") or "").strip()
     if not cfg.get("data_path"):
         cfg["data_path"] = _default_tracker_data_path()
     if not cfg.get("library_data_path"):

@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 import csv
 import os
+import secrets
 import sys
 import webbrowser
 import time
@@ -185,6 +186,7 @@ class CannabisTracker:
         self.network_host = "127.0.0.1"
         self.network_bind_host = "0.0.0.0"
         self.network_port = DEFAULT_NETWORK_PORT
+        self.network_access_key = ""
         self.network_server = None
         self.network_server_thread = None
         self._network_error_shown = False
@@ -248,6 +250,7 @@ class CannabisTracker:
                 # Load tracker UI data first, then bring up host services in the
                 # background so server binds never stall the main thread.
                 self.load_data()
+                self._ensure_network_access_key()
                 self._network_bootstrap_ready = True
                 self._start_host_services_async()
             elif self.network_mode == MODE_CLIENT:
@@ -283,6 +286,18 @@ class CannabisTracker:
         self._refresh_stock()
         self._refresh_log()
 
+    def _ensure_network_access_key(self) -> None:
+        if self.network_mode != MODE_HOST:
+            return
+        if str(getattr(self, "network_access_key", "") or "").strip():
+            return
+        try:
+            self.network_access_key = secrets.token_urlsafe(24)
+            self._save_config()
+            self._log_network("[network] generated new access key for host mode")
+        except Exception:
+            pass
+
     def _start_host_services_async(self) -> None:
         if self.network_mode != MODE_HOST:
             return
@@ -315,12 +330,13 @@ class CannabisTracker:
             self._client_poll_inflight = True
         host = (self.network_host or "").strip()
         port = int(self.network_port)
+        access_key = str(getattr(self, "network_access_key", "") or "")
         prev_mtime = float(getattr(self, "_network_tracker_mtime", 0.0) or 0.0)
 
         def worker() -> None:
             result: dict[str, object] = {"ok": False, "initial": initial}
             try:
-                meta = fetch_tracker_meta(host, port, timeout=0.75)
+                meta = fetch_tracker_meta(host, port, timeout=0.75, access_key=access_key)
                 if not isinstance(meta, dict) or not meta.get("ok"):
                     result = {"ok": False, "initial": initial}
                 else:
@@ -330,7 +346,12 @@ class CannabisTracker:
                         remote_mtime = 0.0
                     result = {"ok": True, "mtime": remote_mtime, "initial": initial}
                     if initial or (remote_mtime > 0 and remote_mtime > prev_mtime):
-                        data = fetch_tracker_data(host, port, timeout=1.5 if initial else 1.0)
+                        data = fetch_tracker_data(
+                            host,
+                            port,
+                            timeout=1.5 if initial else 1.0,
+                            access_key=access_key,
+                        )
                         if isinstance(data, dict):
                             result["data"] = data
                         else:
@@ -541,6 +562,7 @@ class CannabisTracker:
         if self.network_mode != MODE_HOST:
             return False
         try:
+            self._ensure_network_access_key()
             if self.network_server and self.network_port:
                 return True
             tracker_path = Path(self.data_path or TRACKER_DATA_FILE)
@@ -551,6 +573,7 @@ class CannabisTracker:
                 tracker_data_path=tracker_path,
                 library_data_path=library_path,
                 log=self._log_network,
+                access_key=str(getattr(self, "network_access_key", "") or ""),
             )
             if httpd and port:
                 self.network_server = httpd
@@ -573,7 +596,11 @@ class CannabisTracker:
         host = (self.network_host or "").strip()
         if not host:
             return None
-        data = fetch_tracker_data(host, int(self.network_port))
+        data = fetch_tracker_data(
+            host,
+            int(self.network_port),
+            access_key=str(getattr(self, "network_access_key", "") or ""),
+        )
         if isinstance(data, dict):
             self._network_error_shown = False
             return data
@@ -583,7 +610,12 @@ class CannabisTracker:
         host = (self.network_host or "").strip()
         if not host:
             return False
-        ok = push_tracker_data(host, int(self.network_port), data)
+        ok = push_tracker_data(
+            host,
+            int(self.network_port),
+            data,
+            access_key=str(getattr(self, "network_access_key", "") or ""),
+        )
         if ok:
             self._network_error_shown = False
         return ok
@@ -592,7 +624,11 @@ class CannabisTracker:
         host = (self.network_host or "").strip()
         if not host:
             return None
-        data = fetch_library_data(host, int(self.network_port))
+        data = fetch_library_data(
+            host,
+            int(self.network_port),
+            access_key=str(getattr(self, "network_access_key", "") or ""),
+        )
         if isinstance(data, list):
             self._network_error_shown = False
             return data
@@ -602,7 +638,12 @@ class CannabisTracker:
         host = (self.network_host or "").strip()
         if not host:
             return False
-        ok = push_library_data(host, int(self.network_port), data)
+        ok = push_library_data(
+            host,
+            int(self.network_port),
+            data,
+            access_key=str(getattr(self, "network_access_key", "") or ""),
+        )
         if ok:
             self._network_error_shown = False
         return ok
@@ -1930,14 +1971,23 @@ class CannabisTracker:
             network_bind_host = str(getattr(self, "network_bind_host", "0.0.0.0")).strip() or "0.0.0.0"
             network_port = int(getattr(self, "network_port", DEFAULT_NETWORK_PORT))
             network_export_port = int(getattr(self, "export_port", DEFAULT_EXPORT_PORT))
+            network_access_key = str(getattr(self, "network_access_key", "") or "").strip()
             if getattr(self, "network_mode", MODE_HOST) == MODE_CLIENT:
                 if hasattr(self, "network_host_entry"):
                     network_host = str(self.network_host_entry.get()).strip()
                 if not network_host:
                     raise ValueError("Host IP is required in client mode.")
+                if hasattr(self, "network_access_key_entry"):
+                    network_access_key = str(self.network_access_key_entry.get()).strip()
+                if not network_access_key:
+                    raise ValueError("Access key is required in client mode.")
             if getattr(self, "network_mode", MODE_CLIENT) == MODE_HOST:
                 if hasattr(self, "network_bind_entry"):
                     network_bind_host = str(self.network_bind_entry.get()).strip() or "0.0.0.0"
+                if hasattr(self, "network_access_key_entry"):
+                    network_access_key = str(self.network_access_key_entry.get()).strip()
+                if not network_access_key:
+                    network_access_key = secrets.token_urlsafe(24)
             if hasattr(self, "network_port_entry"):
                 network_port = _parse_int("Data port", self.network_port_entry.get())
             if hasattr(self, "network_export_port_entry"):
@@ -1999,11 +2049,13 @@ class CannabisTracker:
             or str(self.network_bind_host).strip() != str(network_bind_host).strip()
             or int(self.network_port) != int(network_port)
             or int(self.export_port) != int(network_export_port)
+            or str(self.network_access_key).strip() != str(network_access_key).strip()
         )
         self.network_host = str(network_host).strip() or "127.0.0.1"
         self.network_bind_host = str(network_bind_host).strip() or "0.0.0.0"
         self.network_port = int(network_port)
         self.export_port = int(network_export_port)
+        self.network_access_key = str(network_access_key).strip()
         self.track_cbd_flower = track_cbd_flower
         self.enable_stock_coloring = enable_stock_coloring
         self.enable_usage_coloring = enable_usage_coloring
@@ -2050,7 +2102,12 @@ class CannabisTracker:
             self._ensure_network_server()
             self._ensure_export_server()
         if network_changed and self.network_mode == MODE_CLIENT:
-            if not network_ping(self.network_host, int(self.network_port), timeout=1.5):
+            if not network_ping(
+                self.network_host,
+                int(self.network_port),
+                timeout=1.5,
+                access_key=str(getattr(self, "network_access_key", "") or ""),
+            ):
                 messagebox.showwarning(
                     "Client connectivity",
                     f"Could not reach host {self.network_host}:{self.network_port}.",
@@ -2918,7 +2975,12 @@ class CannabisTracker:
             if remote_mtime is not None:
                 self._network_tracker_mtime = float(remote_mtime or 0.0)
             else:
-                meta = fetch_tracker_meta(self.network_host, int(self.network_port), timeout=0.9)
+                meta = fetch_tracker_meta(
+                    self.network_host,
+                    int(self.network_port),
+                    timeout=0.9,
+                    access_key=str(getattr(self, "network_access_key", "") or ""),
+                )
                 if isinstance(meta, dict):
                     try:
                         self._network_tracker_mtime = float(meta.get("mtime") or 0.0)
@@ -2981,6 +3043,7 @@ class CannabisTracker:
         self.show_scraper_buttons = bool(cfg.get("show_scraper_buttons", self.show_scraper_buttons))
         self.network_host = str(cfg.get("network_host", self.network_host)).strip() or "127.0.0.1"
         self.network_bind_host = str(cfg.get("network_bind_host", self.network_bind_host)).strip() or "0.0.0.0"
+        self.network_access_key = str(cfg.get("network_access_key", self.network_access_key)).strip()
         try:
             self.network_port = max(1, min(65535, int(cfg.get("network_port", self.network_port))))
         except Exception:
@@ -3145,6 +3208,7 @@ class CannabisTracker:
             "show_scraper_buttons": self.show_scraper_buttons,
             "network_host": self.network_host,
             "network_bind_host": self.network_bind_host,
+            "network_access_key": self.network_access_key,
             "network_port": int(self.network_port),
             "network_export_port": int(self.export_port),
         }

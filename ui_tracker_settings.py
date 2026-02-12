@@ -435,6 +435,17 @@ def open_tracker_settings(app) -> None:
             except Exception:
                 pass
             data_row += 1
+            lbl_access_key = ttk.Label(frame, text="Access key")
+            lbl_access_key.grid(row=data_row, column=0, sticky="w")
+            app.network_access_key_entry = ttk.Entry(frame, width=28)
+            app.network_access_key_entry.insert(0, str(getattr(app, "network_access_key", "") or ""))
+            app.network_access_key_entry.grid(row=data_row, column=1, columnspan=2, sticky="w", padx=(12, 0), pady=(2, 0))
+            try:
+                app._bind_tooltip(lbl_access_key, "Shared secret required by host network API.")
+                app._bind_tooltip(app.network_access_key_entry, "Must match host access key exactly.")
+            except Exception:
+                pass
+            data_row += 1
         else:
             lbl_bind_ip = ttk.Label(frame, text="Bind IP")
             lbl_bind_ip.grid(row=data_row, column=0, sticky="w")
@@ -444,6 +455,17 @@ def open_tracker_settings(app) -> None:
             try:
                 app._bind_tooltip(lbl_bind_ip, "IP to bind host network services on (0.0.0.0 = all interfaces).")
                 app._bind_tooltip(app.network_bind_entry, "Use 0.0.0.0 for LAN access.")
+            except Exception:
+                pass
+            data_row += 1
+            lbl_access_key = ttk.Label(frame, text="Access key")
+            lbl_access_key.grid(row=data_row, column=0, sticky="w")
+            app.network_access_key_entry = ttk.Entry(frame, width=28)
+            app.network_access_key_entry.insert(0, str(getattr(app, "network_access_key", "") or ""))
+            app.network_access_key_entry.grid(row=data_row, column=1, columnspan=2, sticky="w", padx=(12, 0), pady=(2, 0))
+            try:
+                app._bind_tooltip(lbl_access_key, "Shared secret required by clients to use host network API.")
+                app._bind_tooltip(app.network_access_key_entry, "Auto-generated if left empty when saving host settings.")
             except Exception:
                 pass
             data_row += 1
