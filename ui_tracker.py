@@ -824,7 +824,9 @@ class CannabisTracker:
         self.main_content = main
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
-        self.root.protocol("WM_DELETE_WINDOW", self._on_main_close)
+        # Route window-close through the tray-aware handler so "Close to tray"
+        # behaves like "Minimize to tray" when enabled.
+        self.root.protocol("WM_DELETE_WINDOW", self._on_close_to_tray)
         self.root.bind("<Unmap>", self._on_unmap)
         self.root.bind("<Configure>", self._on_root_configure)
         top_bar = ttk.Frame(main, padding=(0, 0, 0, 8))
