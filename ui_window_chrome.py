@@ -17,6 +17,14 @@ def apply_dark_titlebar(
         return False
     try:
         hwnd = int(window.winfo_id())
+        # Resolve to the real top-level window handle for this widget first.
+        try:
+            GA_ROOT = 2
+            root_hwnd = ctypes.windll.user32.GetAncestor(hwnd, GA_ROOT)
+            if root_hwnd:
+                hwnd = int(root_hwnd)
+        except Exception:
+            pass
         if allow_parent:
             get_parent = ctypes.windll.user32.GetParent
             parent = get_parent(hwnd)
