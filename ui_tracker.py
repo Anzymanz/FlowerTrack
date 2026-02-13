@@ -383,6 +383,18 @@ class CannabisTracker:
     def _request_client_network_poll(self, initial: bool = False) -> None:
         if self.network_mode != MODE_CLIENT:
             return
+        # Throttle client polling so host-side optional rate limiting doesn't
+        # trip during normal operation (clock tick can call this frequently).
+        try:
+            if not initial:
+                min_interval = float(getattr(self, "_client_poll_min_interval_s", 2.0) or 2.0)
+                now = time.monotonic()
+                last = float(getattr(self, "_client_last_poll_request", 0.0) or 0.0)
+                if (now - last) < min_interval:
+                    return
+                self._client_last_poll_request = now
+        except Exception:
+            pass
         with self._client_poll_lock:
             if self._client_poll_inflight:
                 return
@@ -398,13 +410,25 @@ class CannabisTracker:
                 meta = fetch_tracker_meta(host, port, timeout=0.75, access_key=access_key)
                 if isinstance(meta, dict) and (meta.get("ok") is False) and isinstance(meta.get("error"), str):
                     # Surface configuration/auth errors immediately instead of silently timing out.
-                    result = {
-                        "ok": False,
-                        "initial": initial,
-                        "fatal": True,
-                        "error": str(meta.get("error")),
-                        "http_status": int(meta.get("_http_status") or 0),
-                    }
+                    err = str(meta.get("error") or "")
+                    code = int(meta.get("_http_status") or 0)
+                    if err == "rate_limited" and code == 429:
+                        # Host is rate limiting; back off and retry without treating as disconnect.
+                        retry_after = int(meta.get("retry_after_seconds") or 2)
+                        result = {
+                            "ok": False,
+                            "initial": initial,
+                            "rate_limited": True,
+                            "retry_after_seconds": max(1, retry_after),
+                        }
+                    else:
+                        result = {
+                            "ok": False,
+                            "initial": initial,
+                            "fatal": True,
+                            "error": err or "network_error",
+                            "http_status": code,
+                        }
                 elif not isinstance(meta, dict) or not meta.get("ok"):
                     result = {"ok": False, "initial": initial}
                 else:
@@ -438,6 +462,23 @@ class CannabisTracker:
 
     def _consume_client_network_result(self, result: dict[str, object]) -> None:
         if self.network_mode != MODE_CLIENT:
+            return
+        if bool(result.get("rate_limited")):
+            # Treat as connected-but-throttled; retry after the requested window.
+            try:
+                self._client_missed_pings = 0
+                self._client_disconnect_since = None
+            except Exception:
+                pass
+            retry_s = 2
+            try:
+                retry_s = int(result.get("retry_after_seconds") or 2)
+            except Exception:
+                retry_s = 2
+            try:
+                self.root.after(max(500, retry_s * 1000), lambda: self._request_client_network_poll(initial=False))
+            except Exception:
+                pass
             return
         if bool(result.get("fatal")):
             if not getattr(self, "_network_error_shown", False):
