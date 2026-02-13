@@ -10,7 +10,7 @@ from pathlib import Path
 from datetime import datetime
 from theme import set_titlebar_dark, apply_rounded_buttons, compute_colors, set_palette_overrides
 from config import load_tracker_config
-import ctypes
+from ui_window_chrome import apply_dark_titlebar
 
 
 
@@ -347,30 +347,7 @@ class HistoryViewer(tk.Toplevel):
             except Exception as exc:
                 _log_debug(f"HistoryViewer suppressed exception: {exc}")
     def _set_titlebar_dark_native(self, enable: bool) -> None:
-        if os.name != "nt":
-            return
-        try:
-            hwnd = self.winfo_id()
-            GetAncestor = ctypes.windll.user32.GetAncestor
-            GA_ROOT = 2
-            GA_ROOTOWNER = 3
-            root = GetAncestor(hwnd, GA_ROOT)
-            if root:
-                hwnd = root
-            root_owner = GetAncestor(hwnd, GA_ROOTOWNER)
-            if root_owner:
-                hwnd = root_owner
-            DWMWA_USE_IMMERSIVE_DARK_MODE = 20
-            DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19
-            value = ctypes.c_int(1 if enable else 0)
-            if ctypes.windll.dwmapi.DwmSetWindowAttribute(
-                hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)
-            ) != 0:
-                ctypes.windll.dwmapi.DwmSetWindowAttribute(
-                    hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value)
-                )
-        except Exception as exc:
-            _log_debug(f"HistoryViewer suppressed exception: {exc}")
+        apply_dark_titlebar(self, enable, allow_parent=True, log_fn=lambda msg: _log_debug(f"HistoryViewer {msg}"))
     def _load_records(self) -> None:
         self.records = []
         if not self.log_path.exists():

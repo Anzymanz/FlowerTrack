@@ -7,6 +7,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import Tk, Toplevel, StringVar, BooleanVar, ttk, messagebox, filedialog
 from theme import apply_style_theme, compute_colors, set_titlebar_dark, set_palette_overrides
+from ui_window_chrome import apply_dark_titlebar
 from logger import log_event
 from config import load_library_config, save_library_config, load_tracker_config, save_tracker_config
 from resources import resource_path
@@ -37,8 +38,8 @@ def save_entries(entries: list[dict]) -> None:
     if DATA_FILE.exists():
         try:
             shutil.copy2(DATA_FILE, DATA_FILE.with_suffix(DATA_FILE.suffix + ".bak"))
-        except Exception:
-            pass
+        except OSError as exc:
+            log_event("flowerlibrary.backup.copy_failed", str(exc), file_name="app.log")
     tmp.write_text(json.dumps(entries, indent=2), encoding="utf-8")
     tmp.replace(DATA_FILE)
 
@@ -56,8 +57,8 @@ def _load_tracker_dark_mode(default: bool = True) -> bool:
         cfg = load_tracker_config(TRACKER_CONFIG_FILE)
         if isinstance(cfg, dict) and "dark_mode" in cfg:
             return bool(cfg.get("dark_mode", default))
-    except Exception:
-        pass
+    except Exception as exc:
+        log_event("flowerlibrary.theme.load_dark_mode_failed", str(exc), file_name="app.log")
     return default
 
 
@@ -68,8 +69,8 @@ def _save_tracker_dark_mode(enabled: bool) -> None:
             cfg = {}
         cfg["dark_mode"] = bool(enabled)
         save_tracker_config(TRACKER_CONFIG_FILE, cfg)
-    except Exception:
-        pass
+    except Exception as exc:
+        log_event("flowerlibrary.theme.save_dark_mode_failed", str(exc), file_name="app.log")
 
 
 def _resource_path(filename: str) -> str:
@@ -82,8 +83,8 @@ class FlowerLibraryApp:
         self.root.title("Medical Cannabis Flower Library")
         try:
             self.root.iconbitmap(_resource_path('icon3.ico'))
-        except Exception:
-            pass
+        except Exception as exc:
+            log_event("flowerlibrary.icon.load_failed", str(exc), file_name="app.log")
 
         self.entries: list[dict] = load_entries()
         self.settings = load_settings()
@@ -746,13 +747,7 @@ class FlowerLibraryApp:
                 pass
 
     def _set_window_titlebar_dark(self, window, enable: bool) -> None:
-        """On Windows 10/11, ask DWM for a dark title bar to match the theme."""
-        if os.name != "nt":
-            return
-        try:
-            self._dwm_set_titlebar(window, enable)
-        except Exception:
-            pass
+        apply_dark_titlebar(window, enable, allow_parent=True)
 
     def _set_titlebar_dark_native(self, window, enable: bool) -> None:
         if os.name != "nt":

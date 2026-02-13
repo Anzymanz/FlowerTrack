@@ -23,7 +23,9 @@ from app_core import APP_DIR, EXPORTS_DIR_DEFAULT, LAST_PARSE_FILE, _load_captur
 from tray import tray_supported, update_tray_icon, stop_tray_icon, make_tray_image, create_tray_icon
 from scraper_state import resolve_scraper_status as resolve_scraper_status_core, read_scraper_state
 from theme import apply_style_theme, compute_colors, set_titlebar_dark, set_palette_overrides, get_default_palettes
+from ui_window_chrome import apply_dark_titlebar
 from ui_tracker_settings import open_tracker_settings
+from ui_tracker_settings_state import save_tracker_settings as _save_tracker_settings
 from ui_tracker_status import (
     bind_log_thc_cbd_tooltip as _status_bind_log_thc_cbd_tooltip,
     bind_tooltip as _status_bind_tooltip,
@@ -1489,219 +1491,7 @@ class CannabisTracker:
         ttk.Button(frame, text="Close", command=win.destroy).grid(row=4, column=0, sticky="se", pady=(12, 0))
         self._prepare_toplevel(win)
     def _save_settings(self) -> None:
-        try:
-            def _parse_float(label: str, raw: str, allow_empty: bool = False, default: float = 0.0) -> float:
-                text = (raw or "").strip()
-                if not text:
-                    if allow_empty:
-                        return float(default)
-                    raise ValueError(f"{label} is required.")
-                try:
-                    value = float(text)
-                except Exception:
-                    raise ValueError(f"{label} must be a number.")
-                if value != value or value in (float("inf"), float("-inf")):
-                    raise ValueError(f"{label} must be a finite number.")
-                return value
-
-            def _parse_int(label: str, raw: str, allow_empty: bool = False, default: int = 0) -> int:
-                text = (raw or "").strip()
-                if not text:
-                    if allow_empty:
-                        return int(default)
-                    raise ValueError(f"{label} is required.")
-                try:
-                    value = int(float(text))
-                except Exception:
-                    raise ValueError(f"{label} must be an integer.")
-                return value
-
-            green = _parse_float("Total THC green threshold", self.total_green_entry.get())
-            red = _parse_float("Total THC red threshold", self.total_red_entry.get())
-            single_green = _parse_float("Single THC green threshold", self.single_green_entry.get())
-            single_red = _parse_float("Single THC red threshold", self.single_red_entry.get())
-            cbd_total_green = _parse_float("Total CBD green threshold", self.cbd_total_green_entry.get())
-            cbd_total_red = _parse_float("Total CBD red threshold", self.cbd_total_red_entry.get())
-            cbd_single_green = _parse_float("Single CBD green threshold", self.cbd_single_green_entry.get())
-            cbd_single_red = _parse_float("Single CBD red threshold", self.cbd_single_red_entry.get())
-            target_daily = _parse_float("Daily THC target", self.daily_target_entry.get())
-            target_daily_cbd = _parse_float(
-                "Daily CBD target",
-                self.daily_target_cbd_entry.get(),
-                allow_empty=True,
-                default=0.0,
-            )
-            avg_usage_days = _parse_int(
-                "Average usage days",
-                self.avg_usage_days_entry.get(),
-                allow_empty=True,
-                default=0,
-            )
-            network_host = str(getattr(self, "network_host", "127.0.0.1")).strip() or "127.0.0.1"
-            network_bind_host = str(getattr(self, "network_bind_host", "0.0.0.0")).strip() or "0.0.0.0"
-            network_port = int(getattr(self, "network_port", DEFAULT_NETWORK_PORT))
-            network_export_port = int(getattr(self, "export_port", DEFAULT_EXPORT_PORT))
-            network_access_key = str(getattr(self, "network_access_key", "") or "").strip()
-            network_rate_limit_requests_per_minute = int(
-                max(0, int(getattr(self, "network_rate_limit_requests_per_minute", 0) or 0))
-            )
-            if getattr(self, "network_mode", MODE_HOST) == MODE_CLIENT:
-                if hasattr(self, "network_host_entry"):
-                    network_host = str(self.network_host_entry.get()).strip()
-                if not network_host:
-                    raise ValueError("Host IP is required in client mode.")
-                if hasattr(self, "network_access_key_entry"):
-                    network_access_key = str(self.network_access_key_entry.get()).strip()
-                if not network_access_key:
-                    raise ValueError("Access key is required in client mode.")
-            if getattr(self, "network_mode", MODE_CLIENT) == MODE_HOST:
-                if hasattr(self, "network_bind_entry"):
-                    network_bind_host = str(self.network_bind_entry.get()).strip() or "0.0.0.0"
-                if hasattr(self, "network_access_key_entry"):
-                    network_access_key = str(self.network_access_key_entry.get()).strip()
-                if not network_access_key:
-                    network_access_key = secrets.token_urlsafe(24)
-            if hasattr(self, "network_port_entry"):
-                network_port = _parse_int("Data port", self.network_port_entry.get())
-            if hasattr(self, "network_export_port_entry"):
-                network_export_port = _parse_int("Browser port", self.network_export_port_entry.get())
-            if hasattr(self, "network_rate_limit_entry"):
-                network_rate_limit_requests_per_minute = _parse_int(
-                    "Rate limit (req/min)",
-                    self.network_rate_limit_entry.get(),
-                    allow_empty=True,
-                    default=0,
-                )
-            if network_port < 1 or network_port > 65535:
-                raise ValueError("Data port must be between 1 and 65535.")
-            if network_export_port < 1 or network_export_port > 65535:
-                raise ValueError("Browser port must be between 1 and 65535.")
-            if network_rate_limit_requests_per_minute < 0:
-                raise ValueError("Rate limit (req/min) cannot be negative.")
-            track_cbd_flower = bool(self.track_cbd_flower_var.get())
-            enable_stock_coloring = bool(self.enable_stock_color_var.get())
-            enable_usage_coloring = bool(self.enable_usage_color_var.get())
-            roa_opts = {}
-            for name, var in self.roa_vars.items():
-                val = _parse_float(f"{name} efficiency (%)", var.get())
-                if val < 0 or val > 100:
-                    raise ValueError(f"{name} efficiency must be 0-100%.")
-                roa_opts[name] = val / 100.0
-        except ValueError as exc:
-            messagebox.showerror("Invalid input", str(exc))
-            return
-        if (
-            green <= 0
-            or red < 0
-            or single_green <= 0
-            or single_red < 0
-            or red >= green
-            or single_red >= single_green
-            or cbd_total_green <= 0
-            or cbd_total_red < 0
-            or cbd_single_green <= 0
-            or cbd_single_red < 0
-            or cbd_total_red >= cbd_total_green
-            or cbd_single_red >= cbd_single_green
-            or target_daily < 0
-            or target_daily_cbd < 0
-            or avg_usage_days < 0
-            or (track_cbd_flower and target_daily_cbd <= 0)
-        ):
-            messagebox.showerror(
-                "Invalid thresholds", "Use positive numbers with red thresholds below green thresholds."
-            )
-            return
-        if not roa_opts:
-            messagebox.showerror("Invalid efficiencies", "Provide at least one route efficiency value.")
-            return
-        self.total_green_threshold = green
-        self.total_red_threshold = red
-        self.single_green_threshold = single_green
-        self.single_red_threshold = single_red
-        self.cbd_total_green_threshold = cbd_total_green
-        self.cbd_total_red_threshold = cbd_total_red
-        self.cbd_single_green_threshold = cbd_single_green
-        self.cbd_single_red_threshold = cbd_single_red
-        self.target_daily_grams = target_daily
-        self.target_daily_cbd_grams = target_daily_cbd
-        self.avg_usage_days = avg_usage_days
-        network_changed = (
-            str(self.network_host).strip() != str(network_host).strip()
-            or str(self.network_bind_host).strip() != str(network_bind_host).strip()
-            or int(self.network_port) != int(network_port)
-            or int(self.export_port) != int(network_export_port)
-            or str(self.network_access_key).strip() != str(network_access_key).strip()
-            or int(getattr(self, "network_rate_limit_requests_per_minute", 0))
-            != int(network_rate_limit_requests_per_minute)
-        )
-        self.network_host = str(network_host).strip() or "127.0.0.1"
-        self.network_bind_host = str(network_bind_host).strip() or "0.0.0.0"
-        self.network_port = int(network_port)
-        self.export_port = int(network_export_port)
-        self.network_access_key = str(network_access_key).strip()
-        self.network_rate_limit_requests_per_minute = int(max(0, network_rate_limit_requests_per_minute))
-        self.track_cbd_flower = track_cbd_flower
-        self.enable_stock_coloring = enable_stock_coloring
-        self.enable_usage_coloring = enable_usage_coloring
-        if hasattr(self, "hide_roa_var"):
-            self.hide_roa_options = bool(self.hide_roa_var.get())
-        if hasattr(self, "hide_mixed_dose_var"):
-            self.hide_mixed_dose = bool(self.hide_mixed_dose_var.get())
-        if hasattr(self, "hide_mix_stock_var"):
-            self.hide_mix_stock = bool(self.hide_mix_stock_var.get())
-        self.roa_options = roa_opts
-        self.minimize_to_tray = self.minimize_var.get()
-        self.close_to_tray = self.close_var.get()
-        if hasattr(self, 'scraper_status_icon_var'):
-            self.show_scraper_status_icon = bool(self.scraper_status_icon_var.get())
-        if hasattr(self, 'scraper_controls_var'):
-            self.show_scraper_buttons = bool(self.scraper_controls_var.get())
-        self._apply_scraper_controls_visibility()
-        if hasattr(self, 'scraper_notify_windows_var'):
-            self.scraper_notify_windows = bool(self.scraper_notify_windows_var.get())
-            try:
-                cap_cfg = _load_capture_config()
-                cap_cfg["notify_windows"] = self.scraper_notify_windows
-                _save_capture_config(cap_cfg)
-            except Exception:
-                pass
-        # Refresh ROA dropdowns
-        values = list(self.roa_options.keys())
-        self.roa_choice["values"] = values
-        if self.roa_choice.get() not in values and values:
-            self.roa_choice.set(values[0])
-        self._apply_roa_visibility()
-        self._apply_stock_form_visibility()
-        self._refresh_stock()
-        self._refresh_log()
-        try:
-            self.root.update_idletasks()
-            self.root.after(0, self._apply_roa_visibility)
-            self.root.after(0, self._refresh_stock)
-        except Exception:
-            pass
-        if network_changed and self.network_mode == MODE_HOST:
-            self._stop_export_server()
-            self._stop_network_server()
-            self._ensure_network_server()
-            self._ensure_export_server()
-        if network_changed and self.network_mode == MODE_CLIENT:
-            if not network_ping(
-                self.network_host,
-                int(self.network_port),
-                timeout=1.5,
-                access_key=str(getattr(self, "network_access_key", "") or ""),
-            ):
-                messagebox.showwarning(
-                    "Client connectivity",
-                    f"Could not reach host {self.network_host}:{self.network_port}.",
-                )
-            self.load_data()
-        self.save_data()
-        if self.settings_window:
-            self.settings_window.destroy()
-            self.settings_window = None
+        _save_tracker_settings(self)
     def _mark_stock_form_dirty(self, event: tk.Event) -> None:
         _stock_mark_stock_form_dirty(self, event)
     def _bind_tree_resize(self, tree: ttk.Treeview, key: str) -> None:
@@ -3892,25 +3682,8 @@ class CannabisTracker:
     def _set_dark_title_bar(
         self, enable: bool, target: tk.Tk | tk.Toplevel | None = None, allow_parent: bool = True
     ) -> None:
-        """On Windows 10/11, ask DWM for a dark title bar to match the theme."""
-        if os.name != "nt":
-            return
-        try:
-            widget = target or self.root
-            hwnd = self._resolve_hwnd(widget, allow_parent=allow_parent)
-            DWMWA_USE_IMMERSIVE_DARK_MODE = 20
-            DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19
-            BOOL = ctypes.c_int
-            value = BOOL(1 if enable else 0)
-            # Try newer attribute, fall back to older if needed
-            if ctypes.windll.dwmapi.DwmSetWindowAttribute(
-                hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)
-            ) != 0:
-                ctypes.windll.dwmapi.DwmSetWindowAttribute(
-                    hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value)
-                )
-        except Exception:
-            pass
+        widget = target or self.root
+        apply_dark_titlebar(widget, enable, allow_parent=allow_parent)
     def run(self) -> None:
         self.root.mainloop()
     def _update_scraper_status_icon(self) -> None:

@@ -16,6 +16,7 @@ from theme import (
 import ctypes
 from config import load_tracker_config, save_tracker_config
 from resources import resource_path
+from ui_window_chrome import apply_dark_titlebar
 
 
 APP_DIR = os.path.join(os.getenv("APPDATA", os.path.expanduser("~")), "FlowerTrack")
@@ -571,23 +572,7 @@ def apply_theme(root, dark: bool):
 
 
 def _set_window_titlebar_dark(window, enable: bool):
-    if os.name != 'nt':
-        return
-    try:
-        hwnd = window.winfo_id()
-        GetParent = ctypes.windll.user32.GetParent
-        parent = GetParent(hwnd)
-        while parent:
-            hwnd = parent
-            parent = GetParent(hwnd)
-        DWMWA_USE_IMMERSIVE_DARK_MODE = 20
-        DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19
-        BOOL = ctypes.c_int
-        value = BOOL(1 if enable else 0)
-        if ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)) != 0:
-            ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value))
-    except Exception:
-        pass
+    apply_dark_titlebar(window, enable, allow_parent=True)
 
 
 raw_items = load_tracker_flowers()

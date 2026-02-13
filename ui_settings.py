@@ -7,6 +7,7 @@ from tkinter import filedialog, messagebox, ttk
 
 from theme import compute_colors
 from config import DEFAULT_CAPTURE_CONFIG
+from ui_scraper_settings_tabs import add_checkbox_row, add_dump_keep_row, add_labeled_entry_row
 
 def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     """
@@ -309,21 +310,34 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     advanced_frame.grid(row=row_idx, column=0, columnspan=2, sticky="ew", padx=0, pady=(0, 6))
     advanced_frame.columnconfigure(1, weight=1)
     adv_row = 0
-    ttk.Label(advanced_frame, text="Target URL").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
-    url_entry = _make_capture_entry(advanced_frame, app.cap_url, width=50)
-    url_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    _, url_entry = add_labeled_entry_row(
+        advanced_frame,
+        row=adv_row,
+        label="Target URL",
+        make_entry=_make_capture_entry,
+        variable=app.cap_url,
+        width=50,
+    )
     _bind_tooltip(url_entry, "Medicann products page URL.")
     adv_row += 1
 
-    ttk.Label(advanced_frame, text="Organization selector").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
-    org_sel_entry = _make_capture_entry(advanced_frame, app.cap_org_sel, width=40)
-    org_sel_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    _, org_sel_entry = add_labeled_entry_row(
+        advanced_frame,
+        row=adv_row,
+        label="Organization selector",
+        make_entry=_make_capture_entry,
+        variable=app.cap_org_sel,
+    )
     _bind_tooltip(org_sel_entry, "CSS selector for the organization field.")
     adv_row += 1
 
-    ttk.Label(advanced_frame, text="Username selector").grid(row=adv_row, column=0, sticky="w", padx=6, pady=2)
-    user_sel_entry = _make_capture_entry(advanced_frame, app.cap_user_sel, width=40)
-    user_sel_entry.grid(row=adv_row, column=1, sticky="ew", padx=6, pady=2)
+    _, user_sel_entry = add_labeled_entry_row(
+        advanced_frame,
+        row=adv_row,
+        label="Username selector",
+        make_entry=_make_capture_entry,
+        variable=app.cap_user_sel,
+    )
     _bind_tooltip(user_sel_entry, "CSS selector for the username/email field.")
     adv_row += 1
 
@@ -375,35 +389,40 @@ def open_settings_window(app, assets_dir: Path) -> tk.Toplevel:
     _bind_tooltip(retry_backoff_entry, "Max multiplier applied to retry wait.")
     adv_row += 1
 
-    headless_chk = ttk.Checkbutton(advanced_frame, text="Headless", variable=app.cap_headless)
-    headless_chk.grid(
-        row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2
+    headless_chk = add_checkbox_row(
+        advanced_frame,
+        row=adv_row,
+        text="Headless",
+        variable=app.cap_headless,
+        tooltip_bind=_bind_tooltip,
+        tooltip_text="Run browser without showing it (faster and less intrusive).",
     )
-    _bind_tooltip(headless_chk, "Run browser without showing it (faster and less intrusive).")
     adv_row += 1
 
-    html_dump_row = ttk.Frame(advanced_frame)
-    html_dump_row.grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
-    html_dump_chk = ttk.Checkbutton(html_dump_row, text="Dump page HTML to file", variable=app.cap_dump_html)
-    html_dump_chk.pack(side="left")
-    _bind_tooltip(html_dump_chk, "Save captured page HTML into the dumps folder.")
-    ttk.Label(html_dump_row, text="Keep").pack(side="left", padx=(10, 4))
-    html_keep_entry = _make_capture_entry(html_dump_row, app.cap_dump_html_keep, width=5)
-    html_keep_entry.pack(side="left")
-    ttk.Label(html_dump_row, text="files").pack(side="left", padx=(4, 0))
-    _bind_tooltip(html_keep_entry, "How many page HTML dump files to keep in the dumps folder.")
+    _, html_keep_entry = add_dump_keep_row(
+        advanced_frame,
+        row=adv_row,
+        text="Dump page HTML to file",
+        variable=app.cap_dump_html,
+        keep_variable=app.cap_dump_html_keep,
+        make_entry=_make_capture_entry,
+        tooltip_bind=_bind_tooltip,
+        tooltip_toggle="Save captured page HTML into the dumps folder.",
+        tooltip_keep="How many page HTML dump files to keep in the dumps folder.",
+    )
     adv_row += 1
 
-    api_dump_row = ttk.Frame(advanced_frame)
-    api_dump_row.grid(row=adv_row, column=0, columnspan=2, sticky="w", padx=6, pady=2)
-    api_dump_chk = ttk.Checkbutton(api_dump_row, text="Dump API traffic (full details)", variable=app.cap_dump_api)
-    api_dump_chk.pack(side="left")
-    _bind_tooltip(api_dump_chk, "Save full API request/response payloads into the dumps folder.")
-    ttk.Label(api_dump_row, text="Keep").pack(side="left", padx=(10, 4))
-    api_keep_entry = _make_capture_entry(api_dump_row, app.cap_dump_api_keep, width=5)
-    api_keep_entry.pack(side="left")
-    ttk.Label(api_dump_row, text="files").pack(side="left", padx=(4, 0))
-    _bind_tooltip(api_keep_entry, "How many API dump files to keep in the dumps folder.")
+    _, api_keep_entry = add_dump_keep_row(
+        advanced_frame,
+        row=adv_row,
+        text="Dump API traffic (full details)",
+        variable=app.cap_dump_api,
+        keep_variable=app.cap_dump_api_keep,
+        make_entry=_make_capture_entry,
+        tooltip_bind=_bind_tooltip,
+        tooltip_toggle="Save full API request/response payloads into the dumps folder.",
+        tooltip_keep="How many API dump files to keep in the dumps folder.",
+    )
     adv_row += 1
 
     show_log_chk = ttk.Checkbutton(advanced_frame, text="Show log window", variable=app.cap_show_log_window)

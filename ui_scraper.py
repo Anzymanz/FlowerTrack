@@ -56,6 +56,7 @@ from tray import create_tray_icon, stop_tray_icon, tray_supported, update_tray_i
 from logger import UILogger
 from notifications import NotificationService
 from theme import apply_style_theme, set_titlebar_dark, compute_colors, set_palette_overrides
+from ui_window_chrome import apply_dark_titlebar
 from resources import resource_path
 from history_viewer import open_history_window
 from ui_scraper_status import (
@@ -2213,45 +2214,9 @@ class App(tk.Tk):
     def _resource_path(self, relative: str) -> str:
         return resource_path(relative)
     def _set_win_titlebar_dark(self, enable: bool):
-        """On Windows 10/11, ask DWM for a dark title bar to match the theme."""
-        if os.name != 'nt':
-            return
-        try:
-            hwnd = self.winfo_id()
-            # Tk may give a child handle; walk up to the top-level window
-            GetParent = ctypes.windll.user32.GetParent
-            parent = GetParent(hwnd)
-            while parent:
-                hwnd = parent
-                parent = GetParent(hwnd)
-            DWMWA_USE_IMMERSIVE_DARK_MODE = 20
-            DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19
-            BOOL = ctypes.c_int
-            value = BOOL(1 if enable else 0)
-            # Try newer attribute, fallback to older if it fails
-            if ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)) != 0:
-                ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value))
-        except Exception as exc:
-            self._debug_log(f"Suppressed exception: {exc}")
+        apply_dark_titlebar(self, enable, allow_parent=True, log_fn=self._debug_log)
     def _set_window_titlebar_dark(self, window, enable: bool):
-        """Apply dark title bar to a specific window."""
-        if os.name != 'nt':
-            return
-        try:
-            hwnd = window.winfo_id()
-            GetParent = ctypes.windll.user32.GetParent
-            parent = GetParent(hwnd)
-            while parent:
-                hwnd = parent
-                parent = GetParent(hwnd)
-            DWMWA_USE_IMMERSIVE_DARK_MODE = 20
-            DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19
-            BOOL = ctypes.c_int
-            value = BOOL(1 if enable else 0)
-            if ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)) != 0:
-                ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ctypes.byref(value), ctypes.sizeof(value))
-        except Exception as exc:
-            self._debug_log(f"Suppressed exception: {exc}")
+        apply_dark_titlebar(window, enable, allow_parent=True, log_fn=self._debug_log)
     def _apply_theme_recursive(self, widget, bg, fg, ctrl_bg, accent, highlight, highlight_text, dark):
         """Lightweight recursive theming for child widgets."""
         try:
