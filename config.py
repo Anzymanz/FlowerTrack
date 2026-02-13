@@ -244,7 +244,7 @@ DEFAULT_TRACKER_CONFIG = {
     "network_port": 8766,
     "network_export_port": 8765,
     "network_access_key": "",
-    "network_rate_limit_requests_per_minute": 0,
+    "network_rate_limit_requests_per_minute": 120,
     "mixcalc_geometry": "",
     "mixcalc_stock_geometry": "",
     "stock_column_widths": {},
