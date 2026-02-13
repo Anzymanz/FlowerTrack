@@ -396,7 +396,16 @@ class CannabisTracker:
             result: dict[str, object] = {"ok": False, "initial": initial}
             try:
                 meta = fetch_tracker_meta(host, port, timeout=0.75, access_key=access_key)
-                if not isinstance(meta, dict) or not meta.get("ok"):
+                if isinstance(meta, dict) and (meta.get("ok") is False) and isinstance(meta.get("error"), str):
+                    # Surface configuration/auth errors immediately instead of silently timing out.
+                    result = {
+                        "ok": False,
+                        "initial": initial,
+                        "fatal": True,
+                        "error": str(meta.get("error")),
+                        "http_status": int(meta.get("_http_status") or 0),
+                    }
+                elif not isinstance(meta, dict) or not meta.get("ok"):
                     result = {"ok": False, "initial": initial}
                 else:
                     try:
@@ -429,6 +438,32 @@ class CannabisTracker:
 
     def _consume_client_network_result(self, result: dict[str, object]) -> None:
         if self.network_mode != MODE_CLIENT:
+            return
+        if bool(result.get("fatal")):
+            if not getattr(self, "_network_error_shown", False):
+                self._network_error_shown = True
+                err = str(result.get("error") or "network_error")
+                code = int(result.get("http_status") or 0)
+                msg = "Client cannot connect to host.\n\n"
+                if err == "invalid_access_key":
+                    msg += "Access key is invalid (check host/client key settings)."
+                elif err == "missing_access_key":
+                    msg += "Host access key is not configured (host must generate/set one)."
+                elif err == "client_not_allowed":
+                    msg += "Host denied this client IP (not a LAN/loopback address)."
+                else:
+                    msg += f"Error: {err}"
+                if code:
+                    msg += f"\n(HTTP {code})"
+                try:
+                    messagebox.showerror("Networking", msg)
+                except Exception:
+                    pass
+            # Stop spinning the UI in a broken client session.
+            try:
+                self.root.after(0, self._on_main_close)
+            except Exception:
+                self._on_main_close()
             return
         if not bool(result.get("ok")):
             self._client_missed_pings = int(getattr(self, "_client_missed_pings", 0) or 0) + 1

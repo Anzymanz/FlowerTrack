@@ -64,7 +64,8 @@ def start_network_data_server(
     bind = (bind_host or DEFAULT_BIND_HOST).strip() or DEFAULT_BIND_HOST
     port = int(preferred_port or DEFAULT_NETWORK_PORT)
     expected_key = str(access_key or "").strip()
-    client_ttl_s = 20.0
+    # Keep this relatively short so host UI reflects disconnects quickly.
+    client_ttl_s = 10.0
     rate_limit = max(0, int(rate_limit_requests_per_minute or 0))
     try:
         rate_window_s = max(1.0, float(rate_limit_window_seconds or 60.0))
@@ -86,7 +87,9 @@ def start_network_data_server(
             return False
         if allow_public_clients:
             return True
-        if addr.is_loopback or addr.is_private or addr.is_link_local:
+        # Allow non-public addresses (private + link-local + loopback + CGNAT, etc).
+        # This intentionally blocks globally-routable addresses unless explicitly enabled.
+        if addr.is_loopback or addr.is_private or addr.is_link_local or (not addr.is_global):
             return True
         return False
 
@@ -201,6 +204,7 @@ def start_network_data_server(
                     self._audit_deny("missing_access_key")
                     self._send_forbidden("missing_access_key")
                     return False
+                self._touch_client()
                 return True
             got_key = str(self.headers.get("X-FlowerTrack-Key", "") or "").strip()
             if not got_key or not hmac.compare_digest(got_key, expected_key):
@@ -362,8 +366,23 @@ def _request_json(
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         headers["Content-Type"] = "application/json; charset=utf-8"
     req = urllib.request.Request(base, data=body, method=method, headers=headers)
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        raw = resp.read()
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read()
+    except urllib.error.HTTPError as exc:
+        try:
+            raw = exc.read()
+        except Exception:
+            raw = b""
+        if raw:
+            try:
+                payload = json.loads(raw.decode("utf-8"))
+                if isinstance(payload, dict):
+                    payload["_http_status"] = int(getattr(exc, "code", 0) or 0)
+                return payload
+            except Exception:
+                pass
+        return {"ok": False, "error": "http_error", "_http_status": int(getattr(exc, "code", 0) or 0)}
     if not raw:
         return None
     return json.loads(raw.decode("utf-8"))
@@ -387,6 +406,8 @@ def fetch_tracker_data(host: str, port: int, timeout: float = 4.0, access_key: s
             timeout=timeout,
             access_key=access_key,
         )
+        if isinstance(payload, dict) and bool(payload.get("ok")) is False and isinstance(payload.get("error"), str):
+            return None
         if isinstance(payload, dict):
             return payload
     except Exception:
@@ -437,6 +458,8 @@ def fetch_library_data(host: str, port: int, timeout: float = 4.0, access_key: s
             timeout=timeout,
             access_key=access_key,
         )
+        if isinstance(payload, dict) and bool(payload.get("ok")) is False and isinstance(payload.get("error"), str):
+            return None
         if isinstance(payload, list):
             return payload
     except Exception:
