@@ -15,8 +15,9 @@ FlowerTrack is a Windows desktop app for tracking medical cannabis usage and sto
 - Flower Browser served at fixed endpoint (`/flowerbrowser`) with filters, badges, favorites, basket, and image previews.
 - Change history viewer in both scraper UI and Flower Browser.
 - Theme customization with colour pickers (including tracker thresholds and dark/light palette overrides).
-- Optional network modes (`-host` / `-client`) to share tracker/library data and the Flower Browser over LAN.
+- Optional network modes (`-host` / `-client`) to share tracker/library data and the Flower Browser over LAN (access-key protected, LAN-only by default, optional rate limiting).
 - Optional console mode (`-console`) for live stdout/stderr output from the built exe.
+- Minimize/close-to-tray support (when enabled in settings).
 
 ## Screenshots
 ### Tracker dashboard
@@ -222,7 +223,10 @@ py -m pytest
   The app uses certifi for API/HA HTTPS validation; missing roots on Windows can cause fetch failures.
 - If scraper settings look blank or defaults are missing, delete `%APPDATA%\FlowerTrack\flowertrack_config.json` and relaunch to re-seed defaults.
 - Use the console log in-app for detailed scrape output.
-- In `-client` mode, confirm host IP/ports in settings and ensure host is reachable on the LAN.
+- In `-client` mode:
+  - Confirm host IP/ports and Access key in settings (host and client must match).
+  - Ensure the host is reachable on the LAN (host blocks public/global client IPs by default).
+  - If you see HTTP `429`, raise the host rate limit in settings (Data settings, host mode) or reduce client polling frequency.
 
 ## Repository layout
 - `flowertracker.py` entry point
