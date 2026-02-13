@@ -110,8 +110,9 @@ button:hover{background:var(--hover)}
 .card.unread-removed{box-shadow:0 0 0 1px #9c2f2f inset}
 .card.unread-price-up{box-shadow:0 0 0 1px #2f7a46 inset}
 .card.unread-price-down{box-shadow:0 0 0 1px #a13535 inset}
-.card.unread-stock-up{box-shadow:0 0 0 1px #2f7a46 inset}
+.card.unread-stock-up{background:#0f2b19;border-color:#1f6a3a;box-shadow:0 0 0 1px #2f7a46 inset}
 .card.unread-stock-down{box-shadow:0 0 0 1px #a13535 inset}
+.light .card.unread-stock-up{background:#e6ffef;border-color:#b3e0c5}
 .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--pill);margin:4px 6px 0 0;font-size:13px;color:var(--fg)}
 .pill.stock-up{background:#15331e;color:#b7f0c8}
 .pill.stock-down{background:#3a1a1a;color:#f6c6c6}
@@ -597,6 +598,16 @@ function applyUnreadVisualForCard(card) {
     }
     if (entry.stock || entry.out_of_stock || entry.restock) {
         const stockPill = findStockPill(card);
+        if (entry.restock) {
+            card.classList.add('unread-stock-up');
+            if (stockPill) stockPill.classList.add('stock-up');
+            return;
+        }
+        if (entry.out_of_stock) {
+            card.classList.add('unread-stock-down');
+            if (stockPill) stockPill.classList.add('stock-down');
+            return;
+        }
         const stockDelta = parseFloat(entry.stock_delta);
         if (Number.isFinite(stockDelta)) {
             if (stockDelta < 0) {
