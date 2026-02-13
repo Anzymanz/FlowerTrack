@@ -3779,7 +3779,15 @@ class CannabisTracker:
             elif self.network_mode == MODE_HOST:
                 host_clients = self._host_active_connections_count()
             if getattr(self, "tray_icon", None):
-                if not getattr(self, "show_scraper_buttons", True):
+                # In client mode, the tray icon represents connection status (not scraper status).
+                if self.network_mode == MODE_CLIENT:
+                    if client_state == "good":
+                        update_tray_icon(self.tray_icon, True, False)
+                    elif client_state == "interrupted":
+                        update_tray_icon(self.tray_icon, True, True)
+                    else:
+                        update_tray_icon(self.tray_icon, False, False)
+                elif not getattr(self, "show_scraper_buttons", True):
                     icon_path = self._resource_path('icon.png')
                     if Image is not None and os.path.exists(icon_path):
                         try:
@@ -3816,7 +3824,7 @@ class CannabisTracker:
             try:
                 if self.network_mode == MODE_HOST:
                     self.host_clients_label.configure(
-                        text=f"Clients: {host_clients}",
+                        text=str(int(host_clients)) if int(host_clients) > 0 else "",
                         foreground=getattr(self, "muted_color", "#999"),
                     )
                 else:
