@@ -1283,6 +1283,9 @@ class CannabisTracker:
             picker.update_idletasks()
             self._apply_picker_titlebar(top)
             picker.after_idle(lambda: self._apply_picker_titlebar(top))
+            # DWM titlebar updates for tkcolorpicker are timing-sensitive on some systems.
+            # Queue a few retries against the picker window handle (not parent) for reliability.
+            self._queue_dark_titlebar(top, attempts=8, delay_ms=80, allow_parent=False)
         except Exception:
             try:
                 picker.deiconify()
