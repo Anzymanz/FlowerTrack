@@ -108,8 +108,8 @@ button:hover{background:var(--hover)}
 .light .card-new{background:#e6ffef;border-color:#b3e0c5}
 .card.unread-new{box-shadow:0 0 0 1px #2f7a46 inset}
 .card.unread-removed{box-shadow:0 0 0 1px #9c2f2f inset}
-.card.unread-price-up{box-shadow:0 0 0 1px #2f7a46 inset}
-.card.unread-price-down{box-shadow:0 0 0 1px #a13535 inset}
+.card.unread-price-up{border-color:#a13535 !important;box-shadow:0 0 0 1px #a13535 inset !important}
+.card.unread-price-down{border-color:#2f7a46 !important;box-shadow:0 0 0 1px #2f7a46 inset !important}
 .card.unread-stock-up{background:#0f2b19;border-color:#1f6a3a;box-shadow:0 0 0 1px #2f7a46 inset}
 .card.unread-stock-down{box-shadow:0 0 0 1px #a13535 inset}
 .light .card.unread-stock-up{background:#e6ffef;border-color:#b3e0c5}
@@ -549,10 +549,23 @@ function clearUnreadVisualForCard(card) {
     if (!card) return;
     card.classList.remove('unread-new', 'unread-removed', 'unread-price-up', 'unread-price-down', 'unread-stock-up', 'unread-stock-down');
     card.querySelectorAll('.badge-removed[data-unread-badge=\"1\"]').forEach(el => el.remove());
+    const pricePill = findPricePill(card);
+    if (pricePill) {
+        pricePill.classList.remove('price-up', 'price-down');
+    }
     const stockPill = findStockPill(card);
     if (stockPill) {
         stockPill.classList.remove('stock-up', 'stock-down', 'stock-change');
     }
+}
+function findPricePill(card) {
+    if (!card) return null;
+    const pills = card.querySelectorAll('.pill');
+    for (const el of pills) {
+        const txt = (el.textContent || '').trim();
+        if (txt.startsWith('💵')) return el;
+    }
+    return null;
 }
 function findStockPill(card) {
     if (!card) return null;
@@ -589,11 +602,14 @@ function applyUnreadVisualForCard(card) {
         ensureUnreadRemovedBadge(card);
     }
     if (entry.price) {
+        const pricePill = findPricePill(card);
         const delta = parseFloat(entry.price_delta);
         if (Number.isFinite(delta) && delta < 0) {
             card.classList.add('unread-price-down');
+            if (pricePill) pricePill.classList.add('price-down');
         } else {
             card.classList.add('unread-price-up');
+            if (pricePill) pricePill.classList.add('price-up');
         }
     }
     if (entry.stock || entry.out_of_stock || entry.restock) {
